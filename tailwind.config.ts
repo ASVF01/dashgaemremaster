@@ -13,7 +13,23 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        marker: ["'Permanent Marker'", "cursive"],
+        bungee: ["'Bungee'", "cursive"],
+        scribble: ["'Caveat'", "cursive"],
+      },
       colors: {
+        ink: "hsl(var(--ink))",
+        paper: "hsl(var(--paper))",
+        electric: "hsl(var(--electric))",
+        parry: "hsl(var(--parry))",
+        mach: {
+          0: "hsl(var(--mach-0))",
+          1: "hsl(var(--mach-1))",
+          2: "hsl(var(--mach-2))",
+          3: "hsl(var(--mach-3))",
+          4: "hsl(var(--mach-4))",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
