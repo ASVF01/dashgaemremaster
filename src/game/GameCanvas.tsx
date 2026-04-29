@@ -9,6 +9,7 @@ import {
 import { buildLevel, type Level, type LevelId } from "@/game/level";
 import { sketchLine, sketchRect, sketchCircle, jaggedBolt, INK } from "@/game/draw";
 import { isPressed, matchesAction, getLiveBinds } from "@/game/keybinds";
+import { sfx, unlockAudio } from "@/game/sfx";
 
 type Keys = Record<string, boolean>;
 
@@ -132,10 +133,14 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       }
       // parry — bound action
       if (matchesAction(e.code, "parry") && refs.current) {
+        unlockAudio();
         const r = refs.current;
         if (r.player.parryCooldown <= 0 && r.player.parrying <= 0) {
           r.player.parrying = PARRY_WINDOW;
           r.player.parryCooldown = PARRY_COOLDOWN + PARRY_WINDOW;
+          // i-frames for the entire parry active window so you can't get hit while parrying
+          if (r.player.invuln < PARRY_WINDOW) r.player.invuln = PARRY_WINDOW;
+          sfx.parryStart();
         }
       }
     };
@@ -274,6 +279,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       // boost in facing dir
       p.vx += p.facing * SLIDE_BOOST;
       spawnParticle(r, { x: p.x, y: p.y + p.h, vx: -p.facing * 200, vy: -80, color: INK, life: 0.4, size: 4, kind: "smear" });
+      sfx.slide();
     }
     if (!slideHeld && p.sliding) {
       // try to stand
@@ -291,6 +297,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       p.onGround = false;
       p.squash = 1;
       spawnParticle(r, { x: p.x + p.w / 2, y: p.y + p.h, color: INK, vy: -40, life: 0.3, size: 4, kind: "ring" });
+      sfx.jump();
     }
     // variable jump
     if (!jumpHeld && p.vy < -300) p.vy = -300;
