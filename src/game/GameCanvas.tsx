@@ -43,6 +43,7 @@ interface Afterimage {
   sliding: boolean;
   diving: boolean;
   state: SpriteState;
+  frame: number;        // animation frame index captured at spawn (mach-scaled)
   life: number; maxLife: number;
   color: string;
 }
@@ -436,12 +437,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         !p.onGround ? (p.vy > 60 ? "fall" : "jump") :
         Math.abs(p.vx) > 60 ? (mach >= 2 ? "runFast" : "run") :
         "idle";
+      // capture the same mach-scaled animation frame the player render uses,
+      // so the afterimage trail stays in lock-step with the live sprite.
+      const aiFps = 12 + mach * 3;
+      const aiFrame = Math.floor(r.time * aiFps);
       r.afterimages.push({
         x: p.x, y: p.y, w: p.w, h: p.h,
         facing: p.facing,
         sliding: p.sliding,
         diving: p.diving,
         state: aiState,
+        frame: aiFrame,
         life, maxLife: life,
         color: p.dashTime > 0 ? "#22e2ff" : p.diving ? "#ffd11a" : MACH_COLORS[Math.max(1, mach)],
       });
@@ -988,7 +994,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
 
   function drawAfterimage(ctx: CanvasRenderingContext2D, ai: Afterimage, t: number) {
     // t: 1 (fresh) → 0 (faded)
-    const sprite = getSprite(ai.state, Math.floor((performance.now() / 1000) * 18));
+    const sprite = getSprite(ai.state, ai.frame);
     ctx.save();
     ctx.globalAlpha = 0.55 * t;
 
