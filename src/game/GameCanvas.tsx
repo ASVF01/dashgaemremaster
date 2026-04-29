@@ -412,7 +412,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     r.afterTimer -= dt;
     if ((mach >= 1 || p.diving || p.dashTime > 0) && r.afterTimer <= 0) {
       r.afterTimer = p.dashTime > 0 ? 0.012 : Math.max(0.018, 0.05 - mach * 0.008);
-      const life = 0.3;
+      const life = 0.2;
       const aiState: SpriteState =
         p.diving ? "dive" :
         p.sliding ? "slide" :
@@ -448,26 +448,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       });
     }
 
-    if (mach >= 1 && Math.random() < 0.4 + mach * 0.15) {
-      spawnParticle(r, {
-        x: p.x + p.w / 2 - p.facing * (p.w / 2 + Math.random() * 12),
-        y: p.y + Math.random() * p.h,
-        vx: -p.facing * (60 + Math.random() * 80),
-        vy: (Math.random() - 0.5) * 80,
-        color: MACH_COLORS[mach],
-        size: 1.5 + Math.random() * 2,
-        life: 0.18 + Math.random() * 0.2,
-        kind: "spark",
-      });
-    }
-    if (mach >= 2 && Math.random() < 0.3) {
-      spawnParticle(r, {
-        x: p.x + p.w / 2, y: p.y + p.h * 0.5,
-        vx: -p.facing * 40, vy: 0,
-        color: MACH_COLORS[mach],
-        size: 6, life: 0.15, kind: "smear",
-      });
-    }
+    // (mach color trail removed — speed lines + afterimage handle the feedback)
 
     // combo decay
     if (r.comboTimer > 0) {
