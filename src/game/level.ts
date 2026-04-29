@@ -75,7 +75,7 @@ function buildJustRunBro(): Level {
 // player's start and pursues forever. Touching it = damage. Parrying it
 // blasts it back and stuns it briefly so you can recover ground.
 function buildChase(): Level {
-  const W = 14000;
+  const W = 24000;
   const H = 720;
   const groundY = H - 80;
 

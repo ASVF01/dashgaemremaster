@@ -20,9 +20,9 @@ export default function MainMenu({ onPlay }: Props) {
         {/* Title */}
         <div className="text-center mb-6">
           <div className="font-marker text-6xl md:text-7xl text-ink leading-[0.9] -rotate-1 inline-block">
-            LOONEY TUNE
+            DASH GAEM
             <br />
-            <span className="text-[hsl(var(--accent))] inline-block rotate-2">RUST BRO💔</span>
+            <span className="text-[hsl(var(--accent))] inline-block rotate-2">REMASTERED</span>
           </div>
           <p className="font-scribble text-2xl text-ink/80 mt-3">
             a chaotic stick-figure speed platformer

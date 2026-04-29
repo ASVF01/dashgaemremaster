@@ -4,7 +4,7 @@ import Hud from "@/game/Hud";
 import MainMenu from "@/game/MainMenu";
 import { LEVELS, type LevelId } from "@/game/level";
 import { useKeybinds, keyLabel, type ActionId } from "@/game/keybinds";
-import { playMenuBgm, playBgmFor } from "@/game/bgm";
+import { playMenuBgm, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage } from "@/game/bgm";
 
 type Screen = "menu" | "playing" | "dead" | "win";
 
@@ -18,6 +18,19 @@ const Index = () => {
   const [finalTime, setFinalTime] = useState(0);
   const [finalScore, setFinalScore] = useState(0);
   const [binds] = useKeybinds();
+  const [muted, setMuted] = useState(false);
+
+  // Load persisted mute pref once.
+  useEffect(() => {
+    initBgmMutedFromStorage();
+    setMuted(isBgmMuted());
+  }, []);
+
+  const toggleMute = () => {
+    const next = !muted;
+    setMuted(next);
+    setBgmMuted(next);
+  };
 
   const handleHud = useCallback((h: HudState) => setHud(h), []);
   const handleFinish = useCallback((t: number, s: number) => {
@@ -72,9 +85,17 @@ const Index = () => {
       {/* page header */}
       <header className="px-6 pt-4 pb-2 flex items-center justify-between max-w-[1500px] mx-auto">
         <h1 className="font-marker text-3xl md:text-5xl text-ink leading-none">
-          LOONEY TUNE <span className="text-[hsl(var(--accent))] inline-block -rotate-2">RUST BRO💔</span>
+          DASH GAEM <span className="text-[hsl(var(--accent))] inline-block -rotate-2">REMASTERED</span>
         </h1>
         <div className="hidden md:flex items-center gap-3 font-scribble text-xl">
+          <button
+            onClick={toggleMute}
+            aria-label={muted ? "Unmute music" : "Mute music"}
+            title={muted ? "Unmute music" : "Mute music"}
+            className="scribble-border bg-paper px-3 py-1 font-marker text-base text-ink hover:-rotate-2 transition-transform"
+          >
+            {muted ? "🔇 MUSIC OFF" : "🔊 MUSIC ON"}
+          </button>
           {screen === "playing" && (
             <button
               onClick={backToMenu}

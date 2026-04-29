@@ -2,13 +2,22 @@
 // Decodes each track to an AudioBuffer once, then schedules overlapping
 // source nodes with an equal-power crossfade at the loop point so there's
 // no click/gap on loop.
-import bgmTutorial from "@/assets/audio/bgm_tutorial.mp3";
 import bgmJustRunBro from "@/assets/audio/bgm_just_run_bro.mp3";
 import bgmMenu from "@/assets/audio/bgm_menu.mp3";
+import bgmChampionPlay from "@/assets/audio/bgm_champion_play.mp3";
+import bgmChampionDuel2 from "@/assets/audio/bgm_champion_duel2.mp3";
 import type { LevelId } from "@/game/level";
 
+// Champion play is the default for every level (it's just THAT good).
+// Specific levels can override below. "just-run-bro" stays silent /
+// vibes-only as the user requested.
 const TRACKS: Partial<Record<LevelId, string>> = {
-  tutorial: bgmTutorial,
+  tutorial: bgmChampionPlay,
+  "scribble-1": bgmChampionPlay,
+  "scribble-2": bgmChampionPlay,
+  "scribble-3": bgmChampionPlay,
+  "speed-test": bgmChampionPlay,
+  chase: bgmChampionDuel2,
   "just-run-bro": bgmJustRunBro,
 };
 
@@ -227,6 +236,19 @@ export function resumeBgm() {
 export function setBgmMuted(v: boolean) {
   muted = v;
   if (masterGain) masterGain.gain.value = muted ? 0 : volume * endDuck;
+  try {
+    if (typeof window !== "undefined") localStorage.setItem("bgmMuted", v ? "1" : "0");
+  } catch { /* ignore */ }
+}
+
+export function isBgmMuted() { return muted; }
+
+export function initBgmMutedFromStorage() {
+  try {
+    if (typeof window === "undefined") return;
+    const v = localStorage.getItem("bgmMuted");
+    if (v === "1") setBgmMuted(true);
+  } catch { /* ignore */ }
 }
 
 export function setBgmVolume(v: number) {
