@@ -3,10 +3,12 @@
 // source nodes with an equal-power crossfade at the loop point so there's
 // no click/gap on loop.
 import bgmTutorial from "@/assets/audio/bgm_tutorial.mp3";
+import bgmJustRunBro from "@/assets/audio/bgm_just_run_bro.mp3";
 import type { LevelId } from "@/game/level";
 
 const TRACKS: Partial<Record<LevelId, string>> = {
   tutorial: bgmTutorial,
+  "just-run-bro": bgmJustRunBro,
 };
 
 // Crossfade length in seconds. Short enough to be inaudible, long enough

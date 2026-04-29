@@ -13,7 +13,7 @@ export type Level = {
   signs?: { x: number; y: number; text: string }[];
 };
 
-export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "chase" | "speed-test";
+export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "chase" | "speed-test" | "just-run-bro";
 
 export type LevelMeta = {
   id: LevelId;
@@ -31,6 +31,7 @@ export const LEVELS: LevelMeta[] = [
   { id: "scribble-3", name: "OVERDRIVE",  subtitle: "go absurdly fast",    difficulty: 4, par: 60 },
   { id: "chase",      name: "THE CHASE",  subtitle: "don't look back. parry to push it off.", difficulty: 4, par: 45 },
   { id: "speed-test", name: "??? SPEED TEST ???", subtitle: "the hallway never ends. or does it.", difficulty: 4, par: 30, hidden: true },
+  { id: "just-run-bro", name: "JUST RUN BRO..", subtitle: "no obstacles. no enemies. just vibes.", difficulty: 1, par: 9999 },
 ];
 
 export function buildLevel(id: LevelId = "scribble-1"): Level {
@@ -41,7 +42,32 @@ export function buildLevel(id: LevelId = "scribble-1"): Level {
     case "scribble-3": return buildLevel3();
     case "chase":      return buildChase();
     case "speed-test": return buildSpeedTest();
+    case "just-run-bro": return buildJustRunBro();
   }
+}
+
+// ---------- JUST RUN BRO: flat, endless, no obstacles ----------
+function buildJustRunBro(): Level {
+  // "Infinitely long" — JS can't be truly infinite, but a million pixels of
+  // flat ground is well past anyone's patience. No hazards, enemies, or
+  // anything to slow you down. Goal sits past the end so you never trigger it.
+  const W = 1_000_000;
+  const H = 720;
+  const groundY = H - 80;
+  const platforms: Platform[] = [
+    { x: 0, y: groundY, w: W, h: 80, kind: "ground" },
+  ];
+  return {
+    width: W, height: H,
+    spawn: { x: 80, y: groundY - 80 },
+    // Goal placed beyond the world edge so it's effectively unreachable.
+    goal: { x: W + 5000, y: groundY - 120, w: 50, h: 120 },
+    platforms, hazards: [], enemies: [], pickups: [],
+    signs: [
+      { x: 200, y: groundY - 110, text: "just run bro.." },
+      { x: 1200, y: groundY - 110, text: "seriously. that's it." },
+    ],
+  };
 }
 
 // ---------- CHASE: long hallway pursued by a wall ----------
