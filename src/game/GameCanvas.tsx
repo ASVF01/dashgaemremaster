@@ -1438,7 +1438,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       const drawColor = rainbowParticles
         ? `hsl(${(r.time * 360 + pi * 37) % 360}, 100%, 60%)`
         : cyanParticles
-        ? (pi % 4 === 0 ? "#ffffff" : "#22e2ff")
+        ? (pi % 4 === 0 ? "#9be8f5" : DARK_CYAN)
         : pa.color;
       ctx.save();
       ctx.globalAlpha = a;
