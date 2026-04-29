@@ -202,15 +202,20 @@ function noise(dur: number, vol = 0.4, hp = 200, lp = 4000, delay = 0) {
 
 export const sfx = {
   jump() {
-    tone({ freq: 380, to: 720, dur: 0.12, type: "square", vol: 0.25 });
-    tone({ freq: 220, to: 420, dur: 0.1, type: "triangle", vol: 0.15, delay: 0.01 });
+    // "tah" — sharp tongue transient + quick open vowel sweep
+    noise(0.02, 0.35, 1500, 6000);                               // "t" tick
+    tone({ freq: 520, to: 880, dur: 0.13, type: "triangle", vol: 0.22, attack: 0.008, release: 0.06, delay: 0.015 }); // "ah" formant rising
+    tone({ freq: 260, to: 440, dur: 0.11, type: "sine", vol: 0.12, delay: 0.018 });
   },
   land() {
-    noise(0.08, 0.25, 80, 1200);
-    tone({ freq: 120, to: 60, dur: 0.08, type: "sine", vol: 0.2 });
+    // "ph" — soft breathy puff, lowpassed, with low body thump
+    noise(0.14, 0.22, 120, 1400);                                // breathy puff
+    noise(0.05, 0.12, 60, 600, 0.0);                             // body
+    tone({ freq: 90, to: 55, dur: 0.09, type: "sine", vol: 0.18, release: 0.06 });
   },
   slide() {
-    noise(0.35, 0.18, 400, 5000);
+    // "thhh" — sustained airy noise around speech band
+    noise(0.35, 0.16, 900, 5500);
   },
   slideEnd() {
     // short whoosh-puff — descending filtered noise + a soft low blip
@@ -219,14 +224,14 @@ export const sfx = {
     tone({ freq: 280, to: 140, dur: 0.12, type: "triangle", vol: 0.1, attack: 0.005, release: 0.08 });
   },
   step() {
-    // soft, short footstep — pitched noise blip
-    noise(0.05, 0.12, 300, 2200);
-    tone({ freq: 110 + Math.random() * 30, dur: 0.04, type: "triangle", vol: 0.06 });
+    // "th" — short tongue-tip noise burst
+    noise(0.05, 0.16, 1200, 5500);
+    tone({ freq: 180 + Math.random() * 40, dur: 0.03, type: "triangle", vol: 0.05 });
   },
   run() {
-    // punchier, faster footstep for running speeds
-    noise(0.06, 0.2, 250, 3000);
-    tone({ freq: 140 + Math.random() * 40, dur: 0.05, type: "triangle", vol: 0.1 });
+    // "th" — slightly punchier for running
+    noise(0.06, 0.22, 1100, 6000);
+    tone({ freq: 200 + Math.random() * 50, dur: 0.035, type: "triangle", vol: 0.07 });
   },
   skid() {
     noise(0.18, 0.14, 500, 4500);
