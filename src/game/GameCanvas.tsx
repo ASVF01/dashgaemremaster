@@ -642,11 +642,14 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
             const lx = p.x + p.w / 2 + (Math.random() - 0.5) * (p.w * 2.2);
             const ly = p.y + p.h + 6 + Math.random() * 18;
             const len = 22 + Math.random() * 30;
+            const lineCol = p.somSom
+              ? (Math.random() < 0.25 ? "#9be8f5" : DARK_CYAN)
+              : (Math.random() < 0.25 ? "#ffffff" : "#22e2ff");
             spawnParticle(r, {
               x: lx, y: ly,
               vx: 0,
               vy: -(520 + Math.random() * 380),
-              color: Math.random() < 0.25 ? "#ffffff" : "#22e2ff",
+              color: lineCol,
               size: len / 2,
               life: 0.22 + Math.random() * 0.12,
               kind: "smear",
