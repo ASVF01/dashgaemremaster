@@ -1447,19 +1447,31 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         ctx.fillRect(dx, dy, drawW, drawH);
         ctx.restore();
       } else if (rainbowCol) {
-        // starman: rainbow tint over sprite + soft glow halo
+        // starman: rainbow-tinted sprite via offscreen canvas so the tint
+        // is clipped to the sprite's alpha (no rectangle box around it).
+        const off = getTintCanvas(sprite.width, sprite.height);
+        const octx = off.getContext("2d")!;
+        octx.clearRect(0, 0, off.width, off.height);
+        octx.imageSmoothingEnabled = false;
+        octx.drawImage(sprite, 0, 0);
+        octx.globalCompositeOperation = "source-in";
+        octx.fillStyle = rainbowCol;
+        octx.fillRect(0, 0, off.width, off.height);
+        octx.globalCompositeOperation = "source-over";
+
         ctx.save();
-        // glow halo behind
-        ctx.shadowColor = rainbowCol;
-        ctx.shadowBlur = 22;
         ctx.imageSmoothingEnabled = false;
+        // soft glow behind by drawing the tinted sprite a few times offset
+        ctx.globalAlpha = 0.35;
+        for (const [ox, oy] of [[-2, 0], [2, 0], [0, -2], [0, 2]]) {
+          ctx.drawImage(off, dx + ox, dy + oy, drawW, drawH);
+        }
+        ctx.globalAlpha = 1;
+        // base sprite (keeps its original details)
         ctx.drawImage(sprite, dx, dy, drawW, drawH);
-        ctx.shadowBlur = 0;
-        // colored overlay clipped to sprite alpha
-        ctx.globalCompositeOperation = "source-atop";
-        ctx.globalAlpha = 0.55;
-        ctx.fillStyle = rainbowCol;
-        ctx.fillRect(dx, dy, drawW, drawH);
+        // tinted sprite over it for the rainbow color
+        ctx.globalAlpha = 0.7;
+        ctx.drawImage(off, dx, dy, drawW, drawH);
         ctx.restore();
       } else {
         ctx.imageSmoothingEnabled = false;
