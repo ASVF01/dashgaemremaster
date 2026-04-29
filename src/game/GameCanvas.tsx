@@ -1470,19 +1470,6 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
     // ---- end sprite override ----
 
-    // starman halo behind the stick figure
-    if (rainbowCol) {
-      ctx.save();
-      ctx.shadowColor = rainbowCol;
-      ctx.shadowBlur = 24;
-      ctx.fillStyle = rainbowCol;
-      ctx.globalAlpha = 0.25;
-      ctx.beginPath();
-      ctx.arc(p.w / 2, p.h / 2, Math.max(p.w, p.h) * 0.7, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
-
     if (p.sliding) {
       // slide pose
       // body oval
