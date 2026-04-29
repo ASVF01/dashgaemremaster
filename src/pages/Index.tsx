@@ -1,12 +1,13 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import GameCanvas, { type HudState } from "@/game/GameCanvas";
 import Hud from "@/game/Hud";
 import MainMenu from "@/game/MainMenu";
 import { LEVELS, type LevelId } from "@/game/level";
 import { useKeybinds, keyLabel, type ActionId } from "@/game/keybinds";
-import { playMenuBgm, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage } from "@/game/bgm";
+import { playMenuBgm, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm } from "@/game/bgm";
+import cutsceneJustRunBro from "@/assets/video/mcdonalds_sprite_2.mp4";
 
-type Screen = "menu" | "playing" | "dead" | "win";
+type Screen = "menu" | "playing" | "dead" | "win" | "cutscene";
 
 const Index = () => {
   const [screen, setScreen] = useState<Screen>("menu");
@@ -34,8 +35,11 @@ const Index = () => {
 
   const handleHud = useCallback((h: HudState) => setHud(h), []);
   const handleFinish = useCallback((t: number, s: number) => {
-    setFinalTime(t); setFinalScore(s); setScreen("win");
-  }, []);
+    setFinalTime(t); setFinalScore(s);
+    setScreen((prev) => prev); // no-op for type
+    // play cutscene after just-run-bro, else go straight to win
+    setScreen(levelId === "just-run-bro" ? "cutscene" : "win");
+  }, [levelId]);
   const handleDeath = useCallback(() => setScreen("dead"), []);
 
   // When the player returns to the menu, swap to the menu BGM. (Other
@@ -43,6 +47,7 @@ const Index = () => {
   useEffect(() => {
     if (screen === "menu") playMenuBgm();
     else if (screen === "playing") playBgmFor(levelId);
+    else if (screen === "cutscene") stopBgm();
   }, [screen, levelId]);
 
   const startLevel = (id: LevelId) => {
@@ -85,7 +90,7 @@ const Index = () => {
       {/* page header */}
       <header className="px-6 pt-4 pb-2 flex items-center justify-between max-w-[1500px] mx-auto">
         <h1 className="font-marker text-3xl md:text-5xl text-ink leading-none">
-          DASH GAEM <span className="text-[hsl(var(--accent))] inline-block -rotate-2">REMASTERED</span>
+          DASH GAEM <span className="text-[hsl(var(--accent))] inline-block -rotate-2">R</span>
         </h1>
         <div className="hidden md:flex items-center gap-3 font-scribble text-xl">
           <button
@@ -126,6 +131,27 @@ const Index = () => {
           {screen === "playing" && <Hud hud={hud} />}
 
           {screen === "menu" && <MainMenu onPlay={startLevel} />}
+
+          {screen === "cutscene" && (
+            <Overlay>
+              <div className="flex flex-col items-center gap-4 px-4 w-full">
+                <video
+                  src={cutsceneJustRunBro}
+                  autoPlay
+                  playsInline
+                  controls={false}
+                  onEnded={() => setScreen("win")}
+                  className="max-h-[70vh] max-w-full scribble-border bg-ink"
+                />
+                <button
+                  onClick={() => setScreen("win")}
+                  className="scribble-border bg-paper text-ink font-marker text-xl px-5 py-2 hover:-rotate-2 transition-transform"
+                >
+                  SKIP ▶
+                </button>
+              </div>
+            </Overlay>
+          )}
 
           {screen === "dead" && (
             <Overlay>
