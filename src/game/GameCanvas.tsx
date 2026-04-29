@@ -616,46 +616,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
             });
           }
         }
-        // every 0.1s: cyan vertical slash through player + cyan flame puff in front
+        // (cyan vertical line + flame trail are drawn directly each frame
+        // in render() so they stay glued to the player & camera)
         r.superDashFxTimer -= dt;
         if (r.superDashFxTimer <= 0) {
           r.superDashFxTimer = 0.1;
-          const cx = p.x + p.w / 2;
-          const cy = p.y + p.h / 2;
-          // vertical cyan line through player (shard rotated 90deg, tall)
-          spawnParticle(r, {
-            x: cx, y: cy,
-            vx: 0, vy: 0,
-            color: "#22e2ff",
-            size: p.h * 0.9, // half-length of the bar
-            life: 0.18,
-            kind: "shard",
-            angle: Math.PI / 2,
-          });
-          // bright white core line
-          spawnParticle(r, {
-            x: cx, y: cy,
-            vx: 0, vy: 0,
-            color: "#ffffff",
-            size: p.h * 0.7,
-            life: 0.12,
-            kind: "shard",
-            angle: Math.PI / 2,
-          });
-          // cyan flame trail in front of player (a few puffs drifting forward + up)
-          for (let i = 0; i < 4; i++) {
-            const fx = cx + p.facing * (p.w * 0.55 + i * 8);
-            const fy = cy + (Math.random() - 0.5) * (p.h * 0.6);
-            spawnParticle(r, {
-              x: fx, y: fy,
-              vx: p.facing * (140 + Math.random() * 120),
-              vy: -40 - Math.random() * 80,
-              color: i === 0 ? "#ffffff" : "#22e2ff",
-              size: 5 + Math.random() * 4,
-              life: 0.22 + Math.random() * 0.1,
-              kind: "ring",
-            });
-          }
           sfx.mach();
         }
       } else {
