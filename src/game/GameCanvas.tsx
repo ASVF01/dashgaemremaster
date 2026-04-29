@@ -11,7 +11,7 @@ import { buildLevel, type Level, type LevelId } from "@/game/level";
 import { sketchLine, sketchRect, sketchCircle, jaggedBolt, INK } from "@/game/draw";
 import { isPressed, matchesAction, getLiveBinds } from "@/game/keybinds";
 import { sfx, unlockAudio } from "@/game/sfx";
-import { rumble } from "@/game/gamepad";
+import { rumble, getGamepadActions, type GamepadActions } from "@/game/gamepad";
 import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, getStarmanElapsed, playSomSomBgm, getSomSomElapsed } from "@/game/bgm";
 import { getSprite, type SpriteState } from "@/game/sprites";
 
@@ -217,6 +217,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const refs = useRef<GameRefs | null>(null);
   const keysRef = useRef<Keys>({});
+  const prevGamepadRef = useRef<GamepadActions | null>(null);
   const levelIdRef = useRef<LevelId>(levelId);
   levelIdRef.current = levelId;
   const [size, setSize] = useState({ w: 1200, h: 600 });
@@ -382,85 +383,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         }
         if (p.dashCooldown <= 0 && p.dashTime <= 0 && p.alive) {
           const k = keysRef.current;
+          const gp = prevGamepadRef.current;
           const b = getLiveBinds();
           let dx = 0, dy = 0;
-          if (isPressed(k, "left",  b)) dx -= 1;
-          if (isPressed(k, "right", b)) dx += 1;
+          if (isPressed(k, "left",  b) || gp?.left) dx -= 1;
+          if (isPressed(k, "right", b) || gp?.right) dx += 1;
           // up = jump key currently held; down = slide key currently held
-          const jumpAlso = isPressed(k, "jump", b);
-          const downHeld = isPressed(k, "slide", b);
+          const jumpAlso = isPressed(k, "jump", b) || !!gp?.jump || !!gp?.up;
+          const downHeld = isPressed(k, "slide", b) || !!gp?.slide || !!gp?.down;
           if (jumpAlso) dy -= 1;
           if (downHeld) dy += 1;
-          if (dx === 0 && dy === 0) dx = p.facing;
-          const len = Math.hypot(dx, dy) || 1;
-          const nx = dx / len, ny = dy / len;
-          const along = p.vx * nx + p.vy * ny;
-          const newAlong = Math.max(along, 0) + DASH_IMPULSE + DASH_BONUS;
-          p.vx += (newAlong - along) * nx;
-          p.vy += (newAlong - along) * ny;
-          if (jumpAlso && p.onGround) {
-            p.vy = Math.min(p.vy, -JUMP_VEL);
-            p.onGround = false;
-            p.squash = 1;
-            sfx.jump();
-          }
-          p.dashTime = DASH_DURATION;
-          p.dashCooldown = DASH_COOLDOWN;
-          p.dashVx = nx; p.dashVy = ny;
-          // a fresh dash refills the mid-air dash-jump
-          p.dashAirJumpUsed = false;
-          p.facing = dx >= 0 ? 1 : -1;
-          p.hStretch = 1;
-          if (p.invuln < DASH_DURATION) p.invuln = DASH_DURATION;
-          burst(r, p.x + p.w / 2, p.y + p.h / 2, "#22e2ff", 14, 320);
-          // Tactile speed cue: a punchy short rumble at dash ignition.
-          rumble({ duration: 90, strong: 0.7, weak: 0.9 });
-          // Directional "warp" smear: a row of stretched streaks trailing
-          // behind the dash heading, plus a few stacked after-image ghosts
-          // so the eye can read the motion vector clearly.
-          {
-            const cxp = p.x + p.w / 2;
-            const cyp = p.y + p.h / 2;
-            // streaks
-            for (let i = 0; i < 10; i++) {
-              const back = 10 + i * 6;        // distance behind player
-              const jitter = (Math.random() - 0.5) * 14;
-              const sx = cxp - nx * back + (-ny) * jitter;
-              const sy = cyp - ny * back + ( nx) * jitter;
-              spawnParticle(r, {
-                x: sx, y: sy,
-                vx: -nx * (220 + Math.random() * 160),
-                vy: -ny * (220 + Math.random() * 160),
-                color: "#22e2ff",
-                size: 3 + Math.random() * 2,
-                life: 0.18 + Math.random() * 0.12,
-                kind: "smear",
-                angle: Math.atan2(ny, nx),
-              });
-            }
-            // staggered ghost sprites behind the dash heading (mostly horizontal)
-            const dashState: SpriteState = "dash";
-            const ghostFps = 14;
-            const ghostFrame = Math.floor(r.time * ghostFps);
-            for (let i = 1; i <= 4; i++) {
-              const back = i * 14;
-              r.afterimages.push({
-                x: p.x - nx * back,
-                y: p.y - ny * back,
-                w: p.w, h: p.h,
-                facing: p.facing,
-                sliding: false,
-                diving: false,
-                state: dashState,
-                frame: ghostFrame,
-                life: 0.22 - i * 0.02,
-                maxLife: 0.22,
-                color: "#22e2ff",
-              });
-            }
-          }
-          sfx.parryStart();
-          sfx.mach();
+          igniteDash(r, p, dx, dy, jumpAlso);
         }
       }
     };
@@ -586,6 +519,68 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
   }
 
+  function igniteDash(r: GameRefs, p: Player, dx: number, dy: number, jumpAlso: boolean) {
+    if (dx === 0 && dy === 0) dx = p.facing;
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = dx / len, ny = dy / len;
+    const along = p.vx * nx + p.vy * ny;
+    const newAlong = Math.max(along, 0) + DASH_IMPULSE + DASH_BONUS;
+    p.vx += (newAlong - along) * nx;
+    p.vy += (newAlong - along) * ny;
+    if (jumpAlso && p.onGround) {
+      p.vy = Math.min(p.vy, -JUMP_VEL);
+      p.onGround = false;
+      p.squash = 1;
+      sfx.jump();
+    }
+    p.dashTime = DASH_DURATION;
+    p.dashCooldown = DASH_COOLDOWN;
+    p.dashVx = nx; p.dashVy = ny;
+    p.dashAirJumpUsed = false;
+    p.facing = dx >= 0 ? 1 : -1;
+    p.hStretch = 1;
+    if (p.invuln < DASH_DURATION) p.invuln = DASH_DURATION;
+    burst(r, p.x + p.w / 2, p.y + p.h / 2, "#22e2ff", 14, 320);
+    rumble({ duration: 90, strong: 0.7, weak: 0.9 });
+
+    const cxp = p.x + p.w / 2;
+    const cyp = p.y + p.h / 2;
+    for (let i = 0; i < 10; i++) {
+      const back = 10 + i * 6;
+      const jitter = (Math.random() - 0.5) * 14;
+      spawnParticle(r, {
+        x: cxp - nx * back + (-ny) * jitter,
+        y: cyp - ny * back + (nx) * jitter,
+        vx: -nx * (220 + Math.random() * 160),
+        vy: -ny * (220 + Math.random() * 160),
+        color: "#22e2ff",
+        size: 3 + Math.random() * 2,
+        life: 0.18 + Math.random() * 0.12,
+        kind: "smear",
+        angle: Math.atan2(ny, nx),
+      });
+    }
+    const ghostFrame = Math.floor(r.time * 14);
+    for (let i = 1; i <= 4; i++) {
+      const back = i * 14;
+      r.afterimages.push({
+        x: p.x - nx * back,
+        y: p.y - ny * back,
+        w: p.w, h: p.h,
+        facing: p.facing,
+        sliding: false,
+        diving: false,
+        state: "dash",
+        frame: ghostFrame,
+        life: 0.22 - i * 0.02,
+        maxLife: 0.22,
+        color: "#22e2ff",
+      });
+    }
+    sfx.parryStart();
+    sfx.mach();
+  }
+
   function update(r: GameRefs, dt: number, keys: Keys) {
     r.time += dt;
     const p = r.player;
@@ -600,12 +595,49 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       p.parryCooldown = 0;
     }
 
-    // input (bound)
+    // input (bound). Read gamepad state directly here too — the keyboard-event
+    // bridge can be blocked by browser focus, but polling inside the game loop
+    // still drives the same actions when the browser exposes a pad.
     const b = getLiveBinds();
-    const left = isPressed(keys, "left", b);
-    const right = isPressed(keys, "right", b);
-    const jumpHeld = isPressed(keys, "jump", b);
-    const slideHeld = isPressed(keys, "slide", b);
+    const gp = getGamepadActions();
+    const prevGp = prevGamepadRef.current;
+    prevGamepadRef.current = gp;
+    const left = isPressed(keys, "left", b) || gp.left;
+    const right = isPressed(keys, "right", b) || gp.right;
+    const jumpHeld = isPressed(keys, "jump", b) || gp.jump || gp.up;
+    const slideHeld = isPressed(keys, "slide", b) || gp.slide || gp.down;
+    const gpParryPressed = gp.parry && !prevGp?.parry;
+    const gpDashPressed = gp.dash && !prevGp?.dash;
+
+    if (gpParryPressed && r.player.parryCooldown <= 0 && r.player.parrying <= 0) {
+      unlockAudio();
+      r.player.parrying = PARRY_WINDOW;
+      r.player.parryCooldown = PARRY_COOLDOWN + PARRY_WINDOW;
+      if (r.player.invuln < PARRY_WINDOW) r.player.invuln = PARRY_WINDOW;
+      sfx.parryStart();
+    }
+
+    if (gpDashPressed && levelIdRef.current === "just-run-bro" && !p.superDashing && p.alive) {
+      unlockAudio();
+      p.superDashing = true;
+      p.superDashTime = 0;
+      p.hStretch = 1;
+      sfx.superDash();
+      r.superDashBurst = { x: p.x + p.w / 2, y: p.y + p.h / 2, t: 0, facing: p.facing };
+      r.shake = Math.max(r.shake, 0.35);
+    }
+    if (!gp.dash && prevGp?.dash && p.superDashing) {
+      p.superDashing = false;
+      p.superDashTime = 0;
+    }
+    if (gpDashPressed && levelIdRef.current !== "just-run-bro" && p.dashCooldown <= 0 && p.dashTime <= 0 && p.alive) {
+      let dx = 0, dy = 0;
+      if (left) dx -= 1;
+      if (right) dx += 1;
+      if (jumpHeld) dy -= 1;
+      if (slideHeld) dy += 1;
+      igniteDash(r, p, dx, dy, jumpHeld);
+    }
 
     // horizontal accel
     let dir = 0;
