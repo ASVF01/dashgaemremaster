@@ -191,8 +191,26 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
   // keys
   useEffect(() => {
+    let cheatBuf = "";
     const down = (e: KeyboardEvent) => {
       keysRef.current[e.code] = true;
+      // cheat code: type "invboi" to enter starman mode
+      if (e.key && e.key.length === 1 && /[a-zA-Z]/.test(e.key)) {
+        cheatBuf = (cheatBuf + e.key.toLowerCase()).slice(-12);
+        if (cheatBuf.endsWith("invboi") && refs.current) {
+          const r = refs.current;
+          if (r.player.alive && !r.finished) {
+            r.player.starman = true;
+            r.player.starTimer = 0;
+            // generous i-frames so they actually feel invincible
+            r.player.invuln = Math.max(r.player.invuln, 9999);
+            unlockAudio();
+            playStarmanBgm();
+            burst(r, r.player.x + r.player.w / 2, r.player.y + r.player.h / 2, "#ffd11a", 24, 380);
+          }
+          cheatBuf = "";
+        }
+      }
       if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) {
         e.preventDefault();
       }
