@@ -466,11 +466,18 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     const mach = machTier(speed);
     if (mach > r.bestMach) { r.bestMach = mach; if (mach >= 1) sfx.mach(); }
 
-    // afterimages — spawn when fast, diving, or dashing
+    // afterimages — spawn when fast, diving, or dashing.
+    // Trail length, density, and lifetime all scale with current speed so
+    // higher velocities read as longer streaks for clarity.
     r.afterTimer -= dt;
+    // Speed factor 0..1 across the readable range (140..2400 px/s).
+    const sp = Math.min(1, Math.max(0, (speed - 140) / 2260));
     if ((mach >= 1 || p.diving || p.dashTime > 0) && r.afterTimer <= 0) {
-      r.afterTimer = p.dashTime > 0 ? 0.012 : Math.max(0.018, 0.05 - mach * 0.008);
-      const life = 0.2;
+      // Faster spawning at higher speed (denser trail). Dash gets the densest.
+      const baseInterval = p.dashTime > 0 ? 0.006 : Math.max(0.010, 0.05 - mach * 0.008 - sp * 0.020);
+      r.afterTimer = baseInterval;
+      // Longer-lived afterimages when going fast → visibly longer trail.
+      const life = (p.dashTime > 0 ? 0.42 : 0.22) + sp * 0.35;
       const aiState: SpriteState =
         p.dashTime > 0 ? "dash" :
         p.diving ? "dive" :
@@ -492,10 +499,30 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         life, maxLife: life,
         color: p.dashTime > 0 ? "#22e2ff" : p.diving ? "#ffd11a" : MACH_COLORS[Math.max(1, mach)],
       });
-      if (r.afterimages.length > 32) r.afterimages.shift();
+      // Keep more ghosts on screen the faster you go (max 96).
+      const cap = Math.floor(32 + sp * 64);
+      while (r.afterimages.length > cap) r.afterimages.shift();
     }
     for (const ai of r.afterimages) ai.life -= dt;
     r.afterimages = r.afterimages.filter((a) => a.life > 0);
+
+    // Horizontal motion-blur smears — emitted while dashing or above mach 2.
+    // Length and emission rate scale with raw speed for readability.
+    if ((p.dashTime > 0 || mach >= 2) && Math.random() < 0.5 + sp * 0.5) {
+      const len = 30 + sp * 140 + (p.dashTime > 0 ? 40 : 0);
+      const yJit = (Math.random() - 0.5) * (p.h - 8);
+      spawnParticle(r, {
+        x: p.x + p.w / 2 - p.facing * (p.w * 0.3 + Math.random() * 20),
+        y: p.y + p.h / 2 + yJit,
+        vx: -p.facing * (speed * 0.4 + 120),
+        vy: 0,
+        color: p.dashTime > 0 ? "#22e2ff" : MACH_COLORS[Math.max(1, mach)],
+        size: len / 2,
+        life: 0.18 + sp * 0.18,
+        kind: "smear",
+      });
+    }
+
 
     // Thin speed lines while running on the ground (any speed above a small threshold).
     if (p.onGround && Math.abs(p.vx) > 140 && Math.random() < 0.55) {
