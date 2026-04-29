@@ -4,7 +4,7 @@ import Hud from "@/game/Hud";
 import MainMenu from "@/game/MainMenu";
 import { LEVELS, type LevelId } from "@/game/level";
 import { useKeybinds, keyLabel, type ActionId } from "@/game/keybinds";
-import { playMenuBgm, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm } from "@/game/bgm";
+import { playMenuBgm, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor } from "@/game/bgm";
 import cutsceneJustRunBro from "@/assets/video/mcdonalds_sprite_2.mp4";
 import { sfx, unlockAudio } from "@/game/sfx";
 
@@ -51,12 +51,15 @@ const Index = () => {
   useEffect(() => {
     if (screen === "menu") playMenuBgm();
     else if (screen === "playing") playBgmFor(levelId, true);
-    else if (screen === "cutscene") stopBgm();
+    else if (screen === "cutscene") stopBgm(0.35);
     else if (screen === "dead" || screen === "win") return;
-    else stopBgm();
+    else stopBgm(0.35);
   }, [screen, levelId]);
 
   const startLevel = (id: LevelId) => {
+    // Warm the next track's buffer BEFORE the screen transition fires the
+    // BGM effect, so the crossfade has a decoded buffer ready instantly.
+    preloadBgmFor(id);
     setLevelId(id);
     setResetKey((k) => k + 1);
     setScreen("playing");

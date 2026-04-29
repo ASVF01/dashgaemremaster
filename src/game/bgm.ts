@@ -21,9 +21,12 @@ const TRACKS: Partial<Record<LevelId, string>> = {
   "just-run-bro": bgmJustRunBro,
 };
 
-// Crossfade length in seconds. Short enough to be inaudible, long enough
-// to mask the loop seam on any browser.
+// Crossfade length in seconds for the seamless LOOP point inside one track.
+// Short enough to be inaudible, long enough to mask the loop seam.
 const CROSSFADE = 0.12;
+// Longer crossfade used when switching BETWEEN different tracks (level
+// transitions). Long enough to feel musical, short enough to feel snappy.
+const TRACK_FADE = 0.35;
 
 let ctx: AudioContext | null = null;
 let masterGain: GainNode | null = null;
@@ -170,23 +173,55 @@ function armNextLoop(c: AudioContext) {
   playing.rafId = requestAnimationFrame(tick);
 }
 
+// Crossfade the currently-playing track out over `dur` seconds, starting at
+// `startAt` (ctx time). The source is stopped just after the fade ends.
+function fadeOutCurrent(c: AudioContext, dur: number, startAt: number) {
+  if (!playing) return;
+  const p = playing;
+  playing = null;
+  p.stopped = true;
+  if (p.rafId != null) cancelAnimationFrame(p.rafId);
+  try {
+    p.gain.gain.cancelScheduledValues(startAt);
+    p.gain.gain.setValueAtTime(p.gain.gain.value, startAt);
+    p.gain.gain.linearRampToValueAtTime(0.0001, startAt + dur);
+  } catch { /* noop */ }
+  if (p.nextGain) {
+    try {
+      p.nextGain.gain.cancelScheduledValues(startAt);
+      p.nextGain.gain.setValueAtTime(0.0001, startAt);
+    } catch { /* noop */ }
+  }
+  try { p.source.stop(startAt + dur + 0.05); } catch { /* noop */ }
+  try { p.nextSource?.stop(startAt + 0.05); } catch { /* noop */ }
+}
+
 function playSrc(src: string, restart = false) {
   // Already playing this track? leave it alone.
   if (!restart && playing && playing.src === src && !playing.stopped) {
     resetLevelEndFx();
     return;
   }
-  stopBgm(); // bumps playRequestId
-  const requestId = playRequestId;
+  const requestId = ++playRequestId;
   resetLevelEndFx();
   const c = ac();
   if (!c) return;
 
   loadBuffer(src).then((buffer) => {
     if (requestId !== playRequestId || !c || !masterGain) return;
-    // Start half a crossfade in the future to give the scheduler headroom.
-    const startAt = c.currentTime + 0.05;
-    const first = scheduleSource(c, buffer, startAt, false);
+    const hadPrevious = !!playing;
+    const fadeDur = hadPrevious ? TRACK_FADE : 0;
+    // Start the new track immediately; if there was a previous track,
+    // fade IN over TRACK_FADE while the old one fades OUT (equal-power-ish).
+    const startAt = c.currentTime + 0.02;
+    if (hadPrevious) fadeOutCurrent(c, fadeDur, startAt);
+    const first = scheduleSource(c, buffer, startAt, hadPrevious);
+    // If we're crossfading in, stretch the fade-in to match TRACK_FADE
+    if (hadPrevious) {
+      first.g.gain.cancelScheduledValues(startAt);
+      first.g.gain.setValueAtTime(0.0001, startAt);
+      first.g.gain.linearRampToValueAtTime(1, startAt + fadeDur);
+    }
     playing = {
       src,
       buffer,
@@ -209,16 +244,33 @@ export function playBgmFor(levelId: LevelId, restart = false) {
     stopBgm();
     return;
   }
+  // Pre-warm decode so the crossfade has the buffer ready.
+  loadBuffer(src).catch(() => { /* ignore */ });
   playSrc(src, restart);
 }
 
+// Pre-decode a track's buffer without playing it. Use to warm the cache
+// before a level transition so the crossfade starts instantly.
+export function preloadBgmFor(levelId: LevelId) {
+  const src = TRACKS[levelId];
+  if (!src) return;
+  ac(); // ensure ctx exists for decoding
+  loadBuffer(src).catch(() => { /* ignore */ });
+}
+
 export function playMenuBgm() {
+  loadBuffer(bgmMenu).catch(() => { /* ignore */ });
   playSrc(bgmMenu);
 }
 
-export function stopBgm() {
+export function stopBgm(fade = 0) {
   playRequestId++;
   if (!playing) return;
+  const c = ac();
+  if (fade > 0 && c) {
+    fadeOutCurrent(c, fade, c.currentTime + 0.01);
+    return;
+  }
   const p = playing;
   playing = null;
   p.stopped = true;
