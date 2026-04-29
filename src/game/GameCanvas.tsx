@@ -518,6 +518,98 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
   }
 
+  // Chunky kick-up of dust + grit on slide-start.
+  function spawnSlideDustBurst(r: GameRefs, p: Player) {
+    const reduced = getSettings().reducedFx;
+    const baseY = p.y + p.h;
+    const cx = p.x + p.w / 2;
+    const back = -p.facing; // dust shoots backward relative to movement
+    const n = reduced ? 6 : 14;
+    // big back-smear
+    spawnParticle(r, {
+      x: cx, y: baseY,
+      vx: back * 240, vy: -90,
+      color: INK, life: 0.42, size: 5, kind: "smear",
+    });
+    for (let i = 0; i < n; i++) {
+      const fwdJitter = (Math.random() - 0.5) * p.w;
+      const speed = 90 + Math.random() * 220;
+      const upward = 80 + Math.random() * 180;
+      const grayShade = 60 + Math.floor(Math.random() * 90);
+      const col = `rgb(${grayShade},${grayShade},${grayShade})`;
+      spawnParticle(r, {
+        x: cx + fwdJitter,
+        y: baseY - Math.random() * 4,
+        vx: back * speed + (Math.random() - 0.5) * 60,
+        vy: -upward,
+        color: col,
+        size: 1.5 + Math.random() * 2.5,
+        life: 0.35 + Math.random() * 0.4,
+        kind: Math.random() < 0.5 ? "spark" : "shard",
+        angle: Math.random() * Math.PI,
+      });
+    }
+    // a couple of pebbles arcing out
+    if (!reduced) {
+      for (let i = 0; i < 4; i++) {
+        spawnParticle(r, {
+          x: cx, y: baseY - 2,
+          vx: back * (260 + Math.random() * 200),
+          vy: -(180 + Math.random() * 140),
+          color: "#3a3a3a",
+          size: 2 + Math.random() * 1.5,
+          life: 0.5 + Math.random() * 0.3,
+          kind: "shard",
+          angle: Math.random() * Math.PI,
+        });
+      }
+    }
+  }
+
+  // Continuous grinding-dust trail while sliding. Throttled by smearTimer.
+  function spawnSlideDustTrail(r: GameRefs, p: Player, dt: number, intensity: number) {
+    const reduced = getSettings().reducedFx;
+    // pace: faster at higher intensity (every 30-90ms)
+    const interval = reduced ? 0.12 : (0.09 - 0.06 * intensity);
+    p.smearTimer -= dt;
+    if (p.smearTimer > 0) return;
+    p.smearTimer = Math.max(0.02, interval);
+    const baseY = p.y + p.h;
+    const cx = p.x + p.w / 2;
+    const back = -p.facing;
+    const puffs = reduced ? 1 : (1 + Math.floor(intensity * 2));
+    for (let i = 0; i < puffs; i++) {
+      const offsetX = (Math.random() - 0.5) * (p.w * 0.7);
+      const grayShade = 80 + Math.floor(Math.random() * 100);
+      const col = `rgb(${grayShade},${grayShade},${grayShade})`;
+      spawnParticle(r, {
+        x: cx + offsetX,
+        y: baseY - Math.random() * 2,
+        vx: back * (40 + Math.random() * 80 + intensity * 80),
+        vy: -(40 + Math.random() * 70 + intensity * 40),
+        color: col,
+        size: 1.5 + Math.random() * 2 + intensity,
+        life: 0.28 + Math.random() * 0.25,
+        kind: Math.random() < 0.35 ? "shard" : "spark",
+        angle: Math.random() * Math.PI,
+      });
+    }
+    // occasional spark/grit shard at higher speeds
+    if (!reduced && intensity > 0.5 && Math.random() < 0.35) {
+      spawnParticle(r, {
+        x: cx + (Math.random() - 0.5) * p.w * 0.5,
+        y: baseY - 1,
+        vx: back * (200 + Math.random() * 180),
+        vy: -(120 + Math.random() * 100),
+        color: "#fff34a",
+        size: 1 + Math.random() * 1.5,
+        life: 0.18 + Math.random() * 0.12,
+        kind: "spark",
+        angle: Math.random() * Math.PI,
+      });
+    }
+  }
+
   function igniteDash(r: GameRefs, p: Player, dx: number, dy: number, jumpAlso: boolean) {
     if (dx === 0 && dy === 0) dx = p.facing;
     const len = Math.hypot(dx, dy) || 1;
@@ -624,7 +716,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       p.y += PLAYER_H - SLIDE_H;
       // boost in facing dir
       p.vx += p.facing * SLIDE_BOOST;
-      spawnParticle(r, { x: p.x, y: p.y + p.h, vx: -p.facing * 200, vy: -80, color: INK, life: 0.4, size: 4, kind: "smear" });
+      // chunky dust kick-up burst on slide-start
+      spawnSlideDustBurst(r, p);
       sfx.slide();
       sfx.slideStart();
     }
@@ -646,10 +739,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         p.sliding = false;
       }
     }
-    // Drive the looping slide sfx based on current state + speed.
+    // Drive the looping slide sfx + grinding-dust trail based on state/speed.
     if (p.sliding && p.alive) {
       const intensity = Math.max(0, Math.min(1, (Math.abs(p.vx) - 120) / 700));
       sfx.slideIntensity(intensity);
+      spawnSlideDustTrail(r, p, dt, intensity);
     } else {
       sfx.slideStop();
     }
