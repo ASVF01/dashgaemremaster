@@ -35,15 +35,38 @@ export const LEVELS: LevelMeta[] = [
 ];
 
 export function buildLevel(id: LevelId = "scribble-1"): Level {
+  let lv: Level;
   switch (id) {
-    case "tutorial":   return buildTutorial();
-    case "scribble-1": return buildLevel1();
-    case "scribble-2": return buildLevel2();
-    case "scribble-3": return buildLevel3();
-    case "chase":      return buildChase();
-    case "speed-test": return buildSpeedTest();
-    case "just-run-bro": return buildJustRunBro();
+    case "tutorial":   lv = buildTutorial(); break;
+    case "scribble-1": lv = buildLevel1(); break;
+    case "scribble-2": lv = buildLevel2(); break;
+    case "scribble-3": lv = buildLevel3(); break;
+    case "chase":      lv = buildChase(); break;
+    case "speed-test": lv = buildSpeedTest(); break;
+    case "just-run-bro": lv = buildJustRunBro(); break;
   }
+  // Fill any pit directly below a hazard with a ground platform so spikes
+  // sit on solid floor instead of marking a bottomless gap.
+  for (const h of lv.hazards) {
+    const top = h.y + h.h; // floor must start at/below the spike's base
+    const hasGround = lv.platforms.some(
+      (pl) =>
+        pl.y >= top - 2 &&
+        pl.y <= top + 40 &&
+        pl.x <= h.x &&
+        pl.x + pl.w >= h.x + h.w,
+    );
+    if (!hasGround) {
+      lv.platforms.push({
+        x: h.x - 20,
+        y: top,
+        w: h.w + 40,
+        h: Math.max(40, lv.height - top),
+        kind: "ground",
+      });
+    }
+  }
+  return lv;
 }
 
 // ---------- JUST RUN BRO: flat, endless, no obstacles ----------
