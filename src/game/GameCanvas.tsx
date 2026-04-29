@@ -1009,8 +1009,21 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   function render(c: HTMLCanvasElement, r: GameRefs, w: number, h: number) {
     const ctx = c.getContext("2d")!;
     ctx.save();
-    // paper bg
-    ctx.fillStyle = "#f0ead6";
+    // starman cinematic kicks in at 3.85s into the cheat track
+    const starElapsed = r.player.starman ? (getStarmanElapsed() ?? 0) : 0;
+    const starmanFx = r.player.starman && starElapsed >= 3.85;
+    // smooth fade-in of the black backdrop
+    const bgT = starmanFx ? Math.min(1, (starElapsed - 3.85) / 0.6) : 0;
+    // paper bg (or black during starman fx)
+    if (bgT >= 1) {
+      ctx.fillStyle = "#000";
+    } else if (bgT > 0) {
+      ctx.fillStyle = "#f0ead6";
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = `rgba(0,0,0,${bgT})`;
+    } else {
+      ctx.fillStyle = "#f0ead6";
+    }
     ctx.fillRect(0, 0, w, h);
 
     // shake
