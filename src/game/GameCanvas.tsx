@@ -466,11 +466,18 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     const mach = machTier(speed);
     if (mach > r.bestMach) { r.bestMach = mach; if (mach >= 1) sfx.mach(); }
 
-    // afterimages — spawn when fast, diving, or dashing
+    // afterimages — spawn when fast, diving, or dashing.
+    // Trail length, density, and lifetime all scale with current speed so
+    // higher velocities read as longer streaks for clarity.
     r.afterTimer -= dt;
+    // Speed factor 0..1 across the readable range (140..2400 px/s).
+    const sp = Math.min(1, Math.max(0, (speed - 140) / 2260));
     if ((mach >= 1 || p.diving || p.dashTime > 0) && r.afterTimer <= 0) {
-      r.afterTimer = p.dashTime > 0 ? 0.012 : Math.max(0.018, 0.05 - mach * 0.008);
-      const life = 0.2;
+      // Faster spawning at higher speed (denser trail). Dash gets the densest.
+      const baseInterval = p.dashTime > 0 ? 0.006 : Math.max(0.010, 0.05 - mach * 0.008 - sp * 0.020);
+      r.afterTimer = baseInterval;
+      // Longer-lived afterimages when going fast → visibly longer trail.
+      const life = (p.dashTime > 0 ? 0.42 : 0.22) + sp * 0.35;
       const aiState: SpriteState =
         p.dashTime > 0 ? "dash" :
         p.diving ? "dive" :
@@ -492,10 +499,30 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         life, maxLife: life,
         color: p.dashTime > 0 ? "#22e2ff" : p.diving ? "#ffd11a" : MACH_COLORS[Math.max(1, mach)],
       });
-      if (r.afterimages.length > 32) r.afterimages.shift();
+      // Keep more ghosts on screen the faster you go (max 96).
+      const cap = Math.floor(32 + sp * 64);
+      while (r.afterimages.length > cap) r.afterimages.shift();
     }
     for (const ai of r.afterimages) ai.life -= dt;
     r.afterimages = r.afterimages.filter((a) => a.life > 0);
+
+    // Horizontal motion-blur smears — emitted while dashing or above mach 2.
+    // Length and emission rate scale with raw speed for readability.
+    if ((p.dashTime > 0 || mach >= 2) && Math.random() < 0.5 + sp * 0.5) {
+      const len = 30 + sp * 140 + (p.dashTime > 0 ? 40 : 0);
+      const yJit = (Math.random() - 0.5) * (p.h - 8);
+      spawnParticle(r, {
+        x: p.x + p.w / 2 - p.facing * (p.w * 0.3 + Math.random() * 20),
+        y: p.y + p.h / 2 + yJit,
+        vx: -p.facing * (speed * 0.4 + 120),
+        vy: 0,
+        color: p.dashTime > 0 ? "#22e2ff" : MACH_COLORS[Math.max(1, mach)],
+        size: len / 2,
+        life: 0.18 + sp * 0.18,
+        kind: "smear",
+      });
+    }
+
 
     // Thin speed lines while running on the ground (any speed above a small threshold).
     if (p.onGround && Math.abs(p.vx) > 140 && Math.random() < 0.55) {
@@ -1142,7 +1169,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
 
       ctx.imageSmoothingEnabled = false;
       // Just draw the sprite faintly — no solid color overlay (that made a block).
-      ctx.globalAlpha = 0.5 * t;
+      // Slightly stronger alpha so the longer trail still reads at speed.
+      ctx.globalAlpha = 0.6 * t;
       ctx.drawImage(sprite, dx, dy, drawW, drawH);
       ctx.restore();
       return;
@@ -1301,12 +1329,16 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         sketchLine(ctx, headX + 4, bodyBot, headX + 10, p.h - 6, 2.8, inkCol, 1.4);
       }
 
-      // smear frame at high mach
-      if (mach >= 3) {
+      // smear frame — visible at mach 3+ or while dashing.
+      // Width and opacity scale with speed for clearer motion readability.
+      const sm_speed = Math.abs(p.vx);
+      const sm_sp = Math.min(1, Math.max(0, (sm_speed - 140) / 2260));
+      if (mach >= 3 || p.dashTime > 0) {
         ctx.save();
-        ctx.globalAlpha = 0.35;
-        ctx.fillStyle = MACH_COLORS[mach];
-        ctx.fillRect(-p.w * 0.6, headY - 2, p.w * 0.6, p.h - headY + 6);
+        ctx.globalAlpha = 0.30 + sm_sp * 0.30;
+        ctx.fillStyle = p.dashTime > 0 ? "#22e2ff" : MACH_COLORS[Math.max(3, mach)];
+        const smearW = p.w * (0.6 + sm_sp * 1.8);
+        ctx.fillRect(-smearW, headY - 2, smearW, p.h - headY + 6);
         ctx.restore();
       }
     }
