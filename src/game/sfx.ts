@@ -246,6 +246,9 @@ export const sfx = {
   shineStop() { stopShine(); },
   rainStart() { startRain(); },
   rainStop() { stopRain(); },
+  slideStart() { startSlideLoop(); },
+  slideStop() { stopSlideLoop(); },
+  slideIntensity(v: number) { setSlideIntensity(v); },
   thunder() {
     // bright crack, then deep rumble
     noise(0.08, 0.45, 2000, 9000);
