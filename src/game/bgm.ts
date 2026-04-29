@@ -217,6 +217,7 @@ export function playMenuBgm() {
 }
 
 export function stopBgm() {
+  playRequestId++;
   if (!playing) return;
   const p = playing;
   playing = null;
