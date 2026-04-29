@@ -11,7 +11,7 @@ import { buildLevel, type Level, type LevelId } from "@/game/level";
 import { sketchLine, sketchRect, sketchCircle, jaggedBolt, INK } from "@/game/draw";
 import { isPressed, matchesAction, getLiveBinds } from "@/game/keybinds";
 import { sfx, unlockAudio } from "@/game/sfx";
-import { playBgmFor, stopBgm, pauseBgm, resumeBgm } from "@/game/bgm";
+import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd } from "@/game/bgm";
 import { getSprite, type SpriteState } from "@/game/sprites";
 
 type Keys = Record<string, boolean>;
@@ -286,6 +286,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         r.finished = true;
         r.finishTime = performance.now() - r.startedAt;
         sfx.die();
+        bgmLevelEnd();
         onDeath();
       }
       if (r.finished && r.player.alive && r.finishTime === 0) {
@@ -764,6 +765,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       r.finishTime = performance.now() - r.startedAt;
       r.score += Math.max(0, 5000 - Math.floor(r.finishTime / 10));
       sfx.win();
+      bgmLevelEnd();
       onFinish(r.finishTime, r.score);
     }
 
