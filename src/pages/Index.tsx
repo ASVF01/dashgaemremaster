@@ -50,27 +50,46 @@ const Index = () => {
   }, [levelId]);
   const handleDeath = useCallback(() => setScreen("dead"), []);
 
-  // One owner for BGM: every screen/level transition cancels any pending
-  // track first so loading delays can never stack songs on top of each other.
+  // One owner for BGM. The "loading" screen handles the actual track switch
+  // before "playing" begins, so we leave that case alone here.
   useEffect(() => {
     if (screen === "menu") playMenuBgm();
-    else if (screen === "playing") playBgmFor(levelId, true);
+    else if (screen === "loading") {
+      // handled by startLevel's preload+play sequence below
+      return;
+    }
+    else if (screen === "playing") {
+      // Only restart BGM for levels that have a unique track. For shared-
+      // track levels, if the same track is already playing, leave it alone.
+      const restart = RESTART_BGM_ON_ENTRY.includes(levelId) || !isSameTrackAs(levelId);
+      playBgmFor(levelId, restart);
+    }
     else if (screen === "cutscene") stopBgm(0.35);
     else if (screen === "dead" || screen === "win") return;
     else stopBgm(0.35);
   }, [screen, levelId]);
 
   const startLevel = (id: LevelId) => {
-    // Warm the next track's buffer BEFORE the screen transition fires the
-    // BGM effect, so the crossfade has a decoded buffer ready instantly.
-    preloadBgmFor(id);
     setLevelId(id);
     setResetKey((k) => k + 1);
-    setScreen("playing");
+    setScreen("loading");
+    // Decode the track buffer first (or skip if already cached). When ready,
+    // hand off to the playing screen — the BGM effect there will play it.
+    preloadBgmFor(id).then(() => {
+      // small grace so the "LOADING…" actually shows briefly even on cache hits
+      setTimeout(() => {
+        setScreen((s) => (s === "loading" ? "playing" : s));
+      }, 250);
+    });
   };
   const retry = () => {
     setResetKey((k) => k + 1);
-    setScreen("playing");
+    setScreen("loading");
+    preloadBgmFor(levelId).then(() => {
+      setTimeout(() => {
+        setScreen((s) => (s === "loading" ? "playing" : s));
+      }, 250);
+    });
   };
   const backToMenu = () => setScreen("menu");
 
