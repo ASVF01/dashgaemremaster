@@ -132,6 +132,27 @@ const Index = () => {
 
           {screen === "menu" && <MainMenu onPlay={startLevel} />}
 
+          {screen === "cutscene" && (
+            <Overlay>
+              <div className="flex flex-col items-center gap-4 px-4 w-full">
+                <video
+                  src={cutsceneJustRunBro}
+                  autoPlay
+                  playsInline
+                  controls={false}
+                  onEnded={() => setScreen("win")}
+                  className="max-h-[70vh] max-w-full scribble-border bg-ink"
+                />
+                <button
+                  onClick={() => setScreen("win")}
+                  className="scribble-border bg-paper text-ink font-marker text-xl px-5 py-2 hover:-rotate-2 transition-transform"
+                >
+                  SKIP ▶
+                </button>
+              </div>
+            </Overlay>
+          )}
+
           {screen === "dead" && (
             <Overlay>
               <div className="text-center px-6">
