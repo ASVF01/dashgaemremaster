@@ -187,6 +187,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       if (!r.player.alive && !r.finished) {
         r.finished = true;
         r.finishTime = performance.now() - r.startedAt;
+        sfx.die();
         onDeath();
       }
       if (r.finished && r.player.alive && r.finishTime === 0) {
@@ -385,6 +386,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
             vx: (dx / len) * sp, vy: (dy / len) * sp - 30,
             r: 7, alive: true, danger: true,
           });
+          sfx.shoot();
         }
       }
 
@@ -504,6 +506,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         pk.collected = true;
         r.score += 25;
         burst(r, pk.x, pk.y, "#ffd11a", 8, 180);
+        sfx.pickup();
       }
     }
 
@@ -523,6 +526,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       r.finished = true;
       r.finishTime = performance.now() - r.startedAt;
       r.score += Math.max(0, 5000 - Math.floor(r.finishTime / 10));
+      sfx.win();
       onFinish(r.finishTime, r.score);
     }
 
@@ -543,6 +547,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     r.shake = 0.6;
     r.glitch = 0.5;
     burst(r, x, y, "#f5234c", 18, 240);
+    sfx.hit();
     if (r.player.hp <= 0) {
       r.player.alive = false;
     }
@@ -556,6 +561,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     r.glitch = 0.7;
     r.freezeFrames = 4;
     r.player.parryCooldown = 0.15; // refund cooldown a bit
+    // refresh i-frames briefly so chained parries stay safe
+    if (r.player.invuln < 0.4) r.player.invuln = 0.4;
+    sfx.parryHit();
     // boost in facing dir
     r.player.vx += r.player.facing * PARRY_BOOST;
     r.player.vy = -220;
