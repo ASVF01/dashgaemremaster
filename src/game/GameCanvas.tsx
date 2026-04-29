@@ -137,6 +137,8 @@ interface GameRefs {
   bestMach: number;
   glitch: number;
   superDashBurst: { x: number; y: number; t: number; facing: 1 | -1 } | null;
+  superDashFxTimer: number;
+  superDashLineTimer: number;
   startedAt: number;
   finished: boolean;
   finishTime: number;
@@ -234,6 +236,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       bestMach: 0,
       glitch: 0,
       superDashBurst: null,
+      superDashFxTimer: 0,
+      superDashLineTimer: 0,
       startedAt: performance.now(),
       finished: false,
       finishTime: 0,
@@ -589,6 +593,46 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       // continuous stretch while ramping
       p.stretch = 1;
       if (p.invuln < 0.05) p.invuln = 0.05;
+
+      // SUPER DAZH animation FX (only after the ramp threshold)
+      if (p.superDashTime >= 5) {
+        // vertical speed lines streaking upward past the player
+        r.superDashLineTimer -= dt;
+        if (r.superDashLineTimer <= 0) {
+          r.superDashLineTimer = 0.012;
+          const lines = 2;
+          for (let i = 0; i < lines; i++) {
+            const lx = p.x + p.w / 2 + (Math.random() - 0.5) * (p.w * 2.2);
+            const ly = p.y + p.h + 6 + Math.random() * 18;
+            const len = 22 + Math.random() * 30;
+            spawnParticle(r, {
+              x: lx, y: ly,
+              vx: 0,
+              vy: -(520 + Math.random() * 380),
+              color: "#ffffff",
+              size: len / 2,
+              life: 0.22 + Math.random() * 0.12,
+              kind: "smear",
+            });
+          }
+        }
+        // little burst every 0.3s
+        r.superDashFxTimer -= dt;
+        if (r.superDashFxTimer <= 0) {
+          r.superDashFxTimer = 0.3;
+          const bx = p.x + p.w / 2 - p.facing * (p.w * 0.4);
+          const by = p.y + p.h / 2;
+          burst(r, bx, by, "#ffd11a", 10, 260);
+          burst(r, bx, by, "#22e2ff", 6, 200);
+          sfx.mach();
+        }
+      } else {
+        r.superDashFxTimer = 0;
+        r.superDashLineTimer = 0;
+      }
+    } else {
+      r.superDashFxTimer = 0;
+      r.superDashLineTimer = 0;
     }
 
     // parry timers
