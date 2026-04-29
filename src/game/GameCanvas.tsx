@@ -412,15 +412,40 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     // projectiles
     for (const pr of r.projectiles) {
       if (!pr.alive) continue;
-      pr.vy += GRAVITY * 0.25 * dt;
+      if (!pr.danger) {
+        // homing toward nearest enemy
+        let best: Enemy | null = null;
+        let bestD = Infinity;
+        for (const e of r.level.enemies) {
+          if (!e.alive) continue;
+          const dx = (e.x + e.w / 2) - pr.x;
+          const dy = (e.y + e.h / 2) - pr.y;
+          const d = dx * dx + dy * dy;
+          if (d < bestD) { bestD = d; best = e; }
+        }
+        if (best) {
+          const dx = (best.x + best.w / 2) - pr.x;
+          const dy = (best.y + best.h / 2) - pr.y;
+          const len = Math.hypot(dx, dy) || 1;
+          const homeSpeed = 620;
+          // smoothly steer
+          pr.vx += ((dx / len) * homeSpeed - pr.vx) * Math.min(1, dt * 8);
+          pr.vy += ((dy / len) * homeSpeed - pr.vy) * Math.min(1, dt * 8);
+        } else {
+          // no gravity drift for homing shots
+          pr.vy *= 1 - Math.min(1, dt * 2);
+        }
+      } else {
+        pr.vy += GRAVITY * 0.25 * dt;
+      }
       pr.x += pr.vx * dt;
       pr.y += pr.vy * dt;
-      if (pr.x < r.cameraX - 200 || pr.x > r.cameraX + size.w + 200 || pr.y > r.level.height) pr.alive = false;
+      if (pr.x < r.cameraX - 400 || pr.x > r.cameraX + size.w + 400 || pr.y > r.level.height) pr.alive = false;
       // hit player
       if (pr.danger && rectOverlap(p.x, p.y, p.w, p.h, pr.x - pr.r, pr.y - pr.r, pr.r * 2, pr.r * 2)) {
         if (p.parrying > 0) {
-          // reflect
-          pr.vx *= -1.6; pr.vy = -260; pr.danger = false; pr.r = 9;
+          // reflect — will home next frame
+          pr.vx *= -1; pr.vy = -260; pr.danger = false; pr.r = 9;
           parrySuccess(r, pr.x, pr.y);
         } else if (p.invuln <= 0) {
           pr.alive = false;
@@ -449,7 +474,19 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     // hazards
     for (const h of r.level.hazards) {
       if (rectOverlap(p.x, p.y, p.w, p.h, h.x, h.y, h.w, h.h)) {
-        if (p.invuln <= 0) damage(r, p.x + p.w / 2, p.y + p.h);
+        if (p.parrying > 0) {
+          // PARRY ANYTHING — bounce off the hazard
+          const cx = h.x + h.w / 2;
+          const cy = h.y + h.h / 2;
+          const dx = (p.x + p.w / 2) - cx;
+          const dy = (p.y + p.h / 2) - cy;
+          const len = Math.hypot(dx, dy) || 1;
+          p.vx = (dx / len) * (PARRY_BOOST + 200) + p.facing * 120;
+          p.vy = -480;
+          parrySuccess(r, cx, cy);
+        } else if (p.invuln <= 0) {
+          damage(r, p.x + p.w / 2, p.y + p.h);
+        }
       }
     }
 
