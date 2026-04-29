@@ -19,6 +19,7 @@ interface Player {
   facing: 1 | -1;
   onGround: boolean;
   sliding: boolean;
+  diving: boolean;
   parrying: number; // remaining seconds of parry active window
   parryCooldown: number;
   invuln: number;
@@ -30,11 +31,22 @@ interface Player {
   alive: boolean;
 }
 
+interface Afterimage {
+  x: number; y: number; w: number; h: number;
+  facing: 1 | -1;
+  sliding: boolean;
+  diving: boolean;
+  life: number; maxLife: number;
+  color: string;
+}
+
 interface GameRefs {
   level: Level;
   player: Player;
   projectiles: Projectile[];
   particles: Particle[];
+  afterimages: Afterimage[];
+  afterTimer: number;
   cameraX: number;
   shake: number;
   freezeFrames: number;
