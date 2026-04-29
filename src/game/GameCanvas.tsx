@@ -1010,12 +1010,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       "idle";
     const sprite = getSprite(state);
     if (sprite) {
-      // Fit the sprite to the player AABB while preserving its aspect ratio.
+      // Fit the sprite to the player AABB. For wide sprites (slide/dive) we
+      // size by width so the pose stays readable; for tall sprites we size
+      // by height. Either way the sprite is anchored to the bottom of the box.
       const ratio = sprite.width / sprite.height;
-      const drawH = p.h;
-      const drawW = drawH * ratio;
+      const wide = ratio > 1.1;
+      const drawH = wide ? p.w * 1.6 / ratio : p.h;
+      const drawW = wide ? p.w * 1.6 : drawH * ratio;
       const dx = p.w / 2 - drawW / 2;
-      const dy = 0;
+      const dy = p.h - drawH;
       if (flash) {
         // flash tint: draw red silhouette behind the sprite
         ctx.save();
