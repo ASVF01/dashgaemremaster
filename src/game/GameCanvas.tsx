@@ -813,17 +813,22 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     if (levelIdRef.current === "just-run-bro") {
       const speedNow = Math.abs(p.vx);
       const playerCenterX = p.x + p.w / 2;
-      const centerCam = playerCenterX - size.w * 0.5;
+      // Shift the player slightly left of center so they appear a bit
+      // to the right within the camera view.
+      const shift = 80;
+      const centerCam = playerCenterX - size.w * 0.5 + shift;
       const lockCentered = p.superDashing;
-      const targetCam = lockCentered ? centerCam : centerCam + p.facing * 60 + p.vx * 0.08;
+      const targetCam = lockCentered ? centerCam : centerCam + p.facing * 40 + p.vx * 0.06;
       const lerp = lockCentered ? 1 : Math.min(1, dt * (6 + speedNow * 0.02));
       r.cameraX += (targetCam - r.cameraX) * lerp;
       if (r.cameraX < 0) r.cameraX = 0;
       if (r.cameraX > r.level.width - size.w) r.cameraX = r.level.width - size.w;
-      const margin = 100;
-      const playerScreenX = (p.x + p.w / 2) - r.cameraX;
-      if (playerScreenX < margin) r.cameraX = (p.x + p.w / 2) - margin;
-      if (playerScreenX > size.w - margin) r.cameraX = (p.x + p.w / 2) - (size.w - margin);
+      // Keep player close to the (shifted) middle — tighter margin.
+      const maxOffset = 60;
+      const desiredScreenX = size.w * 0.5 - shift;
+      const playerScreenX = playerCenterX - r.cameraX;
+      if (playerScreenX < desiredScreenX - maxOffset) r.cameraX = playerCenterX - (desiredScreenX - maxOffset);
+      if (playerScreenX > desiredScreenX + maxOffset) r.cameraX = playerCenterX - (desiredScreenX + maxOffset);
     } else {
       const targetCam = p.x - size.w * 0.35 + p.facing * 80 + p.vx * 0.12;
       r.cameraX += (targetCam - r.cameraX) * Math.min(1, dt * 6);
