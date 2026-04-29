@@ -126,6 +126,8 @@ interface Player {
   invuln: number;
   hp: number;
   hitFlash: number;
+  hurtTimer: number; // seconds remaining of post-hit "hurt" pose + red afterimages
+  hurtAfterTimer: number; // throttle for spawning red afterimages
   squash: number; // 0..1 transient (landing — wide & short)
   stretch: number; // 0..1 transient (falling/dive — tall & thin)
   hStretch: number; // 0..1 transient (dash — wide & slightly short)
@@ -150,6 +152,8 @@ interface Afterimage {
   life: number; maxLife: number;
   color: string;
   rainbowHue?: number;
+  tintColor?: string; // solid tint applied over sprite (e.g., red hurt trail)
+  alphaBoost?: number; // optional alpha multiplier (defaults to 1)
 }
 
 interface GameRefs {
@@ -256,6 +260,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         invuln: 0,
         hp: 3,
         hitFlash: 0,
+        hurtTimer: 0,
+        hurtAfterTimer: 0,
         squash: 0, stretch: 0, hStretch: 0, smearTimer: 0,
         dashAirJumpUsed: false,
         jumpWasHeld: false,
@@ -894,6 +900,28 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     if (p.parryCooldown > 0) p.parryCooldown -= dt;
     if (p.invuln > 0) p.invuln -= dt;
     if (p.hitFlash > 0) p.hitFlash -= dt;
+    // hurt window: leave red afterimages behind for ~0.5s after a hit
+    if (p.hurtTimer > 0) {
+      p.hurtTimer -= dt;
+      p.hurtAfterTimer -= dt;
+      if (p.hurtAfterTimer <= 0) {
+        p.hurtAfterTimer = 0.04;
+        const life = 0.32;
+        r.afterimages.push({
+          x: p.x, y: p.y, w: p.w, h: p.h,
+          facing: p.facing,
+          sliding: false,
+          diving: false,
+          state: "hurt",
+          frame: 0,
+          life, maxLife: life,
+          color: "#f5234c",
+          tintColor: "#f5234c",
+          alphaBoost: 1.1,
+        });
+        if (r.afterimages.length > 40) r.afterimages.splice(0, r.afterimages.length - 40);
+      }
+    }
     if (p.squash > 0) p.squash = Math.max(0, p.squash - dt * 4);
     // While airborne and falling, stretch the sprite vertically based on
     // downward speed. Drives the squash&stretch render below; gives a juicy
@@ -1332,18 +1360,28 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   }
 
   function damage(r: GameRefs, x: number, y: number) {
-    r.player.hp -= 1;
-    r.player.invuln = 1.0;
-    r.player.hitFlash = 0.4;
-    r.player.vx *= -0.3;
-    r.player.vy = -380;
+    const p = r.player;
+    p.hp -= 1;
+    p.invuln = 1.0;
+    p.hitFlash = 0.5;
+    p.hurtTimer = 0.5;
+    p.hurtAfterTimer = 0;
+    // knockback: shove away from the hit point, with a small upward pop
+    const dir = (p.x + p.w / 2) < x ? -1 : 1;
+    const kbX = 360;
+    p.vx = dir * kbX;
+    p.vy = -420;
+    // cancel slide/dash so the knockback actually reads
+    p.sliding = false;
+    p.diving = false;
+    p.dashTime = 0;
     r.combo = 0;
     r.shake = 0.6;
     r.glitch = 0.5;
     burst(r, x, y, "#f5234c", 18, 240);
     sfx.hit();
-    if (r.player.hp <= 0) {
-      r.player.alive = false;
+    if (p.hp <= 0) {
+      p.alive = false;
     }
   }
 
@@ -2040,7 +2078,21 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       ctx.imageSmoothingEnabled = false;
       // Cached rainbow tint for starman afterimages; avoids repainting an
       // offscreen sprite for every ghost every frame.
-      if (ai.rainbowHue !== undefined) {
+      if (ai.tintColor) {
+        // Solid-color tint (e.g., red hurt trail). Draw sprite alpha mask
+        // then fill with the tint inside the alpha.
+        const off = document.createElement("canvas");
+        off.width = sprite.width;
+        off.height = sprite.height;
+        const octx = off.getContext("2d")!;
+        octx.imageSmoothingEnabled = false;
+        octx.drawImage(sprite, 0, 0);
+        octx.globalCompositeOperation = "source-in";
+        octx.fillStyle = ai.tintColor;
+        octx.fillRect(0, 0, off.width, off.height);
+        ctx.globalAlpha = 0.75 * t * (ai.alphaBoost ?? 1);
+        ctx.drawImage(off, dx, dy, drawW, drawH);
+      } else if (ai.rainbowHue !== undefined) {
         const isSomSomAi = ai.color === "rainbow" && ai.rainbowHue === 190;
         const off = isSomSomAi ? getDarkCyanTintedSprite(sprite) : getTintedSprite(sprite, ai.rainbowHue);
         // invboi (starman) trail: bumped from 0.62 → 0.85 so the rainbow
@@ -2165,6 +2217,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     const speedNow = Math.abs(p.vx);
     const machNow = machTier(speedNow);
     const state: SpriteState =
+      p.hurtTimer > 0 ? "hurt" :
       p.dashTime > 0 ? "dash" :
       p.diving ? "dive" :
       p.sliding ? "slide" :
