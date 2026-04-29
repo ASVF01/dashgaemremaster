@@ -509,7 +509,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // speed cap (dash impulse can briefly exceed it; we let momentum carry).
     // Super-dash hold (just-run-bro) bypasses the cap entirely.
     if (!p.superDashing) {
-      const speedCap = MAX_SPEED + (p.sliding ? 120 : 0) + (p.dashTime > 0 ? 600 : 0);
+      const speedCap = (MAX_SPEED + (p.sliding ? 120 : 0) + (p.dashTime > 0 ? 600 : 0)) * speedMul;
       if (Math.abs(p.vx) > speedCap) p.vx = Math.sign(p.vx) * speedCap;
     }
 
