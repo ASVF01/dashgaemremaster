@@ -1,4 +1,7 @@
-// Background music player. Per-level tracks, gapless looping via HTMLAudioElement.loop.
+// Background music with seamless WebAudio crossfade looping.
+// Decodes each track to an AudioBuffer once, then schedules overlapping
+// source nodes with an equal-power crossfade at the loop point so there's
+// no click/gap on loop.
 import bgmTutorial from "@/assets/audio/bgm_tutorial.mp3";
 import type { LevelId } from "@/game/level";
 
@@ -6,25 +9,139 @@ const TRACKS: Partial<Record<LevelId, string>> = {
   tutorial: bgmTutorial,
 };
 
-let current: HTMLAudioElement | null = null;
-let currentSrc: string | null = null;
+// Crossfade length in seconds. Short enough to be inaudible, long enough
+// to mask the loop seam on any browser.
+const CROSSFADE = 0.12;
+
+let ctx: AudioContext | null = null;
+let masterGain: GainNode | null = null;
 let muted = false;
 let volume = 0.35;
 
-function ensureAudio(src: string): HTMLAudioElement {
-  if (current && currentSrc === src) return current;
-  // tearing down a previous track
-  if (current) {
-    current.pause();
-    current.src = "";
+const bufferCache = new Map<string, AudioBuffer>();
+const decodingCache = new Map<string, Promise<AudioBuffer>>();
+
+// State of the currently-playing track
+type Playing = {
+  src: string;
+  buffer: AudioBuffer;
+  // The currently-audible source and its envelope gain
+  source: AudioBufferSourceNode;
+  gain: GainNode;
+  // The next scheduled source for the crossfade (created ahead of time)
+  nextSource: AudioBufferSourceNode | null;
+  nextGain: GainNode | null;
+  // ctx.currentTime at which the current source started playing (in track time = 0)
+  startedAt: number;
+  // The next scheduled loop boundary (ctx.currentTime when next source begins)
+  nextLoopAt: number;
+  rafId: number | null;
+  stopped: boolean;
+};
+
+let playing: Playing | null = null;
+
+function ac(): AudioContext | null {
+  if (typeof window === "undefined") return null;
+  if (!ctx) {
+    const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    masterGain = ctx.createGain();
+    masterGain.gain.value = muted ? 0 : volume;
+    masterGain.connect(ctx.destination);
   }
-  const a = new Audio(src);
-  a.loop = true;        // gapless loop on the same element
-  a.preload = "auto";
-  a.volume = muted ? 0 : volume;
-  current = a;
-  currentSrc = src;
-  return a;
+  if (ctx.state === "suspended") ctx.resume().catch(() => {});
+  return ctx;
+}
+
+async function loadBuffer(src: string): Promise<AudioBuffer> {
+  const cached = bufferCache.get(src);
+  if (cached) return cached;
+  const inflight = decodingCache.get(src);
+  if (inflight) return inflight;
+  const c = ac();
+  if (!c) throw new Error("no AudioContext");
+  const p = (async () => {
+    const res = await fetch(src);
+    const arr = await res.arrayBuffer();
+    const buf = await c.decodeAudioData(arr);
+    bufferCache.set(src, buf);
+    decodingCache.delete(src);
+    return buf;
+  })();
+  decodingCache.set(src, p);
+  return p;
+}
+
+// Schedule a source to start at `when` (ctx time), playing `buffer` from offset 0,
+// fading in over CROSSFADE. Returns the source + its gain node.
+function scheduleSource(c: AudioContext, buffer: AudioBuffer, when: number, fadeIn: boolean) {
+  const src = c.createBufferSource();
+  src.buffer = buffer;
+  const g = c.createGain();
+  if (fadeIn) {
+    // equal-power-ish fade in
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.linearRampToValueAtTime(1, when + CROSSFADE);
+  } else {
+    g.gain.setValueAtTime(1, when);
+  }
+  src.connect(g).connect(masterGain!);
+  src.start(when);
+  return { src, g };
+}
+
+// Schedule the crossfade-out for the currently playing source, ending at `endAt`.
+function scheduleFadeOut(g: GainNode, endAt: number) {
+  // Hold full volume until the crossfade window starts, then ramp to 0
+  // by the time the next source has fully faded in.
+  const startFade = endAt - CROSSFADE;
+  g.gain.cancelScheduledValues(startFade);
+  g.gain.setValueAtTime(1, startFade);
+  g.gain.linearRampToValueAtTime(0.0001, endAt);
+}
+
+// Loop scheduler: keep one "next" source pre-armed so the crossfade is
+// sample-accurate. Re-arm whenever the current "next" becomes the active one.
+function armNextLoop(c: AudioContext) {
+  if (!playing) return;
+  const { buffer, gain, startedAt } = playing;
+  const dur = buffer.duration;
+  // Loop boundary time on the ctx clock = when this iteration ends.
+  const loopBoundary = startedAt + dur;
+  // Start the next source CROSSFADE seconds before the boundary so they overlap.
+  const nextStart = loopBoundary - CROSSFADE;
+
+  // Schedule the next source (fade in) and the current source's fade out
+  const next = scheduleSource(c, buffer, nextStart, true);
+  scheduleFadeOut(gain, loopBoundary);
+
+  playing.nextSource = next.src;
+  playing.nextGain = next.g;
+  playing.nextLoopAt = nextStart;
+
+  // When the boundary passes, promote `next` to current and re-arm.
+  const promoteAt = loopBoundary; // both sources are audible until here
+  const tick = () => {
+    if (!playing || playing.stopped) return;
+    const now = c.currentTime;
+    if (now >= promoteAt) {
+      // Stop the old source slightly after the fade ends to free it.
+      try { playing.source.stop(now + 0.05); } catch { /* already stopped */ }
+      playing.source = playing.nextSource!;
+      playing.gain = playing.nextGain!;
+      playing.nextSource = null;
+      playing.nextGain = null;
+      // The new "current" source started at nextStart (= loopBoundary - CROSSFADE),
+      // but its track-time-zero is `nextStart` on the ctx clock.
+      playing.startedAt = nextStart;
+      armNextLoop(c);
+      return;
+    }
+    playing.rafId = requestAnimationFrame(tick);
+  };
+  playing.rafId = requestAnimationFrame(tick);
 }
 
 export function playBgmFor(levelId: LevelId) {
@@ -33,37 +150,59 @@ export function playBgmFor(levelId: LevelId) {
     stopBgm();
     return;
   }
-  const a = ensureAudio(src);
-  // Some browsers may reject autoplay until a user gesture — caller usually
-  // invokes this from a click (Play button) so this should be fine.
-  const p = a.play();
-  if (p && typeof p.catch === "function") p.catch(() => {});
+  // Already playing this track? leave it alone.
+  if (playing && playing.src === src && !playing.stopped) return;
+
+  stopBgm();
+  const c = ac();
+  if (!c) return;
+
+  loadBuffer(src).then((buffer) => {
+    if (!c || !masterGain) return;
+    // Start half a crossfade in the future to give the scheduler headroom.
+    const startAt = c.currentTime + 0.05;
+    const first = scheduleSource(c, buffer, startAt, false);
+    playing = {
+      src,
+      buffer,
+      source: first.src,
+      gain: first.g,
+      nextSource: null,
+      nextGain: null,
+      startedAt: startAt,
+      nextLoopAt: 0,
+      rafId: null,
+      stopped: false,
+    };
+    armNextLoop(c);
+  }).catch(() => { /* decode failed; stay silent */ });
 }
 
 export function stopBgm() {
-  if (current) {
-    current.pause();
-    current.currentTime = 0;
-  }
+  if (!playing) return;
+  const p = playing;
+  playing = null;
+  p.stopped = true;
+  if (p.rafId != null) cancelAnimationFrame(p.rafId);
+  try { p.source.stop(); } catch { /* noop */ }
+  try { p.nextSource?.stop(); } catch { /* noop */ }
 }
 
 export function pauseBgm() {
-  if (current) current.pause();
+  // WebAudio AudioContext.suspend pauses all scheduling cleanly.
+  if (ctx && ctx.state === "running") ctx.suspend().catch(() => {});
 }
 
 export function resumeBgm() {
-  if (current) {
-    const p = current.play();
-    if (p && typeof p.catch === "function") p.catch(() => {});
-  }
+  if (ctx && ctx.state === "suspended") ctx.resume().catch(() => {});
 }
 
 export function setBgmMuted(v: boolean) {
   muted = v;
-  if (current) current.volume = muted ? 0 : volume;
+  if (masterGain) masterGain.gain.value = muted ? 0 : volume;
 }
 
 export function setBgmVolume(v: number) {
   volume = Math.max(0, Math.min(1, v));
-  if (current && !muted) current.volume = volume;
+  if (masterGain && !muted) masterGain.gain.value = volume;
 }
