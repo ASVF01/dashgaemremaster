@@ -26,6 +26,28 @@ const tintCache = new Map<string, HTMLCanvasElement>();
 const darkTintCache = new Map<string, HTMLCanvasElement>();
 const starCache = new Map<string, HTMLCanvasElement>();
 
+// "Man of spook" — chaser sprite + its hurt variant. Eagerly loaded so the
+// first frame after spawn already has a sprite ready. A red-tinted silhouette
+// is cached on first use for the trail ghosts.
+const spookImg = new Image(); spookImg.src = spookUrl;
+const spookHurtImg = new Image(); spookHurtImg.src = spookHurtUrl;
+let spookRedTint: HTMLCanvasElement | null = null;
+function getSpookRedTint(): HTMLCanvasElement | null {
+  if (!spookImg.complete || !spookImg.naturalWidth) return null;
+  if (spookRedTint) return spookRedTint;
+  const off = document.createElement("canvas");
+  off.width = spookImg.naturalWidth;
+  off.height = spookImg.naturalHeight;
+  const octx = off.getContext("2d")!;
+  octx.imageSmoothingEnabled = false;
+  octx.drawImage(spookImg, 0, 0);
+  octx.globalCompositeOperation = "source-in";
+  octx.fillStyle = "#f5234c";
+  octx.fillRect(0, 0, off.width, off.height);
+  spookRedTint = off;
+  return off;
+}
+
 // Darker cyan used by SOM SOM (invboi-in-just-run-bro). Single hue, lower lightness.
 const DARK_CYAN = "#0fb5cf";
 const DARK_CYAN_SOFT = "#1199b0";
