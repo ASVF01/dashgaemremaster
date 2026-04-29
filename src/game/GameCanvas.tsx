@@ -988,7 +988,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
 
   function drawAfterimage(ctx: CanvasRenderingContext2D, ai: Afterimage, t: number) {
     // t: 1 (fresh) → 0 (faded)
-    const sprite = getSprite(ai.state);
+    const sprite = getSprite(ai.state, Math.floor((performance.now() / 1000) * 18));
     ctx.save();
     ctx.globalAlpha = 0.55 * t;
 
