@@ -253,6 +253,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         hp: 3,
         hitFlash: 0,
         squash: 0, stretch: 0, smearTimer: 0,
+        dashAirJumpUsed: false,
+        jumpWasHeld: false,
         alive: true,
         superDashing: false,
         superDashTime: 0,
