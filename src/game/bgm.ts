@@ -252,11 +252,19 @@ export function playBgmFor(levelId: LevelId, restart = false) {
 
 // Pre-decode a track's buffer without playing it. Use to warm the cache
 // before a level transition so the crossfade starts instantly.
-export function preloadBgmFor(levelId: LevelId) {
+export function preloadBgmFor(levelId: LevelId): Promise<void> {
   const src = TRACKS[levelId];
-  if (!src) return;
+  if (!src) return Promise.resolve();
   ac(); // ensure ctx exists for decoding
-  loadBuffer(src).catch(() => { /* ignore */ });
+  return loadBuffer(src).then(() => undefined).catch(() => undefined);
+}
+
+// True if the given level uses the same shared track that's already playing,
+// so we should keep the music going instead of restarting on transition.
+export function isSameTrackAs(levelId: LevelId): boolean {
+  const src = TRACKS[levelId];
+  if (!src) return false;
+  return !!playing && !playing.stopped && playing.src === src;
 }
 
 export function playMenuBgm() {

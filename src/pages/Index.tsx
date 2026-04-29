@@ -4,11 +4,15 @@ import Hud from "@/game/Hud";
 import MainMenu from "@/game/MainMenu";
 import { LEVELS, type LevelId } from "@/game/level";
 import { useKeybinds, keyLabel, type ActionId } from "@/game/keybinds";
-import { playMenuBgm, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor } from "@/game/bgm";
+import { playMenuBgm, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor, isSameTrackAs } from "@/game/bgm";
 import cutsceneJustRunBro from "@/assets/video/mcdonalds_sprite_2.mp4";
 import { sfx, unlockAudio } from "@/game/sfx";
 
-type Screen = "menu" | "playing" | "dead" | "win" | "cutscene";
+type Screen = "menu" | "loading" | "playing" | "dead" | "win" | "cutscene";
+
+// Levels whose music should hard-restart on entry. Everything else shares
+// the "champion play" track and lets it keep looping across transitions.
+const RESTART_BGM_ON_ENTRY: ReadonlyArray<LevelId> = ["tutorial", "chase", "just-run-bro"];
 
 const Index = () => {
   const [screen, setScreen] = useState<Screen>("menu");
@@ -46,27 +50,46 @@ const Index = () => {
   }, [levelId]);
   const handleDeath = useCallback(() => setScreen("dead"), []);
 
-  // One owner for BGM: every screen/level transition cancels any pending
-  // track first so loading delays can never stack songs on top of each other.
+  // One owner for BGM. The "loading" screen handles the actual track switch
+  // before "playing" begins, so we leave that case alone here.
   useEffect(() => {
     if (screen === "menu") playMenuBgm();
-    else if (screen === "playing") playBgmFor(levelId, true);
+    else if (screen === "loading") {
+      // handled by startLevel's preload+play sequence below
+      return;
+    }
+    else if (screen === "playing") {
+      // Only restart BGM for levels that have a unique track. For shared-
+      // track levels, if the same track is already playing, leave it alone.
+      const restart = RESTART_BGM_ON_ENTRY.includes(levelId) || !isSameTrackAs(levelId);
+      playBgmFor(levelId, restart);
+    }
     else if (screen === "cutscene") stopBgm(0.35);
     else if (screen === "dead" || screen === "win") return;
     else stopBgm(0.35);
   }, [screen, levelId]);
 
   const startLevel = (id: LevelId) => {
-    // Warm the next track's buffer BEFORE the screen transition fires the
-    // BGM effect, so the crossfade has a decoded buffer ready instantly.
-    preloadBgmFor(id);
     setLevelId(id);
     setResetKey((k) => k + 1);
-    setScreen("playing");
+    setScreen("loading");
+    // Decode the track buffer first (or skip if already cached). When ready,
+    // hand off to the playing screen — the BGM effect there will play it.
+    preloadBgmFor(id).then(() => {
+      // small grace so the "LOADING…" actually shows briefly even on cache hits
+      setTimeout(() => {
+        setScreen((s) => (s === "loading" ? "playing" : s));
+      }, 250);
+    });
   };
   const retry = () => {
     setResetKey((k) => k + 1);
-    setScreen("playing");
+    setScreen("loading");
+    preloadBgmFor(levelId).then(() => {
+      setTimeout(() => {
+        setScreen((s) => (s === "loading" ? "playing" : s));
+      }, 250);
+    });
   };
   const backToMenu = () => setScreen("menu");
 
@@ -164,6 +187,12 @@ const Index = () => {
 
           {screen === "menu" && <MainMenu onPlay={startLevel} />}
 
+          {screen === "loading" && (
+            <Overlay>
+              <LoadingScreen levelName={currentLevel?.name ?? "level"} />
+            </Overlay>
+          )}
+
           {screen === "cutscene" && (
             <CutscenePlayer src={cutsceneJustRunBro} onDone={finishCutscene} />
           )}
@@ -256,6 +285,27 @@ function Overlay({ children }: { children: React.ReactNode }) {
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-paper/85 backdrop-blur-[2px]">
       {children}
+    </div>
+  );
+}
+
+function LoadingScreen({ levelName }: { levelName: string }) {
+  const [dots, setDots] = useState("");
+  useEffect(() => {
+    const id = setInterval(() => setDots((d) => (d.length >= 3 ? "" : d + ".")), 280);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <div className="text-center px-6">
+      <div className="font-marker text-6xl md:text-7xl text-ink mb-3 animate-jitter inline-block">
+        LOADING{dots}
+      </div>
+      <div className="font-scribble text-2xl md:text-3xl text-[hsl(var(--accent))] mb-2">
+        {levelName}
+      </div>
+      <div className="font-scribble text-base md:text-lg text-ink/60">
+        cueing the music…
+      </div>
     </div>
   );
 }
