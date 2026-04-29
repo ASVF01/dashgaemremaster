@@ -19,6 +19,7 @@ interface Player {
   facing: 1 | -1;
   onGround: boolean;
   sliding: boolean;
+  diving: boolean;
   parrying: number; // remaining seconds of parry active window
   parryCooldown: number;
   invuln: number;
@@ -30,11 +31,22 @@ interface Player {
   alive: boolean;
 }
 
+interface Afterimage {
+  x: number; y: number; w: number; h: number;
+  facing: 1 | -1;
+  sliding: boolean;
+  diving: boolean;
+  life: number; maxLife: number;
+  color: string;
+}
+
 interface GameRefs {
   level: Level;
   player: Player;
   projectiles: Projectile[];
   particles: Particle[];
+  afterimages: Afterimage[];
+  afterTimer: number;
   cameraX: number;
   shake: number;
   freezeFrames: number;
@@ -99,6 +111,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         facing: 1,
         onGround: false,
         sliding: false,
+        diving: false,
         parrying: 0,
         parryCooldown: 0,
         invuln: 0,
@@ -109,6 +122,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       },
       projectiles: [],
       particles: [],
+      afterimages: [],
+      afterTimer: 0,
       cameraX: 0,
       shake: 0,
       freezeFrames: 0,
@@ -272,7 +287,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       p.vx = sign * mag;
     }
 
-    // slide
+    // slide (ground) / dive (air) — both on the slide button
     if (slideHeld && onGround && !p.sliding && Math.abs(p.vx) > 120) {
       p.sliding = true;
       p.h = SLIDE_H;
@@ -280,6 +295,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       // boost in facing dir
       p.vx += p.facing * SLIDE_BOOST;
       spawnParticle(r, { x: p.x, y: p.y + p.h, vx: -p.facing * 200, vy: -80, color: INK, life: 0.4, size: 4, kind: "smear" });
+      sfx.slide();
+    }
+    // dive — pressed while airborne
+    if (slideHeld && !onGround && !p.diving) {
+      p.diving = true;
+      p.vx += p.facing * 260;
+      p.vy = Math.max(p.vy + 200, 520);
+      p.stretch = 1;
+      spawnParticle(r, { x: p.x + p.w / 2, y: p.y, vx: -p.facing * 120, vy: -60, color: INK, life: 0.35, size: 3, kind: "smear" });
       sfx.slide();
     }
     if (!slideHeld && p.sliding) {
@@ -292,11 +316,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       }
     }
 
-    // jump
+    // jump (also cancels dive when grounded — handled by jump flow naturally)
     if (jumpHeld && onGround) {
       p.vy = -JUMP_VEL;
       p.onGround = false;
       p.squash = 1;
+      p.diving = false;
       spawnParticle(r, { x: p.x + p.w / 2, y: p.y + p.h, color: INK, vy: -40, life: 0.3, size: 4, kind: "ring" });
       sfx.jump();
     }
@@ -333,6 +358,24 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     const speed = Math.abs(p.vx);
     const mach = machTier(speed);
     if (mach > r.bestMach) { r.bestMach = mach; if (mach >= 1) sfx.mach(); }
+
+    // afterimages — spawn when fast or diving
+    r.afterTimer -= dt;
+    if ((mach >= 1 || p.diving) && r.afterTimer <= 0) {
+      r.afterTimer = Math.max(0.018, 0.05 - mach * 0.008);
+      const life = 0.28 + mach * 0.05;
+      r.afterimages.push({
+        x: p.x, y: p.y, w: p.w, h: p.h,
+        facing: p.facing,
+        sliding: p.sliding,
+        diving: p.diving,
+        life, maxLife: life,
+        color: p.diving ? "#ffd11a" : MACH_COLORS[Math.max(1, mach)],
+      });
+      if (r.afterimages.length > 24) r.afterimages.shift();
+    }
+    for (const ai of r.afterimages) ai.life -= dt;
+    r.afterimages = r.afterimages.filter((a) => a.life > 0);
 
     if (mach >= 1 && Math.random() < 0.4 + mach * 0.15) {
       spawnParticle(r, {
@@ -597,6 +640,19 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
           if (delta > 0) {
             p.y = pl.y - p.h;
             if (!p.onGround && p.vy > 200) { p.squash = 1; sfx.land(); }
+            // dive impact — convert to slide, shake, sparks
+            if (p.diving) {
+              p.diving = false;
+              r.shake = Math.max(r.shake, 0.55);
+              burst(r, p.x + p.w / 2, pl.y, "#ffd11a", 12, 280);
+              if (!p.sliding) {
+                p.sliding = true;
+                p.h = SLIDE_H;
+                p.y = pl.y - p.h;
+                p.vx += p.facing * SLIDE_BOOST;
+              }
+              sfx.land();
+            }
             p.vy = 0;
             landed = true;
           } else if (delta < 0) {
@@ -746,21 +802,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     // goal
     drawGoal(ctx, r.level.goal.x, r.level.goal.y, r.level.goal.w, r.level.goal.h, r.time);
 
-    // mach speed lines behind player
-    const speed = Math.abs(r.player.vx);
-    const mach = machTier(speed);
-    if (mach >= 1) {
-      const intensity = mach;
-      ctx.save();
-      for (let i = 0; i < 3 + intensity * 3; i++) {
-        const yy = r.player.y + Math.random() * r.player.h;
-        const len = 30 + intensity * 30 + Math.random() * 60;
-        const x1 = r.player.x + r.player.w / 2 - r.player.facing * (10 + Math.random() * 8);
-        const x2 = x1 - r.player.facing * len;
-        jaggedBolt(ctx, x1, yy, x2, yy + (Math.random() - 0.5) * 8,
-          MACH_COLORS[mach], 1.4 + intensity * 0.5, 5 + intensity, 4 + intensity * 2);
-      }
-      ctx.restore();
+    // afterimages — draw before player so player sits on top
+    for (const ai of r.afterimages) {
+      const t = ai.life / ai.maxLife; // 1 → 0
+      drawAfterimage(ctx, ai, t);
     }
 
     // player
@@ -804,11 +849,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     ctx.restore();
 
     // vignette / mach overlay
-    if (mach >= 2) {
+    const vmach = machTier(Math.abs(r.player.vx));
+    if (vmach >= 2) {
       ctx.save();
       const g = ctx.createRadialGradient(w / 2, h / 2, h * 0.3, w / 2, h / 2, h * 0.8);
       g.addColorStop(0, "rgba(0,0,0,0)");
-      g.addColorStop(1, `rgba(0,0,0,${0.15 + mach * 0.06})`);
+      g.addColorStop(1, `rgba(0,0,0,${0.15 + vmach * 0.06})`);
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, w, h);
       ctx.restore();
@@ -840,6 +886,43 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       x += 160;
     }
     ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawAfterimage(ctx: CanvasRenderingContext2D, ai: Afterimage, t: number) {
+    // t: 1 (fresh) → 0 (faded)
+    ctx.save();
+    ctx.globalAlpha = 0.55 * t;
+    ctx.fillStyle = ai.color;
+    ctx.strokeStyle = ai.color;
+    ctx.lineWidth = 2;
+    const cx = ai.x + ai.w / 2;
+    const cy = ai.y + ai.h / 2;
+    ctx.translate(cx, cy);
+    // slight stretch in motion direction
+    const sx = ai.diving ? 0.85 : ai.sliding ? 1.25 : 1.05;
+    const sy = ai.diving ? 1.2 : ai.sliding ? 0.7 : 0.95;
+    ctx.scale(sx * ai.facing, sy);
+    ctx.translate(-ai.w / 2, -ai.h / 2);
+
+    if (ai.sliding) {
+      // squat oval
+      ctx.beginPath();
+      ctx.ellipse(ai.w / 2, ai.h / 2, ai.w * 0.7, ai.h * 0.55, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      // head
+      const headR = 12;
+      const headX = ai.w / 2;
+      const headY = headR + 2;
+      ctx.beginPath();
+      ctx.arc(headX, headY, headR, 0, Math.PI * 2);
+      ctx.fill();
+      // body slab
+      ctx.beginPath();
+      ctx.roundRect(headX - 6, headY + headR - 4, 12, ai.h - headY - headR - 6, 4);
+      ctx.fill();
+    }
     ctx.restore();
   }
 
