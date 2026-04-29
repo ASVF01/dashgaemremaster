@@ -1,6 +1,7 @@
 // Tiny WebAudio SFX engine — procedural, no assets.
 import nySampleUrl from "@/assets/audio/ny.ogg";
 import beamCriticalUrl from "@/assets/audio/beam_critical2.mp3";
+import notBadUrl from "@/assets/audio/not_bad.ogg";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -115,7 +116,7 @@ function ac(): AudioContext | null {
   return ctx;
 }
 
-export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); }
+export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); }
 let baseVol = 0.35;
 export function setMuted(v: boolean) {
   muted = v;
@@ -231,10 +232,7 @@ export const sfx = {
     tone({ freq: 700, to: 250, dur: 0.08, type: "sawtooth", vol: 0.18 });
   },
   win() {
-    tone({ freq: 523, dur: 0.12, type: "square", vol: 0.3 });
-    tone({ freq: 659, dur: 0.12, type: "square", vol: 0.3, delay: 0.12 });
-    tone({ freq: 784, dur: 0.18, type: "square", vol: 0.3, delay: 0.24 });
-    tone({ freq: 1046, dur: 0.3, type: "square", vol: 0.32, delay: 0.42 });
+    playSample(notBadUrl, { vol: 0.7 });
   },
   die() {
     tone({ freq: 400, to: 60, dur: 0.5, type: "sawtooth", vol: 0.35 });
