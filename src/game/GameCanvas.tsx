@@ -960,6 +960,20 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
       // enemy vs player
       if (rectOverlap(p.x, p.y, p.w, p.h, e.x, e.y, e.w, e.h)) {
+        // INVBOI (starman) — touching anything obliterates it, chaser
+        // included. Big rainbow burst + combo bump for style.
+        if (p.starman) {
+          e.alive = false;
+          r.combo += 1;
+          r.comboTimer = 2.5;
+          r.score += 250 * Math.max(1, r.combo);
+          // rainbow-ish burst — pick a random hue per call so it varies.
+          const hue = Math.floor(Math.random() * 360);
+          burst(r, e.x + e.w / 2, e.y + e.h / 2, `hsl(${hue} 95% 60%)`, 22, 360);
+          r.shake = Math.max(r.shake, 0.5);
+          sfx.enemyKill();
+          continue;
+        }
         if (e.kind === "chaser") {
           // Chaser is unkillable — only parry pushes it back.
           if (p.parrying > 0) {
