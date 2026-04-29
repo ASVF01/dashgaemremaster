@@ -11,6 +11,7 @@ import { buildLevel, type Level, type LevelId } from "@/game/level";
 import { sketchLine, sketchRect, sketchCircle, jaggedBolt, INK } from "@/game/draw";
 import { isPressed, matchesAction, getLiveBinds } from "@/game/keybinds";
 import { sfx, unlockAudio } from "@/game/sfx";
+import { getSprite, type SpriteState } from "@/game/sprites";
 
 type Keys = Record<string, boolean>;
 
@@ -999,6 +1000,39 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     }
 
     const inkCol = flash ? "#f5234c" : INK;
+
+    // ---- sprite override (use uploaded PNG if available for current state) ----
+    const state: SpriteState =
+      p.diving ? "dive" :
+      p.sliding ? "slide" :
+      !p.onGround ? (p.vy > 60 ? "fall" : "jump") :
+      Math.abs(p.vx) > 60 ? "run" :
+      "idle";
+    const sprite = getSprite(state);
+    if (sprite) {
+      // Fit the sprite to the player AABB while preserving its aspect ratio.
+      const ratio = sprite.width / sprite.height;
+      const drawH = p.h;
+      const drawW = drawH * ratio;
+      const dx = p.w / 2 - drawW / 2;
+      const dy = 0;
+      if (flash) {
+        // flash tint: draw red silhouette behind the sprite
+        ctx.save();
+        ctx.globalCompositeOperation = "source-over";
+        ctx.drawImage(sprite, dx, dy, drawW, drawH);
+        ctx.globalCompositeOperation = "source-atop";
+        ctx.fillStyle = "#f5234c";
+        ctx.fillRect(dx, dy, drawW, drawH);
+        ctx.restore();
+      } else {
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(sprite, dx, dy, drawW, drawH);
+      }
+      ctx.restore();
+      return;
+    }
+    // ---- end sprite override ----
 
     if (p.sliding) {
       // slide pose
