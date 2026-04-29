@@ -1871,11 +1871,34 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       ctx.restore();
     }
 
+    // chaser red trail (drawn behind enemies)
+    if (r.chaserTrail.length) {
+      const tint = getSpookRedTint();
+      for (const ct of r.chaserTrail) {
+        if (ct.x + ct.w < camX - 40 || ct.x > camX + w + 40) continue;
+        const t = ct.life / ct.maxLife; // 1 → 0
+        const drawW = ct.w * 1.4;
+        const drawH = ct.h * 1.4;
+        const dx = ct.x + ct.w / 2 - drawW / 2;
+        const dy = ct.y + ct.h - drawH;
+        ctx.save();
+        ctx.imageSmoothingEnabled = false;
+        ctx.globalAlpha = 0.55 * t;
+        if (tint) {
+          ctx.drawImage(tint, dx, dy, drawW, drawH);
+        } else {
+          ctx.fillStyle = "#f5234c";
+          ctx.fillRect(ct.x, ct.y, ct.w, ct.h);
+        }
+        ctx.restore();
+      }
+    }
+
     // enemies
     for (const e of r.level.enemies) {
       if (!e.alive) continue;
       if (e.x + e.w < camX - 40 || e.x > camX + w + 40) continue;
-      drawEnemy(ctx, e.x, e.y, e.w, e.h, e.kind, e.vx, r.time);
+      drawEnemy(ctx, e.x, e.y, e.w, e.h, e.kind, e.vx, r.time, e.hitFlash ?? 0);
     }
 
     // projectiles
