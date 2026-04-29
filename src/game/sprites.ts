@@ -6,12 +6,13 @@ import jumpUrl from "@/assets/sprites/jump.png";
 import slideUrl from "@/assets/sprites/slide.png";
 import diveUrl from "@/assets/sprites/dive.png";
 import dashUrl from "@/assets/sprites/dash.png";
+import skidUrl from "@/assets/sprites/skid.png";
 import runFast1 from "@/assets/sprites/run_fast_1.png";
 import runFast2 from "@/assets/sprites/run_fast_2.png";
 import runFast3 from "@/assets/sprites/run_fast_3.png";
 import runFast4 from "@/assets/sprites/run_fast_4.png";
 
-export type SpriteState = "idle" | "run" | "runFast" | "jump" | "fall" | "slide" | "dive" | "dash";
+export type SpriteState = "idle" | "run" | "runFast" | "jump" | "fall" | "slide" | "dive" | "dash" | "skid";
 
 const URLS: Partial<Record<SpriteState, string>> = {
   idle: standUrl,
@@ -21,6 +22,7 @@ const URLS: Partial<Record<SpriteState, string>> = {
   slide: slideUrl,
   dive: diveUrl,
   dash: dashUrl,
+  skid: skidUrl,
 };
 
 // Animation cycles — array of frame URLs, played in order.
@@ -85,6 +87,7 @@ export function getSprite(state: SpriteState, frame = 0): HTMLImageElement | nul
     state === "fall"  ? ["fall", "jump", "idle"] :
     state === "dive"  ? ["dive", "slide", "jump", "idle"] :
     state === "slide" ? ["slide", "idle"] :
+    state === "skid"  ? ["skid", "run", "idle"] :
     state === "jump"  ? ["jump", "idle"] :
     state === "dash"  ? ["dash", "run", "idle"] :
     state === "run"   ? ["run", "idle"] :
