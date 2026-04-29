@@ -21,6 +21,8 @@ interface Player {
   onGround: boolean;
   sliding: boolean;
   diving: boolean;
+  dashTime: number; // remaining seconds of active dash
+  dashCooldown: number;
   parrying: number; // remaining seconds of parry active window
   parryCooldown: number;
   invuln: number;
@@ -113,6 +115,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         onGround: false,
         sliding: false,
         diving: false,
+        dashTime: 0,
+        dashCooldown: 0,
         parrying: 0,
         parryCooldown: 0,
         invuln: 0,
