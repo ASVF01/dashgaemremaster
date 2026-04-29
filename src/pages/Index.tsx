@@ -1,12 +1,13 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import GameCanvas, { type HudState } from "@/game/GameCanvas";
 import Hud from "@/game/Hud";
 import MainMenu from "@/game/MainMenu";
 import { LEVELS, type LevelId } from "@/game/level";
 import { useKeybinds, keyLabel, type ActionId } from "@/game/keybinds";
-import { playMenuBgm, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage } from "@/game/bgm";
+import { playMenuBgm, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm } from "@/game/bgm";
+import cutsceneJustRunBro from "@/assets/video/mcdonalds_sprite_2.mp4";
 
-type Screen = "menu" | "playing" | "dead" | "win";
+type Screen = "menu" | "playing" | "dead" | "win" | "cutscene";
 
 const Index = () => {
   const [screen, setScreen] = useState<Screen>("menu");
