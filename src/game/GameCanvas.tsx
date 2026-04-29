@@ -205,6 +205,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         unlockAudio();
         const r = refs.current;
         const p = r.player;
+        // SUPER DASH (just-run-bro only): hold dash for increasing speed.
+        // No cooldown, no normal dash sfx — just a single whoosh on press.
+        if (levelIdRef.current === "just-run-bro") {
+          if (!p.superDashing && p.alive && !e.repeat) {
+            p.superDashing = true;
+            p.superDashTime = 0;
+            p.stretch = 1;
+            sfx.superDash();
+          }
+          return;
+        }
         if (p.dashCooldown <= 0 && p.dashTime <= 0 && p.alive) {
           const k = keysRef.current;
           const b = getLiveBinds();
@@ -219,24 +230,19 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
           if (dx === 0 && dy === 0) dx = p.facing;
           const len = Math.hypot(dx, dy) || 1;
           const nx = dx / len, ny = dy / len;
-          // Impulse: shove in the aimed direction. Existing velocity along
-          // that direction is preserved + boosted by DASH_BONUS; perpendicular
-          // velocity is kept as-is so momentum carries through.
           const along = p.vx * nx + p.vy * ny;
           const newAlong = Math.max(along, 0) + DASH_IMPULSE + DASH_BONUS;
-          // remove old along-component, add the new one
           p.vx += (newAlong - along) * nx;
           p.vy += (newAlong - along) * ny;
-          // dash-jump: pressing jump together pops you off the ground too
           if (jumpAlso && p.onGround) {
             p.vy = Math.min(p.vy, -JUMP_VEL);
             p.onGround = false;
             p.squash = 1;
             sfx.jump();
           }
-          p.dashTime = DASH_DURATION;        // visual / i-frame window only
+          p.dashTime = DASH_DURATION;
           p.dashCooldown = DASH_COOLDOWN;
-          p.dashVx = nx; p.dashVy = ny;      // store aim for sprite/afterimage tinting
+          p.dashVx = nx; p.dashVy = ny;
           p.facing = dx >= 0 ? 1 : -1;
           p.stretch = 1;
           if (p.invuln < DASH_DURATION) p.invuln = DASH_DURATION;
@@ -246,7 +252,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         }
       }
     };
-    const up = (e: KeyboardEvent) => { keysRef.current[e.code] = false; };
+    const up = (e: KeyboardEvent) => {
+      keysRef.current[e.code] = false;
+      // release super dash
+      if (matchesAction(e.code, "dash") && refs.current) {
+        const p = refs.current.player;
+        if (p.superDashing) {
+          p.superDashing = false;
+          p.superDashTime = 0;
+        }
+      }
+    };
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
     return () => {
