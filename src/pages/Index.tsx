@@ -142,11 +142,11 @@ const Index = () => {
                   autoPlay
                   playsInline
                   controls={false}
-                  onEnded={() => setScreen("win")}
+                  onEnded={finishCutscene}
                   className="max-h-[70vh] max-w-full scribble-border bg-ink"
                 />
                 <button
-                  onClick={() => setScreen("win")}
+                  onClick={finishCutscene}
                   className="scribble-border bg-paper text-ink font-marker text-xl px-5 py-2 hover:-rotate-2 transition-transform"
                 >
                   SKIP ▶
