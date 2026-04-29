@@ -64,7 +64,7 @@ const Index = () => {
       {/* page header */}
       <header className="px-6 pt-4 pb-2 flex items-center justify-between max-w-[1500px] mx-auto">
         <h1 className="font-marker text-3xl md:text-5xl text-ink leading-none">
-          SCRIBBLE <span className="text-[hsl(var(--accent))] inline-block -rotate-2">RUSH!!</span>
+          LOONEY TUNE <span className="text-[hsl(var(--accent))] inline-block -rotate-2">RUST BRO💔</span>
         </h1>
         <div className="hidden md:flex items-center gap-3 font-scribble text-xl">
           {screen === "playing" && (
