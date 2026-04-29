@@ -808,8 +808,20 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     }
 
     // camera follow with lookahead
+    // Camera follow with lookahead. At extreme speeds (super-dash) the
+    // smoothing can't keep up, so we boost the lerp by speed and then
+    // hard-clamp so the player never leaves the visible window.
+    const speedNow = Math.abs(p.vx);
     const targetCam = p.x - size.w * 0.35 + p.facing * 80 + p.vx * 0.12;
-    r.cameraX += (targetCam - r.cameraX) * Math.min(1, dt * 6);
+    const lerp = Math.min(1, dt * (6 + speedNow * 0.01));
+    r.cameraX += (targetCam - r.cameraX) * lerp;
+    // hard clamp: keep player fully on-screen with a small margin
+    const margin = 80;
+    const minCam = p.x + p.w - size.w + margin;
+    const maxCam = p.x - margin;
+    if (r.cameraX < minCam) r.cameraX = minCam;
+    if (r.cameraX > maxCam) r.cameraX = maxCam;
+    // world bounds
     if (r.cameraX < 0) r.cameraX = 0;
     if (r.cameraX > r.level.width - size.w) r.cameraX = r.level.width - size.w;
   }
