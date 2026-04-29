@@ -11,7 +11,7 @@ import { buildLevel, type Level, type LevelId } from "@/game/level";
 import { sketchLine, sketchRect, sketchCircle, jaggedBolt, INK } from "@/game/draw";
 import { isPressed, matchesAction, getLiveBinds } from "@/game/keybinds";
 import { sfx, unlockAudio } from "@/game/sfx";
-import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd } from "@/game/bgm";
+import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm } from "@/game/bgm";
 import { getSprite, type SpriteState } from "@/game/sprites";
 
 type Keys = Record<string, boolean>;
@@ -38,6 +38,8 @@ interface Player {
   alive: boolean;
   superDashing: boolean;
   superDashTime: number; // seconds the hold has been active
+  starman: boolean; // "invboi" cheat — rainbow + star sparkles + custom BGM
+  starTimer: number; // timer for emitting star particles
 }
 
 interface Afterimage {
@@ -146,6 +148,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         alive: true,
         superDashing: false,
         superDashTime: 0,
+        starman: false,
+        starTimer: 0,
       },
       projectiles: [],
       particles: [],
@@ -187,8 +191,26 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
   // keys
   useEffect(() => {
+    let cheatBuf = "";
     const down = (e: KeyboardEvent) => {
       keysRef.current[e.code] = true;
+      // cheat code: type "invboi" to enter starman mode
+      if (e.key && e.key.length === 1 && /[a-zA-Z]/.test(e.key)) {
+        cheatBuf = (cheatBuf + e.key.toLowerCase()).slice(-12);
+        if (cheatBuf.endsWith("invboi") && refs.current) {
+          const r = refs.current;
+          if (r.player.alive && !r.finished) {
+            r.player.starman = true;
+            r.player.starTimer = 0;
+            // generous i-frames so they actually feel invincible
+            r.player.invuln = Math.max(r.player.invuln, 9999);
+            unlockAudio();
+            playStarmanBgm();
+            burst(r, r.player.x + r.player.w / 2, r.player.y + r.player.h / 2, "#ffd11a", 24, 380);
+          }
+          cheatBuf = "";
+        }
+      }
       if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) {
         e.preventDefault();
       }
@@ -383,6 +405,32 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     r.time += dt;
     const p = r.player;
     const onGround = p.onGround;
+
+    // starman cheat: keep i-frames topped up + emit yellow star sparkles
+    if (p.starman) {
+      p.invuln = Math.max(p.invuln, 1);
+      p.starTimer -= dt;
+      if (p.starTimer <= 0) {
+        p.starTimer = 0.04;
+        for (let i = 0; i < 2; i++) {
+          const a = Math.random() * Math.PI * 2;
+          const s = 60 + Math.random() * 80;
+          const life = 0.45 + Math.random() * 0.3;
+          r.particles.push({
+            x: p.x + p.w / 2 + Math.cos(a) * 18,
+            y: p.y + p.h / 2 + Math.sin(a) * 22,
+            vx: Math.cos(a) * s,
+            vy: Math.sin(a) * s - 80,
+            color: "#ffd11a",
+            size: 3 + Math.random() * 3,
+            life,
+            maxLife: life,
+            kind: "star",
+            angle: Math.random() * Math.PI,
+          });
+        }
+      }
+    }
 
     // input (bound)
     const b = getLiveBinds();
@@ -1171,6 +1219,27 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         ctx.translate(pa.x, pa.y);
         ctx.rotate(pa.angle ?? 0);
         ctx.fillRect(-pa.size, -1, pa.size * 2, 2);
+      } else if (pa.kind === "star") {
+        // 5-point star
+        ctx.fillStyle = pa.color;
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 1;
+        ctx.translate(pa.x, pa.y);
+        ctx.rotate(pa.angle ?? 0);
+        const sp = 5;
+        const outer = pa.size + 2;
+        const inner = outer * 0.45;
+        ctx.beginPath();
+        for (let i = 0; i < sp * 2; i++) {
+          const rr = i % 2 === 0 ? outer : inner;
+          const ang = (i / (sp * 2)) * Math.PI * 2 - Math.PI / 2;
+          const x = Math.cos(ang) * rr;
+          const y = Math.sin(ang) * rr;
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
       } else {
         ctx.fillStyle = pa.color;
         ctx.beginPath();
@@ -1318,12 +1387,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
     // hit flash
     const flash = p.hitFlash > 0 && Math.floor(r.time * 30) % 2 === 0;
-    const blink = p.invuln > 0 && Math.floor(r.time * 20) % 2 === 0;
+    // suppress invuln blink while starman is active so the rainbow stays solid
+    const blink = !p.starman && p.invuln > 0 && Math.floor(r.time * 20) % 2 === 0;
     if (blink && p.hitFlash <= 0) {
       ctx.globalAlpha = 0.4;
     }
 
     const inkCol = flash ? "#f5234c" : INK;
+    // rainbow tint color cycling for starman cheat
+    const rainbowCol = p.starman ? `hsl(${Math.floor(r.time * 720) % 360}, 95%, 55%)` : null;
 
     // ---- sprite override (use uploaded PNG if available for current state) ----
     const speedNow = Math.abs(p.vx);
@@ -1370,6 +1442,21 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         ctx.drawImage(sprite, dx, dy, drawW, drawH);
         ctx.globalCompositeOperation = "source-atop";
         ctx.fillStyle = "#f5234c";
+        ctx.fillRect(dx, dy, drawW, drawH);
+        ctx.restore();
+      } else if (rainbowCol) {
+        // starman: rainbow tint over sprite + soft glow halo
+        ctx.save();
+        // glow halo behind
+        ctx.shadowColor = rainbowCol;
+        ctx.shadowBlur = 22;
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(sprite, dx, dy, drawW, drawH);
+        ctx.shadowBlur = 0;
+        // colored overlay clipped to sprite alpha
+        ctx.globalCompositeOperation = "source-atop";
+        ctx.globalAlpha = 0.55;
+        ctx.fillStyle = rainbowCol;
         ctx.fillRect(dx, dy, drawW, drawH);
         ctx.restore();
       } else {
