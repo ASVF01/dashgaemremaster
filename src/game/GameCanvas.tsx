@@ -161,11 +161,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     };
   }, [resetKey, levelId]);
 
-  // BGM: start when level mounts/changes, stop on unmount
+  // BGM: start when level mounts/changes, restart on death/reset, stop on unmount
   useEffect(() => {
+    stopBgm();
     playBgmFor(levelId);
     return () => { stopBgm(); };
-  }, [levelId]);
+  }, [levelId, resetKey]);
 
   // BGM: pause/resume with the game's pause state
   useEffect(() => {
