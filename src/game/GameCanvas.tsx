@@ -2497,51 +2497,24 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       sketchLine(ctx, w / 2, 4, w / 2 + Math.sin(time * 4) * 4, -10, 2, INK, 0.8);
       sketchCircle(ctx, w / 2 + Math.sin(time * 4) * 4, -12, 3, "#22e2ff", INK, 1.8, 0.8);
     } else {
-      // CHASER: looming dark scribble wall
-      // jagged ink mass
-      ctx.fillStyle = "#1a1a1a";
-      ctx.strokeStyle = INK;
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      const segs = 10;
-      for (let i = 0; i <= segs; i++) {
-        const t = i / segs;
-        const px = t * w;
-        const py = Math.sin(time * 6 + i) * 6;
-        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-      }
-      ctx.lineTo(w, h);
-      ctx.lineTo(0, h);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-      // hungry eyes
-      const eyeY = h * 0.35;
-      ctx.fillStyle = "#f5234c";
-      ctx.beginPath(); ctx.arc(w * 0.35, eyeY, 6, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(w * 0.65, eyeY, 6, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#fff8d6";
-      ctx.beginPath(); ctx.arc(w * 0.35 + Math.sin(time * 5) * 1.5, eyeY, 2, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(w * 0.65 + Math.sin(time * 5) * 1.5, eyeY, 2, 0, Math.PI * 2); ctx.fill();
-      // jagged teeth
-      ctx.strokeStyle = "#fff8d6";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      const teethY = h * 0.55;
-      for (let i = 0; i < 7; i++) {
-        const tx = (i / 6) * (w - 16) + 8;
-        ctx.moveTo(tx, teethY);
-        ctx.lineTo(tx + 6, teethY + 10);
-        ctx.lineTo(tx + 12, teethY);
-      }
-      ctx.stroke();
-      // wispy tendrils trailing behind
-      ctx.strokeStyle = INK;
-      ctx.lineWidth = 2;
-      for (let i = 0; i < 4; i++) {
-        const ty = h * (0.3 + i * 0.18);
-        const sway = Math.sin(time * 3 + i) * 8;
-        sketchLine(ctx, 0, ty, -22 - i * 6, ty + sway, 2, INK, 0.8);
+      // CHASER: "Man of spook" sprite, swap to OW variant on hit.
+      const useHurt = hitFlash > 0;
+      const img = useHurt ? spookHurtImg : spookImg;
+      const ready = img.complete && img.naturalWidth > 0;
+      if (ready) {
+        // size sprite to fill the chaser AABB while preserving aspect.
+        const ratio = img.naturalWidth / img.naturalHeight;
+        // Make him a bit larger than the hitbox so he reads as a looming threat.
+        const drawH = h * 1.25;
+        const drawW = drawH * ratio;
+        const dx = w / 2 - drawW / 2;
+        const dy = h - drawH;
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(img, dx, dy, drawW, drawH);
+      } else {
+        // sprite not loaded yet — draw a quick red silhouette so he's visible.
+        ctx.fillStyle = "#1a1a1a";
+        ctx.fillRect(0, 0, w, h);
       }
     }
     ctx.restore();
