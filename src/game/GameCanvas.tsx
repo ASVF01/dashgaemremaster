@@ -634,7 +634,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       const accel = 500 + t * 160; // ~500 -> ~2420 px/s^2 over 12s
       p.vx += p.facing * accel * dt;
       // hard cap on super dash top speed
-      const SUPER_DASH_CAP = 2200;
+      const SUPER_DASH_CAP = 2900;
       if (Math.abs(p.vx) > SUPER_DASH_CAP) p.vx = Math.sign(p.vx) * SUPER_DASH_CAP;
       // continuous stretch while ramping
       p.stretch = 1;
