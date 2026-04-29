@@ -139,18 +139,55 @@ export function startGamepadBridge(): () => void {
       return;
     }
 
+    // Detect non-standard mapping (some Firefox + DualShock 4 cases). When
+    // mapping !== "standard", button indices are device-specific. We sniff
+    // the id for "PLAYSTATION" / "DualShock" / "DualSense" / vendor 054c
+    // and apply the common DS4-on-Firefox layout:
+    //   0 X(cross), 1 O(circle), 2 □(square), 3 △(triangle),
+    //   4 L1, 5 R1, 6 L2, 7 R2, 8 share, 9 options, 10 L3, 11 R3,
+    //   12 up, 13 down, 14 left, 15 right
+    // which happens to match Standard, so even non-standard PS pads usually
+    // "just work" with the indices below — but the dpad axis (axis 9 hat)
+    // needs handling for the truly legacy non-standard path.
+    const isNonStandard = gp.mapping !== "standard";
+    const id = (gp.id || "").toLowerCase();
+    const isPlayStation =
+      id.includes("playstation") ||
+      id.includes("dualshock") ||
+      id.includes("dualsense") ||
+      id.includes("054c");      // Sony USB vendor id
+
     // Axes (left stick) + dpad.
     const ax = gp.axes[0] ?? 0;
     const ay = gp.axes[1] ?? 0;
-    const left  = ax < -STICK_DEADZONE || pressed(gp, 14);
-    const right = ax >  STICK_DEADZONE || pressed(gp, 15);
-    const up    = ay < -STICK_DEADZONE || pressed(gp, 12);
-    const down  = ay >  STICK_DEADZONE || pressed(gp, 13);
 
-    set("ArrowLeft",  left  && !right); // avoid simultaneous L+R
+    // Hat-switch dpad fallback: many non-standard PS pads encode the dpad as
+    // a single axis (axis 9) with discrete values for each direction.
+    let hatLeft = false, hatRight = false, hatUp = false, hatDown = false;
+    if (isNonStandard && isPlayStation && gp.axes.length > 9) {
+      const h = gp.axes[9];
+      // Values cluster near these multiples of 1/7. Use windows for slop.
+      const near = (target: number) => Math.abs(h - target) < 0.15;
+      hatUp    = near(-1) || near(-0.71) || near(-0.43);
+      hatRight = near(-0.43) || near(-0.14) || near(0.14);
+      hatDown  = near(0.14) || near(0.43) || near(0.71);
+      hatLeft  = near(0.71) || near(1) || near(-1);
+    }
+
+    const left  = ax < -STICK_DEADZONE || pressed(gp, 14) || hatLeft;
+    const right = ax >  STICK_DEADZONE || pressed(gp, 15) || hatRight;
+    const up    = ay < -STICK_DEADZONE || pressed(gp, 12) || hatUp;
+    const down  = ay >  STICK_DEADZONE || pressed(gp, 13) || hatDown;
+
+    set("ArrowLeft",  left  && !right);
     set("ArrowRight", right && !left);
 
-    // Face buttons (Standard mapping).
+    // Face buttons. Indices match between Xbox Standard and PS Standard,
+    // so the same numbers work for DualShock/DualSense:
+    //   PS Cross    = idx 0  → jump (Xbox A)
+    //   PS Circle   = idx 1  → slide (Xbox B)
+    //   PS Square   = idx 2  → parry (Xbox X)
+    //   PS Triangle = idx 3  → dash  (Xbox Y)
     const a = pressed(gp, 0);
     const b = pressed(gp, 1);
     const x = pressed(gp, 2);
@@ -159,17 +196,17 @@ export function startGamepadBridge(): () => void {
     const rb = pressed(gp, 5);
     const lt = pressed(gp, 6);
     const rt = pressed(gp, 7);
-    const start = pressed(gp, 9);
+    const start = pressed(gp, 9); // PS: Options
 
-    // Jump: A button OR up direction
+    // Jump: Cross / A / up direction
     set("Space", a || up);
-    // Slide / dive: B, LB, LT, or down direction
+    // Slide / dive: Circle / B / L1 / L2 / down direction
     set("ShiftLeft", b || lb || lt || down);
-    // Parry: X
+    // Parry: Square / X
     set("KeyJ", x);
-    // Dash / hold for super dash: Y, RT, or RB
+    // Dash / hold for super dash: Triangle / Y / R1 / R2
     set("KeyK", y || rt || rb);
-    // Menu confirm
+    // Menu confirm: Options / Start
     set("Enter", start);
 
     raf = requestAnimationFrame(tick);
