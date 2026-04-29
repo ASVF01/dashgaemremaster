@@ -1068,7 +1068,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         sketchCircle(ctx, pa.x, pa.y, (1 - a) * 24 + 4, null, pa.color, 2, 1);
       } else if (pa.kind === "smear") {
         ctx.fillStyle = pa.color;
-        ctx.fillRect(pa.x - pa.size, pa.y - 2, pa.size * 2, 4);
+        ctx.fillRect(pa.x - pa.size, pa.y - 1, pa.size * 2, 2);
       } else if (pa.kind === "shard") {
         ctx.fillStyle = pa.color;
         ctx.translate(pa.x, pa.y);
@@ -1261,7 +1261,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         drawH = p.w * 1.6 / ratio;
         drawW = p.w * 1.6;
       } else {
-        drawH = p.h;
+        // Tall sprites — scale up so the figure fills the AABB visually
+        // (new stand/walk PNGs have a lot of headroom).
+        drawH = p.h * 1.4;
         drawW = drawH * ratio;
       }
       const dx = p.w / 2 - drawW / 2;
