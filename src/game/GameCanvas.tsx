@@ -86,6 +86,7 @@ interface GameRefs {
   skidDustTimer: number;
   skidSfxTimer: number;
   isSkidding: boolean;
+  rainStars: { x: number; y: number; vy: number; size: number; phase: number; hue: number }[];
 }
 
 interface Props {
