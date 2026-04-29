@@ -45,18 +45,18 @@ export default function Hud({ hud }: { hud: HudState }) {
           <div className="flex items-center justify-between mb-1">
             <span className="font-marker text-ink text-sm tracking-widest">SPEED</span>
             <span
-              className={`font-bungee text-xl ${hud.mach >= 3 ? "animate-jitter" : ""}`}
-              style={{ color: machColor, textShadow: hud.mach >= 2 ? `2px 2px 0 ${machColor}55` : "none" }}
+              className={`font-bungee text-xl ${sm ? "rainbow-text animate-jitter" : hud.mach >= 3 ? "animate-jitter" : ""}`}
+              style={sm ? undefined : { color: machColor, textShadow: hud.mach >= 2 ? `2px 2px 0 ${machColor}55` : "none" }}
             >
-              {machLabel}
+              {sm ? "INVBOI!!" : machLabel}
             </span>
           </div>
           <div className="h-3 border-2 border-ink bg-paper relative overflow-hidden">
             <div
-              className="h-full transition-[width] duration-75"
+              className={`h-full transition-[width] duration-75 ${sm ? "rainbow-bar" : ""}`}
               style={{
-                width: `${Math.min(100, (hud.speed / 980) * 100)}%`,
-                background: machColor,
+                width: `${sm ? 100 : Math.min(100, (hud.speed / 980) * 100)}%`,
+                background: sm ? undefined : machColor,
               }}
             />
             {[0.286, 0.469, 0.653, 0.836].map((p, i) => (
@@ -69,7 +69,7 @@ export default function Hud({ hud }: { hud: HudState }) {
         <div className="scribble-border bg-paper px-4 py-3">
           <div className="font-marker text-ink text-sm tracking-widest mb-1">PARRY [J]</div>
           <div
-            className={`w-20 h-3 border-2 border-ink ${hud.parryReady ? "bg-parry" : "bg-paper"}`}
+            className={`w-20 h-3 border-2 border-ink ${sm ? "rainbow-bar" : hud.parryReady ? "bg-parry" : "bg-paper"}`}
           />
         </div>
 
@@ -78,10 +78,10 @@ export default function Hud({ hud }: { hud: HudState }) {
           <div className="font-marker text-ink text-sm tracking-widest mb-1">DASH [K]</div>
           <div className="w-20 h-3 border-2 border-ink bg-paper relative overflow-hidden">
             <div
-              className="h-full"
+              className={`h-full ${sm ? "rainbow-bar" : ""}`}
               style={{
-                width: `${(1 - Math.min(1, hud.dashCooldown / hud.dashCooldownMax)) * 100}%`,
-                background: hud.dashCooldown <= 0 ? "#22e2ff" : "#7d8a8a",
+                width: `${sm ? 100 : (1 - Math.min(1, hud.dashCooldown / hud.dashCooldownMax)) * 100}%`,
+                background: sm ? undefined : hud.dashCooldown <= 0 ? "#22e2ff" : "#7d8a8a",
                 transition: "width 75ms linear",
               }}
             />
