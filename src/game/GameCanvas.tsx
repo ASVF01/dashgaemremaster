@@ -968,9 +968,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         ctx.translate(-(dx + drawW / 2), -(dy + drawH / 2));
       }
 
-      // Draw sprite, then tint it with the trail color using source-atop.
       ctx.imageSmoothingEnabled = false;
+      // Draw the actual sprite faintly so the stick figure is visible.
+      ctx.globalAlpha = 0.45 * t;
       ctx.drawImage(sprite, dx, dy, drawW, drawH);
+      // Subtle color wash on top of just the sprite pixels.
+      ctx.globalAlpha = 0.25 * t;
       ctx.globalCompositeOperation = "source-atop";
       ctx.fillStyle = ai.color;
       ctx.fillRect(dx, dy, drawW, drawH);
