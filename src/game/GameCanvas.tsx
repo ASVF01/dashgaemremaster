@@ -24,6 +24,8 @@ interface Player {
   diving: boolean;
   dashTime: number; // remaining seconds of active dash
   dashCooldown: number;
+  dashVx: number;   // locked velocity during current dash
+  dashVy: number;
   parrying: number; // remaining seconds of parry active window
   parryCooldown: number;
   invuln: number;
