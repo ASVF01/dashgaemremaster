@@ -1,6 +1,7 @@
 // Tiny WebAudio SFX engine — procedural, no assets.
 import nySampleUrl from "@/assets/audio/ny.ogg";
 import beamCriticalUrl from "@/assets/audio/beam_critical2.mp3";
+import wwHitUrl from "@/assets/audio/ww.ogg";
 import notBadUrl from "@/assets/audio/not_bad.ogg";
 
 let ctx: AudioContext | null = null;
@@ -98,6 +99,26 @@ function playSample(url: string, opts: { vol?: number } = {}) {
   g.gain.value = opts.vol ?? 0.55;
   src.connect(g).connect(master);
   src.start(c.currentTime);
+}
+
+// Like playSample but stops after `maxDur` seconds with a short fade-out.
+function playSampleClipped(url: string, maxDur: number, opts: { vol?: number; fade?: number } = {}) {
+  const c = ac(); if (!c || !master) return;
+  const buf = sampleCache.get(url);
+  if (!buf) { loadSample(url); return; }
+  const t0 = c.currentTime;
+  const src = c.createBufferSource();
+  src.buffer = buf;
+  const g = c.createGain();
+  const vol = opts.vol ?? 0.55;
+  const fade = opts.fade ?? 0.05;
+  g.gain.setValueAtTime(vol, t0);
+  const stopAt = t0 + Math.max(0.05, maxDur);
+  g.gain.setValueAtTime(vol, Math.max(t0, stopAt - fade));
+  g.gain.linearRampToValueAtTime(0.0001, stopAt);
+  src.connect(g).connect(master);
+  src.start(t0);
+  try { src.stop(stopAt + 0.02); } catch { /* noop */ }
 }
 
 
