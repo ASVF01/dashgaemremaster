@@ -11,6 +11,7 @@ import { buildLevel, type Level, type LevelId } from "@/game/level";
 import { sketchLine, sketchRect, sketchCircle, jaggedBolt, INK } from "@/game/draw";
 import { isPressed, matchesAction, getLiveBinds } from "@/game/keybinds";
 import { sfx, unlockAudio } from "@/game/sfx";
+import { rumble } from "@/game/gamepad";
 import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, getStarmanElapsed, playSomSomBgm, getSomSomElapsed } from "@/game/bgm";
 import { getSprite, type SpriteState } from "@/game/sprites";
 
@@ -1182,6 +1183,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // refresh i-frames briefly so chained parries stay safe
     if (r.player.invuln < 0.4) r.player.invuln = 0.4;
     sfx.parryHit();
+    // Tactile timing cue: short, sharp jolt on successful parry.
+    rumble({ duration: 140, strong: 0.85, weak: 0.55 });
     // boost in facing dir
     r.player.vx += r.player.facing * PARRY_BOOST;
     r.player.vy = -220;
