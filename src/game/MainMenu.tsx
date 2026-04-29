@@ -292,6 +292,12 @@ function SettingsTab() {
           value={settings.reducedFx}
           onChange={(v) => update("reducedFx", v)}
         />
+        <ToggleRow
+          label="Low-HP heartbeat"
+          desc="Faint heartbeat sound when you're down to 1 HP. Turn off if it's annoying."
+          value={settings.lowHpHeartbeat}
+          onChange={(v) => update("lowHpHeartbeat", v)}
+        />
         <SliderRow
           label="SFX volume"
           value={settings.sfxVolume}
