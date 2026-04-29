@@ -88,18 +88,17 @@ export default function TouchControls({ visible }: { visible: boolean }) {
 
   return (
     <div
-      className="pointer-events-none absolute inset-0 z-30"
-      // prevent iOS/Android double-tap zoom and scroll while playing
+      className="w-full mt-3 px-3 flex items-end justify-between gap-3 select-none"
       style={{ touchAction: "none" }}
     >
       {/* LEFT cluster: D-pad style left/right */}
-      <div className="absolute bottom-3 left-3 flex gap-2 pointer-events-auto">
+      <div className="flex gap-2">
         <HoldButton code="ArrowLeft" label="◀" className="w-16 h-16 text-2xl" ariaLabel="Move left" />
         <HoldButton code="ArrowRight" label="▶" className="w-16 h-16 text-2xl" ariaLabel="Move right" />
       </div>
 
       {/* RIGHT cluster: action buttons */}
-      <div className="absolute bottom-3 right-3 grid grid-cols-3 gap-2 pointer-events-auto">
+      <div className="grid grid-cols-3 gap-2">
         <HoldButton code="ShiftLeft" label="SLIDE" className="w-16 h-14 text-[11px]" />
         <HoldButton code="Space"     label="JUMP"  className="w-16 h-14 text-[11px]" />
         <HoldButton code="KeyK"      label="DASH"  className="w-16 h-14 text-[11px]" />

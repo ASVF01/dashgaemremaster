@@ -208,7 +208,6 @@ const Index = () => {
             levelId={levelId}
           />
           {screen === "playing" && <Hud hud={hud} />}
-          <TouchControls visible={screen === "playing"} />
 
           {screen === "menu" && <MainMenu onPlay={startLevel} />}
 
@@ -283,6 +282,9 @@ const Index = () => {
             </Overlay>
           )}
         </div>
+
+        {/* touch controls live BELOW the game stage so they never cover the HUD */}
+        <TouchControls visible={screen === "playing"} />
 
         {/* mobile controls hint */}
         <p className="md:hidden text-center font-scribble text-lg mt-2 text-ink/70">
