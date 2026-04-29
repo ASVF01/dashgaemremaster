@@ -4,6 +4,7 @@ import beamCriticalUrl from "@/assets/audio/beam_critical2.mp3";
 import wwHitUrl from "@/assets/audio/ww.ogg";
 import notBadUrl from "@/assets/audio/not_bad.ogg";
 import auraUrl from "@/assets/audio/aura.mp3";
+import swingSwipeUrl from "@/assets/audio/swing_swipe.ogg";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -90,12 +91,13 @@ function playPixelSample(url: string, opts: { vol?: number; bits?: number; rateD
   src.start(t0);
 }
 
-function playSample(url: string, opts: { vol?: number } = {}) {
+function playSample(url: string, opts: { vol?: number; rate?: number } = {}) {
   const c = ac(); if (!c || !master) return;
   const buf = sampleCache.get(url);
   if (!buf) { loadSample(url); return; }
   const src = c.createBufferSource();
   src.buffer = buf;
+  if (opts.rate) src.playbackRate.value = opts.rate;
   const g = c.createGain();
   g.gain.value = opts.vol ?? 0.55;
   src.connect(g).connect(master);
