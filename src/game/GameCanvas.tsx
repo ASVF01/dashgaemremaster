@@ -24,6 +24,8 @@ interface Player {
   diving: boolean;
   dashTime: number; // remaining seconds of active dash
   dashCooldown: number;
+  dashVx: number;   // locked velocity during current dash
+  dashVy: number;
   parrying: number; // remaining seconds of parry active window
   parryCooldown: number;
   invuln: number;
@@ -121,6 +123,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         diving: false,
         dashTime: 0,
         dashCooldown: 0,
+        dashVx: 0, dashVy: 0,
         parrying: 0,
         parryCooldown: 0,
         invuln: 0,
@@ -167,17 +170,40 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
           sfx.parryStart();
         }
       }
-      // dash — bound action
+      // dash — bound action. Direction comes from currently held movement
+      // keys (8-way). If nothing is held, dash horizontally in facing dir.
+      // Pressing dash + jump together performs a "dash jump".
       if (matchesAction(e.code, "dash") && refs.current) {
         unlockAudio();
         const r = refs.current;
         const p = r.player;
         if (p.dashCooldown <= 0 && p.dashTime <= 0 && p.alive) {
+          const k = keysRef.current;
+          const b = getLiveBinds();
+          let dx = 0, dy = 0;
+          if (isPressed(k, "left",  b)) dx -= 1;
+          if (isPressed(k, "right", b)) dx += 1;
+          // up = jump key currently held; down = slide key currently held
+          const jumpAlso = isPressed(k, "jump", b);
+          const downHeld = isPressed(k, "slide", b);
+          if (jumpAlso) dy -= 1;
+          if (downHeld) dy += 1;
+          if (dx === 0 && dy === 0) dx = p.facing;
+          const len = Math.hypot(dx, dy) || 1;
+          p.dashVx = (dx / len) * DASH_SPEED;
+          p.dashVy = (dy / len) * DASH_SPEED;
           p.dashTime = DASH_DURATION;
           p.dashCooldown = DASH_COOLDOWN;
-          p.vx = p.facing * DASH_SPEED;
-          p.vy = 0;
+          p.vx = p.dashVx;
+          p.vy = p.dashVy;
+          p.facing = dx >= 0 ? 1 : -1;
           p.stretch = 1;
+          // dash-jump: also fire a jump impulse so the player leaves the floor
+          if (jumpAlso && p.onGround) {
+            p.onGround = false;
+            p.squash = 1;
+            sfx.jump();
+          }
           // brief i-frames during dash
           if (p.invuln < DASH_DURATION) p.invuln = DASH_DURATION;
           burst(r, p.x + p.w / 2, p.y + p.h / 2, "#22e2ff", 14, 320);
@@ -308,7 +334,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
 
     if (p.dashTime > 0) {
       // locked velocity during dash — direction set on activation
-      p.vx = p.facing * DASH_SPEED;
+      p.vx = p.dashVx;
     } else if (dir !== 0) {
       p.vx += dir * MOVE_ACCEL * dt;
     } else {
@@ -366,9 +392,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       if (Math.abs(p.vx) > speedCap) p.vx = Math.sign(p.vx) * speedCap;
     }
 
-    // gravity (dash floats horizontally)
+    // gravity (dash floats — uses locked dash velocity in any direction)
     if (p.dashTime > 0) {
-      p.vy = 0;
+      p.vy = p.dashVy;
     } else {
       p.vy += GRAVITY * dt;
       if (p.vy > 1400) p.vy = 1400;
