@@ -570,7 +570,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         state: aiState,
         frame: aiFrame,
         life, maxLife: life,
-        color: p.dashTime > 0 ? "#22e2ff" : p.diving ? "#ffd11a" : MACH_COLORS[Math.max(1, mach)],
+        color: p.starman
+          ? `hsl(${Math.floor(r.time * 720) % 360}, 95%, 60%)`
+          : p.dashTime > 0 ? "#22e2ff" : p.diving ? "#ffd11a" : MACH_COLORS[Math.max(1, mach)],
       });
       if (r.afterimages.length > 32) r.afterimages.shift();
     }
@@ -1403,9 +1405,25 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       }
 
       ctx.imageSmoothingEnabled = false;
-      // Just draw the sprite faintly — no solid color overlay (that made a block).
-      ctx.globalAlpha = 0.5 * t;
-      ctx.drawImage(sprite, dx, dy, drawW, drawH);
+      // If color starts with "hsl" we treat it as the rainbow starman tint
+      // and dye the afterimage instead of drawing a plain ghost.
+      if (ai.color.startsWith("hsl")) {
+        const off = getTintCanvas(sprite.width, sprite.height);
+        const octx = off.getContext("2d")!;
+        octx.clearRect(0, 0, off.width, off.height);
+        octx.imageSmoothingEnabled = false;
+        octx.drawImage(sprite, 0, 0);
+        octx.globalCompositeOperation = "source-in";
+        octx.fillStyle = ai.color;
+        octx.fillRect(0, 0, off.width, off.height);
+        octx.globalCompositeOperation = "source-over";
+        ctx.globalAlpha = 0.7 * t;
+        ctx.drawImage(off, dx, dy, drawW, drawH);
+      } else {
+        // Just draw the sprite faintly — no solid color overlay (that made a block).
+        ctx.globalAlpha = 0.5 * t;
+        ctx.drawImage(sprite, dx, dy, drawW, drawH);
+      }
       ctx.restore();
       return;
     }
