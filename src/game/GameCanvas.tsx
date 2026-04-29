@@ -936,7 +936,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       p.hurtAfterTimer -= dt;
       if (p.hurtAfterTimer <= 0) {
         p.hurtAfterTimer = 0.04;
-        const life = 0.32;
+        const life = 0.01;
         r.afterimages.push({
           x: p.x, y: p.y, w: p.w, h: p.h,
           facing: p.facing,
