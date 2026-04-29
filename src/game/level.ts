@@ -48,9 +48,10 @@ export function buildLevel(id: LevelId = "scribble-1"): Level {
 
 // ---------- JUST RUN BRO: flat, endless, no obstacles ----------
 function buildJustRunBro(): Level {
-  // A nice long flat stretch — no hazards, no enemies, just vibes.
-  // A finish flag sits at the very end so the run actually concludes.
-  const W = 30000;
+  // A SUPER long flat stretch — no hazards, no enemies, just vibes.
+  // The super dash ramp is intentionally slow, so this length rewards
+  // committing to the hold for the full payoff.
+  const W = 120000;
   const H = 720;
   const groundY = H - 80;
   const platforms: Platform[] = [
@@ -62,12 +63,16 @@ function buildJustRunBro(): Level {
     goal: { x: W - 160, y: groundY - 120, w: 50, h: 120 },
     platforms, hazards: [], enemies: [], pickups: [],
     signs: [
-      { x: 200, y: groundY - 110, text: "just run bro.." },
-      { x: 1200, y: groundY - 110, text: "seriously. that's it." },
-      { x: 6000, y: groundY - 110, text: "you're doing great bro" },
-      { x: 12000, y: groundY - 110, text: "halfway-ish. keep vibing." },
-      { x: 20000, y: groundY - 110, text: "bro you're built different" },
-      { x: 27000, y: groundY - 110, text: "flag's right there bro" },
+      { x: 200,    y: groundY - 110, text: "just run bro.." },
+      { x: 1500,   y: groundY - 110, text: "seriously. that's it." },
+      { x: 5000,   y: groundY - 110, text: "hold dash. trust me." },
+      { x: 12000,  y: groundY - 110, text: "you're doing great bro" },
+      { x: 25000,  y: groundY - 110, text: "still going? respect." },
+      { x: 45000,  y: groundY - 110, text: "halfway-ish. keep vibing." },
+      { x: 65000,  y: groundY - 110, text: "bro you're built different" },
+      { x: 85000,  y: groundY - 110, text: "the horizon fears you" },
+      { x: 105000, y: groundY - 110, text: "ok almost there bro" },
+      { x: 118000, y: groundY - 110, text: "flag's right there bro" },
     ],
   };
 }
