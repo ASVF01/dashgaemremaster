@@ -35,8 +35,11 @@ const Index = () => {
 
   const handleHud = useCallback((h: HudState) => setHud(h), []);
   const handleFinish = useCallback((t: number, s: number) => {
-    setFinalTime(t); setFinalScore(s); setScreen("win");
-  }, []);
+    setFinalTime(t); setFinalScore(s);
+    setScreen((prev) => prev); // no-op for type
+    // play cutscene after just-run-bro, else go straight to win
+    setScreen(levelId === "just-run-bro" ? "cutscene" : "win");
+  }, [levelId]);
   const handleDeath = useCallback(() => setScreen("dead"), []);
 
   // When the player returns to the menu, swap to the menu BGM. (Other
