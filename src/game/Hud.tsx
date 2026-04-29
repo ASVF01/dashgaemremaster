@@ -5,6 +5,7 @@ export default function Hud({ hud }: { hud: HudState }) {
   const machColor = MACH_COLORS[hud.mach];
   const machLabel = MACH_LABELS[hud.mach];
   const seconds = (hud.timeMs / 1000).toFixed(2);
+  const sm = !!hud.starman;
 
   return (
     <div className="pointer-events-none absolute inset-0 p-4 flex flex-col gap-2">
