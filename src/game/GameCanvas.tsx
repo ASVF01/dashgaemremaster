@@ -389,19 +389,13 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     // variable jump
     if (!jumpHeld && p.vy < -300) p.vy = -300;
 
-    // clamp speed (dash bypasses)
-    if (p.dashTime <= 0) {
-      const speedCap = MAX_SPEED + (p.sliding ? 120 : 0);
-      if (Math.abs(p.vx) > speedCap) p.vx = Math.sign(p.vx) * speedCap;
-    }
+    // speed cap (dash impulse can briefly exceed it; we let momentum carry)
+    const speedCap = MAX_SPEED + (p.sliding ? 120 : 0) + (p.dashTime > 0 ? 600 : 0);
+    if (Math.abs(p.vx) > speedCap) p.vx = Math.sign(p.vx) * speedCap;
 
-    // gravity (dash floats — uses locked dash velocity in any direction)
-    if (p.dashTime > 0) {
-      p.vy = p.dashVy;
-    } else {
-      p.vy += GRAVITY * dt;
-      if (p.vy > 1400) p.vy = 1400;
-    }
+    // gravity — always on; dash no longer freezes vertical motion
+    p.vy += GRAVITY * dt;
+    if (p.vy > 1400) p.vy = 1400;
 
     // dash timers + spawn extra afterimages while active
     if (p.dashTime > 0) {
