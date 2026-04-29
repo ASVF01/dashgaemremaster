@@ -36,6 +36,8 @@ interface Player {
   stretch: number; // 0..1 transient
   smearTimer: number;
   alive: boolean;
+  superDashing: boolean;
+  superDashTime: number; // seconds the hold has been active
 }
 
 interface Afterimage {
@@ -100,6 +102,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const refs = useRef<GameRefs | null>(null);
   const keysRef = useRef<Keys>({});
+  const levelIdRef = useRef<LevelId>(levelId);
+  levelIdRef.current = levelId;
   const [size, setSize] = useState({ w: 1200, h: 600 });
 
   // resize
@@ -137,6 +141,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         hitFlash: 0,
         squash: 0, stretch: 0, smearTimer: 0,
         alive: true,
+        superDashing: false,
+        superDashTime: 0,
       },
       projectiles: [],
       particles: [],
@@ -199,6 +205,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         unlockAudio();
         const r = refs.current;
         const p = r.player;
+        // SUPER DASH (just-run-bro only): hold dash for increasing speed.
+        // No cooldown, no normal dash sfx — just a single whoosh on press.
+        if (levelIdRef.current === "just-run-bro") {
+          if (!p.superDashing && p.alive && !e.repeat) {
+            p.superDashing = true;
+            p.superDashTime = 0;
+            p.stretch = 1;
+            sfx.superDash();
+          }
+          return;
+        }
         if (p.dashCooldown <= 0 && p.dashTime <= 0 && p.alive) {
           const k = keysRef.current;
           const b = getLiveBinds();
@@ -213,24 +230,19 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
           if (dx === 0 && dy === 0) dx = p.facing;
           const len = Math.hypot(dx, dy) || 1;
           const nx = dx / len, ny = dy / len;
-          // Impulse: shove in the aimed direction. Existing velocity along
-          // that direction is preserved + boosted by DASH_BONUS; perpendicular
-          // velocity is kept as-is so momentum carries through.
           const along = p.vx * nx + p.vy * ny;
           const newAlong = Math.max(along, 0) + DASH_IMPULSE + DASH_BONUS;
-          // remove old along-component, add the new one
           p.vx += (newAlong - along) * nx;
           p.vy += (newAlong - along) * ny;
-          // dash-jump: pressing jump together pops you off the ground too
           if (jumpAlso && p.onGround) {
             p.vy = Math.min(p.vy, -JUMP_VEL);
             p.onGround = false;
             p.squash = 1;
             sfx.jump();
           }
-          p.dashTime = DASH_DURATION;        // visual / i-frame window only
+          p.dashTime = DASH_DURATION;
           p.dashCooldown = DASH_COOLDOWN;
-          p.dashVx = nx; p.dashVy = ny;      // store aim for sprite/afterimage tinting
+          p.dashVx = nx; p.dashVy = ny;
           p.facing = dx >= 0 ? 1 : -1;
           p.stretch = 1;
           if (p.invuln < DASH_DURATION) p.invuln = DASH_DURATION;
@@ -240,7 +252,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         }
       }
     };
-    const up = (e: KeyboardEvent) => { keysRef.current[e.code] = false; };
+    const up = (e: KeyboardEvent) => {
+      keysRef.current[e.code] = false;
+      // release super dash
+      if (matchesAction(e.code, "dash") && refs.current) {
+        const p = refs.current.player;
+        if (p.superDashing) {
+          p.superDashing = false;
+          p.superDashTime = 0;
+        }
+      }
+    };
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
     return () => {
@@ -413,7 +435,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     if (!jumpHeld && p.vy < -300) p.vy = -300;
 
     // speed cap (dash impulse can briefly exceed it; we let momentum carry)
-    const speedCap = MAX_SPEED + (p.sliding ? 120 : 0) + (p.dashTime > 0 ? 600 : 0);
+    const superCapBoost = p.superDashing ? 6000 : 0;
+    const speedCap = MAX_SPEED + (p.sliding ? 120 : 0) + (p.dashTime > 0 ? 600 : 0) + superCapBoost;
     if (Math.abs(p.vx) > speedCap) p.vx = Math.sign(p.vx) * speedCap;
 
     // gravity — always on; dash no longer freezes vertical motion
@@ -423,6 +446,18 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     // dash visual / i-frame window timer (velocity is no longer locked)
     if (p.dashTime > 0) p.dashTime -= dt;
     if (p.dashCooldown > 0) p.dashCooldown -= dt;
+
+    // SUPER DASH (just-run-bro): hold dash to ramp up speed in facing dir.
+    if (p.superDashing && p.alive) {
+      p.superDashTime += dt;
+      // accel grows over time, capped
+      const t = Math.min(p.superDashTime, 6);
+      const accel = 1800 + t * 900; // up to ~7200 px/s^2
+      p.vx += p.facing * accel * dt;
+      // continuous stretch while ramping
+      p.stretch = 1;
+      if (p.invuln < 0.05) p.invuln = 0.05;
+    }
 
     // parry timers
     if (p.parrying > 0) p.parrying -= dt;
