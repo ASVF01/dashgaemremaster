@@ -2,7 +2,7 @@
 // Decodes each track to an AudioBuffer once, then schedules overlapping
 // source nodes with an equal-power crossfade at the loop point so there's
 // no click/gap on loop.
-import bgmJustRunBro from "@/assets/audio/bgm_just_run_bro.mp3";
+import bgmJustRunBro from "@/assets/audio/bgm_just_run_bro_ts.wav";
 import bgmMenu from "@/assets/audio/bgm_menu.mp3";
 import bgmChampionPlay from "@/assets/audio/bgm_champion_play.mp3";
 import bgmChampionDuel2 from "@/assets/audio/bgm_champion_duel2.mp3";
