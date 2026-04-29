@@ -610,7 +610,44 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
   }
 
-  function igniteDash(r: GameRefs, p: Player, dx: number, dy: number, jumpAlso: boolean) {
+  // Soft puff of dust when the player stands up out of a slide.
+  function spawnSlideEndPuff(r: GameRefs, p: Player) {
+    const reduced = getSettings().reducedFx;
+    const baseY = p.y + p.h;
+    const cx = p.x + p.w / 2;
+    const back = -p.facing;
+    const n = reduced ? 5 : 11;
+    // small back-smear
+    spawnParticle(r, {
+      x: cx, y: baseY,
+      vx: back * 110, vy: -60,
+      color: INK, life: 0.32, size: 4, kind: "smear",
+    });
+    for (let i = 0; i < n; i++) {
+      const offsetX = (Math.random() - 0.5) * (p.w * 0.9);
+      const grayShade = 110 + Math.floor(Math.random() * 90);
+      const col = `rgb(${grayShade},${grayShade},${grayShade})`;
+      spawnParticle(r, {
+        x: cx + offsetX,
+        y: baseY - Math.random() * 3,
+        vx: back * (40 + Math.random() * 90) + (Math.random() - 0.5) * 50,
+        vy: -(70 + Math.random() * 130),
+        color: col,
+        size: 1.5 + Math.random() * 2,
+        life: 0.32 + Math.random() * 0.28,
+        kind: Math.random() < 0.4 ? "shard" : "spark",
+        angle: Math.random() * Math.PI,
+      });
+    }
+    // tiny upward ring to sell the "pop up to standing" feel
+    if (!reduced) {
+      spawnParticle(r, {
+        x: cx, y: baseY - 4,
+        vx: 0, vy: -20,
+        color: INK, life: 0.28, size: 5, kind: "ring",
+      });
+    }
+  }
     if (dx === 0 && dy === 0) dx = p.facing;
     const len = Math.hypot(dx, dy) || 1;
     const nx = dx / len, ny = dy / len;
