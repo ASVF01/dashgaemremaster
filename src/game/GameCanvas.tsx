@@ -11,7 +11,7 @@ import { buildLevel, type Level, type LevelId } from "@/game/level";
 import { sketchLine, sketchRect, sketchCircle, jaggedBolt, INK } from "@/game/draw";
 import { isPressed, matchesAction, getLiveBinds } from "@/game/keybinds";
 import { sfx, unlockAudio } from "@/game/sfx";
-import { rumble } from "@/game/gamepad";
+import { rumble, getGamepadActions, type GamepadActions } from "@/game/gamepad";
 import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, getStarmanElapsed, playSomSomBgm, getSomSomElapsed } from "@/game/bgm";
 import { getSprite, type SpriteState } from "@/game/sprites";
 
@@ -217,6 +217,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const refs = useRef<GameRefs | null>(null);
   const keysRef = useRef<Keys>({});
+  const prevGamepadRef = useRef<GamepadActions | null>(null);
   const levelIdRef = useRef<LevelId>(levelId);
   levelIdRef.current = levelId;
   const [size, setSize] = useState({ w: 1200, h: 600 });
