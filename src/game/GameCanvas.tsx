@@ -4,7 +4,7 @@ import {
   SLIDE_BOOST, SLIDE_FRICTION, PARRY_WINDOW, PARRY_COOLDOWN, PARRY_BOOST,
   PLAYER_W, PLAYER_H, SLIDE_H,
   MACH_THRESHOLDS, MACH_COLORS, MACH_LABELS,
-  type Particle, type Projectile,
+  type Particle, type Projectile, type Enemy,
 } from "@/game/constants";
 import { buildLevel, type Level, type LevelId } from "@/game/level";
 import { sketchLine, sketchRect, sketchCircle, jaggedBolt, INK } from "@/game/draw";
