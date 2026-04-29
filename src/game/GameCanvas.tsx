@@ -802,21 +802,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     // goal
     drawGoal(ctx, r.level.goal.x, r.level.goal.y, r.level.goal.w, r.level.goal.h, r.time);
 
-    // mach speed lines behind player
-    const speed = Math.abs(r.player.vx);
-    const mach = machTier(speed);
-    if (mach >= 1) {
-      const intensity = mach;
-      ctx.save();
-      for (let i = 0; i < 3 + intensity * 3; i++) {
-        const yy = r.player.y + Math.random() * r.player.h;
-        const len = 30 + intensity * 30 + Math.random() * 60;
-        const x1 = r.player.x + r.player.w / 2 - r.player.facing * (10 + Math.random() * 8);
-        const x2 = x1 - r.player.facing * len;
-        jaggedBolt(ctx, x1, yy, x2, yy + (Math.random() - 0.5) * 8,
-          MACH_COLORS[mach], 1.4 + intensity * 0.5, 5 + intensity, 4 + intensity * 2);
-      }
-      ctx.restore();
+    // afterimages — draw before player so player sits on top
+    for (const ai of r.afterimages) {
+      const t = ai.life / ai.maxLife; // 1 → 0
+      drawAfterimage(ctx, ai, t);
     }
 
     // player
