@@ -116,11 +116,16 @@ function ac(): AudioContext | null {
 }
 
 export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); }
+let baseVol = 0.35;
 export function setMuted(v: boolean) {
   muted = v;
-  if (master) master.gain.value = v ? 0 : 0.35;
+  if (master) master.gain.value = v ? 0 : baseVol;
 }
 export function isMuted() { return muted; }
+export function setSfxVolume(v: number) {
+  baseVol = Math.max(0, Math.min(1, v)) * 0.5; // cap so 1.0 = current loud-ish max
+  if (master && !muted) master.gain.value = baseVol;
+}
 
 type ToneOpts = {
   freq: number;

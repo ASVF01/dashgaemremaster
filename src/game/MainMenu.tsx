@@ -4,8 +4,11 @@ import {
   ACTIONS, DEFAULT_BINDS, type ActionId, type Keybinds,
   keyLabel, useKeybinds,
 } from "@/game/keybinds";
+import { useSettings, type Settings } from "@/game/settings";
+import { setSfxVolume } from "@/game/sfx";
+import { setBgmVolume } from "@/game/bgm";
 
-export type MenuTab = "play" | "tutorial" | "keybinds" | "credits";
+export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "credits";
 
 interface Props {
   onPlay: (id: LevelId) => void;
@@ -34,6 +37,7 @@ export default function MainMenu({ onPlay }: Props) {
           <TabBtn active={tab === "play"}     onClick={() => setTab("play")}>PLAY</TabBtn>
           <TabBtn active={tab === "tutorial"} onClick={() => setTab("tutorial")}>HOW TO PLAY</TabBtn>
           <TabBtn active={tab === "keybinds"} onClick={() => setTab("keybinds")}>KEYBINDS</TabBtn>
+          <TabBtn active={tab === "settings"} onClick={() => setTab("settings")}>SETTINGS</TabBtn>
           <TabBtn active={tab === "credits"}  onClick={() => setTab("credits")}>CREDITS</TabBtn>
         </nav>
 
@@ -42,6 +46,7 @@ export default function MainMenu({ onPlay }: Props) {
           {tab === "play"     && <PlayTab onPlay={onPlay} />}
           {tab === "tutorial" && <TutorialTab onStartTutorial={() => onPlay("tutorial")} />}
           {tab === "keybinds" && <KeybindsTab />}
+          {tab === "settings" && <SettingsTab />}
           {tab === "credits"  && <CreditsTab />}
         </div>
       </div>
@@ -231,6 +236,116 @@ function KeybindsTab() {
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// ---------------- SETTINGS TAB ----------------
+function SettingsTab() {
+  const [settings, setSettings, resetSettings] = useSettings();
+
+  // Apply audio volumes live as the user drags.
+  useEffect(() => { setSfxVolume(settings.sfxVolume); }, [settings.sfxVolume]);
+  useEffect(() => { setBgmVolume(settings.bgmVolume * 0.5); }, [settings.bgmVolume]);
+
+  const update = <K extends keyof Settings>(key: K, value: Settings[K]) => {
+    setSettings({ [key]: value } as Partial<Settings>);
+  };
+
+  return (
+    <div className="scribble-border bg-paper p-5 max-w-3xl mx-auto">
+      <div className="flex items-center justify-between mb-4">
+        <div className="font-marker text-3xl text-ink -rotate-1">SETTINGS</div>
+        <button
+          onClick={() => resetSettings()}
+          className="scribble-border bg-paper px-3 py-1 font-marker text-lg text-ink hover:-rotate-2 transition-transform"
+        >
+          RESET DEFAULTS
+        </button>
+      </div>
+
+      <div className="space-y-3">
+        <ToggleRow
+          label="No jump while sliding"
+          desc="Stops jump-spam during a slide. Disable for old-school slide-hop."
+          value={settings.noJumpWhileSliding}
+          onChange={(v) => update("noJumpWhileSliding", v)}
+        />
+        <ToggleRow
+          label="Show FPS"
+          desc="Display a tiny frames-per-second counter in the top-right."
+          value={settings.showFps}
+          onChange={(v) => update("showFps", v)}
+        />
+        <ToggleRow
+          label="Reduce screen shake"
+          desc="Quarters the camera shake — kinder on motion-sensitive eyes."
+          value={settings.reduceShake}
+          onChange={(v) => update("reduceShake", v)}
+        />
+        <ToggleRow
+          label="Reduced FX"
+          desc="Tones down particle bursts and glitch flashes (helps on slow devices)."
+          value={settings.reducedFx}
+          onChange={(v) => update("reducedFx", v)}
+        />
+        <SliderRow
+          label="SFX volume"
+          value={settings.sfxVolume}
+          onChange={(v) => update("sfxVolume", v)}
+        />
+        <SliderRow
+          label="Music volume"
+          value={settings.bgmVolume}
+          onChange={(v) => update("bgmVolume", v)}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ToggleRow({ label, desc, value, onChange }: { label: string; desc: string; value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <div className="grid grid-cols-12 items-center gap-3 py-2 border-b-2 border-dashed border-ink/20">
+      <div className="col-span-12 sm:col-span-8">
+        <div className="font-marker text-2xl text-ink leading-tight">{label}</div>
+        <div className="font-scribble text-base text-ink/60">{desc}</div>
+      </div>
+      <div className="col-span-12 sm:col-span-4 flex sm:justify-end">
+        <button
+          onClick={() => onChange(!value)}
+          className={[
+            "scribble-border font-marker text-lg px-4 py-1.5 transition-transform hover:-rotate-2",
+            value ? "bg-ink text-paper" : "bg-paper text-ink",
+          ].join(" ")}
+        >
+          {value ? "ON" : "OFF"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SliderRow({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+  return (
+    <div className="grid grid-cols-12 items-center gap-3 py-2 border-b-2 border-dashed border-ink/20">
+      <div className="col-span-12 sm:col-span-4">
+        <div className="font-marker text-2xl text-ink leading-tight">{label}</div>
+      </div>
+      <div className="col-span-9 sm:col-span-7 flex items-center">
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.05}
+          value={value}
+          onChange={(e) => onChange(parseFloat(e.target.value))}
+          className="w-full accent-[hsl(var(--accent))]"
+        />
+      </div>
+      <div className="col-span-3 sm:col-span-1 text-right font-marker text-lg text-ink">
+        {Math.round(value * 100)}
       </div>
     </div>
   );
