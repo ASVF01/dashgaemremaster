@@ -217,6 +217,7 @@ interface GameRefs {
   somSomStormFlash: number; // seconds since flash trigger
   somSomCloudX: number | null;
   somSomRain: Float32Array | null; // packed [x, y, speed, len] * N
+  heartbeatTimer: number;
 }
 
 interface Props {
