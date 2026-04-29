@@ -1169,7 +1169,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
 
       ctx.imageSmoothingEnabled = false;
       // Just draw the sprite faintly — no solid color overlay (that made a block).
-      ctx.globalAlpha = 0.5 * t;
+      // Slightly stronger alpha so the longer trail still reads at speed.
+      ctx.globalAlpha = 0.6 * t;
       ctx.drawImage(sprite, dx, dy, drawW, drawH);
       ctx.restore();
       return;
