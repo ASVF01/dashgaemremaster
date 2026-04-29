@@ -2519,20 +2519,24 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       const useHurt = hitFlash > 0;
       const img = useHurt ? spookHurtImg : spookImg;
       const ready = img.complete && img.naturalWidth > 0;
+      // little nervous shake — jitters more when hurt
+      const shakeAmp = useHurt ? 3 : 1.5;
+      const sx = (Math.sin(time * 47.3) + Math.sin(time * 31.7)) * 0.5 * shakeAmp;
+      const sy = (Math.cos(time * 53.1) + Math.sin(time * 39.9)) * 0.5 * shakeAmp;
       if (ready) {
         // size sprite to fill the chaser AABB while preserving aspect.
         const ratio = img.naturalWidth / img.naturalHeight;
         // Make him a bit larger than the hitbox so he reads as a looming threat.
         const drawH = h * 1.25;
         const drawW = drawH * ratio;
-        const dx = w / 2 - drawW / 2;
-        const dy = h - drawH;
+        const dx = w / 2 - drawW / 2 + sx;
+        const dy = h - drawH + sy;
         ctx.imageSmoothingEnabled = false;
         ctx.drawImage(img, dx, dy, drawW, drawH);
       } else {
         // sprite not loaded yet — draw a quick red silhouette so he's visible.
         ctx.fillStyle = "#1a1a1a";
-        ctx.fillRect(0, 0, w, h);
+        ctx.fillRect(sx, sy, w, h);
       }
     }
     ctx.restore();
