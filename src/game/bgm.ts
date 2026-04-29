@@ -49,7 +49,7 @@ let playing: Playing | null = null;
 // "Open" lowpass cutoff — effectively bypasses filtering.
 const LP_OPEN = 20000;
 // Cutoff used when the level ends — ~50% perceived openness.
-const LP_END = 800;
+const LP_END = 480;
 
 function ac(): AudioContext | null {
   if (typeof window === "undefined") return null;
@@ -230,7 +230,7 @@ export function setBgmVolume(v: number) {
 // Ducks volume slightly and closes the lowpass to ~50% to give the BGM a
 // muffled "behind a wall" vibe while end-of-level UI plays.
 export function bgmLevelEnd() {
-  endDuck = 0.6;
+  endDuck = 0.4;
   const c = ac();
   const now = c ? c.currentTime : 0;
   if (masterGain && c) {
