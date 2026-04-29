@@ -20,6 +20,7 @@ const Index = () => {
   const [finalScore, setFinalScore] = useState(0);
   const [binds] = useKeybinds();
   const [muted, setMuted] = useState(false);
+  const [hasJrbBadge, setHasJrbBadge] = useState(false);
 
   // Load persisted mute pref once.
   useEffect(() => {
