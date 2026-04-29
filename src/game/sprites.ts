@@ -1,12 +1,14 @@
 // Player sprite registry. Add more states as PNGs are uploaded.
 // Each sprite should face RIGHT — the renderer mirrors for left.
 import standUrl from "@/assets/sprites/stand.png";
+import walkUrl from "@/assets/sprites/walk.png";
 
 export type SpriteState = "idle" | "run" | "jump" | "fall" | "slide" | "dive";
 
 const URLS: Partial<Record<SpriteState, string>> = {
   idle: standUrl,
-  // run: runUrl,  jump: jumpUrl,  fall: fallUrl,  slide: slideUrl,  dive: diveUrl,
+  run: walkUrl,
+  // jump: jumpUrl,  fall: fallUrl,  slide: slideUrl,  dive: diveUrl,
 };
 
 const cache: Partial<Record<SpriteState, HTMLImageElement>> = {};
