@@ -57,7 +57,7 @@ export default function Hud({ hud }: { hud: HudState }) {
                   : { color: machColor, textShadow: hud.mach >= 2 ? `2px 2px 0 ${machColor}55` : "none" }
               }
             >
-              {sm ? "INVBOI!!" : machLabel}
+              {sm ? (ss ? "SPEEDBOI!!" : "INVBOI!!") : machLabel}
             </span>
           </div>
           <div className="h-3 border-2 border-ink bg-paper relative overflow-hidden">
