@@ -105,6 +105,7 @@ interface Player {
   superDashing: boolean;
   superDashTime: number; // seconds the hold has been active
   starman: boolean; // "invboi" cheat — rainbow + star sparkles + custom BGM
+  somSom: boolean; // invboi while in just-run-bro — cyan variant
   starTimer: number; // timer for emitting star particles
 }
 
