@@ -4,6 +4,7 @@ import Hud from "@/game/Hud";
 import MainMenu from "@/game/MainMenu";
 import { LEVELS, type LevelId } from "@/game/level";
 import { useKeybinds, keyLabel, type ActionId } from "@/game/keybinds";
+import { playMenuBgm, playBgmFor } from "@/game/bgm";
 
 type Screen = "menu" | "playing" | "dead" | "win";
 
@@ -23,6 +24,13 @@ const Index = () => {
     setFinalTime(t); setFinalScore(s); setScreen("win");
   }, []);
   const handleDeath = useCallback(() => setScreen("dead"), []);
+
+  // When the player returns to the menu, swap to the menu BGM. (Other
+  // screens have their music driven by GameCanvas / bgmLevelEnd.)
+  useEffect(() => {
+    if (screen === "menu") playMenuBgm();
+    else if (screen === "playing") playBgmFor(levelId);
+  }, [screen, levelId]);
 
   const startLevel = (id: LevelId) => {
     setLevelId(id);
