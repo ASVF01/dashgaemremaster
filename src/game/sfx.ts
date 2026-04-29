@@ -152,6 +152,16 @@ export const sfx = {
   },
   shineStart() { startShine(); },
   shineStop() { stopShine(); },
+  rainStart() { startRain(); },
+  rainStop() { stopRain(); },
+  thunder() {
+    // bright crack, then deep rumble
+    noise(0.08, 0.45, 2000, 9000);
+    noise(0.05, 0.35, 4000, 12000, 0.02);
+    tone({ freq: 90, to: 35, dur: 0.9, type: "sawtooth", vol: 0.32, delay: 0.06, release: 0.4 });
+    noise(0.7, 0.32, 60, 700, 0.08);
+    noise(0.5, 0.18, 120, 400, 0.4);
+  },
 };
 
 // ---------- looping "shine" sound for the invboi (starman) state ----------
