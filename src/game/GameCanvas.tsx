@@ -18,7 +18,12 @@ type Keys = Record<string, boolean>;
 
 const RAINBOW_BUCKETS = 18;
 const tintCache = new Map<string, HTMLCanvasElement>();
+const darkTintCache = new Map<string, HTMLCanvasElement>();
 const starCache = new Map<string, HTMLCanvasElement>();
+
+// Darker cyan used by SOM SOM (invboi-in-just-run-bro). Single hue, lower lightness.
+const DARK_CYAN = "#0fb5cf";
+const DARK_CYAN_SOFT = "#1199b0";
 
 function hueBucket(hue: number) {
   return ((Math.round(hue / (360 / RAINBOW_BUCKETS)) % RAINBOW_BUCKETS) + RAINBOW_BUCKETS) % RAINBOW_BUCKETS;
