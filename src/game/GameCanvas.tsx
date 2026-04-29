@@ -161,6 +161,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     };
   }, [resetKey, levelId]);
 
+  // BGM: start when level mounts/changes, stop on unmount
+  useEffect(() => {
+    playBgmFor(levelId);
+    return () => { stopBgm(); };
+  }, [levelId]);
+
+  // BGM: pause/resume with the game's pause state
+  useEffect(() => {
+    if (paused) pauseBgm(); else resumeBgm();
+  }, [paused]);
+
   // keys
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
