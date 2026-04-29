@@ -620,7 +620,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         // It stays in world space, so it visually trails behind the player.
         r.superDashFxTimer -= dt;
         if (r.superDashFxTimer <= 0) {
-          r.superDashFxTimer = 0.1;
+          r.superDashFxTimer = 0.2;
           const cx = p.x + p.w / 2;
           const cy = p.y + p.h / 2;
           // cyan glow bar
