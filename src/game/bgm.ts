@@ -15,8 +15,11 @@ const CROSSFADE = 0.12;
 
 let ctx: AudioContext | null = null;
 let masterGain: GainNode | null = null;
+let lowpass: BiquadFilterNode | null = null;
 let muted = false;
 let volume = 0.35;
+// Multiplier applied on top of `volume` when the level has ended (duck).
+let endDuck = 1;
 
 const bufferCache = new Map<string, AudioBuffer>();
 const decodingCache = new Map<string, Promise<AudioBuffer>>();
@@ -41,6 +44,11 @@ type Playing = {
 
 let playing: Playing | null = null;
 
+// "Open" lowpass cutoff — effectively bypasses filtering.
+const LP_OPEN = 20000;
+// Cutoff used when the level ends — ~50% perceived openness.
+const LP_END = 800;
+
 function ac(): AudioContext | null {
   if (typeof window === "undefined") return null;
   if (!ctx) {
@@ -48,8 +56,13 @@ function ac(): AudioContext | null {
     if (!AC) return null;
     ctx = new AC();
     masterGain = ctx.createGain();
-    masterGain.gain.value = muted ? 0 : volume;
-    masterGain.connect(ctx.destination);
+    masterGain.gain.value = muted ? 0 : volume * endDuck;
+    lowpass = ctx.createBiquadFilter();
+    lowpass.type = "lowpass";
+    lowpass.frequency.value = LP_OPEN;
+    lowpass.Q.value = 0.7;
+    masterGain.connect(lowpass);
+    lowpass.connect(ctx.destination);
   }
   if (ctx.state === "suspended") ctx.resume().catch(() => {});
   return ctx;
