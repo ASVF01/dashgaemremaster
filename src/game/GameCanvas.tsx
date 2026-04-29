@@ -1161,6 +1161,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           e.x += e.vx * dt;
         }
         e.y = (r.level.height - 80) - e.h; // pin to ground
+
+        // red trail ghosts behind the chaser (0.3s lifetime)
+        r.chaserTrailTimer -= dt;
+        if (r.chaserTrailTimer <= 0) {
+          r.chaserTrailTimer = 0.035;
+          r.chaserTrail.push({
+            x: e.x, y: e.y, w: e.w, h: e.h,
+            life: 0.3, maxLife: 0.3,
+          });
+          if (r.chaserTrail.length > 24) r.chaserTrail.splice(0, r.chaserTrail.length - 24);
+        }
       }
 
       // enemy vs player
