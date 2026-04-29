@@ -27,13 +27,28 @@ const Index = () => {
   const [muted, setMuted] = useState(false);
   const [hasJrbBadge, setHasJrbBadge] = useState(false);
   const [badgeFace, setBadgeFace] = useState<":3" | "X3">(":3");
+  const [dark, setDark] = useState(false);
 
-  // Load persisted mute pref once.
+  // Load persisted prefs once.
   useEffect(() => {
     initBgmMutedFromStorage();
     setMuted(isBgmMuted());
     try { setHasJrbBadge(localStorage.getItem("badge_jrb") === "1"); } catch { /* noop */ }
+    try {
+      const d = localStorage.getItem("dark_mode") === "1";
+      setDark(d);
+      document.documentElement.classList.toggle("dark", d);
+    } catch { /* noop */ }
   }, []);
+
+  const toggleDark = () => {
+    setDark((d) => {
+      const next = !d;
+      document.documentElement.classList.toggle("dark", next);
+      try { localStorage.setItem("dark_mode", next ? "1" : "0"); } catch { /* noop */ }
+      return next;
+    });
+  };
 
   const toggleMute = () => {
     const next = !muted;
@@ -155,6 +170,14 @@ const Index = () => {
             className="scribble-border bg-paper px-3 py-1 font-marker text-base text-ink hover:-rotate-2 transition-transform"
           >
             {muted ? "🔇 MUSIC OFF" : "🔊 MUSIC ON"}
+          </button>
+          <button
+            onClick={toggleDark}
+            aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+            title={dark ? "Light mode" : "Dark mode (save your eyes)"}
+            className="scribble-border bg-paper px-3 py-1 font-marker text-base text-ink hover:rotate-2 transition-transform"
+          >
+            {dark ? "☀️ LIGHT" : "🌙 DARK"}
           </button>
           {screen === "playing" && (
             <button

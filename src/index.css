@@ -82,6 +82,35 @@
     --border: 48 30% 94%;
     --input: 0 0% 15%;
     --ring: 350 90% 55%;
+
+    /* remap paper/ink so existing components flip to dark */
+    --paper: 0 0% 10%;
+    --ink: 48 30% 94%;
+  }
+
+  /* rainbow bar used by HUD during invboi/starman cheat */
+  @keyframes rainbow-slide {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+  .rainbow-bar {
+    background-image: linear-gradient(
+      90deg,
+      #ff004c, #ff8a00, #ffe600, #14ff5a, #00d2ff, #6a4cff, #ff4cd2, #ff004c
+    );
+    background-size: 200% 100%;
+    animation: rainbow-slide 1.2s linear infinite;
+  }
+  .rainbow-text {
+    background-image: linear-gradient(
+      90deg,
+      #ff004c, #ff8a00, #ffe600, #14ff5a, #00d2ff, #6a4cff, #ff4cd2, #ff004c
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: rainbow-slide 1.2s linear infinite;
   }
 }
 

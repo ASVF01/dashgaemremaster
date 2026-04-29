@@ -169,6 +169,7 @@ export interface HudState {
   parryReady: boolean;
   dashCooldown: number;
   dashCooldownMax: number;
+  starman?: boolean;
 }
 
 export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio = false, resetKey, levelId = "scribble-1" }: Props) {
@@ -413,9 +414,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           combo: r.combo,
           progress: Math.min(1, r.player.x / r.level.width),
           timeMs: r.finished ? r.finishTime : performance.now() - r.startedAt,
-          parryReady: r.player.parryCooldown <= 0,
-          dashCooldown: Math.max(0, r.player.dashCooldown),
+          parryReady: r.player.starman ? true : r.player.parryCooldown <= 0,
+          dashCooldown: r.player.starman ? 0 : Math.max(0, r.player.dashCooldown),
           dashCooldownMax: DASH_COOLDOWN,
+          starman: r.player.starman,
         });
       }
 
@@ -489,6 +491,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // player in render() (blinking in place) instead of spawning particles.
     if (p.starman) {
       p.invuln = Math.max(p.invuln, 1);
+      // free dash + parry: zero out their cooldowns every frame
+      p.dashCooldown = 0;
+      p.parryCooldown = 0;
     }
 
     // input (bound)
@@ -1320,23 +1325,28 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
 
     // particles
-    for (const pa of r.particles) {
+    const rainbowParticles = r.player.starman;
+    for (let pi = 0; pi < r.particles.length; pi++) {
+      const pa = r.particles[pi];
       const a = Math.max(0, pa.life / pa.maxLife);
+      const drawColor = rainbowParticles
+        ? `hsl(${(r.time * 360 + pi * 37) % 360}, 100%, 60%)`
+        : pa.color;
       ctx.save();
       ctx.globalAlpha = a;
       if (pa.kind === "ring") {
-        sketchCircle(ctx, pa.x, pa.y, (1 - a) * 24 + 4, null, pa.color, 2, 1);
+        sketchCircle(ctx, pa.x, pa.y, (1 - a) * 24 + 4, null, drawColor, 2, 1);
       } else if (pa.kind === "smear") {
-        ctx.fillStyle = pa.color;
+        ctx.fillStyle = drawColor;
         ctx.fillRect(pa.x - pa.size, pa.y - 2, pa.size * 2, 4);
       } else if (pa.kind === "shard") {
-        ctx.fillStyle = pa.color;
+        ctx.fillStyle = drawColor;
         ctx.translate(pa.x, pa.y);
         ctx.rotate(pa.angle ?? 0);
         ctx.fillRect(-pa.size, -1, pa.size * 2, 2);
       } else if (pa.kind === "star") {
         // 5-point star
-        ctx.fillStyle = pa.color;
+        ctx.fillStyle = drawColor;
         ctx.strokeStyle = "#fff";
         ctx.lineWidth = 1;
         ctx.translate(pa.x, pa.y);
@@ -1356,7 +1366,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         ctx.fill();
         ctx.stroke();
       } else {
-        ctx.fillStyle = pa.color;
+        ctx.fillStyle = drawColor;
         ctx.beginPath();
         ctx.arc(pa.x, pa.y, pa.size, 0, Math.PI * 2);
         ctx.fill();
