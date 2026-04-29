@@ -415,6 +415,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         for (let i = 0; i < 2; i++) {
           const a = Math.random() * Math.PI * 2;
           const s = 60 + Math.random() * 80;
+          const life = 0.45 + Math.random() * 0.3;
           r.particles.push({
             x: p.x + p.w / 2 + Math.cos(a) * 18,
             y: p.y + p.h / 2 + Math.sin(a) * 22,
@@ -422,7 +423,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
             vy: Math.sin(a) * s - 80,
             color: "#ffd11a",
             size: 3 + Math.random() * 3,
-            life: 0.45 + Math.random() * 0.3,
+            life,
+            maxLife: life,
             kind: "star",
             angle: Math.random() * Math.PI,
           });
