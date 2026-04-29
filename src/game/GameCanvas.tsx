@@ -173,6 +173,9 @@ interface GameRefs {
   skidSfxTimer: number;
   isSkidding: boolean;
   rainStars: { x: number; y: number; vy: number; size: number; phase: number; hue: number }[];
+  // SOM SOM lightning: spawned occasionally over the OLED-black backdrop.
+  lightningCooldown: number;
+  lightningBolts: { x: number; t: number; life: number; segs: { x: number; y: number }[]; flash: number }[];
 }
 
 interface Props {
