@@ -6,8 +6,9 @@ import {
   MACH_THRESHOLDS, MACH_COLORS, MACH_LABELS,
   type Particle, type Projectile,
 } from "@/game/constants";
-import { buildLevel, type Level } from "@/game/level";
+import { buildLevel, type Level, type LevelId } from "@/game/level";
 import { sketchLine, sketchRect, sketchCircle, jaggedBolt, INK } from "@/game/draw";
+import { isPressed, matchesAction, getLiveBinds } from "@/game/keybinds";
 
 type Keys = Record<string, boolean>;
 
@@ -53,6 +54,7 @@ interface Props {
   onDeath: () => void;
   paused: boolean;
   resetKey: number;
+  levelId?: LevelId;
 }
 
 export interface HudState {
@@ -66,7 +68,7 @@ export interface HudState {
   parryReady: boolean;
 }
 
-export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey }: Props) {
+export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey, levelId = "scribble-1" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const refs = useRef<GameRefs | null>(null);
   const keysRef = useRef<Keys>({});
@@ -86,7 +88,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey 
 
   // init / reset
   useEffect(() => {
-    const level = buildLevel();
+    const level = buildLevel(levelId);
     refs.current = {
       level,
       player: {
@@ -119,7 +121,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey 
       finished: false,
       finishTime: 0,
     };
-  }, [resetKey]);
+  }, [resetKey, levelId]);
 
   // keys
   useEffect(() => {
@@ -128,8 +130,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey 
       if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) {
         e.preventDefault();
       }
-      // parry
-      if ((e.code === "KeyJ" || e.code === "KeyK" || e.code === "ShiftRight") && refs.current) {
+      // parry — bound action
+      if (matchesAction(e.code, "parry") && refs.current) {
         const r = refs.current;
         if (r.player.parryCooldown <= 0 && r.player.parrying <= 0) {
           r.player.parrying = PARRY_WINDOW;
@@ -241,11 +243,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey 
     const p = r.player;
     const onGround = p.onGround;
 
-    // input
-    const left = keys["ArrowLeft"] || keys["KeyA"];
-    const right = keys["ArrowRight"] || keys["KeyD"];
-    const jumpHeld = keys["Space"] || keys["KeyW"] || keys["ArrowUp"];
-    const slideHeld = keys["ShiftLeft"] || keys["KeyS"] || keys["ArrowDown"];
+    // input (bound)
+    const b = getLiveBinds();
+    const left = isPressed(keys, "left", b);
+    const right = isPressed(keys, "right", b);
+    const jumpHeld = isPressed(keys, "jump", b);
+    const slideHeld = isPressed(keys, "slide", b);
 
     // horizontal accel
     let dir = 0;
