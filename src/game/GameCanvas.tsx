@@ -239,6 +239,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       superDashBurst: null,
       superDashFxTimer: 0,
       superDashLineTimer: 0,
+      superDashFlash: 0,
       startedAt: performance.now(),
       finished: false,
       finishTime: 0,
