@@ -205,7 +205,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         unlockAudio();
         const r = refs.current;
         const p = r.player;
-        if (p.dashCooldown <= 0 && p.dashTime <= 0 && p.alive) {
+        const spamDash = levelId === "just-run-bro";
+        if ((spamDash || (p.dashCooldown <= 0 && p.dashTime <= 0)) && p.alive) {
           const k = keysRef.current;
           const b = getLiveBinds();
           let dx = 0, dy = 0;
@@ -235,7 +236,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
             sfx.jump();
           }
           p.dashTime = DASH_DURATION;        // visual / i-frame window only
-          p.dashCooldown = DASH_COOLDOWN;
+          p.dashCooldown = spamDash ? 0 : DASH_COOLDOWN;
           p.dashVx = nx; p.dashVy = ny;      // store aim for sprite/afterimage tinting
           p.facing = dx >= 0 ? 1 : -1;
           p.stretch = 1;
