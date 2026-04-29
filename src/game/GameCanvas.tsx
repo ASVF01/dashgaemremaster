@@ -508,17 +508,18 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
 
     // Horizontal motion-blur smears — emitted while dashing or above mach 2.
     // Length and emission rate scale with raw speed for readability.
+    // Color is monochrome white so it reads as motion, not as a mach tint.
     if ((p.dashTime > 0 || mach >= 2) && Math.random() < 0.5 + sp * 0.5) {
-      const len = 30 + sp * 140 + (p.dashTime > 0 ? 40 : 0);
+      const len = 18 + sp * 70 + (p.dashTime > 0 ? 20 : 0);
       const yJit = (Math.random() - 0.5) * (p.h - 8);
       spawnParticle(r, {
         x: p.x + p.w / 2 - p.facing * (p.w * 0.3 + Math.random() * 20),
         y: p.y + p.h / 2 + yJit,
         vx: -p.facing * (speed * 0.4 + 120),
         vy: 0,
-        color: p.dashTime > 0 ? "#22e2ff" : MACH_COLORS[Math.max(1, mach)],
+        color: "#ffffff",
         size: len / 2,
-        life: 0.18 + sp * 0.18,
+        life: 0.14 + sp * 0.12,
         kind: "smear",
       });
     }
@@ -526,7 +527,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
 
     // Thin speed lines while running on the ground (any speed above a small threshold).
     if (p.onGround && Math.abs(p.vx) > 140 && Math.random() < 0.55) {
-      const len = 14 + Math.random() * 18 + Math.min(40, Math.abs(p.vx) * 0.04);
+      const len = 8 + Math.random() * 10 + Math.min(22, Math.abs(p.vx) * 0.025);
       spawnParticle(r, {
         x: p.x + p.w / 2 - p.facing * (p.w * 0.4 + Math.random() * 30),
         y: p.y + 4 + Math.random() * (p.h - 8),
@@ -534,7 +535,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         vy: 0,
         color: "#ffffff",
         size: len / 2,
-        life: 0.18 + Math.random() * 0.12,
+        life: 0.14 + Math.random() * 0.10,
         kind: "smear",
       });
     }
@@ -1067,7 +1068,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         sketchCircle(ctx, pa.x, pa.y, (1 - a) * 24 + 4, null, pa.color, 2, 1);
       } else if (pa.kind === "smear") {
         ctx.fillStyle = pa.color;
-        ctx.fillRect(pa.x - pa.size, pa.y - 2, pa.size * 2, 4);
+        ctx.fillRect(pa.x - pa.size, pa.y - 1, pa.size * 2, 2);
       } else if (pa.kind === "shard") {
         ctx.fillStyle = pa.color;
         ctx.translate(pa.x, pa.y);
@@ -1154,7 +1155,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         drawH = ai.w * 1.6 / ratio;
         drawW = ai.w * 1.6;
       } else {
-        drawH = ai.h;
+        // Match drawPlayer: scale tall sprites so they fill the AABB visually.
+        drawH = ai.h * 1.4;
         drawW = drawH * ratio;
       }
       const dx = ai.x + ai.w / 2 - drawW / 2;
@@ -1260,7 +1262,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         drawH = p.w * 1.6 / ratio;
         drawW = p.w * 1.6;
       } else {
-        drawH = p.h;
+        // Tall sprites — scale up so the figure fills the AABB visually
+        // (new stand/walk PNGs have a lot of headroom).
+        drawH = p.h * 1.4;
         drawW = drawH * ratio;
       }
       const dx = p.w / 2 - drawW / 2;
