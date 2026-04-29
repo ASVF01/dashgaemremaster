@@ -412,7 +412,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     r.afterTimer -= dt;
     if ((mach >= 1 || p.diving || p.dashTime > 0) && r.afterTimer <= 0) {
       r.afterTimer = p.dashTime > 0 ? 0.012 : Math.max(0.018, 0.05 - mach * 0.008);
-      const life = 0.7;
+      const life = 0.3;
       const aiState: SpriteState =
         p.diving ? "dive" :
         p.sliding ? "slide" :
