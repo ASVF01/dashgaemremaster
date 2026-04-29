@@ -47,6 +47,7 @@ const Index = () => {
   useEffect(() => {
     if (screen === "menu") playMenuBgm();
     else if (screen === "playing") playBgmFor(levelId);
+    else if (screen === "cutscene") stopBgm();
   }, [screen, levelId]);
 
   const startLevel = (id: LevelId) => {
