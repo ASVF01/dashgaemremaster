@@ -332,7 +332,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     // mach particles
     const speed = Math.abs(p.vx);
     const mach = machTier(speed);
-    if (mach > r.bestMach) r.bestMach = mach;
+    if (mach > r.bestMach) { r.bestMach = mach; if (mach >= 1) sfx.mach(); }
 
     if (mach >= 1 && Math.random() < 0.4 + mach * 0.15) {
       spawnParticle(r, {
@@ -596,7 +596,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         if (rectOverlap(p.x, p.y, p.w, p.h, pl.x, pl.y, pl.w, pl.h)) {
           if (delta > 0) {
             p.y = pl.y - p.h;
-            if (!p.onGround && p.vy > 200) p.squash = 1;
+            if (!p.onGround && p.vy > 200) { p.squash = 1; sfx.land(); }
             p.vy = 0;
             landed = true;
           } else if (delta < 0) {
