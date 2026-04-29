@@ -43,6 +43,7 @@ interface Afterimage {
   sliding: boolean;
   diving: boolean;
   state: SpriteState;
+  frame: number;        // animation frame index captured at spawn (mach-scaled)
   life: number; maxLife: number;
   color: string;
 }
