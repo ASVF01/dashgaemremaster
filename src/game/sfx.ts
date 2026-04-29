@@ -276,9 +276,20 @@ export const sfx = {
     noise(0.2, 0.18, 600, 6000, 0.02);
   },
   superDash() {
-    // procedural-only impact: punchy noise transient + low sweep
-    noise(0.04, 0.45, 1500, 8000);
-    tone({ freq: 180, to: 60, dur: 0.1, type: "sawtooth", vol: 0.32, release: 0.05 });
+    // BIG impact: layered sub-boom, sharp crack transient, body sweep, and
+    // a tail rumble — designed to feel like a heavy hit on press.
+    // 1) sharp crack: very short bright noise transient
+    noise(0.025, 0.7, 3500, 12000);
+    // 2) sub-boom: deep low sine drop, fat and short
+    tone({ freq: 140, to: 35, dur: 0.22, type: "sine", vol: 0.55, attack: 0.001, release: 0.12 });
+    // 3) body sweep: sawtooth descending for weight
+    tone({ freq: 320, to: 70, dur: 0.18, type: "sawtooth", vol: 0.42, attack: 0.002, release: 0.08 });
+    // 4) high whoosh: filtered noise body that decays through the dash
+    noise(0.18, 0.42, 800, 5000, 0.04);
+    // 5) tail rumble: low sub continuing the impact
+    tone({ freq: 80, to: 50, dur: 0.28, type: "sine", vol: 0.28, attack: 0.01, release: 0.18, delay: 0.05 });
+    // 6) metallic tick to add edge
+    tone({ freq: 1800, to: 600, dur: 0.06, type: "square", vol: 0.18, release: 0.04 });
   },
   dash() {
     // sped-up swing/swipe sample, used for the normal dash
