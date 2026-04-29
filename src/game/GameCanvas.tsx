@@ -1147,6 +1147,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
     // player
     drawPlayer(ctx, r);
+    if (r.player.starman) drawStarmanStars(ctx, r);
 
     // super dash burst VFX
     if (r.superDashBurst) {
