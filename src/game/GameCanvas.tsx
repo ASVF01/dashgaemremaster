@@ -14,6 +14,7 @@ import { sfx, unlockAudio } from "@/game/sfx";
 
 import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, getStarmanElapsed, playSomSomBgm, getSomSomElapsed } from "@/game/bgm";
 import weSfxUrl from "@/assets/audio/impact_aura_charge.ogg";
+import { getSettings } from "@/game/settings";
 import { getSprite, type SpriteState } from "@/game/sprites";
 
 type Keys = Record<string, boolean>;
@@ -655,7 +656,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
     // jump (also cancels dive when grounded — handled by jump flow naturally)
     const jumpJustPressed = jumpHeld && !p.jumpWasHeld;
-    if (jumpHeld && onGround) {
+    const settings = getSettings();
+    const jumpBlockedBySlide = settings.noJumpWhileSliding && p.sliding;
+    if (jumpHeld && onGround && !jumpBlockedBySlide) {
       p.vy = -JUMP_VEL;
       p.onGround = false;
       p.squash = 1;
