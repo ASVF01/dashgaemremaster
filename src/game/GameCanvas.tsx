@@ -993,7 +993,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     if ((mach >= 1 || p.diving || p.dashTime > 0) && r.afterTimer <= 0) {
       const superDazh = p.superDashing && p.superDashTime >= 5;
       r.afterTimer = p.starman ? 0.04 : superDazh ? 0.025 : (p.dashTime > 0 ? 0.012 : Math.max(0.018, 0.05 - mach * 0.008));
-      const life = 0.01;
+      const life = p.starman ? 0.28 : (p.dashTime > 0 ? 0.22 : 0.18);
       const rainbowHue = p.starman
         ? (p.somSom ? 190 : Math.floor(r.time * 90) % 360)
         : superDazh ? 190 : undefined;
