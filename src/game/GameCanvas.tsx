@@ -1095,22 +1095,24 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       const inv = 1 - k;
       ctx.save();
       // bright flash core (fades fast)
+      const CYAN = "#22e2ff";
+      const CYAN_LIGHT = "#b9f6ff";
       const flashA = Math.max(0, 1 - k * 2.2);
       if (flashA > 0) {
         ctx.globalAlpha = flashA * 0.9;
-        ctx.fillStyle = "#fffbe6";
+        ctx.fillStyle = CYAN_LIGHT;
         ctx.beginPath();
         ctx.arc(b.x, b.y, 18 + k * 30, 0, Math.PI * 2);
         ctx.fill();
       }
       // shockwave rings
       ctx.globalAlpha = inv;
-      sketchCircle(ctx, b.x, b.y, 10 + k * 70, null, INK, 3, 1.2);
+      sketchCircle(ctx, b.x, b.y, 10 + k * 70, null, CYAN, 3, 1.2);
       ctx.globalAlpha = inv * 0.7;
-      sketchCircle(ctx, b.x, b.y, 4 + k * 44, null, INK, 2, 1);
+      sketchCircle(ctx, b.x, b.y, 4 + k * 44, null, CYAN, 2, 1);
       // radial speed lines
       ctx.globalAlpha = inv;
-      ctx.strokeStyle = INK;
+      ctx.strokeStyle = CYAN;
       ctx.lineWidth = 2.5;
       const spokes = 14;
       for (let i = 0; i < spokes; i++) {
@@ -1127,9 +1129,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       ctx.lineWidth = 4;
       const sx = b.x + b.facing * (10 + k * 20);
       const ex = b.x + b.facing * (50 + k * 90);
-      jaggedBolt(ctx, sx, b.y, ex, b.y, INK, 3, 4, 6);
-      jaggedBolt(ctx, sx, b.y - 6, ex - b.facing * 10, b.y - 6, INK, 2, 3, 5);
-      jaggedBolt(ctx, sx, b.y + 6, ex - b.facing * 10, b.y + 6, INK, 2, 3, 5);
+      jaggedBolt(ctx, sx, b.y, ex, b.y, CYAN, 3, 4, 6);
+      jaggedBolt(ctx, sx, b.y - 6, ex - b.facing * 10, b.y - 6, CYAN, 2, 3, 5);
+      jaggedBolt(ctx, sx, b.y + 6, ex - b.facing * 10, b.y + 6, CYAN, 2, 3, 5);
       ctx.restore();
     }
 
