@@ -300,7 +300,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     if (right) dir += 1;
     if (dir !== 0) p.facing = dir > 0 ? 1 : -1;
 
-    if (dir !== 0) {
+    if (p.dashTime > 0) {
+      // locked velocity during dash — direction set on activation
+      p.vx = p.facing * DASH_SPEED;
+    } else if (dir !== 0) {
       p.vx += dir * MOVE_ACCEL * dt;
     } else {
       // friction (more if not sliding)
@@ -351,13 +354,30 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     // variable jump
     if (!jumpHeld && p.vy < -300) p.vy = -300;
 
-    // clamp speed
-    const speedCap = MAX_SPEED + (p.sliding ? 120 : 0);
-    if (Math.abs(p.vx) > speedCap) p.vx = Math.sign(p.vx) * speedCap;
+    // clamp speed (dash bypasses)
+    if (p.dashTime <= 0) {
+      const speedCap = MAX_SPEED + (p.sliding ? 120 : 0);
+      if (Math.abs(p.vx) > speedCap) p.vx = Math.sign(p.vx) * speedCap;
+    }
 
-    // gravity
-    p.vy += GRAVITY * dt;
-    if (p.vy > 1400) p.vy = 1400;
+    // gravity (dash floats horizontally)
+    if (p.dashTime > 0) {
+      p.vy = 0;
+    } else {
+      p.vy += GRAVITY * dt;
+      if (p.vy > 1400) p.vy = 1400;
+    }
+
+    // dash timers + spawn extra afterimages while active
+    if (p.dashTime > 0) {
+      p.dashTime -= dt;
+      if (p.dashTime <= 0) {
+        // exit dash with preserved horizontal momentum (capped)
+        const cap = MAX_SPEED + 120;
+        if (Math.abs(p.vx) > cap) p.vx = Math.sign(p.vx) * cap;
+      }
+    }
+    if (p.dashCooldown > 0) p.dashCooldown -= dt;
 
     // parry timers
     if (p.parrying > 0) p.parrying -= dt;
