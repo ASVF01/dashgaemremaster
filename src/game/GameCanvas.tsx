@@ -807,25 +807,29 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       onFinish(r.finishTime, r.score);
     }
 
-    // Camera follow: center normally with a small lookahead, but while
-    // super-dashing in just-run-bro, lock the camera directly to the
-    // player's center so high velocity doesn't push them to the left.
-    const speedNow = Math.abs(p.vx);
-    const playerCenterX = p.x + p.w / 2;
-    const centerCam = playerCenterX - size.w * 0.5;
-    const lockCentered = levelIdRef.current === "just-run-bro" && p.superDashing;
-    const targetCam = lockCentered ? centerCam : centerCam + p.facing * 60 + p.vx * 0.08;
-    const lerp = lockCentered ? 1 : Math.min(1, dt * (6 + speedNow * 0.02));
-    r.cameraX += (targetCam - r.cameraX) * lerp;
-    // world bounds
-    if (r.cameraX < 0) r.cameraX = 0;
-    if (r.cameraX > r.level.width - size.w) r.cameraX = r.level.width - size.w;
-    // safety: if player would still leave the screen (extreme speed),
-    // snap the camera so they sit at the visible edge with a margin.
-    const margin = 100;
-    const playerScreenX = (p.x + p.w / 2) - r.cameraX;
-    if (playerScreenX < margin) r.cameraX = (p.x + p.w / 2) - margin;
-    if (playerScreenX > size.w - margin) r.cameraX = (p.x + p.w / 2) - (size.w - margin);
+    // Camera follow. In "just-run-bro" we keep the player centered so
+    // extreme super-dash velocity doesn't push them off-screen. Other
+    // levels use the original offset-follow with lookahead.
+    if (levelIdRef.current === "just-run-bro") {
+      const speedNow = Math.abs(p.vx);
+      const playerCenterX = p.x + p.w / 2;
+      const centerCam = playerCenterX - size.w * 0.5;
+      const lockCentered = p.superDashing;
+      const targetCam = lockCentered ? centerCam : centerCam + p.facing * 60 + p.vx * 0.08;
+      const lerp = lockCentered ? 1 : Math.min(1, dt * (6 + speedNow * 0.02));
+      r.cameraX += (targetCam - r.cameraX) * lerp;
+      if (r.cameraX < 0) r.cameraX = 0;
+      if (r.cameraX > r.level.width - size.w) r.cameraX = r.level.width - size.w;
+      const margin = 100;
+      const playerScreenX = (p.x + p.w / 2) - r.cameraX;
+      if (playerScreenX < margin) r.cameraX = (p.x + p.w / 2) - margin;
+      if (playerScreenX > size.w - margin) r.cameraX = (p.x + p.w / 2) - (size.w - margin);
+    } else {
+      const targetCam = p.x - size.w * 0.35 + p.facing * 80 + p.vx * 0.12;
+      r.cameraX += (targetCam - r.cameraX) * Math.min(1, dt * 6);
+      if (r.cameraX < 0) r.cameraX = 0;
+      if (r.cameraX > r.level.width - size.w) r.cameraX = r.level.width - size.w;
+    }
   }
 
   function damage(r: GameRefs, x: number, y: number) {
