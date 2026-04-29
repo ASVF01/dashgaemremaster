@@ -970,9 +970,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       // Match drawPlayer's sizing exactly so the trail fits the PNG.
       const ratio = sprite.width / sprite.height;
       const wide = ratio > 1.1;
-      const wideScale = 1.6;
-      const drawH = wide ? ai.w * wideScale / ratio : ai.h;
-      const drawW = wide ? ai.w * wideScale : drawH * ratio;
+      let drawW: number, drawH: number;
+      if (ai.state === "slide") {
+        drawW = ai.w * 2.2;
+        drawH = drawW / ratio;
+      } else if (wide) {
+        drawH = ai.w * 1.6 / ratio;
+        drawW = ai.w * 1.6;
+      } else {
+        drawH = ai.h;
+        drawW = drawH * ratio;
+      }
       const dx = ai.x + ai.w / 2 - drawW / 2;
       const dy = ai.y + ai.h - drawH;
 
