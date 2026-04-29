@@ -170,17 +170,40 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
           sfx.parryStart();
         }
       }
-      // dash — bound action
+      // dash — bound action. Direction comes from currently held movement
+      // keys (8-way). If nothing is held, dash horizontally in facing dir.
+      // Pressing dash + jump together performs a "dash jump".
       if (matchesAction(e.code, "dash") && refs.current) {
         unlockAudio();
         const r = refs.current;
         const p = r.player;
         if (p.dashCooldown <= 0 && p.dashTime <= 0 && p.alive) {
+          const k = keysRef.current;
+          const b = getLiveBinds();
+          let dx = 0, dy = 0;
+          if (isPressed(k, "left",  b)) dx -= 1;
+          if (isPressed(k, "right", b)) dx += 1;
+          if (isPressed(k, "up",    b)) dy -= 1;
+          if (isPressed(k, "down",  b)) dy += 1;
+          // dash-jump: if jump is also held, bias upward
+          const jumpAlso = isPressed(k, "jump", b);
+          if (jumpAlso) dy -= 1;
+          if (dx === 0 && dy === 0) dx = p.facing;
+          const len = Math.hypot(dx, dy) || 1;
+          p.dashVx = (dx / len) * DASH_SPEED;
+          p.dashVy = (dy / len) * DASH_SPEED;
           p.dashTime = DASH_DURATION;
           p.dashCooldown = DASH_COOLDOWN;
-          p.vx = p.facing * DASH_SPEED;
-          p.vy = 0;
+          p.vx = p.dashVx;
+          p.vy = p.dashVy;
+          p.facing = dx >= 0 ? 1 : -1;
           p.stretch = 1;
+          // dash-jump: also fire a jump impulse so the player leaves the floor
+          if (jumpAlso && p.onGround) {
+            p.onGround = false;
+            p.squash = 1;
+            sfx.jump();
+          }
           // brief i-frames during dash
           if (p.invuln < DASH_DURATION) p.invuln = DASH_DURATION;
           burst(r, p.x + p.w / 2, p.y + p.h / 2, "#22e2ff", 14, 320);
