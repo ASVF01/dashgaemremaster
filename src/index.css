@@ -99,7 +99,11 @@
       #ff004c, #ff8a00, #ffe600, #14ff5a, #00d2ff, #6a4cff, #ff4cd2, #ff004c
     );
     background-size: 200% 100%;
-    animation: rainbow-slide 6s linear infinite;
+    animation: rainbow-slide 1.2s linear infinite;
+  }
+  /* gentler variant for the SPEED meter — easier on photosensitive players */
+  .rainbow-bar-slow {
+    animation-duration: 6s;
   }
   .rainbow-text {
     background-image: linear-gradient(
