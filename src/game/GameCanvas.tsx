@@ -1362,6 +1362,51 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     ctx.restore();
   }
 
+  // Star sparkles for the "invboi" cheat — six stars orbiting the player,
+  // each blinking on/off (and twinkling in size) on its own offset cycle.
+  function drawStarmanStars(ctx: CanvasRenderingContext2D, r: GameRefs) {
+    const p = r.player;
+    const cx = p.x + p.w / 2;
+    const cy = p.y + p.h / 2;
+    const radius = Math.max(p.w, p.h) * 0.85;
+    const count = 6;
+    for (let i = 0; i < count; i++) {
+      const phase = i / count;
+      // slow orbit so the stars feel attached but float a little
+      const ang = r.time * 0.9 + phase * Math.PI * 2;
+      const sx = cx + Math.cos(ang) * radius;
+      const sy = cy + Math.sin(ang) * radius * 0.7;
+      // each star blinks on/off ~3 times per second on its own offset
+      const blink = (Math.sin(r.time * 9 + phase * 7) + 1) * 0.5; // 0..1
+      if (blink < 0.25) continue; // off
+      const a = (blink - 0.25) / 0.75; // 0..1
+      const size = 4 + a * 3;
+      ctx.save();
+      ctx.globalAlpha = 0.55 + a * 0.45;
+      ctx.translate(sx, sy);
+      ctx.rotate(r.time * 2 + phase * 5);
+      const hue = (r.time * 360 + phase * 360) % 360;
+      ctx.fillStyle = `hsl(${hue}, 95%, 60%)`;
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = 1.2;
+      const sp = 5;
+      const outer = size + 2;
+      const inner = outer * 0.45;
+      ctx.beginPath();
+      for (let k = 0; k < sp * 2; k++) {
+        const rr = k % 2 === 0 ? outer : inner;
+        const an = (k / (sp * 2)) * Math.PI * 2 - Math.PI / 2;
+        const x = Math.cos(an) * rr;
+        const y = Math.sin(an) * rr;
+        if (k === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
   function drawPlayer(ctx: CanvasRenderingContext2D, r: GameRefs) {
     const p = r.player;
     const speed = Math.abs(p.vx);
