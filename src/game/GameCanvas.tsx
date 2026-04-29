@@ -1444,6 +1444,21 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         ctx.fillStyle = "#f5234c";
         ctx.fillRect(dx, dy, drawW, drawH);
         ctx.restore();
+      } else if (rainbowCol) {
+        // starman: rainbow tint over sprite + soft glow halo
+        ctx.save();
+        // glow halo behind
+        ctx.shadowColor = rainbowCol;
+        ctx.shadowBlur = 22;
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(sprite, dx, dy, drawW, drawH);
+        ctx.shadowBlur = 0;
+        // colored overlay clipped to sprite alpha
+        ctx.globalCompositeOperation = "source-atop";
+        ctx.globalAlpha = 0.55;
+        ctx.fillStyle = rainbowCol;
+        ctx.fillRect(dx, dy, drawW, drawH);
+        ctx.restore();
       } else {
         ctx.imageSmoothingEnabled = false;
         ctx.drawImage(sprite, dx, dy, drawW, drawH);
