@@ -622,6 +622,19 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
           if (delta > 0) {
             p.y = pl.y - p.h;
             if (!p.onGround && p.vy > 200) { p.squash = 1; sfx.land(); }
+            // dive impact — convert to slide, shake, sparks
+            if (p.diving) {
+              p.diving = false;
+              r.shake = Math.max(r.shake, 0.55);
+              burst(r, p.x + p.w / 2, pl.y, "#ffd11a", 12, 280);
+              if (!p.sliding) {
+                p.sliding = true;
+                p.h = SLIDE_H;
+                p.y = pl.y - p.h;
+                p.vx += p.facing * SLIDE_BOOST;
+              }
+              sfx.land();
+            }
             p.vy = 0;
             landed = true;
           } else if (delta < 0) {
