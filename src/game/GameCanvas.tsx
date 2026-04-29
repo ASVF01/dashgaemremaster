@@ -473,13 +473,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   }, [size.w, size.h, paused, onHud, onDeath, onFinish]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={size.w}
-      height={size.h}
-      className="block mx-auto scribble-border bg-paper"
-      style={{ imageRendering: "pixelated" }}
-    />
+    <div className="relative mx-auto" style={{ width: size.w, height: size.h }}>
+      <canvas
+        ref={canvasRef}
+        width={size.w}
+        height={size.h}
+        className="block scribble-border bg-paper"
+        style={{ imageRendering: "pixelated" }}
+      />
+    </div>
   );
 
   // ----- helpers in closure -----
