@@ -76,6 +76,9 @@ const Index = () => {
 
   // One owner for BGM. The "loading" screen handles the actual track switch
   // before "playing" begins, so we leave that case alone here.
+  // `cameFromDeathRef` is set when the player dies, then consumed when we
+  // re-enter "playing" so we know to leave the BGM alone on a death-retry.
+  const cameFromDeathRef = useRef(false);
   useEffect(() => {
     if (screen === "menu") playMenuBgm();
     else if (screen === "loading") {
@@ -83,13 +86,19 @@ const Index = () => {
       return;
     }
     else if (screen === "playing") {
+      const fromDeath = cameFromDeathRef.current;
+      cameFromDeathRef.current = false;
+      // Never reset BGM on a death-retry: if the same track is already
+      // playing, leave it alone entirely.
+      if (fromDeath && isSameTrackAs(levelId)) return;
       // Only restart BGM for levels that have a unique track. For shared-
       // track levels, if the same track is already playing, leave it alone.
-      const restart = RESTART_BGM_ON_ENTRY.includes(levelId) || !isSameTrackAs(levelId);
+      const restart = !fromDeath && (RESTART_BGM_ON_ENTRY.includes(levelId) || !isSameTrackAs(levelId));
       playBgmFor(levelId, restart);
     }
     else if (screen === "cutscene") stopBgm(0.35);
-    else if (screen === "dead" || screen === "win") return;
+    else if (screen === "dead") { cameFromDeathRef.current = true; return; }
+    else if (screen === "win") return;
     else stopBgm(0.35);
   }, [screen, levelId]);
 
