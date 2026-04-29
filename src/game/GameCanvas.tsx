@@ -152,6 +152,8 @@ interface Afterimage {
   life: number; maxLife: number;
   color: string;
   rainbowHue?: number;
+  tintColor?: string; // solid tint applied over sprite (e.g., red hurt trail)
+  alphaBoost?: number; // optional alpha multiplier (defaults to 1)
 }
 
 interface GameRefs {
@@ -1336,18 +1338,28 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   }
 
   function damage(r: GameRefs, x: number, y: number) {
-    r.player.hp -= 1;
-    r.player.invuln = 1.0;
-    r.player.hitFlash = 0.4;
-    r.player.vx *= -0.3;
-    r.player.vy = -380;
+    const p = r.player;
+    p.hp -= 1;
+    p.invuln = 1.0;
+    p.hitFlash = 0.5;
+    p.hurtTimer = 0.5;
+    p.hurtAfterTimer = 0;
+    // knockback: shove away from the hit point, with a small upward pop
+    const dir = (p.x + p.w / 2) < x ? -1 : 1;
+    const kbX = 360;
+    p.vx = dir * kbX;
+    p.vy = -420;
+    // cancel slide/dash so the knockback actually reads
+    p.sliding = false;
+    p.diving = false;
+    p.dashTime = 0;
     r.combo = 0;
     r.shake = 0.6;
     r.glitch = 0.5;
     burst(r, x, y, "#f5234c", 18, 240);
     sfx.hit();
-    if (r.player.hp <= 0) {
-      r.player.alive = false;
+    if (p.hp <= 0) {
+      p.alive = false;
     }
   }
 
