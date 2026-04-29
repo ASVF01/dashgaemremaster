@@ -55,6 +55,7 @@ type Playing = {
 };
 
 let playing: Playing | null = null;
+let playRequestId = 0;
 
 // "Open" lowpass cutoff — effectively bypasses filtering.
 const LP_OPEN = 20000;
@@ -169,9 +170,10 @@ function armNextLoop(c: AudioContext) {
   playing.rafId = requestAnimationFrame(tick);
 }
 
-function playSrc(src: string) {
+function playSrc(src: string, restart = false) {
+  const requestId = ++playRequestId;
   // Already playing this track? leave it alone.
-  if (playing && playing.src === src && !playing.stopped) {
+  if (!restart && playing && playing.src === src && !playing.stopped) {
     resetLevelEndFx();
     return;
   }
@@ -181,7 +183,7 @@ function playSrc(src: string) {
   if (!c) return;
 
   loadBuffer(src).then((buffer) => {
-    if (!c || !masterGain) return;
+    if (requestId !== playRequestId || !c || !masterGain) return;
     // Start half a crossfade in the future to give the scheduler headroom.
     const startAt = c.currentTime + 0.05;
     const first = scheduleSource(c, buffer, startAt, false);
@@ -201,13 +203,13 @@ function playSrc(src: string) {
   }).catch(() => { /* decode failed; stay silent */ });
 }
 
-export function playBgmFor(levelId: LevelId) {
+export function playBgmFor(levelId: LevelId, restart = false) {
   const src = TRACKS[levelId];
   if (!src) {
     stopBgm();
     return;
   }
-  playSrc(src);
+  playSrc(src, restart);
 }
 
 export function playMenuBgm() {
@@ -215,6 +217,7 @@ export function playMenuBgm() {
 }
 
 export function stopBgm() {
+  playRequestId++;
   if (!playing) return;
   const p = playing;
   playing = null;
