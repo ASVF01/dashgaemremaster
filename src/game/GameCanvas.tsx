@@ -9,6 +9,7 @@ import {
 import { buildLevel, type Level, type LevelId } from "@/game/level";
 import { sketchLine, sketchRect, sketchCircle, jaggedBolt, INK } from "@/game/draw";
 import { isPressed, matchesAction, getLiveBinds } from "@/game/keybinds";
+import { sfx, unlockAudio } from "@/game/sfx";
 
 type Keys = Record<string, boolean>;
 
@@ -132,10 +133,14 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       }
       // parry — bound action
       if (matchesAction(e.code, "parry") && refs.current) {
+        unlockAudio();
         const r = refs.current;
         if (r.player.parryCooldown <= 0 && r.player.parrying <= 0) {
           r.player.parrying = PARRY_WINDOW;
           r.player.parryCooldown = PARRY_COOLDOWN + PARRY_WINDOW;
+          // i-frames for the entire parry active window so you can't get hit while parrying
+          if (r.player.invuln < PARRY_WINDOW) r.player.invuln = PARRY_WINDOW;
+          sfx.parryStart();
         }
       }
     };
@@ -182,6 +187,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       if (!r.player.alive && !r.finished) {
         r.finished = true;
         r.finishTime = performance.now() - r.startedAt;
+        sfx.die();
         onDeath();
       }
       if (r.finished && r.player.alive && r.finishTime === 0) {
@@ -274,6 +280,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       // boost in facing dir
       p.vx += p.facing * SLIDE_BOOST;
       spawnParticle(r, { x: p.x, y: p.y + p.h, vx: -p.facing * 200, vy: -80, color: INK, life: 0.4, size: 4, kind: "smear" });
+      sfx.slide();
     }
     if (!slideHeld && p.sliding) {
       // try to stand
@@ -291,6 +298,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       p.onGround = false;
       p.squash = 1;
       spawnParticle(r, { x: p.x + p.w / 2, y: p.y + p.h, color: INK, vy: -40, life: 0.3, size: 4, kind: "ring" });
+      sfx.jump();
     }
     // variable jump
     if (!jumpHeld && p.vy < -300) p.vy = -300;
@@ -324,7 +332,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     // mach particles
     const speed = Math.abs(p.vx);
     const mach = machTier(speed);
-    if (mach > r.bestMach) r.bestMach = mach;
+    if (mach > r.bestMach) { r.bestMach = mach; if (mach >= 1) sfx.mach(); }
 
     if (mach >= 1 && Math.random() < 0.4 + mach * 0.15) {
       spawnParticle(r, {
@@ -378,6 +386,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
             vx: (dx / len) * sp, vy: (dy / len) * sp - 30,
             r: 7, alive: true, danger: true,
           });
+          sfx.shoot();
         }
       }
 
@@ -392,6 +401,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
           r.score += 100 * Math.max(1, r.combo);
           burst(r, e.x + e.w / 2, e.y + e.h / 2, "#f5234c", 14);
           r.shake = 0.4;
+          sfx.enemyKill();
         } else if (p.parrying > 0) {
           // parry kill
           parrySuccess(r, e.x + e.w / 2, e.y + e.h / 2);
@@ -403,6 +413,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
           r.comboTimer = 2.5;
           r.score += 150 * Math.max(1, r.combo);
           r.shake = 0.5;
+          sfx.enemyKill();
         } else if (p.invuln <= 0) {
           damage(r, e.x + e.w / 2, e.y + e.h / 2);
         }
@@ -464,6 +475,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
             r.comboTimer = 2.5;
             r.score += 200 * Math.max(1, r.combo);
             r.shake = 0.4;
+            sfx.enemyKill();
             break;
           }
         }
@@ -497,6 +509,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         pk.collected = true;
         r.score += 25;
         burst(r, pk.x, pk.y, "#ffd11a", 8, 180);
+        sfx.pickup();
       }
     }
 
@@ -516,6 +529,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       r.finished = true;
       r.finishTime = performance.now() - r.startedAt;
       r.score += Math.max(0, 5000 - Math.floor(r.finishTime / 10));
+      sfx.win();
       onFinish(r.finishTime, r.score);
     }
 
@@ -536,6 +550,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     r.shake = 0.6;
     r.glitch = 0.5;
     burst(r, x, y, "#f5234c", 18, 240);
+    sfx.hit();
     if (r.player.hp <= 0) {
       r.player.alive = false;
     }
@@ -549,6 +564,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     r.glitch = 0.7;
     r.freezeFrames = 4;
     r.player.parryCooldown = 0.15; // refund cooldown a bit
+    // refresh i-frames briefly so chained parries stay safe
+    if (r.player.invuln < 0.4) r.player.invuln = 0.4;
+    sfx.parryHit();
     // boost in facing dir
     r.player.vx += r.player.facing * PARRY_BOOST;
     r.player.vy = -220;
@@ -578,7 +596,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         if (rectOverlap(p.x, p.y, p.w, p.h, pl.x, pl.y, pl.w, pl.h)) {
           if (delta > 0) {
             p.y = pl.y - p.h;
-            if (!p.onGround && p.vy > 200) p.squash = 1;
+            if (!p.onGround && p.vy > 200) { p.squash = 1; sfx.land(); }
             p.vy = 0;
             landed = true;
           } else if (delta < 0) {
