@@ -900,6 +900,28 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     if (p.parryCooldown > 0) p.parryCooldown -= dt;
     if (p.invuln > 0) p.invuln -= dt;
     if (p.hitFlash > 0) p.hitFlash -= dt;
+    // hurt window: leave red afterimages behind for ~0.5s after a hit
+    if (p.hurtTimer > 0) {
+      p.hurtTimer -= dt;
+      p.hurtAfterTimer -= dt;
+      if (p.hurtAfterTimer <= 0) {
+        p.hurtAfterTimer = 0.04;
+        const life = 0.32;
+        r.afterimages.push({
+          x: p.x, y: p.y, w: p.w, h: p.h,
+          facing: p.facing,
+          sliding: false,
+          diving: false,
+          state: "hurt",
+          frame: 0,
+          life, maxLife: life,
+          color: "#f5234c",
+          tintColor: "#f5234c",
+          alphaBoost: 1.1,
+        });
+        if (r.afterimages.length > 40) r.afterimages.splice(0, r.afterimages.length - 40);
+      }
+    }
     if (p.squash > 0) p.squash = Math.max(0, p.squash - dt * 4);
     // While airborne and falling, stretch the sprite vertically based on
     // downward speed. Drives the squash&stretch render below; gives a juicy
