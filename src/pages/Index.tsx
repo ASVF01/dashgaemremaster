@@ -63,6 +63,13 @@ const Index = () => {
   };
   const backToMenu = () => setScreen("menu");
 
+  // Award the "just run bro" badge and head back to the main menu.
+  const finishCutscene = useCallback(() => {
+    setHasJrbBadge(true);
+    try { localStorage.setItem("badge_jrb", "1"); } catch { /* noop */ }
+    setScreen("menu");
+  }, []);
+
   const currentLevel = LEVELS.find((l) => l.id === levelId);
   // next non-hidden level after the current one (used for "NEXT LEVEL" button)
   const visibleLevels = LEVELS.filter((l) => !l.hidden);
