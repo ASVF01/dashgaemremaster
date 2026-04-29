@@ -163,6 +163,24 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
           sfx.parryStart();
         }
       }
+      // dash — bound action
+      if (matchesAction(e.code, "dash") && refs.current) {
+        unlockAudio();
+        const r = refs.current;
+        const p = r.player;
+        if (p.dashCooldown <= 0 && p.dashTime <= 0 && p.alive) {
+          p.dashTime = DASH_DURATION;
+          p.dashCooldown = DASH_COOLDOWN;
+          p.vx = p.facing * DASH_SPEED;
+          p.vy = 0;
+          p.stretch = 1;
+          // brief i-frames during dash
+          if (p.invuln < DASH_DURATION) p.invuln = DASH_DURATION;
+          burst(r, p.x + p.w / 2, p.y + p.h / 2, "#22e2ff", 14, 320);
+          sfx.parryStart();
+          sfx.mach();
+        }
+      }
     };
     const up = (e: KeyboardEvent) => { keysRef.current[e.code] = false; };
     window.addEventListener("keydown", down);
