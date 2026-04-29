@@ -98,9 +98,19 @@ const Index = () => {
     <main className="min-h-screen w-full bg-paper text-ink overflow-hidden relative">
       {/* page header */}
       <header className="px-6 pt-4 pb-2 flex items-center justify-between max-w-[1500px] mx-auto">
-        <h1 className="font-marker text-3xl md:text-5xl text-ink leading-none">
-          DASH GAEM <span className="text-[hsl(var(--accent))] inline-block -rotate-2">R</span>
-        </h1>
+        <div className="flex items-center gap-3">
+          <h1 className="font-marker text-3xl md:text-5xl text-ink leading-none">
+            DASH GAEM <span className="text-[hsl(var(--accent))] inline-block -rotate-2">R</span>
+          </h1>
+          {hasJrbBadge && (
+            <span
+              title="badge: just ran bro :3"
+              className="scribble-border bg-[hsl(var(--accent))] text-accent-foreground font-marker text-sm md:text-base px-2 py-1 rotate-3 inline-block animate-jitter select-none"
+            >
+              :3
+            </span>
+          )}
+        </div>
         <div className="hidden md:flex items-center gap-3 font-scribble text-xl">
           <button
             onClick={toggleMute}
