@@ -708,7 +708,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       r.afterTimer = p.starman ? 0.04 : superDazh ? 0.025 : (p.dashTime > 0 ? 0.012 : Math.max(0.018, 0.05 - mach * 0.008));
       const life = p.starman ? 0.16 : superDazh ? 0.22 : 0.2;
       const rainbowHue = p.starman
-        ? (p.somSom ? 190 : Math.floor(r.time * 720) % 360)
+        ? (p.somSom ? 190 : Math.floor(r.time * 90) % 360)
         : superDazh ? 190 : undefined;
       const aiState: SpriteState =
         p.dashTime > 0 ? "dash" :
@@ -1892,7 +1892,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // tint hue: rainbow during starman, fixed cyan during SUPER DAZH
     const superDazhActive = p.superDashing && p.superDashTime >= 5;
     const rainbowHue = p.starman
-      ? (p.somSom ? 190 : Math.floor(r.time * 720) % 360)
+      ? (p.somSom ? 190 : Math.floor(r.time * 90) % 360)
       : superDazhActive ? 190 : null;
 
     // ---- sprite override (use uploaded PNG if available for current state) ----
