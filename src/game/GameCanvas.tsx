@@ -173,6 +173,7 @@ export interface HudState {
   dashCooldown: number;
   dashCooldownMax: number;
   starman?: boolean;
+  somSom?: boolean;
 }
 
 export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio = false, resetKey, levelId = "scribble-1" }: Props) {
