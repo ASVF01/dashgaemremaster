@@ -11,6 +11,8 @@ export type Settings = {
   reduceShake: boolean;
   /** Reduce particle/glitch fx for performance / motion sensitivity. */
   reducedFx: boolean;
+  /** Play a faint heartbeat sound when HP is critical (1). */
+  lowHpHeartbeat: boolean;
   /** Master SFX volume 0..1. */
   sfxVolume: number;
   /** Master BGM volume 0..1. */
@@ -22,6 +24,7 @@ export const DEFAULT_SETTINGS: Settings = {
   showFps: false,
   reduceShake: false,
   reducedFx: false,
+  lowHpHeartbeat: true,
   sfxVolume: 0.7,
   bgmVolume: 0.7,
 };

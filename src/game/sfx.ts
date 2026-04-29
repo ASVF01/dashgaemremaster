@@ -314,6 +314,11 @@ export const sfx = {
     noise(0.7, 0.32, 60, 700, 0.08);
     noise(0.5, 0.18, 120, 400, 0.4);
   },
+  heartbeat() {
+    // faint "lub-dub" — two soft low thumps, very quick
+    tone({ freq: 90, to: 55, dur: 0.05, type: "sine", vol: 0.16, attack: 0.003, release: 0.05 });
+    tone({ freq: 75, to: 45, dur: 0.06, type: "sine", vol: 0.12, attack: 0.003, release: 0.06, delay: 0.11 });
+  },
 };
 
 // ---------- looping "shine" sound for the invboi (starman) state ----------
