@@ -415,30 +415,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     const p = r.player;
     const onGround = p.onGround;
 
-    // starman cheat: keep i-frames topped up + emit yellow star sparkles
+    // starman cheat: keep i-frames topped up. Stars are drawn around the
+    // player in render() (blinking in place) instead of spawning particles.
     if (p.starman) {
       p.invuln = Math.max(p.invuln, 1);
-      p.starTimer -= dt;
-      if (p.starTimer <= 0) {
-        p.starTimer = 0.04;
-        for (let i = 0; i < 2; i++) {
-          const a = Math.random() * Math.PI * 2;
-          const s = 60 + Math.random() * 80;
-          const life = 0.45 + Math.random() * 0.3;
-          r.particles.push({
-            x: p.x + p.w / 2 + Math.cos(a) * 18,
-            y: p.y + p.h / 2 + Math.sin(a) * 22,
-            vx: Math.cos(a) * s,
-            vy: Math.sin(a) * s - 80,
-            color: "#ffd11a",
-            size: 3 + Math.random() * 3,
-            life,
-            maxLife: life,
-            kind: "star",
-            angle: Math.random() * Math.PI,
-          });
-        }
-      }
     }
 
     // input (bound)
@@ -454,8 +434,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     if (right) dir += 1;
     if (dir !== 0) p.facing = dir > 0 ? 1 : -1;
 
+    const speedMul = p.starman ? 1.5 : 1;
     if (dir !== 0) {
-      p.vx += dir * MOVE_ACCEL * dt;
+      p.vx += dir * MOVE_ACCEL * speedMul * dt;
     } else {
       // friction (more if not sliding)
       const fr = p.sliding ? SLIDE_FRICTION : FRICTION;
@@ -508,7 +489,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // speed cap (dash impulse can briefly exceed it; we let momentum carry).
     // Super-dash hold (just-run-bro) bypasses the cap entirely.
     if (!p.superDashing) {
-      const speedCap = MAX_SPEED + (p.sliding ? 120 : 0) + (p.dashTime > 0 ? 600 : 0);
+      const speedCap = (MAX_SPEED + (p.sliding ? 120 : 0) + (p.dashTime > 0 ? 600 : 0)) * speedMul;
       if (Math.abs(p.vx) > speedCap) p.vx = Math.sign(p.vx) * speedCap;
     }
 
@@ -1166,6 +1147,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
     // player
     drawPlayer(ctx, r);
+    if (r.player.starman) drawStarmanStars(ctx, r);
 
     // super dash burst VFX
     if (r.superDashBurst) {
@@ -1378,6 +1360,51 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       ctx.fill();
     }
     ctx.restore();
+  }
+
+  // Star sparkles for the "invboi" cheat — six stars orbiting the player,
+  // each blinking on/off (and twinkling in size) on its own offset cycle.
+  function drawStarmanStars(ctx: CanvasRenderingContext2D, r: GameRefs) {
+    const p = r.player;
+    const cx = p.x + p.w / 2;
+    const cy = p.y + p.h / 2;
+    const radius = Math.max(p.w, p.h) * 0.85;
+    const count = 6;
+    for (let i = 0; i < count; i++) {
+      const phase = i / count;
+      // slow orbit so the stars feel attached but float a little
+      const ang = r.time * 0.9 + phase * Math.PI * 2;
+      const sx = cx + Math.cos(ang) * radius;
+      const sy = cy + Math.sin(ang) * radius * 0.7;
+      // each star blinks on/off ~3 times per second on its own offset
+      const blink = (Math.sin(r.time * 9 + phase * 7) + 1) * 0.5; // 0..1
+      if (blink < 0.25) continue; // off
+      const a = (blink - 0.25) / 0.75; // 0..1
+      const size = 4 + a * 3;
+      ctx.save();
+      ctx.globalAlpha = 0.55 + a * 0.45;
+      ctx.translate(sx, sy);
+      ctx.rotate(r.time * 2 + phase * 5);
+      const hue = (r.time * 360 + phase * 360) % 360;
+      ctx.fillStyle = `hsl(${hue}, 95%, 60%)`;
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = 1.2;
+      const sp = 5;
+      const outer = size + 2;
+      const inner = outer * 0.45;
+      ctx.beginPath();
+      for (let k = 0; k < sp * 2; k++) {
+        const rr = k % 2 === 0 ? outer : inner;
+        const an = (k / (sp * 2)) * Math.PI * 2 - Math.PI / 2;
+        const x = Math.cos(an) * rr;
+        const y = Math.sin(an) * rr;
+        if (k === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
   }
 
   function drawPlayer(ctx: CanvasRenderingContext2D, r: GameRefs) {
