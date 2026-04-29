@@ -1219,6 +1219,27 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         ctx.translate(pa.x, pa.y);
         ctx.rotate(pa.angle ?? 0);
         ctx.fillRect(-pa.size, -1, pa.size * 2, 2);
+      } else if (pa.kind === "star") {
+        // 5-point star
+        ctx.fillStyle = pa.color;
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 1;
+        ctx.translate(pa.x, pa.y);
+        ctx.rotate(pa.angle ?? 0);
+        const sp = 5;
+        const outer = pa.size + 2;
+        const inner = outer * 0.45;
+        ctx.beginPath();
+        for (let i = 0; i < sp * 2; i++) {
+          const rr = i % 2 === 0 ? outer : inner;
+          const ang = (i / (sp * 2)) * Math.PI * 2 - Math.PI / 2;
+          const x = Math.cos(ang) * rr;
+          const y = Math.sin(ang) * rr;
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
       } else {
         ctx.fillStyle = pa.color;
         ctx.beginPath();
