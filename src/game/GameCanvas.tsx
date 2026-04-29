@@ -629,6 +629,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         ctx.textBaseline = "alphabetic";
       }
       ctx.restore();
+    }
+
+    // hazards (spikes - scribbled triangles)
     for (const hz of r.level.hazards) {
       if (hz.x + hz.w < camX - 40 || hz.x > camX + w + 40) continue;
       const teeth = Math.max(3, Math.floor(hz.w / 14));
