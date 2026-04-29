@@ -169,6 +169,7 @@ export interface HudState {
   parryReady: boolean;
   dashCooldown: number;
   dashCooldownMax: number;
+  starman?: boolean;
 }
 
 export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio = false, resetKey, levelId = "scribble-1" }: Props) {
