@@ -100,6 +100,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const refs = useRef<GameRefs | null>(null);
   const keysRef = useRef<Keys>({});
+  // For "just-run-bro": BGM starts the first time the player actually moves.
+  const bgmDeferredStartedRef = useRef(false);
   const [size, setSize] = useState({ w: 1200, h: 600 });
 
   // resize
@@ -161,10 +163,14 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     };
   }, [resetKey, levelId]);
 
-  // BGM: start when level mounts/changes, restart on death/reset, stop on unmount
+  // BGM: start when level mounts/changes, restart on death/reset, stop on unmount.
+  // Exception: "just-run-bro" defers BGM start until the player actually starts running.
   useEffect(() => {
     stopBgm();
-    playBgmFor(levelId);
+    bgmDeferredStartedRef.current = false;
+    if (levelId !== "just-run-bro") {
+      playBgmFor(levelId);
+    }
     return () => { stopBgm(); };
   }, [levelId, resetKey]);
 
@@ -360,6 +366,13 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     if (left) dir -= 1;
     if (right) dir += 1;
     if (dir !== 0) p.facing = dir > 0 ? 1 : -1;
+
+    // "just-run-bro": defer BGM start until the player actually starts running.
+    if (levelId === "just-run-bro" && !bgmDeferredStartedRef.current && dir !== 0) {
+      bgmDeferredStartedRef.current = true;
+      playBgmFor("just-run-bro");
+    }
+
 
     if (dir !== 0) {
       p.vx += dir * MOVE_ACCEL * dt;
