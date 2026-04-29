@@ -596,7 +596,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
       // SUPER DAZH animation FX (only after the ramp threshold)
       if (p.superDashTime >= 5) {
-        // vertical speed lines streaking upward past the player
+        // vertical cyan speed lines streaking upward past the player
         r.superDashLineTimer -= dt;
         if (r.superDashLineTimer <= 0) {
           r.superDashLineTimer = 0.012;
@@ -609,61 +609,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
               x: lx, y: ly,
               vx: 0,
               vy: -(520 + Math.random() * 380),
-              color: "#ffffff",
+              color: Math.random() < 0.25 ? "#ffffff" : "#22e2ff",
               size: len / 2,
               life: 0.22 + Math.random() * 0.12,
               kind: "smear",
             });
           }
         }
-        // every 0.1s drop a cyan vertical line at the player's current pos.
-        // It stays in world space, so it visually trails behind the player.
-        r.superDashFxTimer -= dt;
-        if (r.superDashFxTimer <= 0) {
-          r.superDashFxTimer = 0.2;
-          const cx = p.x + p.w / 2;
-          const cy = p.y + p.h / 2;
-          // cyan glow bar
-          spawnParticle(r, {
-            x: cx, y: cy, vx: 0, vy: 0,
-            color: "#22e2ff",
-            size: p.h * 1.2,
-            life: 0.45,
-            kind: "shard",
-            angle: Math.PI / 2,
-          });
-          // bright white core
-          spawnParticle(r, {
-            x: cx, y: cy, vx: 0, vy: 0,
-            color: "#ffffff",
-            size: p.h * 1.0,
-            life: 0.3,
-            kind: "shard",
-            angle: Math.PI / 2,
-          });
-          sfx.mach();
-        }
-
-        // continuous cyan flame trail in front of player — emits each frame
-        // so the flame leaves an afterimage trail in world space.
-        const fcx = p.x + p.w / 2;
-        const fcy = p.y + p.h / 2;
-        const tipX = fcx + p.facing * (p.w * 0.6);
-        for (let i = 0; i < 2; i++) {
-          spawnParticle(r, {
-            x: tipX + p.facing * Math.random() * 6,
-            y: fcy + (Math.random() - 0.5) * (p.h * 0.5),
-            vx: 0, vy: -20 - Math.random() * 30,
-            color: Math.random() < 0.3 ? "#ffffff" : "#22e2ff",
-            size: 5 + Math.random() * 4,
-            life: 0.35 + Math.random() * 0.15,
-            kind: "ring",
-          });
-        }
       } else {
-        r.superDashFxTimer = 0;
         r.superDashLineTimer = 0;
       }
+      r.superDashFxTimer = 0;
     } else {
       r.superDashFxTimer = 0;
       r.superDashLineTimer = 0;
