@@ -3,6 +3,7 @@
 import standUrl from "@/assets/sprites/stand.png";
 import walkUrl from "@/assets/sprites/walk.png";
 import jumpUrl from "@/assets/sprites/jump.png";
+import fallUrl from "@/assets/sprites/fall.png";
 import slideUrl from "@/assets/sprites/slide.png";
 import diveUrl from "@/assets/sprites/dive.png";
 import dashUrl from "@/assets/sprites/dash.png";
@@ -18,7 +19,7 @@ const URLS: Partial<Record<SpriteState, string>> = {
   idle: standUrl,
   run: walkUrl,
   jump: jumpUrl,
-  // fall: fallUrl,  // (falls back to jump until you upload one)
+  fall: fallUrl,
   slide: slideUrl,
   dive: diveUrl,
   dash: dashUrl,
