@@ -807,14 +807,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       onFinish(r.finishTime, r.score);
     }
 
-    // camera follow with lookahead
-    // Camera follow: center the player horizontally with a slight
-    // lookahead. Lerp speed scales with player velocity so super-dash
-    // can't outrun the camera. Final safety clamp guarantees the player
-    // is always inside the viewport.
+    // Camera follow: center normally with a small lookahead, but while
+    // super-dashing in just-run-bro, lock the camera directly to the
+    // player's center so high velocity doesn't push them to the left.
     const speedNow = Math.abs(p.vx);
-    const targetCam = (p.x + p.w / 2) - size.w * 0.5 + p.facing * 60 + p.vx * 0.08;
-    const lerp = Math.min(1, dt * (6 + speedNow * 0.02));
+    const playerCenterX = p.x + p.w / 2;
+    const centerCam = playerCenterX - size.w * 0.5;
+    const lockCentered = levelIdRef.current === "just-run-bro" && p.superDashing;
+    const targetCam = lockCentered ? centerCam : centerCam + p.facing * 60 + p.vx * 0.08;
+    const lerp = lockCentered ? 1 : Math.min(1, dt * (6 + speedNow * 0.02));
     r.cameraX += (targetCam - r.cameraX) * lerp;
     // world bounds
     if (r.cameraX < 0) r.cameraX = 0;
