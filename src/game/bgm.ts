@@ -171,13 +171,13 @@ function armNextLoop(c: AudioContext) {
 }
 
 function playSrc(src: string, restart = false) {
-  const requestId = ++playRequestId;
   // Already playing this track? leave it alone.
   if (!restart && playing && playing.src === src && !playing.stopped) {
     resetLevelEndFx();
     return;
   }
-  stopBgm();
+  stopBgm(); // bumps playRequestId
+  const requestId = playRequestId;
   resetLevelEndFx();
   const c = ac();
   if (!c) return;
