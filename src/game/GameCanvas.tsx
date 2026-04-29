@@ -509,6 +509,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         p.diving ? "dive" :
         p.sliding ? "slide" :
         !p.onGround ? (p.vy > 0 ? "fall" : "jump") :
+        (p.superDashing && p.superDashTime >= 5) ? "superDash" :
         Math.abs(p.vx) > 60 ? (mach >= 2 ? "runFast" : "run") :
         "idle";
       // capture the same mach-scaled animation frame the player render uses,
@@ -1313,6 +1314,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       p.sliding ? "slide" :
       !p.onGround ? (p.vy > 0 ? "fall" : "jump") :
       r.isSkidding ? "skid" :
+      (p.superDashing && p.superDashTime >= 5) ? "superDash" :
       speedNow > 60 ? (machNow >= 2 ? "runFast" : "run") :
       "idle";
     // Animation frame: cycles faster the faster you go (mach 2..4).

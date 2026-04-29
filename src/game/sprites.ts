@@ -12,8 +12,11 @@ import runFast1 from "@/assets/sprites/run_fast_1.png";
 import runFast2 from "@/assets/sprites/run_fast_2.png";
 import runFast3 from "@/assets/sprites/run_fast_3.png";
 import runFast4 from "@/assets/sprites/run_fast_4.png";
+import superDash1 from "@/assets/sprites/super_dash_1.png";
+import superDash2 from "@/assets/sprites/super_dash_2.png";
+import superDash3 from "@/assets/sprites/super_dash_3.png";
 
-export type SpriteState = "idle" | "run" | "runFast" | "jump" | "fall" | "slide" | "dive" | "dash" | "skid";
+export type SpriteState = "idle" | "run" | "runFast" | "jump" | "fall" | "slide" | "dive" | "dash" | "skid" | "superDash";
 
 const URLS: Partial<Record<SpriteState, string>> = {
   idle: standUrl,
@@ -29,6 +32,7 @@ const URLS: Partial<Record<SpriteState, string>> = {
 // Animation cycles — array of frame URLs, played in order.
 const CYCLES: Partial<Record<SpriteState, string[]>> = {
   runFast: [runFast1, runFast2, runFast3, runFast4],
+  superDash: [superDash1, superDash2, superDash3],
 };
 
 const cache: Partial<Record<SpriteState, HTMLImageElement>> = {};
@@ -84,6 +88,7 @@ export function getSprite(state: SpriteState, frame = 0): HTMLImageElement | nul
   }
 
   const order: SpriteState[] =
+    state === "superDash" ? ["superDash", "runFast", "run", "idle"] :
     state === "runFast" ? ["runFast", "run", "idle"] :
     state === "fall"  ? ["fall", "jump", "idle"] :
     state === "dive"  ? ["dive", "slide", "jump", "idle"] :
