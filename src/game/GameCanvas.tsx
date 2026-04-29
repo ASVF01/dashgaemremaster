@@ -139,7 +139,6 @@ interface GameRefs {
   superDashBurst: { x: number; y: number; t: number; facing: 1 | -1 } | null;
   superDashFxTimer: number;
   superDashLineTimer: number;
-  superDashFlash: number;
   startedAt: number;
   finished: boolean;
   finishTime: number;
@@ -239,7 +238,6 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       superDashBurst: null,
       superDashFxTimer: 0,
       superDashLineTimer: 0,
-      superDashFlash: 0,
       startedAt: performance.now(),
       finished: false,
       finishTime: 0,
@@ -618,17 +616,47 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
             });
           }
         }
-        // little burst every 0.3s
+        // every 0.1s: cyan vertical slash through player + cyan flame puff in front
         r.superDashFxTimer -= dt;
         if (r.superDashFxTimer <= 0) {
-          r.superDashFxTimer = 0.3;
-          const bx = p.x + p.w / 2 - p.facing * (p.w * 0.4);
-          const by = p.y + p.h / 2;
-          burst(r, bx, by, "#ffd11a", 10, 260);
-          burst(r, bx, by, "#22e2ff", 6, 200);
+          r.superDashFxTimer = 0.1;
+          const cx = p.x + p.w / 2;
+          const cy = p.y + p.h / 2;
+          // vertical cyan line through player (shard rotated 90deg, tall)
+          spawnParticle(r, {
+            x: cx, y: cy,
+            vx: 0, vy: 0,
+            color: "#22e2ff",
+            size: p.h * 0.9, // half-length of the bar
+            life: 0.18,
+            kind: "shard",
+            angle: Math.PI / 2,
+          });
+          // bright white core line
+          spawnParticle(r, {
+            x: cx, y: cy,
+            vx: 0, vy: 0,
+            color: "#ffffff",
+            size: p.h * 0.7,
+            life: 0.12,
+            kind: "shard",
+            angle: Math.PI / 2,
+          });
+          // cyan flame trail in front of player (a few puffs drifting forward + up)
+          for (let i = 0; i < 4; i++) {
+            const fx = cx + p.facing * (p.w * 0.55 + i * 8);
+            const fy = cy + (Math.random() - 0.5) * (p.h * 0.6);
+            spawnParticle(r, {
+              x: fx, y: fy,
+              vx: p.facing * (140 + Math.random() * 120),
+              vy: -40 - Math.random() * 80,
+              color: i === 0 ? "#ffffff" : "#22e2ff",
+              size: 5 + Math.random() * 4,
+              life: 0.22 + Math.random() * 0.1,
+              kind: "ring",
+            });
+          }
           sfx.mach();
-          r.superDashFlash = 1;
-          r.shake = Math.max(r.shake, 0.25);
         }
       } else {
         r.superDashFxTimer = 0;
@@ -794,7 +822,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
     if (r.shake > 0) r.shake = Math.max(0, r.shake - dt * 3);
     if (r.glitch > 0) r.glitch = Math.max(0, r.glitch - dt * 4);
-    if (r.superDashFlash > 0) r.superDashFlash = Math.max(0, r.superDashFlash - dt * 6);
+    
 
     // enemies update
     for (const e of r.level.enemies) {
@@ -1450,28 +1478,6 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       ctx.restore();
     }
 
-    // SUPER DAZH burst flash + chromatic distortion bands
-    if (r.superDashFlash > 0) {
-      const f = r.superDashFlash;
-      ctx.save();
-      // additive white flash
-      ctx.globalCompositeOperation = "lighter";
-      ctx.fillStyle = `rgba(255,245,200,${0.55 * f})`;
-      ctx.fillRect(0, 0, w, h);
-      ctx.restore();
-
-      // horizontal distortion bands (cyan/magenta scanlines)
-      ctx.save();
-      const bands = 5;
-      for (let i = 0; i < bands; i++) {
-        const by = (i / bands) * h + ((r.time * 600) % (h / bands));
-        const bh = 4 + Math.random() * 6;
-        ctx.globalAlpha = 0.35 * f;
-        ctx.fillStyle = i % 2 === 0 ? "#22e2ff" : "#ff3df0";
-        ctx.fillRect(0, by, w, bh);
-      }
-      ctx.restore();
-    }
   }
 
   function drawScenery(ctx: CanvasRenderingContext2D, camX: number, w: number, levelH: number) {
