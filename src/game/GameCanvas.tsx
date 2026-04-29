@@ -25,6 +25,72 @@ function getTintCanvas(w: number, h: number): HTMLCanvasElement {
   return _tintCanvas;
 }
 
+const RAINBOW_BUCKETS = 18;
+const tintCache = new Map<string, HTMLCanvasElement>();
+const starCache = new Map<string, HTMLCanvasElement>();
+
+function hueBucket(hue: number) {
+  return ((Math.round(hue / (360 / RAINBOW_BUCKETS)) % RAINBOW_BUCKETS) + RAINBOW_BUCKETS) % RAINBOW_BUCKETS;
+}
+
+function bucketHue(bucket: number) {
+  return Math.round((bucket / RAINBOW_BUCKETS) * 360);
+}
+
+function getTintedSprite(sprite: HTMLImageElement, hue: number): HTMLCanvasElement {
+  const bucket = hueBucket(hue);
+  const key = `${sprite.currentSrc || sprite.src}|${bucket}`;
+  const cached = tintCache.get(key);
+  if (cached) return cached;
+  const off = document.createElement("canvas");
+  off.width = sprite.width;
+  off.height = sprite.height;
+  const octx = off.getContext("2d")!;
+  octx.imageSmoothingEnabled = false;
+  octx.drawImage(sprite, 0, 0);
+  octx.globalCompositeOperation = "source-in";
+  octx.fillStyle = `hsl(${bucketHue(bucket)}, 95%, 60%)`;
+  octx.fillRect(0, 0, off.width, off.height);
+  octx.globalCompositeOperation = "source-over";
+  if (tintCache.size > 96) tintCache.clear();
+  tintCache.set(key, off);
+  return off;
+}
+
+function getRainStar(size: number, hue: number): HTMLCanvasElement {
+  const sizeBucket = Math.max(4, Math.min(9, Math.round(size)));
+  const bucket = hueBucket(hue);
+  const key = `${sizeBucket}|${bucket}`;
+  const cached = starCache.get(key);
+  if (cached) return cached;
+  const pad = 3;
+  const outer = sizeBucket;
+  const inner = outer * 0.45;
+  const off = document.createElement("canvas");
+  off.width = off.height = (outer + pad) * 2;
+  const octx = off.getContext("2d")!;
+  octx.translate(off.width / 2, off.height / 2);
+  octx.fillStyle = `hsl(${bucketHue(bucket)}, 95%, 60%)`;
+  octx.strokeStyle = "rgba(255,255,255,0.72)";
+  octx.lineWidth = 1;
+  octx.beginPath();
+  octx.moveTo(0, -outer);
+  octx.lineTo(inner * 0.5878, -inner * 0.809);
+  octx.lineTo(outer * 0.9511, -outer * 0.309);
+  octx.lineTo(inner * 0.9511, inner * 0.309);
+  octx.lineTo(outer * 0.5878, outer * 0.809);
+  octx.lineTo(0, inner);
+  octx.lineTo(-outer * 0.5878, outer * 0.809);
+  octx.lineTo(-inner * 0.9511, inner * 0.309);
+  octx.lineTo(-outer * 0.9511, -outer * 0.309);
+  octx.lineTo(-inner * 0.5878, -inner * 0.809);
+  octx.closePath();
+  octx.fill();
+  octx.stroke();
+  starCache.set(key, off);
+  return off;
+}
+
 interface Player {
   x: number; y: number; vx: number; vy: number;
   w: number; h: number;
@@ -60,6 +126,7 @@ interface Afterimage {
   frame: number;        // animation frame index captured at spawn (mach-scaled)
   life: number; maxLife: number;
   color: string;
+  rainbowHue?: number;
 }
 
 interface GameRefs {
@@ -86,7 +153,7 @@ interface GameRefs {
   skidDustTimer: number;
   skidSfxTimer: number;
   isSkidding: boolean;
-  rainStars: { x: number; y: number; vy: number; size: number; phase: number; hue: number }[];
+  rainStars: { x: number; y: number; vy: number; size: number; phase: number; hue: number; rot: number }[];
 }
 
 interface Props {
@@ -551,8 +618,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // afterimages — spawn when fast, diving, or dashing
     r.afterTimer -= dt;
     if ((mach >= 1 || p.diving || p.dashTime > 0) && r.afterTimer <= 0) {
-      r.afterTimer = p.dashTime > 0 ? 0.012 : Math.max(0.018, 0.05 - mach * 0.008);
-      const life = 0.2;
+      r.afterTimer = p.starman ? 0.04 : (p.dashTime > 0 ? 0.012 : Math.max(0.018, 0.05 - mach * 0.008));
+      const life = p.starman ? 0.16 : 0.2;
+      const rainbowHue = p.starman ? Math.floor(r.time * 720) % 360 : undefined;
       const aiState: SpriteState =
         p.dashTime > 0 ? "dash" :
         p.diving ? "dive" :
@@ -574,10 +642,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         frame: aiFrame,
         life, maxLife: life,
         color: p.starman
-          ? `hsl(${Math.floor(r.time * 720) % 360}, 95%, 60%)`
+          ? "rainbow"
           : p.dashTime > 0 ? "#22e2ff" : p.diving ? "#ffd11a" : MACH_COLORS[Math.max(1, mach)],
+        rainbowHue,
       });
-      if (r.afterimages.length > 32) r.afterimages.shift();
+      const maxAfterimages = p.starman ? 12 : 32;
+      if (r.afterimages.length > maxAfterimages) r.afterimages.splice(0, r.afterimages.length - maxAfterimages);
     }
     for (const ai of r.afterimages) ai.life -= dt;
     r.afterimages = r.afterimages.filter((a) => a.life > 0);
@@ -1034,69 +1104,43 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     ctx.fillRect(0, 0, w, h);
 
     // starman: rainbow stars rain down (BACKGROUND layer, behind level assets)
-    if (starmanFx) {
-      // integer spawn count, scales with fade-in
-      const spawnRate = 0.6 + bgT * 1.4;
-      const whole = Math.floor(spawnRate);
-      const frac = spawnRate - whole;
-      let toSpawn = whole + (Math.random() < frac ? 1 : 0);
-      while (toSpawn-- > 0) {
+    const maxRainStars = Math.min(64, Math.max(28, Math.floor((w * h) / 17000)));
+    if (starmanFx && r.rainStars.length < maxRainStars) {
+      const spawnRate = 0.2 + bgT * 0.55;
+      if (Math.random() < spawnRate) {
         r.rainStars.push({
           x: Math.random() * w,
           y: -10 - Math.random() * 40,
-          vy: 40 + Math.random() * 50,
-          size: 4 + Math.random() * 5,
+          vy: 32 + Math.random() * 34,
+          size: 4 + Math.random() * 4,
           phase: Math.random() * Math.PI * 2,
           hue: Math.random() * 360,
+          rot: Math.random() * Math.PI * 2,
         });
       }
     }
     if (r.rainStars.length) {
       const dtFrame = 1 / 60;
       const t = r.time;
-      ctx.save();
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = "#fff";
-      // single shadow setup, applied to all stars in batch
-      ctx.shadowBlur = 8;
       const stars = r.rainStars;
-      // update + cull in place (single pass)
       let write = 0;
+      ctx.imageSmoothingEnabled = false;
       for (let i = 0; i < stars.length; i++) {
         const s = stars[i];
         s.y += s.vy * dtFrame;
-        if (s.y >= h + 40) continue;
-        s.x += Math.sin(s.phase + t * 1.3) * 0.6;
-        const hue = (s.hue + t * 120) % 360;
-        const col = `hsl(${hue|0},95%,60%)`;
-        ctx.fillStyle = col;
-        ctx.shadowColor = col;
-        ctx.setTransform(1, 0, 0, 1, s.x, s.y);
-        const rot = t * 1.4 + s.phase;
-        const cos = Math.cos(rot), sin = Math.sin(rot);
-        ctx.transform(cos, sin, -sin, cos, 0, 0);
-        const outer = s.size;
-        const inner = outer * 0.45;
-        ctx.beginPath();
-        // unrolled 5-point star (10 vertices)
-        ctx.moveTo(0, -outer);
-        ctx.lineTo(inner * 0.5878, -inner * 0.809);
-        ctx.lineTo(outer * 0.9511, -outer * 0.309);
-        ctx.lineTo(inner * 0.9511, inner * 0.309);
-        ctx.lineTo(outer * 0.5878, outer * 0.809);
-        ctx.lineTo(0, inner);
-        ctx.lineTo(-outer * 0.5878, outer * 0.809);
-        ctx.lineTo(-inner * 0.9511, inner * 0.309);
-        ctx.lineTo(-outer * 0.9511, -outer * 0.309);
-        ctx.lineTo(-inner * 0.5878, -inner * 0.809);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
+        if (!starmanFx || s.y >= h + 28) continue;
+        s.x += Math.sin(s.phase + t * 1.1) * 0.35;
+        s.rot += dtFrame * 0.9;
+        const img = getRainStar(s.size, s.hue + t * 80);
+        const half = img.width / 2;
+        ctx.save();
+        ctx.translate(s.x, s.y);
+        ctx.rotate(s.rot);
+        ctx.drawImage(img, -half, -half);
+        ctx.restore();
         stars[write++] = s;
       }
       stars.length = write;
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.restore();
     }
 
     // shake
@@ -1416,19 +1460,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       }
 
       ctx.imageSmoothingEnabled = false;
-      // If color starts with "hsl" we treat it as the rainbow starman tint
-      // and dye the afterimage instead of drawing a plain ghost.
-      if (ai.color.startsWith("hsl")) {
-        const off = getTintCanvas(sprite.width, sprite.height);
-        const octx = off.getContext("2d")!;
-        octx.clearRect(0, 0, off.width, off.height);
-        octx.imageSmoothingEnabled = false;
-        octx.drawImage(sprite, 0, 0);
-        octx.globalCompositeOperation = "source-in";
-        octx.fillStyle = ai.color;
-        octx.fillRect(0, 0, off.width, off.height);
-        octx.globalCompositeOperation = "source-over";
-        ctx.globalAlpha = 0.7 * t;
+      // Cached rainbow tint for starman afterimages; avoids repainting an
+      // offscreen sprite for every ghost every frame.
+      if (ai.rainbowHue !== undefined) {
+        const off = getTintedSprite(sprite, ai.rainbowHue);
+        ctx.globalAlpha = 0.62 * t;
         ctx.drawImage(off, dx, dy, drawW, drawH);
       } else {
         // Just draw the sprite faintly — no solid color overlay (that made a block).
@@ -1537,7 +1573,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
     const inkCol = flash ? "#f5234c" : INK;
     // rainbow tint color cycling for starman cheat (applied to PNG sprite)
-    const rainbowCol = p.starman ? `hsl(${Math.floor(r.time * 720) % 360}, 95%, 55%)` : null;
+    const rainbowHue = p.starman ? Math.floor(r.time * 720) % 360 : null;
 
     // ---- sprite override (use uploaded PNG if available for current state) ----
     const speedNow = Math.abs(p.vx);
@@ -1586,31 +1622,13 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         ctx.fillStyle = "#f5234c";
         ctx.fillRect(dx, dy, drawW, drawH);
         ctx.restore();
-      } else if (rainbowCol) {
-        // starman: rainbow-tinted sprite via offscreen canvas so the tint
-        // is clipped to the sprite's alpha (no rectangle box around it).
-        const off = getTintCanvas(sprite.width, sprite.height);
-        const octx = off.getContext("2d")!;
-        octx.clearRect(0, 0, off.width, off.height);
-        octx.imageSmoothingEnabled = false;
-        octx.drawImage(sprite, 0, 0);
-        octx.globalCompositeOperation = "source-in";
-        octx.fillStyle = rainbowCol;
-        octx.fillRect(0, 0, off.width, off.height);
-        octx.globalCompositeOperation = "source-over";
-
+      } else if (rainbowHue !== null) {
+        // starman: cached rainbow-tinted sprite clipped to the PNG alpha.
+        const off = getTintedSprite(sprite, rainbowHue);
         ctx.save();
         ctx.imageSmoothingEnabled = false;
-        // soft glow behind by drawing the tinted sprite a few times offset
-        ctx.globalAlpha = 0.35;
-        for (const [ox, oy] of [[-2, 0], [2, 0], [0, -2], [0, 2]]) {
-          ctx.drawImage(off, dx + ox, dy + oy, drawW, drawH);
-        }
-        ctx.globalAlpha = 1;
-        // base sprite (keeps its original details)
         ctx.drawImage(sprite, dx, dy, drawW, drawH);
-        // tinted sprite over it for the rainbow color
-        ctx.globalAlpha = 0.7;
+        ctx.globalAlpha = 0.65;
         ctx.drawImage(off, dx, dy, drawW, drawH);
         ctx.restore();
       } else {
