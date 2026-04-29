@@ -1392,6 +1392,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
                 p.h = SLIDE_H;
                 p.y = pl.y - p.h;
                 p.vx += p.facing * SLIDE_BOOST;
+                // dive→slide also needs the looping slide sfx + dust kick-up
+                spawnSlideDustBurst(r, p);
+                sfx.slide();
+                sfx.slideStart();
               }
               sfx.land();
             }
