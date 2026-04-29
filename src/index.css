@@ -102,8 +102,11 @@
     animation: rainbow-slide 1.2s linear infinite;
   }
   /* gentler variant for the SPEED meter — easier on photosensitive players */
+  /* SPEED meter variant — uses a fixed pixel-width gradient so the rainbow
+     sweep visually matches the much smaller parry/dash bars. */
   .rainbow-bar-slow {
-    animation-duration: 3.6s;
+    background-size: 160px 100% !important;
+    animation-duration: 1.2s;
   }
   .rainbow-text {
     background-image: linear-gradient(
