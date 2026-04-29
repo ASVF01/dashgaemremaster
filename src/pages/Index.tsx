@@ -134,10 +134,22 @@ const Index = () => {
                     <div className="font-bungee text-3xl text-[hsl(var(--accent))]">{finalScore}</div>
                   </div>
                 </div>
-                <div className="flex gap-3 justify-center">
-                  <button onClick={retry} className="scribble-border bg-[hsl(var(--accent))] text-accent-foreground font-marker text-2xl px-6 py-3 hover:-rotate-2 transition-transform">
+                <div className="flex gap-3 justify-center flex-wrap">
+                  <button onClick={retry} className="scribble-border bg-paper text-ink font-marker text-2xl px-6 py-3 hover:-rotate-2 transition-transform">
                     RUN IT BACK
                   </button>
+                  {nextLevel ? (
+                    <button
+                      onClick={() => startLevel(nextLevel.id)}
+                      className="scribble-border bg-[hsl(var(--accent))] text-accent-foreground font-marker text-2xl px-6 py-3 hover:rotate-2 transition-transform animate-jitter"
+                    >
+                      NEXT LEVEL →
+                    </button>
+                  ) : (
+                    <div className="scribble-border bg-paper px-4 py-3 font-marker text-xl text-ink/70 self-center">
+                      BOSS COMING SOON…
+                    </div>
+                  )}
                   <button onClick={backToMenu} className="scribble-border bg-paper text-ink font-marker text-2xl px-6 py-3 hover:rotate-1 transition-transform">
                     MAIN MENU
                   </button>
