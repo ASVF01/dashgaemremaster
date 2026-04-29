@@ -428,6 +428,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           dashCooldown: r.player.starman ? 0 : Math.max(0, r.player.dashCooldown),
           dashCooldownMax: DASH_COOLDOWN,
           starman: r.player.starman,
+          somSom: r.player.somSom,
         });
       }
 
