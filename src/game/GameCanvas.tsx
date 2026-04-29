@@ -968,7 +968,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     r.afterimages = r.afterimages.filter((a) => a.life > 0);
 
     // Thin speed lines while running on the ground (any speed above a small threshold).
-    if (p.onGround && Math.abs(p.vx) > 140 && Math.random() < 0.55) {
+    if (p.onGround && !p.sliding && Math.abs(p.vx) > 140 && Math.random() < 0.55) {
       const len = 14 + Math.random() * 18 + Math.min(40, Math.abs(p.vx) * 0.04);
       spawnParticle(r, {
         x: p.x + p.w / 2 - p.facing * (p.w * 0.4 + Math.random() * 30),
