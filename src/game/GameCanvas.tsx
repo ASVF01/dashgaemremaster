@@ -213,6 +213,20 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
             p.superDashTime = 0;
             p.stretch = 1;
             sfx.superDash();
+            // burst effect (~0.1s)
+            const cx = p.x + p.w / 2;
+            const cy = p.y + p.h / 2;
+            spawnParticle(r, { x: cx, y: cy, color: INK, life: 0.1, size: 14, kind: "ring" });
+            spawnParticle(r, { x: cx, y: cy, color: INK, life: 0.1, size: 8, kind: "ring" });
+            for (let i = 0; i < 12; i++) {
+              const ang = (i / 12) * Math.PI * 2;
+              spawnParticle(r, {
+                x: cx, y: cy,
+                vx: Math.cos(ang) * 320,
+                vy: Math.sin(ang) * 320,
+                color: INK, life: 0.1, size: 3, kind: "spark",
+              });
+            }
           }
           return;
         }
