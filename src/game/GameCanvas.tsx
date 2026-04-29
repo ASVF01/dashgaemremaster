@@ -167,6 +167,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
   // Exception: "just-run-bro" defers BGM start until the player actually starts running.
   useEffect(() => {
     stopBgm();
+    bgmDeferredStartedRef.current = false;
     if (levelId !== "just-run-bro") {
       playBgmFor(levelId);
     }
