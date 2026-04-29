@@ -123,8 +123,9 @@ interface Player {
   invuln: number;
   hp: number;
   hitFlash: number;
-  squash: number; // 0..1 transient
-  stretch: number; // 0..1 transient
+  squash: number; // 0..1 transient (landing — wide & short)
+  stretch: number; // 0..1 transient (falling/dive — tall & thin)
+  hStretch: number; // 0..1 transient (dash — wide & slightly short)
   smearTimer: number;
   dashAirJumpUsed: boolean; // one bonus mid-air jump available while dashing
   jumpWasHeld: boolean;     // for rising-edge jump detection
