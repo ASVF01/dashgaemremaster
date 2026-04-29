@@ -76,7 +76,7 @@ export function subscribeBinds(fn: (b: Keybinds) => void) {
 
 export function useKeybinds(): [Keybinds, (b: Keybinds) => void] {
   const [b, setB] = useState<Keybinds>(LIVE);
-  useEffect(() => subscribeBinds(setB), []);
+  useEffect(() => { const u = subscribeBinds(setB); return () => { u(); }; }, []);
   return [b, setLiveBinds];
 }
 
