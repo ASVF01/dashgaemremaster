@@ -53,6 +53,26 @@ function getTintedSprite(sprite: HTMLImageElement, hue: number): HTMLCanvasEleme
   return off;
 }
 
+// Darker variant used for SOM SOM cyan. Lower lightness, slightly less saturated.
+function getDarkCyanTintedSprite(sprite: HTMLImageElement): HTMLCanvasElement {
+  const key = sprite.currentSrc || sprite.src;
+  const cached = darkTintCache.get(key);
+  if (cached) return cached;
+  const off = document.createElement("canvas");
+  off.width = sprite.width;
+  off.height = sprite.height;
+  const octx = off.getContext("2d")!;
+  octx.imageSmoothingEnabled = false;
+  octx.drawImage(sprite, 0, 0);
+  octx.globalCompositeOperation = "source-in";
+  octx.fillStyle = "hsl(190, 85%, 42%)";
+  octx.fillRect(0, 0, off.width, off.height);
+  octx.globalCompositeOperation = "source-over";
+  if (darkTintCache.size > 64) darkTintCache.clear();
+  darkTintCache.set(key, off);
+  return off;
+}
+
 function getRainStar(size: number, hue: number): HTMLCanvasElement {
   const sizeBucket = Math.max(4, Math.min(9, Math.round(size)));
   const bucket = hueBucket(hue);
