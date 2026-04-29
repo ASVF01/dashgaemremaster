@@ -11,7 +11,7 @@ const Index = () => {
   const [screen, setScreen] = useState<Screen>("menu");
   const [levelId, setLevelId] = useState<LevelId>("tutorial");
   const [hud, setHud] = useState<HudState>({
-    hp: 3, mach: 0, speed: 0, score: 0, combo: 0, progress: 0, timeMs: 0, parryReady: true,
+    hp: 3, mach: 0, speed: 0, score: 0, combo: 0, progress: 0, timeMs: 0, parryReady: true, dashCooldown: 0, dashCooldownMax: 2.5,
   });
   const [resetKey, setResetKey] = useState(0);
   const [finalTime, setFinalTime] = useState(0);
