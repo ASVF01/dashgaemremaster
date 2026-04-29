@@ -588,6 +588,68 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
   }
 
+  function igniteDash(r: GameRefs, p: Player, dx: number, dy: number, jumpAlso: boolean) {
+    if (dx === 0 && dy === 0) dx = p.facing;
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = dx / len, ny = dy / len;
+    const along = p.vx * nx + p.vy * ny;
+    const newAlong = Math.max(along, 0) + DASH_IMPULSE + DASH_BONUS;
+    p.vx += (newAlong - along) * nx;
+    p.vy += (newAlong - along) * ny;
+    if (jumpAlso && p.onGround) {
+      p.vy = Math.min(p.vy, -JUMP_VEL);
+      p.onGround = false;
+      p.squash = 1;
+      sfx.jump();
+    }
+    p.dashTime = DASH_DURATION;
+    p.dashCooldown = DASH_COOLDOWN;
+    p.dashVx = nx; p.dashVy = ny;
+    p.dashAirJumpUsed = false;
+    p.facing = dx >= 0 ? 1 : -1;
+    p.hStretch = 1;
+    if (p.invuln < DASH_DURATION) p.invuln = DASH_DURATION;
+    burst(r, p.x + p.w / 2, p.y + p.h / 2, "#22e2ff", 14, 320);
+    rumble({ duration: 90, strong: 0.7, weak: 0.9 });
+
+    const cxp = p.x + p.w / 2;
+    const cyp = p.y + p.h / 2;
+    for (let i = 0; i < 10; i++) {
+      const back = 10 + i * 6;
+      const jitter = (Math.random() - 0.5) * 14;
+      spawnParticle(r, {
+        x: cxp - nx * back + (-ny) * jitter,
+        y: cyp - ny * back + (nx) * jitter,
+        vx: -nx * (220 + Math.random() * 160),
+        vy: -ny * (220 + Math.random() * 160),
+        color: "#22e2ff",
+        size: 3 + Math.random() * 2,
+        life: 0.18 + Math.random() * 0.12,
+        kind: "smear",
+        angle: Math.atan2(ny, nx),
+      });
+    }
+    const ghostFrame = Math.floor(r.time * 14);
+    for (let i = 1; i <= 4; i++) {
+      const back = i * 14;
+      r.afterimages.push({
+        x: p.x - nx * back,
+        y: p.y - ny * back,
+        w: p.w, h: p.h,
+        facing: p.facing,
+        sliding: false,
+        diving: false,
+        state: "dash",
+        frame: ghostFrame,
+        life: 0.22 - i * 0.02,
+        maxLife: 0.22,
+        color: "#22e2ff",
+      });
+    }
+    sfx.parryStart();
+    sfx.mach();
+  }
+
   function update(r: GameRefs, dt: number, keys: Keys) {
     r.time += dt;
     const p = r.player;
