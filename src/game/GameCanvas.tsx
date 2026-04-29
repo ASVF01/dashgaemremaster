@@ -290,7 +290,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       somSomRain: null,
     };
     // Any reset/level change cancels the starman shimmer too.
-    sfx.shineStop();
+    sfx.shineStop(); sfx.rainStop();
   }, [resetKey, levelId]);
 
   // BGM: stop on unmount only. The parent (Index) decides which track to
@@ -298,7 +298,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   // with the menu music here. Restart on retry is also driven by the
   // parent via screen/levelId/resetKey transitions.
   useEffect(() => {
-    return () => { stopBgm(); sfx.shineStop(); };
+    return () => { stopBgm(); sfx.shineStop(); sfx.rainStop(); };
   }, []);
 
   // BGM: pause/resume with the game's pause state — but keep playing when
@@ -1240,6 +1240,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         }
         segs.push({ x: cx, y: cy });
         r.lightningBolts.push({ x: bx, t: 0, life: 0.45, segs, flash: 1 });
+        sfx.thunder();
       }
       for (let i = r.lightningBolts.length - 1; i >= 0; i--) {
         const b = r.lightningBolts[i];
@@ -1276,8 +1277,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       r.lightningCooldown = 0;
     }
 
-    // SOM SOM "32.65" event: white fade-out flash + fast grey cloud + optimized rain.
-    const STORM_T = 32.65;
+    // SOM SOM "32.50" event: white fade-out flash + fast grey cloud + optimized rain.
+    const STORM_T = 32.50;
     if (somSomActive && starElapsed >= STORM_T && !r.somSomStorm) {
       r.somSomStorm = true;
       r.somSomStormFlash = 0;
@@ -1291,11 +1292,13 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         buf[i * 4 + 3] = 10 + Math.random() * 10;
       }
       r.somSomRain = buf;
+      sfx.rainStart();
     } else if (!somSomActive && r.somSomStorm) {
       r.somSomStorm = false;
       r.somSomStormFlash = -1;
       r.somSomCloudX = null;
       r.somSomRain = null;
+      sfx.rainStop();
     }
 
     if (r.somSomStorm) {

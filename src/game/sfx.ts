@@ -152,6 +152,16 @@ export const sfx = {
   },
   shineStart() { startShine(); },
   shineStop() { stopShine(); },
+  rainStart() { startRain(); },
+  rainStop() { stopRain(); },
+  thunder() {
+    // bright crack, then deep rumble
+    noise(0.08, 0.45, 2000, 9000);
+    noise(0.05, 0.35, 4000, 12000, 0.02);
+    tone({ freq: 90, to: 35, dur: 0.9, type: "sawtooth", vol: 0.32, delay: 0.06, release: 0.4 });
+    noise(0.7, 0.32, 60, 700, 0.08);
+    noise(0.5, 0.18, 120, 400, 0.4);
+  },
 };
 
 // ---------- looping "shine" sound for the invboi (starman) state ----------
@@ -230,4 +240,44 @@ function stopShine() {
   try { s.osc2.stop(stopAt); } catch { /* noop */ }
   try { s.lfo.stop(stopAt); } catch { /* noop */ }
   try { s.bell.stop(stopAt); } catch { /* noop */ }
+}
+
+// ---------- looping rain (filtered noise) ----------
+let rain: { src: AudioBufferSourceNode; out: GainNode } | null = null;
+
+function startRain() {
+  const c = ac(); if (!c || !master || rain) return;
+  const t0 = c.currentTime;
+  // 2s of brown-ish noise, looped
+  const len = Math.floor(c.sampleRate * 2);
+  const buf = c.createBuffer(1, len, c.sampleRate);
+  const data = buf.getChannelData(0);
+  let last = 0;
+  for (let i = 0; i < len; i++) {
+    const white = Math.random() * 2 - 1;
+    last = (last + 0.02 * white) / 1.02;
+    data[i] = last * 3.5 + (Math.random() * 2 - 1) * 0.4;
+  }
+  const src = c.createBufferSource();
+  src.buffer = buf; src.loop = true;
+  const hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 600;
+  const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 5500;
+  const out = c.createGain();
+  out.gain.setValueAtTime(0.0001, t0);
+  out.gain.exponentialRampToValueAtTime(0.22, t0 + 0.6);
+  src.connect(hp).connect(lp).connect(out).connect(master);
+  src.start(t0);
+  rain = { src, out };
+}
+
+function stopRain() {
+  const c = ac(); if (!c || !rain) return;
+  const t = c.currentTime;
+  const r = rain; rain = null;
+  try {
+    r.out.gain.cancelScheduledValues(t);
+    r.out.gain.setValueAtTime(r.out.gain.value, t);
+    r.out.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+  } catch { /* noop */ }
+  try { r.src.stop(t + 0.45); } catch { /* noop */ }
 }
