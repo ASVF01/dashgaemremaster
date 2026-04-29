@@ -171,12 +171,13 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     };
   }, [resetKey, levelId]);
 
-  // BGM: start when level mounts/changes, restart on death/reset, stop on unmount
+  // BGM: stop on unmount only. The parent (Index) decides which track to
+  // play based on the current screen (menu vs playing) so we don't race
+  // with the menu music here. Restart on retry is also driven by the
+  // parent via screen/levelId/resetKey transitions.
   useEffect(() => {
-    stopBgm();
-    playBgmFor(levelId);
     return () => { stopBgm(); };
-  }, [levelId, resetKey]);
+  }, []);
 
   // BGM: pause/resume with the game's pause state — but keep playing when
   // an overlay (win/death) wants the music to continue in the background.
