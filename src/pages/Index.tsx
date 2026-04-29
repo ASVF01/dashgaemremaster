@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import GameCanvas, { type HudState } from "@/game/GameCanvas";
 import Hud from "@/game/Hud";
 import TouchControls from "@/game/TouchControls";
+import GamepadDebug from "@/game/GamepadDebug";
 import MainMenu from "@/game/MainMenu";
 import { LEVELS, type LevelId } from "@/game/level";
 import { useKeybinds, keyLabel, type ActionId } from "@/game/keybinds";
@@ -290,6 +291,7 @@ const Index = () => {
 
         {/* touch controls live BELOW the game stage so they never cover the HUD */}
         <TouchControls visible={screen === "playing"} />
+        <GamepadDebug />
 
         {/* mobile controls hint */}
         <p className="md:hidden text-center font-scribble text-lg mt-2 text-ink/70">
