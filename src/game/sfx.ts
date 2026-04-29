@@ -87,6 +87,18 @@ function playPixelSample(url: string, opts: { vol?: number; bits?: number; rateD
   src.start(t0);
 }
 
+function playSample(url: string, opts: { vol?: number } = {}) {
+  const c = ac(); if (!c || !master) return;
+  const buf = sampleCache.get(url);
+  if (!buf) { loadSample(url); return; }
+  const src = c.createBufferSource();
+  src.buffer = buf;
+  const g = c.createGain();
+  g.gain.value = opts.vol ?? 0.55;
+  src.connect(g).connect(master);
+  src.start(c.currentTime);
+}
+
 
 
 function ac(): AudioContext | null {
@@ -222,12 +234,7 @@ export const sfx = {
     noise(0.2, 0.18, 600, 6000, 0.02);
   },
   superDash() {
-    // long, sweeping whoosh — used as the one-shot for hold-to-superdash
-    tone({ freq: 180, to: 1600, dur: 0.55, type: "sawtooth", vol: 0.28 });
-    tone({ freq: 360, to: 2400, dur: 0.5, type: "square", vol: 0.18, delay: 0.02 });
-    tone({ freq: 90, to: 40, dur: 0.6, type: "sine", vol: 0.22, delay: 0.0 });
-    noise(0.6, 0.28, 400, 9000, 0.0);
-    noise(0.5, 0.18, 1200, 6000, 0.08);
+    playSample(beamCriticalUrl, { vol: 0.7 });
   },
   meow() {
     // cute lil kitten "mrow" — two pitched sweeps, second a bit higher
