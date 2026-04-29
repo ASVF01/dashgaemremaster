@@ -50,7 +50,7 @@ export function buildLevel(id: LevelId = "scribble-1"): Level {
 function buildJustRunBro(): Level {
   // A nice long flat stretch — no hazards, no enemies, just vibes.
   // A finish flag sits at the very end so the run actually concludes.
-  const W = 12000;
+  const W = 30000;
   const H = 720;
   const groundY = H - 80;
   const platforms: Platform[] = [
@@ -64,8 +64,10 @@ function buildJustRunBro(): Level {
     signs: [
       { x: 200, y: groundY - 110, text: "just run bro.." },
       { x: 1200, y: groundY - 110, text: "seriously. that's it." },
-      { x: 6000, y: groundY - 110, text: "halfway-ish. keep vibing." },
-      { x: 10500, y: groundY - 110, text: "flag's right there bro" },
+      { x: 6000, y: groundY - 110, text: "you're doing great bro" },
+      { x: 12000, y: groundY - 110, text: "halfway-ish. keep vibing." },
+      { x: 20000, y: groundY - 110, text: "bro you're built different" },
+      { x: 27000, y: groundY - 110, text: "flag's right there bro" },
     ],
   };
 }
