@@ -25,7 +25,7 @@ export type LevelMeta = {
 };
 
 export const LEVELS: LevelMeta[] = [
-  { id: "tutorial",   name: "TUTORIAL",   subtitle: "learn to scribble",   difficulty: 1, par: 60 },
+  { id: "tutorial",   name: "TUTORIAL",   subtitle: "learn to scribble",   difficulty: 1, par: 90 },
   { id: "scribble-1", name: "INK ALLEY",  subtitle: "warm up those legs",  difficulty: 2, par: 50 },
   { id: "scribble-2", name: "PAPER CUTS", subtitle: "shooters everywhere", difficulty: 3, par: 55 },
   { id: "scribble-3", name: "OVERDRIVE",  subtitle: "go absurdly fast",    difficulty: 4, par: 60 },
