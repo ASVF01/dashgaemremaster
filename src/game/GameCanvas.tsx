@@ -1462,6 +1462,21 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
     // (rainbow star rain is rendered earlier as a background layer)
 
+    // SOM SOM cinematic overlays: white-out (5..6s) then cyan impact flash (6..6.45s)
+    if (whiteOut > 0) {
+      ctx.save();
+      ctx.fillStyle = `rgba(255,255,255,${whiteOut})`;
+      ctx.fillRect(0, 0, w, h);
+      ctx.restore();
+    }
+    if (impactFlash > 0) {
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.fillStyle = `rgba(34,226,255,${0.85 * impactFlash})`;
+      ctx.fillRect(0, 0, w, h);
+      ctx.restore();
+    }
+
     // vignette / mach overlay
     const vmach = machTier(Math.abs(r.player.vx));
     if (vmach >= 2) {
