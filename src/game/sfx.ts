@@ -1,6 +1,7 @@
 // Tiny WebAudio SFX engine — procedural, no assets.
 import nySampleUrl from "@/assets/audio/ny.ogg";
 import beamCriticalUrl from "@/assets/audio/beam_critical2.mp3";
+import wwHitUrl from "@/assets/audio/ww.ogg";
 import notBadUrl from "@/assets/audio/not_bad.ogg";
 
 let ctx: AudioContext | null = null;
@@ -100,6 +101,26 @@ function playSample(url: string, opts: { vol?: number } = {}) {
   src.start(c.currentTime);
 }
 
+// Like playSample but stops after `maxDur` seconds with a short fade-out.
+function playSampleClipped(url: string, maxDur: number, opts: { vol?: number; fade?: number } = {}) {
+  const c = ac(); if (!c || !master) return;
+  const buf = sampleCache.get(url);
+  if (!buf) { loadSample(url); return; }
+  const t0 = c.currentTime;
+  const src = c.createBufferSource();
+  src.buffer = buf;
+  const g = c.createGain();
+  const vol = opts.vol ?? 0.55;
+  const fade = opts.fade ?? 0.05;
+  g.gain.setValueAtTime(vol, t0);
+  const stopAt = t0 + Math.max(0.05, maxDur);
+  g.gain.setValueAtTime(vol, Math.max(t0, stopAt - fade));
+  g.gain.linearRampToValueAtTime(0.0001, stopAt);
+  src.connect(g).connect(master);
+  src.start(t0);
+  try { src.stop(stopAt + 0.02); } catch { /* noop */ }
+}
+
 
 
 function ac(): AudioContext | null {
@@ -116,7 +137,7 @@ function ac(): AudioContext | null {
   return ctx;
 }
 
-export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); }
+export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); loadSample(wwHitUrl); }
 let baseVol = 0.35;
 export function setMuted(v: boolean) {
   muted = v;
@@ -217,8 +238,7 @@ export const sfx = {
     playPixelSample(nySampleUrl, { vol: 0.55, bits: 8, rateDiv: 4, lp: 8000 });
   },
   hit() {
-    tone({ freq: 220, to: 70, dur: 0.18, type: "sawtooth", vol: 0.35 });
-    noise(0.18, 0.3, 200, 3000);
+    playSampleClipped(wwHitUrl, 1.5, { vol: 0.6, fade: 0.08 });
   },
   enemyKill() {
     tone({ freq: 600, to: 200, dur: 0.12, type: "square", vol: 0.28 });
