@@ -495,7 +495,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         r.finished = true;
         r.finishTime = performance.now() - r.startedAt;
         sfx.die();
-        bgmLevelEnd();
+        // Don't touch BGM on death — let the level's music keep playing
+        // through the death overlay and into the retry.
         onDeath();
       }
       if (r.finished && r.player.alive && r.finishTime === 0) {
