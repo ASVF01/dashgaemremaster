@@ -137,6 +137,8 @@ interface GameRefs {
   bestMach: number;
   glitch: number;
   superDashBurst: { x: number; y: number; t: number; facing: 1 | -1 } | null;
+  superDashFxTimer: number;
+  superDashLineTimer: number;
   startedAt: number;
   finished: boolean;
   finishTime: number;
