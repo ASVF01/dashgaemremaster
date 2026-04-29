@@ -3,6 +3,7 @@ import nySampleUrl from "@/assets/audio/ny.ogg";
 import beamCriticalUrl from "@/assets/audio/beam_critical2.mp3";
 import wwHitUrl from "@/assets/audio/ww.ogg";
 import notBadUrl from "@/assets/audio/not_bad.ogg";
+import auraUrl from "@/assets/audio/aura.mp3";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -137,7 +138,7 @@ function ac(): AudioContext | null {
   return ctx;
 }
 
-export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); loadSample(wwHitUrl); }
+export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); loadSample(wwHitUrl); loadSample(auraUrl); }
 let baseVol = 0.35;
 export function setMuted(v: boolean) {
   muted = v;
@@ -232,6 +233,7 @@ export const sfx = {
   },
   parryStart() {
     tone({ freq: 1200, to: 1800, dur: 0.06, type: "triangle", vol: 0.18 });
+    playSample(auraUrl, { vol: 0.6 });
   },
   parryHit() {
     // 8-bit "ny" sample for successful parries.
