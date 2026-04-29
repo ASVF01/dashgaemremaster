@@ -238,7 +238,7 @@ function playSrc(src: string, restart = false) {
       rafId: null,
       stopped: false,
     };
-    armNextLoop(c);
+    // Native loop is on the source itself; no scheduler needed.
   }).catch(() => { /* decode failed; stay silent */ });
 }
 
