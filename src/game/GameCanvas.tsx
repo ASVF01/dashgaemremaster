@@ -616,12 +616,49 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
             });
           }
         }
-        // (cyan vertical line + flame trail are drawn directly each frame
-        // in render() so they stay glued to the player & camera)
+        // every 0.1s drop a cyan vertical line at the player's current pos.
+        // It stays in world space, so it visually trails behind the player.
         r.superDashFxTimer -= dt;
         if (r.superDashFxTimer <= 0) {
           r.superDashFxTimer = 0.1;
+          const cx = p.x + p.w / 2;
+          const cy = p.y + p.h / 2;
+          // cyan glow bar
+          spawnParticle(r, {
+            x: cx, y: cy, vx: 0, vy: 0,
+            color: "#22e2ff",
+            size: p.h * 1.2,
+            life: 0.45,
+            kind: "shard",
+            angle: Math.PI / 2,
+          });
+          // bright white core
+          spawnParticle(r, {
+            x: cx, y: cy, vx: 0, vy: 0,
+            color: "#ffffff",
+            size: p.h * 1.0,
+            life: 0.3,
+            kind: "shard",
+            angle: Math.PI / 2,
+          });
           sfx.mach();
+        }
+
+        // continuous cyan flame trail in front of player — emits each frame
+        // so the flame leaves an afterimage trail in world space.
+        const fcx = p.x + p.w / 2;
+        const fcy = p.y + p.h / 2;
+        const tipX = fcx + p.facing * (p.w * 0.6);
+        for (let i = 0; i < 2; i++) {
+          spawnParticle(r, {
+            x: tipX + p.facing * Math.random() * 6,
+            y: fcy + (Math.random() - 0.5) * (p.h * 0.5),
+            vx: 0, vy: -20 - Math.random() * 30,
+            color: Math.random() < 0.3 ? "#ffffff" : "#22e2ff",
+            size: 5 + Math.random() * 4,
+            life: 0.35 + Math.random() * 0.15,
+            kind: "ring",
+          });
         }
       } else {
         r.superDashFxTimer = 0;
@@ -1318,53 +1355,6 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     drawPlayer(ctx, r);
     if (r.player.starman) drawStarmanStars(ctx, r);
 
-    // SUPER DAZH attached FX — cyan vertical slash through player + flame trail in front
-    {
-      const p = r.player;
-      if (p.superDashing && p.superDashTime >= 5) {
-        const cx = p.x + p.w / 2;
-        const cy = p.y + p.h / 2;
-        const tt = r.time;
-        // vertical cyan slash through the player (slight thickness pulse)
-        ctx.save();
-        const pulse = 0.7 + 0.3 * Math.sin(tt * 60);
-        const lineH = p.h * 2.4;
-        // outer glow
-        ctx.globalAlpha = 0.55 * pulse;
-        ctx.fillStyle = "#22e2ff";
-        ctx.fillRect(cx - 6, cy - lineH / 2, 12, lineH);
-        // inner core
-        ctx.globalAlpha = 0.95 * pulse;
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(cx - 1.5, cy - lineH / 2, 3, lineH);
-        ctx.restore();
-
-        // cyan flame trail in front of player
-        ctx.save();
-        ctx.globalCompositeOperation = "lighter";
-        const flameLen = 7;
-        for (let i = 0; i < flameLen; i++) {
-          const k = i / (flameLen - 1); // 0 at player, 1 at tip
-          const flick = Math.sin(tt * 30 + i * 1.3) * 0.5 + 0.5;
-          const fx = cx + p.facing * (p.w * 0.45 + i * 14 + flick * 4);
-          const fy = cy + Math.sin(tt * 22 + i * 0.9) * 6;
-          const radius = (1 - k) * 14 + 4 + flick * 2;
-          // outer cyan
-          ctx.globalAlpha = (1 - k) * 0.7;
-          ctx.fillStyle = "#22e2ff";
-          ctx.beginPath();
-          ctx.arc(fx, fy, radius, 0, Math.PI * 2);
-          ctx.fill();
-          // hot white core
-          ctx.globalAlpha = (1 - k) * 0.9;
-          ctx.fillStyle = "#ffffff";
-          ctx.beginPath();
-          ctx.arc(fx, fy, radius * 0.45, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.restore();
-      }
-    }
 
     // super dash burst VFX
     if (r.superDashBurst) {
