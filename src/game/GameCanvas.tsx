@@ -415,30 +415,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     const p = r.player;
     const onGround = p.onGround;
 
-    // starman cheat: keep i-frames topped up + emit yellow star sparkles
+    // starman cheat: keep i-frames topped up. Stars are drawn around the
+    // player in render() (blinking in place) instead of spawning particles.
     if (p.starman) {
       p.invuln = Math.max(p.invuln, 1);
-      p.starTimer -= dt;
-      if (p.starTimer <= 0) {
-        p.starTimer = 0.04;
-        for (let i = 0; i < 2; i++) {
-          const a = Math.random() * Math.PI * 2;
-          const s = 60 + Math.random() * 80;
-          const life = 0.45 + Math.random() * 0.3;
-          r.particles.push({
-            x: p.x + p.w / 2 + Math.cos(a) * 18,
-            y: p.y + p.h / 2 + Math.sin(a) * 22,
-            vx: Math.cos(a) * s,
-            vy: Math.sin(a) * s - 80,
-            color: "#ffd11a",
-            size: 3 + Math.random() * 3,
-            life,
-            maxLife: life,
-            kind: "star",
-            angle: Math.random() * Math.PI,
-          });
-        }
-      }
     }
 
     // input (bound)
