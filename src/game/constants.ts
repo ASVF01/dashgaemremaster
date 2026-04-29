@@ -43,6 +43,6 @@ export type Pickup = { x: number; y: number; collected: boolean };
 export type Particle = {
   x: number; y: number; vx: number; vy: number;
   life: number; maxLife: number;
-  color: string; size: number; kind: "spark" | "smear" | "ring" | "shard";
+  color: string; size: number; kind: "spark" | "smear" | "ring" | "shard" | "star";
   angle?: number;
 };
