@@ -177,7 +177,7 @@ function actionsFromPad(gp: Gamepad): GamepadActions {
   // using the standard mapping to avoid right-stick false positives.
   const dashAxis = isNonStandard && (axis(gp, 4) > 0.45 || axis(gp, 5) > 0.45 || axis(gp, 8) > 0.45);
   const dash = pressed(gp, 7, 0.25) || dashAxis;
-  const menu = pressed(gp, 9) || pressed(gp, 0);
+  const menu = pressed(gp, 9);
 
   return {
     connected: true,
@@ -294,11 +294,9 @@ export function startGamepadBridge(): () => void {
 
   // Optional: log connect/disconnect for debugging.
   const onConnect = (e: GamepadEvent) => {
-    // eslint-disable-next-line no-console
     console.log("[gamepad] connected:", e.gamepad.id);
   };
   const onDisconnect = (e: GamepadEvent) => {
-    // eslint-disable-next-line no-console
     console.log("[gamepad] disconnected:", e.gamepad.id);
     for (const c of ALL_CODES) if (held[c]) set(c, false);
   };
