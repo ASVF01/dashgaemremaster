@@ -164,9 +164,13 @@ export function playBgmFor(levelId: LevelId) {
     return;
   }
   // Already playing this track? leave it alone.
-  if (playing && playing.src === src && !playing.stopped) return;
+  if (playing && playing.src === src && !playing.stopped) {
+    resetLevelEndFx();
+    return;
+  }
 
   stopBgm();
+  resetLevelEndFx();
   const c = ac();
   if (!c) return;
 
@@ -212,10 +216,48 @@ export function resumeBgm() {
 
 export function setBgmMuted(v: boolean) {
   muted = v;
-  if (masterGain) masterGain.gain.value = muted ? 0 : volume;
+  if (masterGain) masterGain.gain.value = muted ? 0 : volume * endDuck;
 }
 
 export function setBgmVolume(v: number) {
   volume = Math.max(0, Math.min(1, v));
-  if (masterGain && !muted) masterGain.gain.value = volume;
+  if (masterGain && !muted) masterGain.gain.value = volume * endDuck;
 }
+
+// Called when the player completes (or otherwise ends) the level.
+// Ducks volume slightly and closes the lowpass to ~50% to give the BGM a
+// muffled "behind a wall" vibe while end-of-level UI plays.
+export function bgmLevelEnd() {
+  endDuck = 0.6;
+  const c = ac();
+  const now = c ? c.currentTime : 0;
+  if (masterGain && c) {
+    masterGain.gain.cancelScheduledValues(now);
+    masterGain.gain.setValueAtTime(masterGain.gain.value, now);
+    masterGain.gain.linearRampToValueAtTime(muted ? 0 : volume * endDuck, now + 0.4);
+  } else if (masterGain) {
+    masterGain.gain.value = muted ? 0 : volume * endDuck;
+  }
+  if (lowpass && c) {
+    lowpass.frequency.cancelScheduledValues(now);
+    lowpass.frequency.setValueAtTime(lowpass.frequency.value, now);
+    lowpass.frequency.linearRampToValueAtTime(LP_END, now + 0.4);
+  } else if (lowpass) {
+    lowpass.frequency.value = LP_END;
+  }
+}
+
+function resetLevelEndFx() {
+  endDuck = 1;
+  if (masterGain) {
+    const c = ac();
+    if (c) masterGain.gain.cancelScheduledValues(c.currentTime);
+    masterGain.gain.value = muted ? 0 : volume * endDuck;
+  }
+  if (lowpass) {
+    const c = ac();
+    if (c) lowpass.frequency.cancelScheduledValues(c.currentTime);
+    lowpass.frequency.value = LP_OPEN;
+  }
+}
+
