@@ -433,6 +433,21 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     for (const ai of r.afterimages) ai.life -= dt;
     r.afterimages = r.afterimages.filter((a) => a.life > 0);
 
+    // Thin speed lines while running on the ground (any speed above a small threshold).
+    if (p.onGround && Math.abs(p.vx) > 140 && Math.random() < 0.55) {
+      const len = 14 + Math.random() * 18 + Math.min(40, Math.abs(p.vx) * 0.04);
+      spawnParticle(r, {
+        x: p.x + p.w / 2 - p.facing * (p.w * 0.4 + Math.random() * 30),
+        y: p.y + 4 + Math.random() * (p.h - 8),
+        vx: -p.facing * (Math.abs(p.vx) * 0.5 + 80),
+        vy: 0,
+        color: "#ffffff",
+        size: len / 2,
+        life: 0.18 + Math.random() * 0.12,
+        kind: "smear",
+      });
+    }
+
     if (mach >= 1 && Math.random() < 0.4 + mach * 0.15) {
       spawnParticle(r, {
         x: p.x + p.w / 2 - p.facing * (p.w / 2 + Math.random() * 12),
