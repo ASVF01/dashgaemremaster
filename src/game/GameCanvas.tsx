@@ -383,13 +383,14 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         }
         if (p.dashCooldown <= 0 && p.dashTime <= 0 && p.alive) {
           const k = keysRef.current;
+          const gp = prevGamepadRef.current;
           const b = getLiveBinds();
           let dx = 0, dy = 0;
-          if (isPressed(k, "left",  b)) dx -= 1;
-          if (isPressed(k, "right", b)) dx += 1;
+          if (isPressed(k, "left",  b) || gp?.left) dx -= 1;
+          if (isPressed(k, "right", b) || gp?.right) dx += 1;
           // up = jump key currently held; down = slide key currently held
-          const jumpAlso = isPressed(k, "jump", b);
-          const downHeld = isPressed(k, "slide", b);
+          const jumpAlso = isPressed(k, "jump", b) || !!gp?.jump || !!gp?.up;
+          const downHeld = isPressed(k, "slide", b) || !!gp?.slide || !!gp?.down;
           if (jumpAlso) dy -= 1;
           if (downHeld) dy += 1;
           if (dx === 0 && dy === 0) dx = p.facing;
