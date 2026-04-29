@@ -2319,12 +2319,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       const dx = p.w / 2 - drawW / 2;
       const dy = p.h - drawH;
       if (flash) {
-        // Tint the player red on hit. Build a sprite-shaped red silhouette in
-        // an offscreen canvas (so the red is clipped to the PNG's alpha and
-        // never bleeds into a square box) and draw it over the sprite.
-        const tinted = getTintedSprite(sprite, 0);
-        // getTintedSprite uses HSL hue 0 = red but with the rainbow lightness;
-        // overlay an extra solid red on top for a punchier flash.
+        // Tint the player red on hit. Build the red silhouette in an
+        // offscreen canvas (clipped to the PNG alpha) and overlay it on the
+        // sprite, so the tint never paints a square red box behind/around
+        // the player.
         ctx.save();
         ctx.imageSmoothingEnabled = false;
         ctx.drawImage(sprite, dx, dy, drawW, drawH);
@@ -2339,7 +2337,6 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         octx.fillRect(0, 0, off.width, off.height);
         ctx.drawImage(off, dx, dy, drawW, drawH);
         ctx.restore();
-        void tinted;
       } else if (rainbowHue !== null) {
         // starman: cached rainbow-tinted sprite clipped to the PNG alpha.
         const isSomSomTint = p.somSom && rainbowHue === 190;
