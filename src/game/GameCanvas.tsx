@@ -1907,9 +1907,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     const cx = p.x + p.w / 2;
     const cy = p.y + p.h / 2;
     ctx.translate(cx, cy);
-    // squash (landing) → wide + short. stretch (falling/ramping) → tall + thin.
-    const sx = 1 + p.squash * 0.3 - p.stretch * 0.18;
-    const sy = 1 - p.squash * 0.2 + p.stretch * 0.28;
+    // squash (landing) → wide + short. stretch (falling) → tall + thin.
+    // hStretch (dash / super dash) → wide + slightly short, motion-streak feel.
+    const sx = 1 + p.squash * 0.3 - p.stretch * 0.18 + p.hStretch * 0.35;
+    const sy = 1 - p.squash * 0.2 + p.stretch * 0.28 - p.hStretch * 0.12;
     // (running tilt removed — sprite stays upright)
     ctx.scale(sx * p.facing, sy);
     ctx.translate(-p.w / 2, -p.h / 2);
