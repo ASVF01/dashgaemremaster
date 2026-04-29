@@ -207,7 +207,7 @@ const Index = () => {
             resetKey={resetKey}
             levelId={levelId}
           />
-          {screen === "playing" && <Hud hud={hud} />
+          {screen === "playing" && <Hud hud={hud} />}
 
           {screen === "menu" && <MainMenu onPlay={startLevel} />}
 
