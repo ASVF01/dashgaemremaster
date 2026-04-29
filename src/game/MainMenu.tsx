@@ -38,6 +38,7 @@ export default function MainMenu({ onPlay }: Props) {
           <TabBtn active={tab === "tutorial"} onClick={() => setTab("tutorial")}>HOW TO PLAY</TabBtn>
           <TabBtn active={tab === "keybinds"} onClick={() => setTab("keybinds")}>KEYBINDS</TabBtn>
           <TabBtn active={tab === "settings"} onClick={() => setTab("settings")}>SETTINGS</TabBtn>
+          <TabBtn active={tab === "extras"}   onClick={() => setTab("extras")}>EXTRAS</TabBtn>
           <TabBtn active={tab === "credits"}  onClick={() => setTab("credits")}>CREDITS</TabBtn>
         </nav>
 
@@ -47,6 +48,7 @@ export default function MainMenu({ onPlay }: Props) {
           {tab === "tutorial" && <TutorialTab onStartTutorial={() => onPlay("tutorial")} />}
           {tab === "keybinds" && <KeybindsTab />}
           {tab === "settings" && <SettingsTab />}
+          {tab === "extras"   && <ExtrasTab onPlay={onPlay} />}
           {tab === "credits"  && <CreditsTab />}
         </div>
       </div>
