@@ -8,6 +8,7 @@ export default function Hud({ hud }: { hud: HudState }) {
   const sm = !!hud.starman;
   const ss = !!hud.somSom; // som-som variant: cyan instead of rainbow
   const invBarClass = ss ? "" : "rainbow-bar";
+  const speedBarClass = ss ? "" : "rainbow-bar rainbow-bar-slow";
   const invBarBg = ss ? "#22e2ff" : undefined;
 
   return (
