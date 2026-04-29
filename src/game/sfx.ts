@@ -144,4 +144,10 @@ export const sfx = {
     noise(0.6, 0.28, 400, 9000, 0.0);
     noise(0.5, 0.18, 1200, 6000, 0.08);
   },
+  meow() {
+    // cute lil kitten "mrow" — two pitched sweeps, second a bit higher
+    tone({ freq: 520, to: 780, dur: 0.14, type: "triangle", vol: 0.22, attack: 0.02, release: 0.06 });
+    tone({ freq: 760, to: 460, dur: 0.18, type: "triangle", vol: 0.2, attack: 0.02, release: 0.08, delay: 0.13 });
+    tone({ freq: 260, to: 320, dur: 0.18, type: "sine", vol: 0.08, delay: 0.0 });
+  },
 };
