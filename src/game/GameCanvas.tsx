@@ -392,9 +392,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       if (Math.abs(p.vx) > speedCap) p.vx = Math.sign(p.vx) * speedCap;
     }
 
-    // gravity (dash floats horizontally)
+    // gravity (dash floats — uses locked dash velocity in any direction)
     if (p.dashTime > 0) {
-      p.vy = 0;
+      p.vy = p.dashVy;
     } else {
       p.vy += GRAVITY * dt;
       if (p.vy > 1400) p.vy = 1400;
