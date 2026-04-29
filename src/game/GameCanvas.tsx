@@ -153,7 +153,7 @@ interface GameRefs {
   skidDustTimer: number;
   skidSfxTimer: number;
   isSkidding: boolean;
-  rainStars: { x: number; y: number; vy: number; size: number; phase: number; hue: number; rot: number }[];
+  rainStars: { x: number; y: number; vy: number; size: number; phase: number; hue: number }[];
 }
 
 interface Props {
@@ -1115,7 +1115,6 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           size: 4 + Math.random() * 4,
           phase: Math.random() * Math.PI * 2,
           hue: Math.random() * 360,
-          rot: Math.random() * Math.PI * 2,
         });
       }
     }
@@ -1130,14 +1129,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         s.y += s.vy * dtFrame;
         if (!starmanFx || s.y >= h + 28) continue;
         s.x += Math.sin(s.phase + t * 1.1) * 0.35;
-        s.rot += dtFrame * 0.9;
         const img = getRainStar(s.size, s.hue + t * 80);
         const half = img.width / 2;
-        ctx.save();
-        ctx.translate(s.x, s.y);
-        ctx.rotate(s.rot);
-        ctx.drawImage(img, -half, -half);
-        ctx.restore();
+        ctx.drawImage(img, s.x - half, s.y - half);
         stars[write++] = s;
       }
       stars.length = write;
