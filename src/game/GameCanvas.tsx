@@ -176,6 +176,11 @@ interface GameRefs {
   // SOM SOM lightning: spawned occasionally over the OLED-black backdrop.
   lightningCooldown: number;
   lightningBolts: { x: number; t: number; life: number; segs: { x: number; y: number }[]; flash: number }[];
+  // SOM SOM "32.65" event: white fade, fast cloud, optimized rain.
+  somSomStorm: boolean;
+  somSomStormFlash: number; // seconds since flash trigger
+  somSomCloudX: number | null;
+  somSomRain: Float32Array | null; // packed [x, y, speed, len] * N
 }
 
 interface Props {
