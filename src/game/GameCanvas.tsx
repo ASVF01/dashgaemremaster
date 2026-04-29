@@ -1042,8 +1042,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       // by height. Either way the sprite is anchored to the bottom of the box.
       const ratio = sprite.width / sprite.height;
       const wide = ratio > 1.1;
-      // Slide gets an extra width boost without rotating/changing the sprite.
-      const wideScale = state === "slide" ? 2.0 : 1.6;
+      const wideScale = 1.6;
       const drawH = wide ? p.w * wideScale / ratio : p.h;
       const drawW = wide ? p.w * wideScale : drawH * ratio;
       const dx = p.w / 2 - drawW / 2;
