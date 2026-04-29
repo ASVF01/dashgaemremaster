@@ -44,6 +44,24 @@ let started = false;
 // Vibration support. We re-resolve the active gamepad each call rather than
 // caching a reference because Gamepad objects in some browsers are snapshots
 // and the cached one quickly goes stale (its actuator stops working).
+//
+// PlayStation pad notes:
+//   - DualShock 4 / DualSense expose dual-rumble through `vibrationActuator`
+//     in Chromium and Safari (Standard Gamepad mapping).
+//   - Older Firefox builds expose `hapticActuators[]` with a `.pulse(value, ms)`
+//     method instead — we fall back to that.
+//   - DualSense's adaptive triggers ("trigger-rumble") aren't appropriate for
+//     a generic "speed cue" so we stick with classic dual-rumble.
+type VibrationActuator = {
+  playEffect?: (type: string, params: Record<string, number>) => Promise<unknown>;
+  pulse?: (value: number, duration: number) => Promise<unknown>;
+};
+type HapticActuator = { pulse?: (value: number, duration: number) => Promise<unknown> };
+type PadWithHaptics = Gamepad & {
+  vibrationActuator?: VibrationActuator;
+  hapticActuators?: HapticActuator[];
+};
+
 export function rumble(opts: { duration?: number; strong?: number; weak?: number } = {}) {
   const duration = opts.duration ?? 120;
   const strong = Math.max(0, Math.min(1, opts.strong ?? 0.6));
@@ -52,24 +70,37 @@ export function rumble(opts: { duration?: number; strong?: number; weak?: number
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];
     for (const gp of pads) {
       if (!gp || !gp.connected) continue;
-      // Standard: GamepadHapticActuator.playEffect("dual-rumble", ...)
-      const actuator = (gp as Gamepad & {
-        vibrationActuator?: {
-          playEffect?: (type: string, params: Record<string, number>) => Promise<unknown>;
-        };
-      }).vibrationActuator;
-      if (actuator?.playEffect) {
-        actuator.playEffect("dual-rumble", {
+      const pad = gp as PadWithHaptics;
+
+      // 1) Modern path — works for Xbox, DualShock 4, DualSense in Chromium/Safari.
+      if (pad.vibrationActuator?.playEffect) {
+        pad.vibrationActuator.playEffect("dual-rumble", {
           startDelay: 0,
           duration,
           strongMagnitude: strong,
           weakMagnitude: weak,
-        }).catch(() => { /* some browsers reject mid-effect; ignore */ });
-        return; // first connected pad gets the rumble
+        }).catch(() => { /* mid-effect rejection — ignore */ });
+        return;
+      }
+
+      // 2) Single-channel fallback (some Chromium builds expose only .pulse).
+      if (pad.vibrationActuator?.pulse) {
+        pad.vibrationActuator.pulse(Math.max(strong, weak), duration).catch(() => {});
+        return;
+      }
+
+      // 3) Firefox legacy path — DualShock 4 often shows up here.
+      const haptics = pad.hapticActuators;
+      if (haptics && haptics.length > 0) {
+        // Drive every motor we can find at the higher of the two magnitudes.
+        const power = Math.max(strong, weak);
+        for (const h of haptics) h.pulse?.(power, duration)?.catch?.(() => {});
+        return;
       }
     }
-  } catch { /* noop — vibration is best-effort */ }
+  } catch { /* vibration is best-effort */ }
 }
+
 
 
 /** Start the controller polling loop. Idempotent. */
@@ -108,18 +139,55 @@ export function startGamepadBridge(): () => void {
       return;
     }
 
+    // Detect non-standard mapping (some Firefox + DualShock 4 cases). When
+    // mapping !== "standard", button indices are device-specific. We sniff
+    // the id for "PLAYSTATION" / "DualShock" / "DualSense" / vendor 054c
+    // and apply the common DS4-on-Firefox layout:
+    //   0 X(cross), 1 O(circle), 2 □(square), 3 △(triangle),
+    //   4 L1, 5 R1, 6 L2, 7 R2, 8 share, 9 options, 10 L3, 11 R3,
+    //   12 up, 13 down, 14 left, 15 right
+    // which happens to match Standard, so even non-standard PS pads usually
+    // "just work" with the indices below — but the dpad axis (axis 9 hat)
+    // needs handling for the truly legacy non-standard path.
+    const isNonStandard = gp.mapping !== "standard";
+    const id = (gp.id || "").toLowerCase();
+    const isPlayStation =
+      id.includes("playstation") ||
+      id.includes("dualshock") ||
+      id.includes("dualsense") ||
+      id.includes("054c");      // Sony USB vendor id
+
     // Axes (left stick) + dpad.
     const ax = gp.axes[0] ?? 0;
     const ay = gp.axes[1] ?? 0;
-    const left  = ax < -STICK_DEADZONE || pressed(gp, 14);
-    const right = ax >  STICK_DEADZONE || pressed(gp, 15);
-    const up    = ay < -STICK_DEADZONE || pressed(gp, 12);
-    const down  = ay >  STICK_DEADZONE || pressed(gp, 13);
 
-    set("ArrowLeft",  left  && !right); // avoid simultaneous L+R
+    // Hat-switch dpad fallback: many non-standard PS pads encode the dpad as
+    // a single axis (axis 9) with discrete values for each direction.
+    let hatLeft = false, hatRight = false, hatUp = false, hatDown = false;
+    if (isNonStandard && isPlayStation && gp.axes.length > 9) {
+      const h = gp.axes[9];
+      // Values cluster near these multiples of 1/7. Use windows for slop.
+      const near = (target: number) => Math.abs(h - target) < 0.15;
+      hatUp    = near(-1) || near(-0.71) || near(-0.43);
+      hatRight = near(-0.43) || near(-0.14) || near(0.14);
+      hatDown  = near(0.14) || near(0.43) || near(0.71);
+      hatLeft  = near(0.71) || near(1) || near(-1);
+    }
+
+    const left  = ax < -STICK_DEADZONE || pressed(gp, 14) || hatLeft;
+    const right = ax >  STICK_DEADZONE || pressed(gp, 15) || hatRight;
+    const up    = ay < -STICK_DEADZONE || pressed(gp, 12) || hatUp;
+    const down  = ay >  STICK_DEADZONE || pressed(gp, 13) || hatDown;
+
+    set("ArrowLeft",  left  && !right);
     set("ArrowRight", right && !left);
 
-    // Face buttons (Standard mapping).
+    // Face buttons. Indices match between Xbox Standard and PS Standard,
+    // so the same numbers work for DualShock/DualSense:
+    //   PS Cross    = idx 0  → jump (Xbox A)
+    //   PS Circle   = idx 1  → slide (Xbox B)
+    //   PS Square   = idx 2  → parry (Xbox X)
+    //   PS Triangle = idx 3  → dash  (Xbox Y)
     const a = pressed(gp, 0);
     const b = pressed(gp, 1);
     const x = pressed(gp, 2);
@@ -128,17 +196,17 @@ export function startGamepadBridge(): () => void {
     const rb = pressed(gp, 5);
     const lt = pressed(gp, 6);
     const rt = pressed(gp, 7);
-    const start = pressed(gp, 9);
+    const start = pressed(gp, 9); // PS: Options
 
-    // Jump: A button OR up direction
+    // Jump: Cross / A / up direction
     set("Space", a || up);
-    // Slide / dive: B, LB, LT, or down direction
+    // Slide / dive: Circle / B / L1 / L2 / down direction
     set("ShiftLeft", b || lb || lt || down);
-    // Parry: X
+    // Parry: Square / X
     set("KeyJ", x);
-    // Dash / hold for super dash: Y, RT, or RB
+    // Dash / hold for super dash: Triangle / Y / R1 / R2
     set("KeyK", y || rt || rb);
-    // Menu confirm
+    // Menu confirm: Options / Start
     set("Enter", start);
 
     raf = requestAnimationFrame(tick);
