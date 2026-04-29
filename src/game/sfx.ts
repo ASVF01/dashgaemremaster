@@ -229,14 +229,14 @@ export const sfx = {
     tone({ freq: 280, to: 140, dur: 0.12, type: "triangle", vol: 0.1, attack: 0.005, release: 0.08 });
   },
   step() {
-    // "th" — short tongue-tip noise burst
-    noise(0.05, 0.16, 1200, 5500);
-    tone({ freq: 180 + Math.random() * 40, dur: 0.03, type: "triangle", vol: 0.05 });
+    // "psh" — short plosive pop into a quick airy hiss (footfall version)
+    noise(0.008, 0.32, 200, 1100);                    // "p" lip pop
+    noise(0.07, 0.22, 3500, 8500, 0.015);             // "sh" hiss tail
   },
   run() {
-    // "th" — slightly punchier for running
-    noise(0.06, 0.22, 1100, 6000);
-    tone({ freq: 200 + Math.random() * 50, dur: 0.035, type: "triangle", vol: 0.07 });
+    // "psh" — punchier footfall while running
+    noise(0.01, 0.4, 220, 1200);                       // "p" pop
+    noise(0.09, 0.28, 3200, 9000, 0.02);              // "sh" hiss tail
   },
   skid() {
     noise(0.18, 0.14, 500, 4500);
