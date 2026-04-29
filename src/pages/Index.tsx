@@ -289,6 +289,27 @@ function Overlay({ children }: { children: React.ReactNode }) {
   );
 }
 
+function LoadingScreen({ levelName }: { levelName: string }) {
+  const [dots, setDots] = useState("");
+  useEffect(() => {
+    const id = setInterval(() => setDots((d) => (d.length >= 3 ? "" : d + ".")), 280);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <div className="text-center px-6">
+      <div className="font-marker text-6xl md:text-7xl text-ink mb-3 animate-jitter inline-block">
+        LOADING{dots}
+      </div>
+      <div className="font-scribble text-2xl md:text-3xl text-[hsl(var(--accent))] mb-2">
+        {levelName}
+      </div>
+      <div className="font-scribble text-base md:text-lg text-ink/60">
+        cueing the music…
+      </div>
+    </div>
+  );
+}
+
 function CutscenePlayer({ src, onDone }: { src: string; onDone: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [loading, setLoading] = useState(true);
