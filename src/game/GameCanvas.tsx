@@ -849,11 +849,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     ctx.restore();
 
     // vignette / mach overlay
-    if (mach >= 2) {
+    const vmach = machTier(Math.abs(r.player.vx));
+    if (vmach >= 2) {
       ctx.save();
       const g = ctx.createRadialGradient(w / 2, h / 2, h * 0.3, w / 2, h / 2, h * 0.8);
       g.addColorStop(0, "rgba(0,0,0,0)");
-      g.addColorStop(1, `rgba(0,0,0,${0.15 + mach * 0.06})`);
+      g.addColorStop(1, `rgba(0,0,0,${0.15 + vmach * 0.06})`);
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, w, h);
       ctx.restore();
