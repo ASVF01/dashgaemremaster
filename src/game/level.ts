@@ -48,10 +48,9 @@ export function buildLevel(id: LevelId = "scribble-1"): Level {
 
 // ---------- JUST RUN BRO: flat, endless, no obstacles ----------
 function buildJustRunBro(): Level {
-  // "Infinitely long" — JS can't be truly infinite, but a million pixels of
-  // flat ground is well past anyone's patience. No hazards, enemies, or
-  // anything to slow you down. Goal sits past the end so you never trigger it.
-  const W = 1_000_000;
+  // A nice long flat stretch — no hazards, no enemies, just vibes.
+  // A finish flag sits at the very end so the run actually concludes.
+  const W = 12000;
   const H = 720;
   const groundY = H - 80;
   const platforms: Platform[] = [
@@ -60,12 +59,13 @@ function buildJustRunBro(): Level {
   return {
     width: W, height: H,
     spawn: { x: 80, y: groundY - 80 },
-    // Goal placed beyond the world edge so it's effectively unreachable.
-    goal: { x: W + 5000, y: groundY - 120, w: 50, h: 120 },
+    goal: { x: W - 160, y: groundY - 120, w: 50, h: 120 },
     platforms, hazards: [], enemies: [], pickups: [],
     signs: [
       { x: 200, y: groundY - 110, text: "just run bro.." },
       { x: 1200, y: groundY - 110, text: "seriously. that's it." },
+      { x: 6000, y: groundY - 110, text: "halfway-ish. keep vibing." },
+      { x: 10500, y: groundY - 110, text: "flag's right there bro" },
     ],
   };
 }
