@@ -737,6 +737,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         p.y -= PLAYER_H - SLIDE_H;
         p.h = PLAYER_H;
         p.sliding = false;
+        spawnSlideEndPuff(r, p);
+        sfx.slideEnd();
       }
     }
     // Drive the looping slide sfx + grinding-dust trail based on state/speed.
