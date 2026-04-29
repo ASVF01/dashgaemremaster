@@ -413,6 +413,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           p.hStretch = 1;
           if (p.invuln < DASH_DURATION) p.invuln = DASH_DURATION;
           burst(r, p.x + p.w / 2, p.y + p.h / 2, "#22e2ff", 14, 320);
+          // Tactile speed cue: a punchy short rumble at dash ignition.
+          rumble({ duration: 90, strong: 0.7, weak: 0.9 });
           // Directional "warp" smear: a row of stretched streaks trailing
           // behind the dash heading, plus a few stacked after-image ghosts
           // so the eye can read the motion vector clearly.
