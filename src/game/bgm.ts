@@ -8,6 +8,7 @@ import bgmChampionPlay from "@/assets/audio/bgm_champion_play.mp3";
 import bgmChampionDuel2 from "@/assets/audio/bgm_champion_duel2.mp3";
 import bgmTutorial from "@/assets/audio/bgm_tutorial.mp3";
 import bgmStarman from "@/assets/audio/bgm_starman.mp3";
+import bgmSomSom from "@/assets/audio/a_lil_som_som.mp3";
 import type { LevelId } from "@/game/level";
 
 // Tutorial keeps its own original track. Champion play is the default for
