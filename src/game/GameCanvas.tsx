@@ -139,6 +139,7 @@ interface GameRefs {
   superDashBurst: { x: number; y: number; t: number; facing: 1 | -1 } | null;
   superDashFxTimer: number;
   superDashLineTimer: number;
+  superDashFlash: number;
   startedAt: number;
   finished: boolean;
   finishTime: number;
@@ -238,6 +239,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       superDashBurst: null,
       superDashFxTimer: 0,
       superDashLineTimer: 0,
+      superDashFlash: 0,
       startedAt: performance.now(),
       finished: false,
       finishTime: 0,
@@ -625,6 +627,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           burst(r, bx, by, "#ffd11a", 10, 260);
           burst(r, bx, by, "#22e2ff", 6, 200);
           sfx.mach();
+          r.superDashFlash = 1;
+          r.shake = Math.max(r.shake, 0.25);
         }
       } else {
         r.superDashFxTimer = 0;
@@ -790,6 +794,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
     if (r.shake > 0) r.shake = Math.max(0, r.shake - dt * 3);
     if (r.glitch > 0) r.glitch = Math.max(0, r.glitch - dt * 4);
+    if (r.superDashFlash > 0) r.superDashFlash = Math.max(0, r.superDashFlash - dt * 6);
 
     // enemies update
     for (const e of r.level.enemies) {
@@ -1442,6 +1447,29 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       g.addColorStop(1, `rgba(0,0,0,${0.15 + vmach * 0.06})`);
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, w, h);
+      ctx.restore();
+    }
+
+    // SUPER DAZH burst flash + chromatic distortion bands
+    if (r.superDashFlash > 0) {
+      const f = r.superDashFlash;
+      ctx.save();
+      // additive white flash
+      ctx.globalCompositeOperation = "lighter";
+      ctx.fillStyle = `rgba(255,245,200,${0.55 * f})`;
+      ctx.fillRect(0, 0, w, h);
+      ctx.restore();
+
+      // horizontal distortion bands (cyan/magenta scanlines)
+      ctx.save();
+      const bands = 5;
+      for (let i = 0; i < bands; i++) {
+        const by = (i / bands) * h + ((r.time * 600) % (h / bands));
+        const bh = 4 + Math.random() * 6;
+        ctx.globalAlpha = 0.35 * f;
+        ctx.fillStyle = i % 2 === 0 ? "#22e2ff" : "#ff3df0";
+        ctx.fillRect(0, by, w, bh);
+      }
       ctx.restore();
     }
   }
