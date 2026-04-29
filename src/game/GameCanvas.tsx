@@ -1215,7 +1215,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // SOM SOM: lightning bolts over the OLED-black background.
     // Random chance every cycle: 10s, 5s, or 1s wait between strikes.
     if (postImpact) {
-      r.lightningCooldown -= dtRender;
+      r.lightningCooldown -= 0.0166;
       if (r.lightningCooldown <= 0) {
         const roll = Math.random();
         const wait = roll < 0.34 ? 1 : roll < 0.67 ? 5 : 10;
@@ -1234,7 +1234,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       }
       for (let i = r.lightningBolts.length - 1; i >= 0; i--) {
         const b = r.lightningBolts[i];
-        b.t += dtRender;
+        b.t += 0.0166;
         b.flash = Math.max(0, 1 - b.t / b.life);
         if (b.t >= b.life) r.lightningBolts.splice(i, 1);
       }
