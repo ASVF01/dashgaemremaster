@@ -1015,9 +1015,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     // squash & stretch
     const sx = 1 + p.stretch * 0.3 - p.squash * 0.2;
     const sy = 1 - p.stretch * 0.2 + p.squash * 0.3;
-    // running tilt
-    const tilt = p.onGround ? Math.sign(p.vx) * Math.min(0.35, speed / 1500) : 0;
-    ctx.rotate(tilt);
+    // (running tilt removed — sprite stays upright)
     ctx.scale(sx * p.facing, sy);
     ctx.translate(-p.w / 2, -p.h / 2);
 
