@@ -338,10 +338,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     if (right) dir += 1;
     if (dir !== 0) p.facing = dir > 0 ? 1 : -1;
 
-    if (p.dashTime > 0) {
-      // locked velocity during dash — direction set on activation
-      p.vx = p.dashVx;
-    } else if (dir !== 0) {
+    if (dir !== 0) {
       p.vx += dir * MOVE_ACCEL * dt;
     } else {
       // friction (more if not sliding)
