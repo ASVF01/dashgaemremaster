@@ -606,6 +606,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
 
     // jump (also cancels dive when grounded — handled by jump flow naturally)
+    const jumpJustPressed = jumpHeld && !p.jumpWasHeld;
     if (jumpHeld && onGround) {
       p.vy = -JUMP_VEL;
       p.onGround = false;
@@ -613,7 +614,18 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       p.diving = false;
       spawnParticle(r, { x: p.x + p.w / 2, y: p.y + p.h, color: INK, vy: -40, life: 0.3, size: 4, kind: "ring" });
       sfx.jump();
+    } else if (jumpJustPressed && !onGround && p.dashTime > 0 && !p.dashAirJumpUsed) {
+      // mid-air dash-jump: lets the player leap while a dash is active
+      p.vy = -JUMP_VEL;
+      p.dashAirJumpUsed = true;
+      p.diving = false;
+      p.squash = 1;
+      spawnParticle(r, { x: p.x + p.w / 2, y: p.y + p.h, color: "#22e2ff", vy: -40, life: 0.3, size: 4, kind: "ring" });
+      sfx.jump();
     }
+    // refill once we touch the ground
+    if (onGround) p.dashAirJumpUsed = false;
+    p.jumpWasHeld = jumpHeld;
     // variable jump
     if (!jumpHeld && p.vy < -300) p.vy = -300;
 
