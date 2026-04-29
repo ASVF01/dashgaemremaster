@@ -204,10 +204,13 @@ function noise(dur: number, vol = 0.4, hp = 200, lp = 4000, delay = 0) {
 
 export const sfx = {
   jump() {
-    // "tah" — sharp tongue transient + quick open vowel sweep
-    noise(0.02, 0.35, 1500, 6000);                               // "t" tick
-    tone({ freq: 520, to: 880, dur: 0.13, type: "triangle", vol: 0.22, attack: 0.008, release: 0.06, delay: 0.015 }); // "ah" formant rising
-    tone({ freq: 260, to: 440, dur: 0.11, type: "sine", vol: 0.12, delay: 0.018 });
+    // "psh" — sharp plosive transient ("p") then airy hiss ("sh")
+    // p: tiny, very short low-mid burst (lip pop)
+    noise(0.012, 0.45, 200, 1200);
+    // sh: sustained high-band noise sweeping down slightly
+    noise(0.16, 0.32, 3500, 8500, 0.02);
+    // subtle body so it has weight without sounding tonal
+    tone({ freq: 220, to: 140, dur: 0.06, type: "sine", vol: 0.06, release: 0.04, delay: 0.005 });
   },
   land() {
     // "ph" — soft breathy puff, lowpassed, with low body thump
