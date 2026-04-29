@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   GRAVITY, MOVE_ACCEL, MAX_SPEED, FRICTION, JUMP_VEL,
   SLIDE_BOOST, SLIDE_FRICTION, PARRY_WINDOW, PARRY_COOLDOWN, PARRY_BOOST,
-  DASH_SPEED, DASH_DURATION, DASH_COOLDOWN,
+  DASH_IMPULSE, DASH_BONUS, DASH_DURATION, DASH_COOLDOWN,
   PLAYER_W, PLAYER_H, SLIDE_H,
   MACH_THRESHOLDS, MACH_COLORS, MACH_LABELS,
   type Particle, type Projectile, type Enemy,
@@ -190,21 +190,27 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
           if (downHeld) dy += 1;
           if (dx === 0 && dy === 0) dx = p.facing;
           const len = Math.hypot(dx, dy) || 1;
-          p.dashVx = (dx / len) * DASH_SPEED;
-          p.dashVy = (dy / len) * DASH_SPEED;
-          p.dashTime = DASH_DURATION;
-          p.dashCooldown = DASH_COOLDOWN;
-          p.vx = p.dashVx;
-          p.vy = p.dashVy;
-          p.facing = dx >= 0 ? 1 : -1;
-          p.stretch = 1;
-          // dash-jump: also fire a jump impulse so the player leaves the floor
+          const nx = dx / len, ny = dy / len;
+          // Impulse: shove in the aimed direction. Existing velocity along
+          // that direction is preserved + boosted by DASH_BONUS; perpendicular
+          // velocity is kept as-is so momentum carries through.
+          const along = p.vx * nx + p.vy * ny;
+          const newAlong = Math.max(along, 0) + DASH_IMPULSE + DASH_BONUS;
+          // remove old along-component, add the new one
+          p.vx += (newAlong - along) * nx;
+          p.vy += (newAlong - along) * ny;
+          // dash-jump: pressing jump together pops you off the ground too
           if (jumpAlso && p.onGround) {
+            p.vy = Math.min(p.vy, -JUMP_VEL);
             p.onGround = false;
             p.squash = 1;
             sfx.jump();
           }
-          // brief i-frames during dash
+          p.dashTime = DASH_DURATION;        // visual / i-frame window only
+          p.dashCooldown = DASH_COOLDOWN;
+          p.dashVx = nx; p.dashVy = ny;      // store aim for sprite/afterimage tinting
+          p.facing = dx >= 0 ? 1 : -1;
+          p.stretch = 1;
           if (p.invuln < DASH_DURATION) p.invuln = DASH_DURATION;
           burst(r, p.x + p.w / 2, p.y + p.h / 2, "#22e2ff", 14, 320);
           sfx.parryStart();
@@ -332,10 +338,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     if (right) dir += 1;
     if (dir !== 0) p.facing = dir > 0 ? 1 : -1;
 
-    if (p.dashTime > 0) {
-      // locked velocity during dash — direction set on activation
-      p.vx = p.dashVx;
-    } else if (dir !== 0) {
+    if (dir !== 0) {
       p.vx += dir * MOVE_ACCEL * dt;
     } else {
       // friction (more if not sliding)
@@ -386,29 +389,16 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     // variable jump
     if (!jumpHeld && p.vy < -300) p.vy = -300;
 
-    // clamp speed (dash bypasses)
-    if (p.dashTime <= 0) {
-      const speedCap = MAX_SPEED + (p.sliding ? 120 : 0);
-      if (Math.abs(p.vx) > speedCap) p.vx = Math.sign(p.vx) * speedCap;
-    }
+    // speed cap (dash impulse can briefly exceed it; we let momentum carry)
+    const speedCap = MAX_SPEED + (p.sliding ? 120 : 0) + (p.dashTime > 0 ? 600 : 0);
+    if (Math.abs(p.vx) > speedCap) p.vx = Math.sign(p.vx) * speedCap;
 
-    // gravity (dash floats — uses locked dash velocity in any direction)
-    if (p.dashTime > 0) {
-      p.vy = p.dashVy;
-    } else {
-      p.vy += GRAVITY * dt;
-      if (p.vy > 1400) p.vy = 1400;
-    }
+    // gravity — always on; dash no longer freezes vertical motion
+    p.vy += GRAVITY * dt;
+    if (p.vy > 1400) p.vy = 1400;
 
-    // dash timers + spawn extra afterimages while active
-    if (p.dashTime > 0) {
-      p.dashTime -= dt;
-      if (p.dashTime <= 0) {
-        // exit dash with preserved horizontal momentum (capped)
-        const cap = MAX_SPEED + 120;
-        if (Math.abs(p.vx) > cap) p.vx = Math.sign(p.vx) * cap;
-      }
-    }
+    // dash visual / i-frame window timer (velocity is no longer locked)
+    if (p.dashTime > 0) p.dashTime -= dt;
     if (p.dashCooldown > 0) p.dashCooldown -= dt;
 
     // parry timers
