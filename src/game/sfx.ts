@@ -1,5 +1,6 @@
 // Tiny WebAudio SFX engine — procedural, no assets.
 import nySampleUrl from "@/assets/audio/ny.ogg";
+import beamCriticalUrl from "@/assets/audio/beam_critical2.mp3";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
