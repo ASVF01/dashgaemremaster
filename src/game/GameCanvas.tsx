@@ -1134,12 +1134,30 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     const ctx = c.getContext("2d")!;
     ctx.save();
     // starman cinematic kicks in at 3.85s into the cheat track
-    const starElapsed = r.player.starman ? (getStarmanElapsed() ?? 0) : 0;
-    const starmanFx = r.player.starman && starElapsed >= 3.85;
+    const isSomSom = r.player.somSom;
+    const starElapsed = r.player.starman
+      ? (isSomSom ? (getSomSomElapsed() ?? 0) : (getStarmanElapsed() ?? 0))
+      : 0;
+    const starmanFx = r.player.starman && !isSomSom && starElapsed >= 3.85;
+
+    // SOM SOM cinematic (just-run-bro invboi):
+    //  0..5s   normal paper background
+    //  5..6s   white-out screen
+    //  6s+     cyan impact flash → OLED-black background + small camera shake
+    const somSomActive = r.player.starman && isSomSom;
+    const whiteOut = somSomActive && starElapsed >= 5 && starElapsed < 6
+      ? Math.min(1, (starElapsed - 5) / 0.25)
+      : 0;
+    const postImpact = somSomActive && starElapsed >= 6;
+    // 0.45s cyan impact flash right after t=6
+    const impactFlash = postImpact ? Math.max(0, 1 - (starElapsed - 6) / 0.45) : 0;
+
     // smooth fade-in of the black backdrop
     const bgT = starmanFx ? Math.min(1, (starElapsed - 3.85) / 0.6) : 0;
-    // paper bg (or black during starman fx)
-    if (bgT >= 1) {
+    // paper bg (or black during starman fx, or OLED black post-impact for som som)
+    if (postImpact) {
+      ctx.fillStyle = "#000";
+    } else if (bgT >= 1) {
       ctx.fillStyle = "#000";
     } else if (bgT > 0) {
       ctx.fillStyle = "#f0ead6";
@@ -1150,7 +1168,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
     ctx.fillRect(0, 0, w, h);
 
+    // SOM SOM: small persistent shake after the impact (light, ongoing)
+    if (postImpact) {
+      r.shake = Math.max(r.shake, 0.12);
+    }
+    // SOM SOM: punchy shake kick on the impact frame itself
+    if (somSomActive && starElapsed >= 6 && starElapsed < 6.05 && r.shake < 0.5) {
+      r.shake = 0.5;
+    }
+
     // starman: rainbow stars rain down (BACKGROUND layer, behind level assets)
+    // (suppressed for SOM SOM variant — no rain, no rainbow)
     const maxRainStars = Math.min(64, Math.max(28, Math.floor((w * h) / 17000)));
     if (starmanFx && r.rainStars.length < maxRainStars) {
       const spawnRate = 0.2 + bgT * 0.55;
