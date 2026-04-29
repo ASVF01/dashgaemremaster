@@ -187,6 +187,12 @@ const Index = () => {
 
           {screen === "menu" && <MainMenu onPlay={startLevel} />}
 
+          {screen === "loading" && (
+            <Overlay>
+              <LoadingScreen levelName={currentLevel?.name ?? "level"} />
+            </Overlay>
+          )}
+
           {screen === "cutscene" && (
             <CutscenePlayer src={cutsceneJustRunBro} onDone={finishCutscene} />
           )}
