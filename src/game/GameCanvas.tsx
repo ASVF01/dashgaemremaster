@@ -412,7 +412,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     r.afterTimer -= dt;
     if ((mach >= 1 || p.diving || p.dashTime > 0) && r.afterTimer <= 0) {
       r.afterTimer = p.dashTime > 0 ? 0.012 : Math.max(0.018, 0.05 - mach * 0.008);
-      const life = p.dashTime > 0 ? 0.35 : 0.28 + mach * 0.05;
+      const life = 0.7;
       const aiState: SpriteState =
         p.diving ? "dive" :
         p.sliding ? "slide" :
@@ -968,9 +968,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         ctx.translate(-(dx + drawW / 2), -(dy + drawH / 2));
       }
 
-      // Draw sprite, then tint it with the trail color using source-atop.
       ctx.imageSmoothingEnabled = false;
+      // Draw the actual sprite faintly so the stick figure is visible.
+      ctx.globalAlpha = 0.45 * t;
       ctx.drawImage(sprite, dx, dy, drawW, drawH);
+      // Subtle color wash on top of just the sprite pixels.
+      ctx.globalAlpha = 0.25 * t;
       ctx.globalCompositeOperation = "source-atop";
       ctx.fillStyle = ai.color;
       ctx.fillRect(dx, dy, drawW, drawH);
