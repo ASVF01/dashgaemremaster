@@ -602,12 +602,41 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       p.parryCooldown = 0;
     }
 
-    // input (bound)
+    // input (bound). Read gamepad state directly here too — the keyboard-event
+    // bridge can be blocked by browser focus, but polling inside the game loop
+    // still drives the same actions when the browser exposes a pad.
     const b = getLiveBinds();
-    const left = isPressed(keys, "left", b);
-    const right = isPressed(keys, "right", b);
-    const jumpHeld = isPressed(keys, "jump", b);
-    const slideHeld = isPressed(keys, "slide", b);
+    const gp = getGamepadActions();
+    const prevGp = prevGamepadRef.current;
+    prevGamepadRef.current = gp;
+    const left = isPressed(keys, "left", b) || gp.left;
+    const right = isPressed(keys, "right", b) || gp.right;
+    const jumpHeld = isPressed(keys, "jump", b) || gp.jump || gp.up;
+    const slideHeld = isPressed(keys, "slide", b) || gp.slide || gp.down;
+    const gpParryPressed = gp.parry && !prevGp?.parry;
+    const gpDashPressed = gp.dash && !prevGp?.dash;
+
+    if (gpParryPressed && r.player.parryCooldown <= 0 && r.player.parrying <= 0) {
+      unlockAudio();
+      r.player.parrying = PARRY_WINDOW;
+      r.player.parryCooldown = PARRY_COOLDOWN + PARRY_WINDOW;
+      if (r.player.invuln < PARRY_WINDOW) r.player.invuln = PARRY_WINDOW;
+      sfx.parryStart();
+    }
+
+    if (gpDashPressed && levelIdRef.current === "just-run-bro" && !p.superDashing && p.alive) {
+      unlockAudio();
+      p.superDashing = true;
+      p.superDashTime = 0;
+      p.hStretch = 1;
+      sfx.superDash();
+      r.superDashBurst = { x: p.x + p.w / 2, y: p.y + p.h / 2, t: 0, facing: p.facing };
+      r.shake = Math.max(r.shake, 0.35);
+    }
+    if (!gp.dash && prevGp?.dash && p.superDashing) {
+      p.superDashing = false;
+      p.superDashTime = 0;
+    }
 
     // horizontal accel
     let dir = 0;
