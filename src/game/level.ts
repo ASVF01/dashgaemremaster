@@ -13,7 +13,7 @@ export type Level = {
   signs?: { x: number; y: number; text: string }[];
 };
 
-export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "speed-test";
+export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "chase" | "speed-test";
 
 export type LevelMeta = {
   id: LevelId;
@@ -29,6 +29,7 @@ export const LEVELS: LevelMeta[] = [
   { id: "scribble-1", name: "INK ALLEY",  subtitle: "warm up those legs",  difficulty: 2, par: 50 },
   { id: "scribble-2", name: "PAPER CUTS", subtitle: "shooters everywhere", difficulty: 3, par: 55 },
   { id: "scribble-3", name: "OVERDRIVE",  subtitle: "go absurdly fast",    difficulty: 4, par: 60 },
+  { id: "chase",      name: "THE CHASE",  subtitle: "don't look back. parry to push it off.", difficulty: 4, par: 45 },
   { id: "speed-test", name: "??? SPEED TEST ???", subtitle: "the hallway never ends. or does it.", difficulty: 4, par: 30, hidden: true },
 ];
 
