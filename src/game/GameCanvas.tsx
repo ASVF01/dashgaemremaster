@@ -1063,6 +1063,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
 
     // ---- sprite override (use uploaded PNG if available for current state) ----
     const state: SpriteState =
+      p.dashTime > 0 ? "dash" :
       p.diving ? "dive" :
       p.sliding ? "slide" :
       !p.onGround ? (p.vy > 60 ? "fall" : "jump") :
