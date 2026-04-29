@@ -1691,10 +1691,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       ctx.restore();
     }
 
-    // INVBOI (non-SOM-SOM): brief white fade-in starting at 3.20s, lasting 0.3s.
+    // INVBOI (non-SOM-SOM): white fade-in over 0.3s starting at 3.20s.
     if (r.player.starman && !isSomSom && starElapsed >= 3.20 && starElapsed < 3.50) {
-      const fadeT = (starElapsed - 3.20) / 0.3; // 0 → 1
-      const alpha = 1 - fadeT; // fade out from full white
+      const f = (starElapsed - 3.20) / 0.3; // 0 → 1
+      // ramp up to full white, then fade out (triangle envelope)
+      const alpha = f < 0.5 ? f * 2 : (1 - f) * 2;
       ctx.save();
       ctx.fillStyle = `rgba(255,255,255,${alpha})`;
       ctx.fillRect(0, 0, w, h);
