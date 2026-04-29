@@ -1278,6 +1278,16 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       r.finished = true;
       r.finishTime = performance.now() - r.startedAt;
       r.score += Math.max(0, 5000 - Math.floor(r.finishTime / 10));
+      r.shake = Math.max(r.shake, 0.7);
+      // trigger white flash overlay
+      const host = canvasRef.current?.parentElement;
+      if (host) {
+        const flash = document.createElement("div");
+        flash.className = "absolute inset-0 pointer-events-none bg-white";
+        flash.style.animation = "winFlash 0.3s ease-out forwards";
+        host.appendChild(flash);
+        setTimeout(() => flash.remove(), 350);
+      }
       // For "just-run-bro" we hand off straight to the cutscene MP4 — skip
       // the win sfx/fanfare so the video starts immediately and clean.
       if (levelId !== "just-run-bro") {
