@@ -610,7 +610,25 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       ctx.restore();
     }
 
-    // hazards (spikes - scribbled triangles)
+    // tutorial signs (if any)
+    if (r.level.signs) {
+      ctx.save();
+      for (const s of r.level.signs) {
+        if (s.x < camX - 200 || s.x > camX + w + 200) continue;
+        // post
+        sketchLine(ctx, s.x, s.y + 60, s.x, s.y + 110, 3, INK, 1.4);
+        // board
+        const bw = Math.max(140, ctx.measureText(s.text).width + 40);
+        sketchRect(ctx, s.x - bw / 2, s.y, bw, 50, "#fff8d6", INK, 2.6, 1.2);
+        ctx.fillStyle = INK;
+        ctx.font = "bold 16px 'Permanent Marker', cursive";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(s.text, s.x, s.y + 25);
+        ctx.textAlign = "start";
+        ctx.textBaseline = "alphabetic";
+      }
+      ctx.restore();
     for (const hz of r.level.hazards) {
       if (hz.x + hz.w < camX - 40 || hz.x > camX + w + 40) continue;
       const teeth = Math.max(3, Math.floor(hz.w / 14));
