@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { isGamepadBlocked, safeGetGamepads } from "@/game/gamepad";
 
 // Tiny on-screen HUD that polls navigator.getGamepads() and prints what the
 // browser sees. Use this to diagnose "my controller does nothing" reports —
@@ -12,6 +13,7 @@ type Snapshot = {
   id: string;
   mapping: string;
   connected: boolean;
+  blocked: boolean;
   axes: number[];
   buttons: { i: number; pressed: boolean; value: number }[];
 } | null;
@@ -49,17 +51,27 @@ export default function GamepadDebug() {
     if (!visible) return;
     let raf = 0;
     const tick = () => {
-      const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+      const blocked = isGamepadBlocked();
+      const pads = blocked ? [] : safeGetGamepads();
       let gp: Gamepad | null = null;
       for (const p of pads) if (p && p.connected) { gp = p; break; }
       if (!gp) {
-        setSnap(null);
+        setSnap(blocked ? {
+          index: -1,
+          id: "Gamepad API blocked by this preview/browser",
+          mapping: "blocked",
+          connected: false,
+          blocked: true,
+          axes: [],
+          buttons: [],
+        } : null);
       } else {
         setSnap({
           index: gp.index,
           id: gp.id,
           mapping: gp.mapping,
           connected: gp.connected,
+          blocked: false,
           axes: Array.from(gp.axes).map((a) => Math.round(a * 100) / 100),
           buttons: gp.buttons.map((b, i) => ({
             i,
@@ -92,6 +104,7 @@ export default function GamepadDebug() {
       )}
       {snap && (
         <>
+          {snap.blocked && <div className="text-red-300 mb-1">API blocked here — open the published/full preview if needed.</div>}
           <div>id: {snap.id}</div>
           <div>mapping: {snap.mapping}</div>
           <div>axes: [{snap.axes.join(", ")}]</div>
