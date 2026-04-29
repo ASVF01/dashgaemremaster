@@ -1691,6 +1691,16 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       ctx.restore();
     }
 
+    // INVBOI (non-SOM-SOM): brief white fade-in starting at 3.20s, lasting 0.3s.
+    if (r.player.starman && !isSomSom && starElapsed >= 3.20 && starElapsed < 3.50) {
+      const fadeT = (starElapsed - 3.20) / 0.3; // 0 → 1
+      const alpha = 1 - fadeT; // fade out from full white
+      ctx.save();
+      ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+      ctx.fillRect(0, 0, w, h);
+      ctx.restore();
+    }
+
     // vignette / mach overlay
     const vmach = machTier(Math.abs(r.player.vx));
     if (vmach >= 2) {
