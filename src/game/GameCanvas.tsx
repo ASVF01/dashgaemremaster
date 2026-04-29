@@ -480,6 +480,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     if (p.squash > 0) p.squash = Math.max(0, p.squash - dt * 4);
     if (p.stretch > 0) p.stretch = Math.max(0, p.stretch - dt * 4);
     if (p.smearTimer > 0) p.smearTimer -= dt;
+    if (r.superDashBurst) {
+      r.superDashBurst.t += dt;
+      if (r.superDashBurst.t >= 0.18) r.superDashBurst = null;
+    }
 
     // move + collide axis-separated
     moveAxis(r, "x", p.vx * dt);
