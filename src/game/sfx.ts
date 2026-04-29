@@ -211,10 +211,9 @@ export const sfx = {
     tone({ freq: 95, to: 60, dur: 0.30, type: "sine", vol: 0.18, release: 0.18 });
   },
   land() {
-    // "ph" — soft breathy puff, lowpassed, with low body thump
-    noise(0.14, 0.22, 120, 1400);                                // breathy puff
-    noise(0.05, 0.12, 60, 600, 0.0);                             // body
-    tone({ freq: 90, to: 55, dur: 0.09, type: "sine", vol: 0.18, release: 0.06 });
+    // "psh" — short plosive "p" pop + airy "sh" hiss tail
+    noise(0.012, 0.34, 180, 1100);                                // "p" pop
+    noise(0.10, 0.24, 3500, 8500, 0.012);                         // "sh" hiss tail
   },
   slide() {
     // "thhh" — sustained airy noise around speech band
@@ -227,18 +226,12 @@ export const sfx = {
     tone({ freq: 280, to: 140, dur: 0.12, type: "triangle", vol: 0.1, attack: 0.005, release: 0.08 });
   },
   step() {
-    // Cobblestone footstep — dry mid-high click + low stone thunk + tiny grit
-    noise(0.012, 0.28, 2200, 6500);                                // sharp click on stone
-    noise(0.06, 0.10, 90, 380, 0.005);                              // low stony thunk
-    tone({ freq: 140 + Math.random() * 30, to: 70, dur: 0.05, type: "sine", vol: 0.10, release: 0.04 });
-    noise(0.03, 0.06, 1200, 3000, 0.015);                           // mid-band grit
+    // Original soft papery footstep — short filtered noise burst
+    noise(0.05, 0.18, 280, 2600);
   },
   run() {
-    // Cobblestone running step — punchier click + heavier thunk
-    noise(0.014, 0.36, 2400, 7000);                                 // sharp stone click
-    noise(0.07, 0.14, 95, 420, 0.005);                              // low thunk body
-    tone({ freq: 150 + Math.random() * 35, to: 75, dur: 0.06, type: "sine", vol: 0.12, release: 0.05 });
-    noise(0.035, 0.08, 1300, 3400, 0.018);                          // grit/scuff
+    // Slightly punchier papery footstep
+    noise(0.06, 0.22, 280, 2800);
   },
   skid() {
     noise(0.18, 0.14, 500, 4500);
