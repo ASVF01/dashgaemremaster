@@ -1,7 +1,92 @@
 // Tiny WebAudio SFX engine — procedural, no assets.
+import nySampleUrl from "@/assets/audio/ny.ogg";
+
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
 let muted = false;
+
+// Sample cache for one-shot decoded buffers (e.g. parry "ny" sting).
+const sampleCache = new Map<string, AudioBuffer>();
+const samplePending = new Map<string, Promise<AudioBuffer | null>>();
+
+async function loadSample(url: string): Promise<AudioBuffer | null> {
+  const c = ac(); if (!c) return null;
+  const cached = sampleCache.get(url);
+  if (cached) return cached;
+  const pending = samplePending.get(url);
+  if (pending) return pending;
+  const p = (async () => {
+    try {
+      const res = await fetch(url);
+      const arr = await res.arrayBuffer();
+      const buf = await c.decodeAudioData(arr);
+      sampleCache.set(url, buf);
+      return buf;
+    } catch {
+      return null;
+    } finally {
+      samplePending.delete(url);
+    }
+  })();
+  samplePending.set(url, p);
+  return p;
+}
+
+// Bitcrush + downsample a buffer for a "pixelated" 8-bit feel.
+// bits: target bit depth (e.g. 4-6). rateDiv: integer downsample factor (e.g. 6-10).
+function pixelateBuffer(c: AudioContext, src: AudioBuffer, bits: number, rateDiv: number): AudioBuffer {
+  const ch = src.numberOfChannels;
+  const out = c.createBuffer(ch, src.length, src.sampleRate);
+  const steps = Math.pow(2, bits);
+  for (let k = 0; k < ch; k++) {
+    const inD = src.getChannelData(k);
+    const outD = out.getChannelData(k);
+    let held = 0;
+    for (let i = 0; i < inD.length; i++) {
+      if (i % rateDiv === 0) {
+        // quantize to N steps
+        held = Math.round(inD[i] * steps) / steps;
+      }
+      outD[i] = held;
+    }
+  }
+  return out;
+}
+
+const pixelCache = new Map<string, AudioBuffer>();
+function getPixelated(url: string, bits: number, rateDiv: number): AudioBuffer | null {
+  const c = ac(); if (!c) return null;
+  const key = `${url}|${bits}|${rateDiv}`;
+  const cached = pixelCache.get(key);
+  if (cached) return cached;
+  const base = sampleCache.get(url);
+  if (!base) return null;
+  const px = pixelateBuffer(c, base, bits, rateDiv);
+  pixelCache.set(key, px);
+  return px;
+}
+
+function playPixelSample(url: string, opts: { vol?: number; bits?: number; rateDiv?: number; lp?: number } = {}) {
+  const c = ac(); if (!c || !master) return;
+  const buf = getPixelated(url, opts.bits ?? 5, opts.rateDiv ?? 8);
+  if (!buf) {
+    // not decoded yet — kick off load and bail (next press will play)
+    loadSample(url);
+    return;
+  }
+  const t0 = c.currentTime;
+  const src = c.createBufferSource();
+  src.buffer = buf;
+  const lpf = c.createBiquadFilter();
+  lpf.type = "lowpass";
+  lpf.frequency.value = opts.lp ?? 5500;
+  const g = c.createGain();
+  g.gain.value = opts.vol ?? 0.5;
+  src.connect(lpf).connect(g).connect(master);
+  src.start(t0);
+}
+
+
 
 function ac(): AudioContext | null {
   if (typeof window === "undefined") return null;
@@ -103,9 +188,8 @@ export const sfx = {
     tone({ freq: 1200, to: 1800, dur: 0.06, type: "triangle", vol: 0.18 });
   },
   parryHit() {
-    tone({ freq: 900, to: 1900, dur: 0.08, type: "square", vol: 0.32 });
-    tone({ freq: 1400, to: 2600, dur: 0.12, type: "triangle", vol: 0.25, delay: 0.02 });
-    noise(0.12, 0.25, 1500, 8000, 0.01);
+    // Pixelated "ny" sample for successful parries.
+    playPixelSample(nySampleUrl, { vol: 0.55, bits: 4, rateDiv: 8, lp: 5000 });
   },
   hit() {
     tone({ freq: 220, to: 70, dur: 0.18, type: "sawtooth", vol: 0.35 });
