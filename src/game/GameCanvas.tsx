@@ -1155,7 +1155,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         drawH = ai.w * 1.6 / ratio;
         drawW = ai.w * 1.6;
       } else {
-        drawH = ai.h;
+        // Match drawPlayer: scale tall sprites so they fill the AABB visually.
+        drawH = ai.h * 1.4;
         drawW = drawH * ratio;
       }
       const dx = ai.x + ai.w / 2 - drawW / 2;
