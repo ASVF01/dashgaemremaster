@@ -947,34 +947,57 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
 
   function drawAfterimage(ctx: CanvasRenderingContext2D, ai: Afterimage, t: number) {
     // t: 1 (fresh) → 0 (faded)
+    const sprite = getSprite(ai.state);
     ctx.save();
     ctx.globalAlpha = 0.55 * t;
+
+    if (sprite) {
+      // Match drawPlayer's sizing exactly so the trail fits the PNG.
+      const ratio = sprite.width / sprite.height;
+      const wide = ratio > 1.1;
+      const wideScale = ai.state === "slide" ? 2.0 : 1.6;
+      const drawH = wide ? ai.w * wideScale / ratio : ai.h;
+      const drawW = wide ? ai.w * wideScale : drawH * ratio;
+      const dx = ai.x + ai.w / 2 - drawW / 2;
+      const dy = ai.y + ai.h - drawH;
+
+      // Flip horizontally for facing without changing the sprite's angle.
+      if (ai.facing === -1) {
+        ctx.translate(dx + drawW / 2, dy + drawH / 2);
+        ctx.scale(-1, 1);
+        ctx.translate(-(dx + drawW / 2), -(dy + drawH / 2));
+      }
+
+      // Draw sprite, then tint it with the trail color using source-atop.
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(sprite, dx, dy, drawW, drawH);
+      ctx.globalCompositeOperation = "source-atop";
+      ctx.fillStyle = ai.color;
+      ctx.fillRect(dx, dy, drawW, drawH);
+      ctx.restore();
+      return;
+    }
+
+    // Fallback (no sprite loaded): old stick-figure silhouette.
     ctx.fillStyle = ai.color;
     ctx.strokeStyle = ai.color;
     ctx.lineWidth = 2;
     const cx = ai.x + ai.w / 2;
     const cy = ai.y + ai.h / 2;
     ctx.translate(cx, cy);
-    // slight stretch in motion direction
-    const sx = ai.diving ? 0.85 : ai.sliding ? 1.25 : 1.05;
-    const sy = ai.diving ? 1.2 : ai.sliding ? 0.7 : 0.95;
-    ctx.scale(sx * ai.facing, sy);
+    ctx.scale(ai.facing, 1);
     ctx.translate(-ai.w / 2, -ai.h / 2);
-
     if (ai.sliding) {
-      // squat oval
       ctx.beginPath();
       ctx.ellipse(ai.w / 2, ai.h / 2, ai.w * 0.7, ai.h * 0.55, 0, 0, Math.PI * 2);
       ctx.fill();
     } else {
-      // head
       const headR = 12;
       const headX = ai.w / 2;
       const headY = headR + 2;
       ctx.beginPath();
       ctx.arc(headX, headY, headR, 0, Math.PI * 2);
       ctx.fill();
-      // body slab
       ctx.beginPath();
       ctx.roundRect(headX - 6, headY + headR - 4, 12, ai.h - headY - headR - 6, 4);
       ctx.fill();
