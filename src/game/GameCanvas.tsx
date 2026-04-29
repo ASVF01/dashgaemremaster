@@ -67,6 +67,9 @@ interface GameRefs {
   startedAt: number;
   finished: boolean;
   finishTime: number;
+  walkTimer: number;
+  skidDustTimer: number;
+  skidSfxTimer: number;
 }
 
 interface Props {
@@ -149,6 +152,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       startedAt: performance.now(),
       finished: false,
       finishTime: 0,
+      walkTimer: 0,
+      skidDustTimer: 0,
+      skidSfxTimer: 0,
     };
   }, [resetKey, levelId]);
 
