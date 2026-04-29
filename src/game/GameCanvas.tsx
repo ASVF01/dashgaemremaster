@@ -16,6 +16,8 @@ import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, 
 import weSfxUrl from "@/assets/audio/impact_aura_charge.ogg";
 import { getSettings } from "@/game/settings";
 import { getSprite, type SpriteState } from "@/game/sprites";
+import spookUrl from "@/assets/sprites/spook.png";
+import spookHurtUrl from "@/assets/sprites/spook_hurt.png";
 
 type Keys = Record<string, boolean>;
 
@@ -23,6 +25,28 @@ const RAINBOW_BUCKETS = 18;
 const tintCache = new Map<string, HTMLCanvasElement>();
 const darkTintCache = new Map<string, HTMLCanvasElement>();
 const starCache = new Map<string, HTMLCanvasElement>();
+
+// "Man of spook" — chaser sprite + its hurt variant. Eagerly loaded so the
+// first frame after spawn already has a sprite ready. A red-tinted silhouette
+// is cached on first use for the trail ghosts.
+const spookImg = new Image(); spookImg.src = spookUrl;
+const spookHurtImg = new Image(); spookHurtImg.src = spookHurtUrl;
+let spookRedTint: HTMLCanvasElement | null = null;
+function getSpookRedTint(): HTMLCanvasElement | null {
+  if (!spookImg.complete || !spookImg.naturalWidth) return null;
+  if (spookRedTint) return spookRedTint;
+  const off = document.createElement("canvas");
+  off.width = spookImg.naturalWidth;
+  off.height = spookImg.naturalHeight;
+  const octx = off.getContext("2d")!;
+  octx.imageSmoothingEnabled = false;
+  octx.drawImage(spookImg, 0, 0);
+  octx.globalCompositeOperation = "source-in";
+  octx.fillStyle = "#f5234c";
+  octx.fillRect(0, 0, off.width, off.height);
+  spookRedTint = off;
+  return off;
+}
 
 // Darker cyan used by SOM SOM (invboi-in-just-run-bro). Single hue, lower lightness.
 const DARK_CYAN = "#0fb5cf";
@@ -163,6 +187,8 @@ interface GameRefs {
   particles: Particle[];
   afterimages: Afterimage[];
   afterTimer: number;
+  chaserTrail: { x: number; y: number; w: number; h: number; life: number; maxLife: number }[];
+  chaserTrailTimer: number;
   cameraX: number;
   shake: number;
   freezeFrames: number;
@@ -276,6 +302,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       particles: [],
       afterimages: [],
       afterTimer: 0,
+      chaserTrail: [],
+      chaserTrailTimer: 0,
       cameraX: 0,
       shake: 0,
       freezeFrames: 0,
@@ -996,6 +1024,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
     for (const ai of r.afterimages) ai.life -= dt;
     r.afterimages = r.afterimages.filter((a) => a.life > 0);
+    for (const ct of r.chaserTrail) ct.life -= dt;
+    r.chaserTrail = r.chaserTrail.filter((c) => c.life > 0);
 
     // Thin speed lines while running on the ground (any speed above a small threshold).
     if (p.onGround && !p.sliding && Math.abs(p.vx) > 140 && Math.random() < 0.55) {
@@ -1133,6 +1163,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           e.x += e.vx * dt;
         }
         e.y = (r.level.height - 80) - e.h; // pin to ground
+
+        // red trail ghosts behind the chaser (0.3s lifetime)
+        r.chaserTrailTimer -= dt;
+        if (r.chaserTrailTimer <= 0) {
+          r.chaserTrailTimer = 0.035;
+          r.chaserTrail.push({
+            x: e.x, y: e.y, w: e.w, h: e.h,
+            life: 0.3, maxLife: 0.3,
+          });
+          if (r.chaserTrail.length > 24) r.chaserTrail.splice(0, r.chaserTrail.length - 24);
+        }
       }
 
       // enemy vs player
@@ -1830,11 +1871,34 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       ctx.restore();
     }
 
+    // chaser red trail (drawn behind enemies)
+    if (r.chaserTrail.length) {
+      const tint = getSpookRedTint();
+      for (const ct of r.chaserTrail) {
+        if (ct.x + ct.w < camX - 40 || ct.x > camX + w + 40) continue;
+        const t = ct.life / ct.maxLife; // 1 → 0
+        const drawW = ct.w * 1.4;
+        const drawH = ct.h * 1.4;
+        const dx = ct.x + ct.w / 2 - drawW / 2;
+        const dy = ct.y + ct.h - drawH;
+        ctx.save();
+        ctx.imageSmoothingEnabled = false;
+        ctx.globalAlpha = 0.55 * t;
+        if (tint) {
+          ctx.drawImage(tint, dx, dy, drawW, drawH);
+        } else {
+          ctx.fillStyle = "#f5234c";
+          ctx.fillRect(ct.x, ct.y, ct.w, ct.h);
+        }
+        ctx.restore();
+      }
+    }
+
     // enemies
     for (const e of r.level.enemies) {
       if (!e.alive) continue;
       if (e.x + e.w < camX - 40 || e.x > camX + w + 40) continue;
-      drawEnemy(ctx, e.x, e.y, e.w, e.h, e.kind, e.vx, r.time);
+      drawEnemy(ctx, e.x, e.y, e.w, e.h, e.kind, e.vx, r.time, e.hitFlash ?? 0);
     }
 
     // projectiles
@@ -2387,7 +2451,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     ctx.restore();
   }
 
-  function drawEnemy(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, kind: "grunt" | "shooter" | "chaser", vx: number, time: number) {
+  function drawEnemy(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, kind: "grunt" | "shooter" | "chaser", vx: number, time: number, hitFlash = 0) {
     const cx = x + w / 2;
     const cy = y + h / 2;
     ctx.save();
@@ -2433,51 +2497,24 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       sketchLine(ctx, w / 2, 4, w / 2 + Math.sin(time * 4) * 4, -10, 2, INK, 0.8);
       sketchCircle(ctx, w / 2 + Math.sin(time * 4) * 4, -12, 3, "#22e2ff", INK, 1.8, 0.8);
     } else {
-      // CHASER: looming dark scribble wall
-      // jagged ink mass
-      ctx.fillStyle = "#1a1a1a";
-      ctx.strokeStyle = INK;
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      const segs = 10;
-      for (let i = 0; i <= segs; i++) {
-        const t = i / segs;
-        const px = t * w;
-        const py = Math.sin(time * 6 + i) * 6;
-        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-      }
-      ctx.lineTo(w, h);
-      ctx.lineTo(0, h);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-      // hungry eyes
-      const eyeY = h * 0.35;
-      ctx.fillStyle = "#f5234c";
-      ctx.beginPath(); ctx.arc(w * 0.35, eyeY, 6, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(w * 0.65, eyeY, 6, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#fff8d6";
-      ctx.beginPath(); ctx.arc(w * 0.35 + Math.sin(time * 5) * 1.5, eyeY, 2, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(w * 0.65 + Math.sin(time * 5) * 1.5, eyeY, 2, 0, Math.PI * 2); ctx.fill();
-      // jagged teeth
-      ctx.strokeStyle = "#fff8d6";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      const teethY = h * 0.55;
-      for (let i = 0; i < 7; i++) {
-        const tx = (i / 6) * (w - 16) + 8;
-        ctx.moveTo(tx, teethY);
-        ctx.lineTo(tx + 6, teethY + 10);
-        ctx.lineTo(tx + 12, teethY);
-      }
-      ctx.stroke();
-      // wispy tendrils trailing behind
-      ctx.strokeStyle = INK;
-      ctx.lineWidth = 2;
-      for (let i = 0; i < 4; i++) {
-        const ty = h * (0.3 + i * 0.18);
-        const sway = Math.sin(time * 3 + i) * 8;
-        sketchLine(ctx, 0, ty, -22 - i * 6, ty + sway, 2, INK, 0.8);
+      // CHASER: "Man of spook" sprite, swap to OW variant on hit.
+      const useHurt = hitFlash > 0;
+      const img = useHurt ? spookHurtImg : spookImg;
+      const ready = img.complete && img.naturalWidth > 0;
+      if (ready) {
+        // size sprite to fill the chaser AABB while preserving aspect.
+        const ratio = img.naturalWidth / img.naturalHeight;
+        // Make him a bit larger than the hitbox so he reads as a looming threat.
+        const drawH = h * 1.25;
+        const drawW = drawH * ratio;
+        const dx = w / 2 - drawW / 2;
+        const dy = h - drawH;
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(img, dx, dy, drawW, drawH);
+      } else {
+        // sprite not loaded yet — draw a quick red silhouette so he's visible.
+        ctx.fillStyle = "#1a1a1a";
+        ctx.fillRect(0, 0, w, h);
       }
     }
     ctx.restore();
