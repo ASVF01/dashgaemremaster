@@ -9,6 +9,7 @@ import bgmChampionDuel2 from "@/assets/audio/bgm_champion_duel2.mp3";
 import bgmTutorial from "@/assets/audio/bgm_tutorial.mp3";
 import bgmStarman from "@/assets/audio/bgm_starman.mp3";
 import bgmSomSom from "@/assets/audio/a_lil_som_som.mp3";
+import bgmMap1 from "@/assets/audio/bgm_map1.mp3";
 import type { LevelId } from "@/game/level";
 
 // Tutorial keeps its own original track. Champion play is the default for
@@ -18,7 +19,7 @@ const TRACKS: Partial<Record<LevelId, string>> = {
   "scribble-1": bgmChampionPlay,
   "scribble-2": bgmChampionPlay,
   "scribble-3": bgmChampionPlay,
-  "speed-test": bgmChampionPlay,
+  "speed-test": bgmMap1,
   chase: bgmChampionDuel2,
   "just-run-bro": bgmJustRunBro,
 };
