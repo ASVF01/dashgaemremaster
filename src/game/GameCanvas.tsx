@@ -794,6 +794,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
     if (r.shake > 0) r.shake = Math.max(0, r.shake - dt * 3);
     if (r.glitch > 0) r.glitch = Math.max(0, r.glitch - dt * 4);
+    if (r.superDashFlash > 0) r.superDashFlash = Math.max(0, r.superDashFlash - dt * 6);
 
     // enemies update
     for (const e of r.level.enemies) {
