@@ -72,6 +72,21 @@ export default function Hud({ hud }: { hud: HudState }) {
           />
         </div>
 
+        {/* dash meter */}
+        <div className="scribble-border bg-paper px-4 py-3">
+          <div className="font-marker text-ink text-sm tracking-widest mb-1">DASH [K]</div>
+          <div className="w-20 h-3 border-2 border-ink bg-paper relative overflow-hidden">
+            <div
+              className="h-full"
+              style={{
+                width: `${(1 - Math.min(1, hud.dashCooldown / hud.dashCooldownMax)) * 100}%`,
+                background: hud.dashCooldown <= 0 ? "#22e2ff" : "#7d8a8a",
+                transition: "width 75ms linear",
+              }}
+            />
+          </div>
+        </div>
+
         {/* progress */}
         <div className="scribble-border bg-paper px-4 py-3 flex-1 max-w-md">
           <div className="font-marker text-ink text-sm tracking-widest mb-1">LEVEL PROGRESS</div>
