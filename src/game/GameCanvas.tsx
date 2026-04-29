@@ -1212,6 +1212,61 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       r.shake = 0.5;
     }
 
+    // SOM SOM: lightning bolts over the OLED-black background.
+    // Random chance every cycle: 10s, 5s, or 1s wait between strikes.
+    if (postImpact) {
+      r.lightningCooldown -= dtRender;
+      if (r.lightningCooldown <= 0) {
+        const roll = Math.random();
+        const wait = roll < 0.34 ? 1 : roll < 0.67 ? 5 : 10;
+        r.lightningCooldown = wait;
+        const bx = 40 + Math.random() * (w - 80);
+        const segs: { x: number; y: number }[] = [];
+        let cy = -8;
+        let cx = bx;
+        while (cy < h * (0.55 + Math.random() * 0.4)) {
+          segs.push({ x: cx, y: cy });
+          cy += 18 + Math.random() * 28;
+          cx += (Math.random() - 0.5) * 36;
+        }
+        segs.push({ x: cx, y: cy });
+        r.lightningBolts.push({ x: bx, t: 0, life: 0.45, segs, flash: 1 });
+      }
+      for (let i = r.lightningBolts.length - 1; i >= 0; i--) {
+        const b = r.lightningBolts[i];
+        b.t += dtRender;
+        b.flash = Math.max(0, 1 - b.t / b.life);
+        if (b.t >= b.life) r.lightningBolts.splice(i, 1);
+      }
+      if (r.lightningBolts.length) {
+        ctx.save();
+        for (const b of r.lightningBolts) {
+          const a = b.flash;
+          if (a > 0.6) {
+            ctx.fillStyle = `rgba(15,181,207,${(a - 0.6) * 0.35})`;
+            ctx.fillRect(0, 0, w, h);
+          }
+          ctx.strokeStyle = `rgba(155,232,245,${0.55 * a})`;
+          ctx.lineWidth = 6;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(b.segs[0].x, b.segs[0].y);
+          for (let s = 1; s < b.segs.length; s++) ctx.lineTo(b.segs[s].x, b.segs[s].y);
+          ctx.stroke();
+          ctx.strokeStyle = `rgba(15,181,207,${0.95 * a})`;
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.moveTo(b.segs[0].x, b.segs[0].y);
+          for (let s = 1; s < b.segs.length; s++) ctx.lineTo(b.segs[s].x, b.segs[s].y);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+    } else if (r.lightningBolts.length || r.lightningCooldown !== 0) {
+      r.lightningBolts.length = 0;
+      r.lightningCooldown = 0;
+    }
+
     // starman: rainbow stars rain down (BACKGROUND layer, behind level assets)
     // (suppressed for SOM SOM variant — no rain, no rainbow)
     const maxRainStars = Math.min(64, Math.max(28, Math.floor((w * h) / 17000)));
