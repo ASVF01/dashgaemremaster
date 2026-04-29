@@ -11,6 +11,7 @@ import { buildLevel, type Level, type LevelId } from "@/game/level";
 import { sketchLine, sketchRect, sketchCircle, jaggedBolt, INK } from "@/game/draw";
 import { isPressed, matchesAction, getLiveBinds } from "@/game/keybinds";
 import { sfx, unlockAudio } from "@/game/sfx";
+import { playBgmFor, stopBgm, pauseBgm, resumeBgm } from "@/game/bgm";
 import { getSprite, type SpriteState } from "@/game/sprites";
 
 type Keys = Record<string, boolean>;
@@ -159,6 +160,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       isSkidding: false,
     };
   }, [resetKey, levelId]);
+
+  // BGM: start when level mounts/changes, stop on unmount
+  useEffect(() => {
+    playBgmFor(levelId);
+    return () => { stopBgm(); };
+  }, [levelId]);
+
+  // BGM: pause/resume with the game's pause state
+  useEffect(() => {
+    if (paused) pauseBgm(); else resumeBgm();
+  }, [paused]);
 
   // keys
   useEffect(() => {
