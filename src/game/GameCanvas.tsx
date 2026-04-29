@@ -11,7 +11,7 @@ import { buildLevel, type Level, type LevelId } from "@/game/level";
 import { sketchLine, sketchRect, sketchCircle, jaggedBolt, INK } from "@/game/draw";
 import { isPressed, matchesAction, getLiveBinds } from "@/game/keybinds";
 import { sfx, unlockAudio } from "@/game/sfx";
-import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, getStarmanElapsed } from "@/game/bgm";
+import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, getStarmanElapsed, playSomSomBgm, getSomSomElapsed } from "@/game/bgm";
 import { getSprite, type SpriteState } from "@/game/sprites";
 
 type Keys = Record<string, boolean>;
@@ -105,6 +105,7 @@ interface Player {
   superDashing: boolean;
   superDashTime: number; // seconds the hold has been active
   starman: boolean; // "invboi" cheat — rainbow + star sparkles + custom BGM
+  somSom: boolean; // invboi while in just-run-bro — cyan variant
   starTimer: number; // timer for emitting star particles
 }
 
@@ -172,6 +173,7 @@ export interface HudState {
   dashCooldown: number;
   dashCooldownMax: number;
   starman?: boolean;
+  somSom?: boolean;
 }
 
 export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio = false, resetKey, levelId = "scribble-1" }: Props) {
@@ -220,6 +222,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         superDashing: false,
         superDashTime: 0,
         starman: false,
+        somSom: false,
         starTimer: 0,
       },
       projectiles: [],
@@ -278,12 +281,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           if (r.player.alive && !r.finished) {
             r.player.starman = true;
             r.player.starTimer = 0;
+            const inJrb = levelIdRef.current === "just-run-bro";
+            r.player.somSom = inJrb;
             // generous i-frames so they actually feel invincible
             r.player.invuln = Math.max(r.player.invuln, 9999);
             unlockAudio();
-            playStarmanBgm();
+            if (inJrb) playSomSomBgm();
+            else playStarmanBgm();
             sfx.shineStart();
-            burst(r, r.player.x + r.player.w / 2, r.player.y + r.player.h / 2, "#ffd11a", 24, 380);
+            burst(r, r.player.x + r.player.w / 2, r.player.y + r.player.h / 2, inJrb ? "#22e2ff" : "#ffd11a", 24, 380);
           }
           cheatBuf = "";
         }
@@ -422,6 +428,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           dashCooldown: r.player.starman ? 0 : Math.max(0, r.player.dashCooldown),
           dashCooldownMax: DASH_COOLDOWN,
           starman: r.player.starman,
+          somSom: r.player.somSom,
         });
       }
 
@@ -659,7 +666,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       r.afterTimer = p.starman ? 0.04 : superDazh ? 0.025 : (p.dashTime > 0 ? 0.012 : Math.max(0.018, 0.05 - mach * 0.008));
       const life = p.starman ? 0.16 : superDazh ? 0.22 : 0.2;
       const rainbowHue = p.starman
-        ? Math.floor(r.time * 720) % 360
+        ? (p.somSom ? 190 : Math.floor(r.time * 720) % 360)
         : superDazh ? 190 : undefined;
       const aiState: SpriteState =
         p.dashTime > 0 ? "dash" :
@@ -1129,12 +1136,30 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     const ctx = c.getContext("2d")!;
     ctx.save();
     // starman cinematic kicks in at 3.85s into the cheat track
-    const starElapsed = r.player.starman ? (getStarmanElapsed() ?? 0) : 0;
-    const starmanFx = r.player.starman && starElapsed >= 3.85;
+    const isSomSom = r.player.somSom;
+    const starElapsed = r.player.starman
+      ? (isSomSom ? (getSomSomElapsed() ?? 0) : (getStarmanElapsed() ?? 0))
+      : 0;
+    const starmanFx = r.player.starman && !isSomSom && starElapsed >= 3.85;
+
+    // SOM SOM cinematic (just-run-bro invboi):
+    //  0..5s   normal paper background
+    //  5..6s   white-out screen
+    //  6s+     cyan impact flash → OLED-black background + small camera shake
+    const somSomActive = r.player.starman && isSomSom;
+    const whiteOut = somSomActive && starElapsed >= 5 && starElapsed < 6
+      ? Math.min(1, (starElapsed - 5) / 0.25)
+      : 0;
+    const postImpact = somSomActive && starElapsed >= 6;
+    // 0.45s cyan impact flash right after t=6
+    const impactFlash = postImpact ? Math.max(0, 1 - (starElapsed - 6) / 0.45) : 0;
+
     // smooth fade-in of the black backdrop
     const bgT = starmanFx ? Math.min(1, (starElapsed - 3.85) / 0.6) : 0;
-    // paper bg (or black during starman fx)
-    if (bgT >= 1) {
+    // paper bg (or black during starman fx, or OLED black post-impact for som som)
+    if (postImpact) {
+      ctx.fillStyle = "#000";
+    } else if (bgT >= 1) {
       ctx.fillStyle = "#000";
     } else if (bgT > 0) {
       ctx.fillStyle = "#f0ead6";
@@ -1145,7 +1170,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
     ctx.fillRect(0, 0, w, h);
 
+    // SOM SOM: small persistent shake after the impact (light, ongoing)
+    if (postImpact) {
+      r.shake = Math.max(r.shake, 0.12);
+    }
+    // SOM SOM: punchy shake kick on the impact frame itself
+    if (somSomActive && starElapsed >= 6 && starElapsed < 6.05 && r.shake < 0.5) {
+      r.shake = 0.5;
+    }
+
     // starman: rainbow stars rain down (BACKGROUND layer, behind level assets)
+    // (suppressed for SOM SOM variant — no rain, no rainbow)
     const maxRainStars = Math.min(64, Math.max(28, Math.floor((w * h) / 17000)));
     if (starmanFx && r.rainStars.length < maxRainStars) {
       const spawnRate = 0.2 + bgT * 0.55;
@@ -1313,7 +1348,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
     // player
     drawPlayer(ctx, r);
-    if (r.player.starman) drawStarmanStars(ctx, r);
+    if (r.player.starman && !r.player.somSom) drawStarmanStars(ctx, r);
 
 
     // super dash burst VFX
@@ -1365,12 +1400,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
 
     // particles
-    const rainbowParticles = r.player.starman;
+    const rainbowParticles = r.player.starman && !r.player.somSom;
+    const cyanParticles = r.player.starman && r.player.somSom;
     for (let pi = 0; pi < r.particles.length; pi++) {
       const pa = r.particles[pi];
       const a = Math.max(0, pa.life / pa.maxLife);
       const drawColor = rainbowParticles
         ? `hsl(${(r.time * 360 + pi * 37) % 360}, 100%, 60%)`
+        : cyanParticles
+        ? (pi % 4 === 0 ? "#ffffff" : "#22e2ff")
         : pa.color;
       ctx.save();
       ctx.globalAlpha = a;
@@ -1428,6 +1466,21 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     ctx.restore();
 
     // (rainbow star rain is rendered earlier as a background layer)
+
+    // SOM SOM cinematic overlays: white-out (5..6s) then cyan impact flash (6..6.45s)
+    if (whiteOut > 0) {
+      ctx.save();
+      ctx.fillStyle = `rgba(255,255,255,${whiteOut})`;
+      ctx.fillRect(0, 0, w, h);
+      ctx.restore();
+    }
+    if (impactFlash > 0) {
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.fillStyle = `rgba(34,226,255,${0.85 * impactFlash})`;
+      ctx.fillRect(0, 0, w, h);
+      ctx.restore();
+    }
 
     // vignette / mach overlay
     const vmach = machTier(Math.abs(r.player.vx));
@@ -1618,7 +1671,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // tint hue: rainbow during starman, fixed cyan during SUPER DAZH
     const superDazhActive = p.superDashing && p.superDashTime >= 5;
     const rainbowHue = p.starman
-      ? Math.floor(r.time * 720) % 360
+      ? (p.somSom ? 190 : Math.floor(r.time * 720) % 360)
       : superDazhActive ? 190 : null;
 
     // ---- sprite override (use uploaded PNG if available for current state) ----

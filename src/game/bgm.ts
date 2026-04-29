@@ -8,6 +8,7 @@ import bgmChampionPlay from "@/assets/audio/bgm_champion_play.mp3";
 import bgmChampionDuel2 from "@/assets/audio/bgm_champion_duel2.mp3";
 import bgmTutorial from "@/assets/audio/bgm_tutorial.mp3";
 import bgmStarman from "@/assets/audio/bgm_starman.mp3";
+import bgmSomSom from "@/assets/audio/a_lil_som_som.mp3";
 import type { LevelId } from "@/game/level";
 
 // Tutorial keeps its own original track. Champion play is the default for
@@ -305,6 +306,34 @@ export function getStarmanElapsed(): number | null {
   if (!c || !playing || playing.src !== bgmStarman || playing.stopped) return null;
   if (starmanStartCtxTime == null) return null;
   return c.currentTime - starmanStartCtxTime;
+}
+
+// "A lil som som" — invboi cheat track variant played only on just-run-bro.
+let somSomStartCtxTime: number | null = null;
+export function playSomSomBgm() {
+  ac();
+  loadBuffer(bgmSomSom).catch(() => { /* ignore */ });
+  somSomStartCtxTime = null;
+  playSrc(bgmSomSom, true);
+  const c = ac();
+  if (c) {
+    const start = performance.now();
+    const tick = () => {
+      if (playing && playing.src === bgmSomSom && !playing.stopped) {
+        somSomStartCtxTime = playing.startedAt;
+        return;
+      }
+      if (performance.now() - start > 4000) return;
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+}
+export function getSomSomElapsed(): number | null {
+  const c = ac();
+  if (!c || !playing || playing.src !== bgmSomSom || playing.stopped) return null;
+  if (somSomStartCtxTime == null) return null;
+  return c.currentTime - somSomStartCtxTime;
 }
 
 export function stopBgm(fade = 0) {
