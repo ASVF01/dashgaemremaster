@@ -126,6 +126,8 @@ interface Player {
   invuln: number;
   hp: number;
   hitFlash: number;
+  hurtTimer: number; // seconds remaining of post-hit "hurt" pose + red afterimages
+  hurtAfterTimer: number; // throttle for spawning red afterimages
   squash: number; // 0..1 transient (landing — wide & short)
   stretch: number; // 0..1 transient (falling/dive — tall & thin)
   hStretch: number; // 0..1 transient (dash — wide & slightly short)
@@ -256,6 +258,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         invuln: 0,
         hp: 3,
         hitFlash: 0,
+        hurtTimer: 0,
+        hurtAfterTimer: 0,
         squash: 0, stretch: 0, hStretch: 0, smearTimer: 0,
         dashAirJumpUsed: false,
         jumpWasHeld: false,
