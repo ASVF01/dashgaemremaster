@@ -821,8 +821,14 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       r.finished = true;
       r.finishTime = performance.now() - r.startedAt;
       r.score += Math.max(0, 5000 - Math.floor(r.finishTime / 10));
-      sfx.win();
-      bgmLevelEnd();
+      // For "just-run-bro" we hand off straight to the cutscene MP4 — skip
+      // the win sfx/fanfare so the video starts immediately and clean.
+      if (levelId !== "just-run-bro") {
+        sfx.win();
+        bgmLevelEnd();
+      } else {
+        stopBgm();
+      }
       onFinish(r.finishTime, r.score);
     }
 
