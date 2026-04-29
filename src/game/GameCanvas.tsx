@@ -433,6 +433,21 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     for (const ai of r.afterimages) ai.life -= dt;
     r.afterimages = r.afterimages.filter((a) => a.life > 0);
 
+    // Thin speed lines while running on the ground (any speed above a small threshold).
+    if (p.onGround && Math.abs(p.vx) > 140 && Math.random() < 0.55) {
+      const len = 14 + Math.random() * 18 + Math.min(40, Math.abs(p.vx) * 0.04);
+      spawnParticle(r, {
+        x: p.x + p.w / 2 - p.facing * (p.w * 0.4 + Math.random() * 30),
+        y: p.y + 4 + Math.random() * (p.h - 8),
+        vx: -p.facing * (Math.abs(p.vx) * 0.5 + 80),
+        vy: 0,
+        color: "#ffffff",
+        size: len / 2,
+        life: 0.18 + Math.random() * 0.12,
+        kind: "smear",
+      });
+    }
+
     if (mach >= 1 && Math.random() < 0.4 + mach * 0.15) {
       spawnParticle(r, {
         x: p.x + p.w / 2 - p.facing * (p.w / 2 + Math.random() * 12),
@@ -955,7 +970,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       // Match drawPlayer's sizing exactly so the trail fits the PNG.
       const ratio = sprite.width / sprite.height;
       const wide = ratio > 1.1;
-      const wideScale = ai.state === "slide" ? 2.0 : 1.6;
+      const wideScale = 1.6;
       const drawH = wide ? ai.w * wideScale / ratio : ai.h;
       const drawW = wide ? ai.w * wideScale : drawH * ratio;
       const dx = ai.x + ai.w / 2 - drawW / 2;
@@ -1015,9 +1030,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     // squash & stretch
     const sx = 1 + p.stretch * 0.3 - p.squash * 0.2;
     const sy = 1 - p.stretch * 0.2 + p.squash * 0.3;
-    // running tilt
-    const tilt = p.onGround ? Math.sign(p.vx) * Math.min(0.35, speed / 1500) : 0;
-    ctx.rotate(tilt);
+    // (running tilt removed — sprite stays upright)
     ctx.scale(sx * p.facing, sy);
     ctx.translate(-p.w / 2, -p.h / 2);
 
@@ -1044,8 +1057,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       // by height. Either way the sprite is anchored to the bottom of the box.
       const ratio = sprite.width / sprite.height;
       const wide = ratio > 1.1;
-      // Slide gets an extra width boost without rotating/changing the sprite.
-      const wideScale = state === "slide" ? 2.0 : 1.6;
+      const wideScale = 1.6;
       const drawH = wide ? p.w * wideScale / ratio : p.h;
       const drawW = wide ? p.w * wideScale : drawH * ratio;
       const dx = p.w / 2 - drawW / 2;
