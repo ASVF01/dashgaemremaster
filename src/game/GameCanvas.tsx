@@ -1033,6 +1033,72 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
     ctx.fillRect(0, 0, w, h);
 
+    // starman: rainbow stars rain down (BACKGROUND layer, behind level assets)
+    if (starmanFx) {
+      // integer spawn count, scales with fade-in
+      const spawnRate = 0.6 + bgT * 1.4;
+      const whole = Math.floor(spawnRate);
+      const frac = spawnRate - whole;
+      let toSpawn = whole + (Math.random() < frac ? 1 : 0);
+      while (toSpawn-- > 0) {
+        r.rainStars.push({
+          x: Math.random() * w,
+          y: -10 - Math.random() * 40,
+          vy: 40 + Math.random() * 50,
+          size: 4 + Math.random() * 5,
+          phase: Math.random() * Math.PI * 2,
+          hue: Math.random() * 360,
+        });
+      }
+    }
+    if (r.rainStars.length) {
+      const dtFrame = 1 / 60;
+      const t = r.time;
+      ctx.save();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#fff";
+      // single shadow setup, applied to all stars in batch
+      ctx.shadowBlur = 8;
+      const stars = r.rainStars;
+      // update + cull in place (single pass)
+      let write = 0;
+      for (let i = 0; i < stars.length; i++) {
+        const s = stars[i];
+        s.y += s.vy * dtFrame;
+        if (s.y >= h + 40) continue;
+        s.x += Math.sin(s.phase + t * 1.3) * 0.6;
+        const hue = (s.hue + t * 120) % 360;
+        const col = `hsl(${hue|0},95%,60%)`;
+        ctx.fillStyle = col;
+        ctx.shadowColor = col;
+        ctx.setTransform(1, 0, 0, 1, s.x, s.y);
+        const rot = t * 1.4 + s.phase;
+        const cos = Math.cos(rot), sin = Math.sin(rot);
+        ctx.transform(cos, sin, -sin, cos, 0, 0);
+        const outer = s.size;
+        const inner = outer * 0.45;
+        ctx.beginPath();
+        // unrolled 5-point star (10 vertices)
+        ctx.moveTo(0, -outer);
+        ctx.lineTo(inner * 0.5878, -inner * 0.809);
+        ctx.lineTo(outer * 0.9511, -outer * 0.309);
+        ctx.lineTo(inner * 0.9511, inner * 0.309);
+        ctx.lineTo(outer * 0.5878, outer * 0.809);
+        ctx.lineTo(0, inner);
+        ctx.lineTo(-outer * 0.5878, outer * 0.809);
+        ctx.lineTo(-inner * 0.9511, inner * 0.309);
+        ctx.lineTo(-outer * 0.9511, -outer * 0.309);
+        ctx.lineTo(-inner * 0.5878, -inner * 0.809);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        stars[write++] = s;
+      }
+      stars.length = write;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.restore();
+    }
+
     // shake
     const shakeX = (Math.random() - 0.5) * r.shake * 16;
     const shakeY = (Math.random() - 0.5) * r.shake * 16;
