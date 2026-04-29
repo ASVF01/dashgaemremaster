@@ -280,12 +280,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           if (r.player.alive && !r.finished) {
             r.player.starman = true;
             r.player.starTimer = 0;
+            const inJrb = levelIdRef.current === "just-run-bro";
+            r.player.somSom = inJrb;
             // generous i-frames so they actually feel invincible
             r.player.invuln = Math.max(r.player.invuln, 9999);
             unlockAudio();
-            playStarmanBgm();
+            if (inJrb) playSomSomBgm();
+            else playStarmanBgm();
             sfx.shineStart();
-            burst(r, r.player.x + r.player.w / 2, r.player.y + r.player.h / 2, "#ffd11a", 24, 380);
+            burst(r, r.player.x + r.player.w / 2, r.player.y + r.player.h / 2, inJrb ? "#22e2ff" : "#ffd11a", 24, 380);
           }
           cheatBuf = "";
         }
