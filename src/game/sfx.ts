@@ -189,6 +189,12 @@ export const sfx = {
   slide() {
     noise(0.35, 0.18, 400, 5000);
   },
+  slideEnd() {
+    // short whoosh-puff — descending filtered noise + a soft low blip
+    noise(0.16, 0.14, 600, 3800);
+    noise(0.1, 0.08, 200, 1500, 0.02);
+    tone({ freq: 280, to: 140, dur: 0.12, type: "triangle", vol: 0.1, attack: 0.005, release: 0.08 });
+  },
   step() {
     // soft, short footstep — pitched noise blip
     noise(0.05, 0.12, 300, 2200);
