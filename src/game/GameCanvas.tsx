@@ -491,6 +491,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // player in render() (blinking in place) instead of spawning particles.
     if (p.starman) {
       p.invuln = Math.max(p.invuln, 1);
+      // free dash + parry: zero out their cooldowns every frame
+      p.dashCooldown = 0;
+      p.parryCooldown = 0;
     }
 
     // input (bound)
