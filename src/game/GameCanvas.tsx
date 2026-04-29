@@ -190,21 +190,27 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
           if (downHeld) dy += 1;
           if (dx === 0 && dy === 0) dx = p.facing;
           const len = Math.hypot(dx, dy) || 1;
-          p.dashVx = (dx / len) * DASH_SPEED;
-          p.dashVy = (dy / len) * DASH_SPEED;
-          p.dashTime = DASH_DURATION;
-          p.dashCooldown = DASH_COOLDOWN;
-          p.vx = p.dashVx;
-          p.vy = p.dashVy;
-          p.facing = dx >= 0 ? 1 : -1;
-          p.stretch = 1;
-          // dash-jump: also fire a jump impulse so the player leaves the floor
+          const nx = dx / len, ny = dy / len;
+          // Impulse: shove in the aimed direction. Existing velocity along
+          // that direction is preserved + boosted by DASH_BONUS; perpendicular
+          // velocity is kept as-is so momentum carries through.
+          const along = p.vx * nx + p.vy * ny;
+          const newAlong = Math.max(along, 0) + DASH_IMPULSE + DASH_BONUS;
+          // remove old along-component, add the new one
+          p.vx += (newAlong - along) * nx;
+          p.vy += (newAlong - along) * ny;
+          // dash-jump: pressing jump together pops you off the ground too
           if (jumpAlso && p.onGround) {
+            p.vy = Math.min(p.vy, -JUMP_VEL);
             p.onGround = false;
             p.squash = 1;
             sfx.jump();
           }
-          // brief i-frames during dash
+          p.dashTime = DASH_DURATION;        // visual / i-frame window only
+          p.dashCooldown = DASH_COOLDOWN;
+          p.dashVx = nx; p.dashVy = ny;      // store aim for sprite/afterimage tinting
+          p.facing = dx >= 0 ? 1 : -1;
+          p.stretch = 1;
           if (p.invuln < DASH_DURATION) p.invuln = DASH_DURATION;
           burst(r, p.x + p.w / 2, p.y + p.h / 2, "#22e2ff", 14, 320);
           sfx.parryStart();
