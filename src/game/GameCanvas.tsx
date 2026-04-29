@@ -13,6 +13,7 @@ import { isPressed, matchesAction, getLiveBinds } from "@/game/keybinds";
 import { sfx, unlockAudio } from "@/game/sfx";
 
 import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, getStarmanElapsed, playSomSomBgm, getSomSomElapsed } from "@/game/bgm";
+import weSfxUrl from "@/assets/audio/we.ogg";
 import { getSprite, type SpriteState } from "@/game/sprites";
 
 type Keys = Record<string, boolean>;
@@ -685,7 +686,16 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
     // SUPER DASH (just-run-bro): hold dash to ramp up speed in facing dir.
     if (p.superDashing && p.alive) {
+      const prevSdt = p.superDashTime;
       p.superDashTime += dt;
+      // When the SUPER DAZH animation kicks in (>=5s), play the WE sting once.
+      if (prevSdt < 5 && p.superDashTime >= 5) {
+        try {
+          const a = new Audio(weSfxUrl);
+          a.volume = 0.7;
+          a.play().catch(() => {});
+        } catch { /* noop */ }
+      }
       // Nerfed: gentler accel and a hard top-speed ceiling so it caps out.
       const t = Math.min(p.superDashTime, 12);
       const accel = 500 + t * 160; // ~500 -> ~2420 px/s^2 over 12s
