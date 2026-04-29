@@ -67,6 +67,7 @@ interface GameRefs {
   score: number;
   bestMach: number;
   glitch: number;
+  superDashBurst: { x: number; y: number; t: number; facing: 1 | -1 } | null;
   startedAt: number;
   finished: boolean;
   finishTime: number;
@@ -157,6 +158,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       score: 0,
       bestMach: 0,
       glitch: 0,
+      superDashBurst: null,
       startedAt: performance.now(),
       finished: false,
       finishTime: 0,
@@ -213,20 +215,14 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
             p.superDashTime = 0;
             p.stretch = 1;
             sfx.superDash();
-            // burst effect (~0.1s)
-            const cx = p.x + p.w / 2;
-            const cy = p.y + p.h / 2;
-            spawnParticle(r, { x: cx, y: cy, color: INK, life: 0.1, size: 14, kind: "ring" });
-            spawnParticle(r, { x: cx, y: cy, color: INK, life: 0.1, size: 8, kind: "ring" });
-            for (let i = 0; i < 12; i++) {
-              const ang = (i / 12) * Math.PI * 2;
-              spawnParticle(r, {
-                x: cx, y: cy,
-                vx: Math.cos(ang) * 320,
-                vy: Math.sin(ang) * 320,
-                color: INK, life: 0.1, size: 3, kind: "spark",
-              });
-            }
+            // dedicated super-dash burst VFX (~0.18s)
+            r.superDashBurst = {
+              x: p.x + p.w / 2,
+              y: p.y + p.h / 2,
+              t: 0,
+              facing: p.facing,
+            };
+            r.shake = Math.max(r.shake, 0.35);
           }
           return;
         }
