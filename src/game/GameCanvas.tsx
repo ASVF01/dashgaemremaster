@@ -655,9 +655,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // afterimages — spawn when fast, diving, or dashing
     r.afterTimer -= dt;
     if ((mach >= 1 || p.diving || p.dashTime > 0) && r.afterTimer <= 0) {
-      r.afterTimer = p.starman ? 0.04 : (p.dashTime > 0 ? 0.012 : Math.max(0.018, 0.05 - mach * 0.008));
-      const life = p.starman ? 0.16 : 0.2;
-      const rainbowHue = p.starman ? Math.floor(r.time * 720) % 360 : undefined;
+      const superDazh = p.superDashing && p.superDashTime >= 5;
+      r.afterTimer = p.starman ? 0.04 : superDazh ? 0.025 : (p.dashTime > 0 ? 0.012 : Math.max(0.018, 0.05 - mach * 0.008));
+      const life = p.starman ? 0.16 : superDazh ? 0.22 : 0.2;
+      const rainbowHue = p.starman
+        ? Math.floor(r.time * 720) % 360
+        : superDazh ? 190 : undefined;
       const aiState: SpriteState =
         p.dashTime > 0 ? "dash" :
         p.diving ? "dive" :
@@ -680,6 +683,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         life, maxLife: life,
         color: p.starman
           ? "rainbow"
+          : superDazh ? "#22e2ff"
           : p.dashTime > 0 ? "#22e2ff" : p.diving ? "#ffd11a" : MACH_COLORS[Math.max(1, mach)],
         rainbowHue,
       });
