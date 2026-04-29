@@ -353,6 +353,134 @@ function SliderRow({ label, value, onChange }: { label: string; value: number; o
   );
 }
 
+// ---------------- EXTRAS ----------------
+const SECRETS: { name: string; how: string; reward: string }[] = [
+  {
+    name: "??? SPEED TEST ???",
+    how: "Type 'testpls' anywhere on the page.",
+    reward: "Launches a hidden, never-ending speed-test hallway.",
+  },
+  {
+    name: ":3 BADGE",
+    how: "Beat 'just run bro' and watch the cutscene through.",
+    reward: "Cute badge in the header — click it for a meow & face flip.",
+  },
+];
+
+const SFX_LIST: { id: string; label: string; play: () => void }[] = [
+  { id: "jump",       label: "JUMP",        play: () => sfx.jump() },
+  { id: "land",       label: "LAND (psh)",  play: () => sfx.land() },
+  { id: "step",       label: "STEP",        play: () => sfx.step() },
+  { id: "run",        label: "RUN",         play: () => sfx.run() },
+  { id: "slide",      label: "SLIDE",       play: () => sfx.slide() },
+  { id: "slideEnd",   label: "SLIDE END",   play: () => sfx.slideEnd() },
+  { id: "skid",       label: "SKID",        play: () => sfx.skid() },
+  { id: "dash",       label: "DASH",        play: () => sfx.dash() },
+  { id: "superDash",  label: "SUPER DASH",  play: () => sfx.superDash() },
+  { id: "mach",       label: "MACH UP",     play: () => sfx.mach() },
+  { id: "parryStart", label: "PARRY START", play: () => sfx.parryStart() },
+  { id: "parryHit",   label: "PARRY HIT",   play: () => sfx.parryHit() },
+  { id: "hit",        label: "PLAYER HIT",  play: () => sfx.hit() },
+  { id: "enemyKill",  label: "ENEMY KILL",  play: () => sfx.enemyKill() },
+  { id: "shoot",      label: "SHOOT",       play: () => sfx.shoot() },
+  { id: "pickup",     label: "PICKUP",      play: () => sfx.pickup() },
+  { id: "win",        label: "WIN",         play: () => sfx.win() },
+  { id: "die",        label: "DIE",         play: () => sfx.die() },
+  { id: "meow",       label: "MEOW",        play: () => sfx.meow() },
+  { id: "thunder",    label: "THUNDER",     play: () => sfx.thunder() },
+];
+
+const SFX_LOOPS: { id: string; label: string; start: () => void; stop: () => void }[] = [
+  { id: "shine", label: "SHINE (starman)",  start: () => sfx.shineStart(), stop: () => sfx.shineStop() },
+  { id: "rain",  label: "RAIN",             start: () => sfx.rainStart(),  stop: () => sfx.rainStop()  },
+  { id: "slideLoop", label: "SLIDE LOOP",   start: () => sfx.slideStart(), stop: () => sfx.slideStop() },
+];
+
+function ExtrasTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
+  const [active, setActive] = useState<Record<string, boolean>>({});
+
+  // Stop any running loops on unmount so they don't bleed into gameplay.
+  useEffect(() => {
+    return () => { SFX_LOOPS.forEach((l) => l.stop()); };
+  }, []);
+
+  const toggleLoop = (id: string, start: () => void, stop: () => void) => {
+    unlockAudio();
+    setActive((a) => {
+      const on = !a[id];
+      if (on) start(); else stop();
+      return { ...a, [id]: on };
+    });
+  };
+
+  const speedTest = LEVELS.find((l) => l.id === "speed-test");
+
+  return (
+    <div className="space-y-5">
+      {/* SECRETS */}
+      <div className="scribble-border bg-paper p-5">
+        <div className="font-marker text-3xl text-ink -rotate-1 mb-3">SECRETS</div>
+        <div className="grid sm:grid-cols-2 gap-3">
+          {SECRETS.map((s) => (
+            <div key={s.name} className="scribble-border bg-paper p-3">
+              <div className="font-marker text-2xl text-ink mb-1">{s.name}</div>
+              <div className="font-scribble text-lg text-ink/85"><b>How:</b> {s.how}</div>
+              <div className="font-scribble text-lg text-ink/70"><b>Reward:</b> {s.reward}</div>
+            </div>
+          ))}
+        </div>
+        {speedTest && (
+          <div className="mt-4 flex justify-center">
+            <button
+              onClick={() => onPlay("speed-test")}
+              className="scribble-border bg-[hsl(var(--accent))] text-accent-foreground font-marker text-2xl px-5 py-2 hover:-rotate-2 transition-transform"
+            >
+              ▶ LAUNCH ??? SPEED TEST ???
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* SFX GALLERY */}
+      <div className="scribble-border bg-paper p-5">
+        <div className="font-marker text-3xl text-ink -rotate-1 mb-3">SFX GALLERY</div>
+        <p className="font-scribble text-base text-ink/70 mb-3">
+          Click any sound to preview it. Loops toggle on/off.
+        </p>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {SFX_LIST.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => { unlockAudio(); s.play(); }}
+              className="scribble-border bg-paper px-3 py-1.5 font-marker text-lg text-ink hover:-rotate-2 transition-transform"
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+        <div className="font-marker text-xl text-ink/70 mb-2">LOOPING SOUNDS</div>
+        <div className="flex flex-wrap gap-2">
+          {SFX_LOOPS.map((l) => {
+            const on = !!active[l.id];
+            return (
+              <button
+                key={l.id}
+                onClick={() => toggleLoop(l.id, l.start, l.stop)}
+                className={[
+                  "scribble-border font-marker text-lg px-3 py-1.5 transition-transform hover:-rotate-2",
+                  on ? "bg-ink text-paper" : "bg-paper text-ink",
+                ].join(" ")}
+              >
+                {on ? "■ " : "▶ "}{l.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ---------------- CREDITS ----------------
 function CreditsTab() {
   return (
