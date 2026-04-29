@@ -828,6 +828,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // hazards
     for (const h of r.level.hazards) {
       if (rectOverlap(p.x, p.y, p.w, p.h, h.x, h.y, h.w, h.h)) {
+        // starman cheat: completely ignore hazards (no damage, no knockback)
+        if (p.starman) continue;
         if (p.parrying > 0) {
           // PARRY ANYTHING — bounce off the hazard
           const cx = h.x + h.w / 2;
