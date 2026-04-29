@@ -286,6 +286,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         r.finished = true;
         r.finishTime = performance.now() - r.startedAt;
         sfx.die();
+        bgmLevelEnd();
         onDeath();
       }
       if (r.finished && r.player.alive && r.finishTime === 0) {
