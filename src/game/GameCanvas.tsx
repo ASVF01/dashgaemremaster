@@ -1024,6 +1024,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
     for (const ai of r.afterimages) ai.life -= dt;
     r.afterimages = r.afterimages.filter((a) => a.life > 0);
+    for (const ct of r.chaserTrail) ct.life -= dt;
+    r.chaserTrail = r.chaserTrail.filter((c) => c.life > 0);
 
     // Thin speed lines while running on the ground (any speed above a small threshold).
     if (p.onGround && !p.sliding && Math.abs(p.vx) > 140 && Math.random() < 0.55) {
