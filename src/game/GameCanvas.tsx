@@ -334,7 +334,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
 
     if (p.dashTime > 0) {
       // locked velocity during dash — direction set on activation
-      p.vx = p.facing * DASH_SPEED;
+      p.vx = p.dashVx;
     } else if (dir !== 0) {
       p.vx += dir * MOVE_ACCEL * dt;
     } else {
