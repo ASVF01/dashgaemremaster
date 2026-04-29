@@ -4,7 +4,7 @@ import {
   ACTIONS, DEFAULT_BINDS, type ActionId, type Keybinds,
   keyLabel, useKeybinds,
 } from "@/game/keybinds";
-import { useSettings, DEFAULT_SETTINGS, type Settings } from "@/game/settings";
+import { useSettings, type Settings } from "@/game/settings";
 import { setSfxVolume } from "@/game/sfx";
 import { setBgmVolume } from "@/game/bgm";
 
