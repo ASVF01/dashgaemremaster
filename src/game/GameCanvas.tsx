@@ -514,7 +514,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         "idle";
       // capture the same mach-scaled animation frame the player render uses,
       // so the afterimage trail stays in lock-step with the live sprite.
-      const aiFps = 12 + mach * 3;
+      const aiFps = aiState === "superDash" ? 8 : 12 + mach * 3;
       const aiFrame = Math.floor(r.time * aiFps);
       r.afterimages.push({
         x: p.x, y: p.y, w: p.w, h: p.h,
@@ -1319,7 +1319,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       "idle";
     // Animation frame: cycles faster the faster you go (mach 2..4).
     // ~14 fps at mach 2, ~22 fps at mach 4.
-    const fps = 12 + machNow * 3;
+    const fps = state === "superDash" ? 8 : 12 + machNow * 3;
     const frame = Math.floor(r.time * fps);
     const sprite = getSprite(state, frame);
     if (sprite) {
