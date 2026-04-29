@@ -435,7 +435,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     if (!jumpHeld && p.vy < -300) p.vy = -300;
 
     // speed cap (dash impulse can briefly exceed it; we let momentum carry)
-    const speedCap = MAX_SPEED + (p.sliding ? 120 : 0) + (p.dashTime > 0 ? 600 : 0);
+    const superCapBoost = p.superDashing ? 6000 : 0;
+    const speedCap = MAX_SPEED + (p.sliding ? 120 : 0) + (p.dashTime > 0 ? 600 : 0) + superCapBoost;
     if (Math.abs(p.vx) > speedCap) p.vx = Math.sign(p.vx) * speedCap;
 
     // gravity — always on; dash no longer freezes vertical motion
@@ -445,6 +446,18 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     // dash visual / i-frame window timer (velocity is no longer locked)
     if (p.dashTime > 0) p.dashTime -= dt;
     if (p.dashCooldown > 0) p.dashCooldown -= dt;
+
+    // SUPER DASH (just-run-bro): hold dash to ramp up speed in facing dir.
+    if (p.superDashing && p.alive) {
+      p.superDashTime += dt;
+      // accel grows over time, capped
+      const t = Math.min(p.superDashTime, 6);
+      const accel = 1800 + t * 900; // up to ~7200 px/s^2
+      p.vx += p.facing * accel * dt;
+      // continuous stretch while ramping
+      p.stretch = 1;
+      if (p.invuln < 0.05) p.invuln = 0.05;
+    }
 
     // parry timers
     if (p.parrying > 0) p.parrying -= dt;
