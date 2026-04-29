@@ -505,8 +505,19 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
 
       // enemy vs player
       if (rectOverlap(p.x, p.y, p.w, p.h, e.x, e.y, e.w, e.h)) {
-        // stomp?
-        if (p.vy > 80 && p.y + p.h - 20 < e.y) {
+        if (e.kind === "chaser") {
+          // Chaser is unkillable — only parry pushes it back.
+          if (p.parrying > 0) {
+            // shove it backwards a long way + stun
+            e.vx = -1400;
+            e.stunTimer = 0.9;
+            parrySuccess(r, e.x + e.w / 2, e.y + e.h / 2);
+            e.hitFlash = 0.2;
+          } else if (p.invuln <= 0) {
+            damage(r, e.x + e.w / 2, e.y + e.h / 2);
+          }
+        } else if (p.vy > 80 && p.y + p.h - 20 < e.y) {
+          // stomp
           e.alive = false;
           p.vy = -520;
           r.combo += 1;
@@ -516,7 +527,6 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
           r.shake = 0.4;
           sfx.enemyKill();
         } else if (p.parrying > 0) {
-          // parry kill
           parrySuccess(r, e.x + e.w / 2, e.y + e.h / 2);
           e.alive = false;
         } else if (p.sliding && Math.abs(p.vx) > 350) {
