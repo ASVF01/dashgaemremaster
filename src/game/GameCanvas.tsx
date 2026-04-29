@@ -405,6 +405,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           p.dashTime = DASH_DURATION;
           p.dashCooldown = DASH_COOLDOWN;
           p.dashVx = nx; p.dashVy = ny;
+          // a fresh dash refills the mid-air dash-jump
+          p.dashAirJumpUsed = false;
           p.facing = dx >= 0 ? 1 : -1;
           p.stretch = 1;
           if (p.invuln < DASH_DURATION) p.invuln = DASH_DURATION;
