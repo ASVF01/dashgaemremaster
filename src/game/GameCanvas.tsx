@@ -1395,8 +1395,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       ctx.globalAlpha = 0.4;
     }
 
-    const inkCol = flash ? "#f5234c" : (p.starman ? `hsl(${Math.floor(r.time * 720) % 360}, 95%, 55%)` : INK);
-    // rainbow tint color cycling for starman cheat (used for glow only now)
+    const inkCol = flash ? "#f5234c" : INK;
+    // rainbow tint color cycling for starman cheat (applied to PNG sprite)
     const rainbowCol = p.starman ? `hsl(${Math.floor(r.time * 720) % 360}, 95%, 55%)` : null;
 
     // ---- sprite override (use uploaded PNG if available for current state) ----
@@ -1416,8 +1416,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     const fps = state === "superDash" ? 8 : 12 + machNow * 3;
     const frame = Math.floor(r.time * fps);
     const sprite = getSprite(state, frame);
-    // starman: bypass PNG sprite so the stick figure (drawn below) gets the rainbow
-    if (sprite && !p.starman) {
+    if (sprite) {
       // Fit the sprite to the player AABB. For wide sprites (slide/dive) we
       // size by width so the pose stays readable; for tall sprites we size
       // by height. Either way the sprite is anchored to the bottom of the box.
@@ -1470,19 +1469,6 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       return;
     }
     // ---- end sprite override ----
-
-    // starman halo behind the stick figure
-    if (rainbowCol) {
-      ctx.save();
-      ctx.shadowColor = rainbowCol;
-      ctx.shadowBlur = 24;
-      ctx.fillStyle = rainbowCol;
-      ctx.globalAlpha = 0.25;
-      ctx.beginPath();
-      ctx.arc(p.w / 2, p.h / 2, Math.max(p.w, p.h) * 0.7, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
 
     if (p.sliding) {
       // slide pose
