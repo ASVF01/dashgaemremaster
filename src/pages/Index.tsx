@@ -2,14 +2,14 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import GameCanvas, { type HudState } from "@/game/GameCanvas";
 import Hud from "@/game/Hud";
 import TouchControls from "@/game/TouchControls";
-import GamepadDebug from "@/game/GamepadDebug";
+
 import MainMenu from "@/game/MainMenu";
 import { LEVELS, type LevelId } from "@/game/level";
 import { useKeybinds, keyLabel, type ActionId } from "@/game/keybinds";
 import { playMenuBgm, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor, isSameTrackAs } from "@/game/bgm";
 import cutsceneJustRunBro from "@/assets/video/mcdonalds_sprite_2.mp4";
 import { sfx, unlockAudio } from "@/game/sfx";
-import { startGamepadBridge } from "@/game/gamepad";
+
 
 type Screen = "menu" | "loading" | "playing" | "dead" | "win" | "cutscene";
 
@@ -42,10 +42,6 @@ const Index = () => {
       setDark(d);
       document.documentElement.classList.toggle("dark", d);
     } catch { /* noop */ }
-    // Controller support: bridge gamepad input to the keyboard pipeline so
-    // every existing system (rebinds, dash, parry, super dash) just works.
-    const stopGamepad = startGamepadBridge();
-    return () => { stopGamepad(); };
   }, []);
 
   const toggleDark = () => {
@@ -291,7 +287,6 @@ const Index = () => {
 
         {/* touch controls live BELOW the game stage so they never cover the HUD */}
         <TouchControls visible={screen === "playing"} />
-        <GamepadDebug />
 
         {/* mobile controls hint */}
         <p className="md:hidden text-center font-scribble text-lg mt-2 text-ink/70">
