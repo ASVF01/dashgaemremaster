@@ -1589,7 +1589,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       // Cached rainbow tint for starman afterimages; avoids repainting an
       // offscreen sprite for every ghost every frame.
       if (ai.rainbowHue !== undefined) {
-        const off = getTintedSprite(sprite, ai.rainbowHue);
+        const isSomSomAi = ai.color === "rainbow" && ai.rainbowHue === 190;
+        const off = isSomSomAi ? getDarkCyanTintedSprite(sprite) : getTintedSprite(sprite, ai.rainbowHue);
         ctx.globalAlpha = 0.62 * t;
         ctx.drawImage(off, dx, dy, drawW, drawH);
       } else {
