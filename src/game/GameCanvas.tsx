@@ -359,6 +359,24 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     const mach = machTier(speed);
     if (mach > r.bestMach) { r.bestMach = mach; if (mach >= 1) sfx.mach(); }
 
+    // afterimages — spawn when fast or diving
+    r.afterTimer -= dt;
+    if ((mach >= 1 || p.diving) && r.afterTimer <= 0) {
+      r.afterTimer = Math.max(0.018, 0.05 - mach * 0.008);
+      const life = 0.28 + mach * 0.05;
+      r.afterimages.push({
+        x: p.x, y: p.y, w: p.w, h: p.h,
+        facing: p.facing,
+        sliding: p.sliding,
+        diving: p.diving,
+        life, maxLife: life,
+        color: p.diving ? "#ffd11a" : MACH_COLORS[Math.max(1, mach)],
+      });
+      if (r.afterimages.length > 24) r.afterimages.shift();
+    }
+    for (const ai of r.afterimages) ai.life -= dt;
+    r.afterimages = r.afterimages.filter((a) => a.life > 0);
+
     if (mach >= 1 && Math.random() < 0.4 + mach * 0.15) {
       spawnParticle(r, {
         x: p.x + p.w / 2 - p.facing * (p.w / 2 + Math.random() * 12),
