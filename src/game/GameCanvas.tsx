@@ -454,8 +454,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     if (right) dir += 1;
     if (dir !== 0) p.facing = dir > 0 ? 1 : -1;
 
+    const speedMul = p.starman ? 1.5 : 1;
     if (dir !== 0) {
-      p.vx += dir * MOVE_ACCEL * dt;
+      p.vx += dir * MOVE_ACCEL * speedMul * dt;
     } else {
       // friction (more if not sliding)
       const fr = p.sliding ? SLIDE_FRICTION : FRICTION;
