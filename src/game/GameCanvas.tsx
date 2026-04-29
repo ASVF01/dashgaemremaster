@@ -163,6 +163,8 @@ interface GameRefs {
   particles: Particle[];
   afterimages: Afterimage[];
   afterTimer: number;
+  chaserTrail: { x: number; y: number; w: number; h: number; life: number; maxLife: number }[];
+  chaserTrailTimer: number;
   cameraX: number;
   shake: number;
   freezeFrames: number;
