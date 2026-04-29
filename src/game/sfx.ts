@@ -238,7 +238,11 @@ export const sfx = {
     playPixelSample(nySampleUrl, { vol: 0.55, bits: 8, rateDiv: 4, lp: 8000 });
   },
   hit() {
-    playSampleClipped(wwHitUrl, 1.5, { vol: 0.6, fade: 0.08 });
+    // long, soft fade-out on the voice sample
+    playSampleClipped(wwHitUrl, 1.5, { vol: 0.6, fade: 0.6 });
+    // little punchy hit on top
+    tone({ freq: 220, to: 70, dur: 0.16, type: "sawtooth", vol: 0.3 });
+    noise(0.14, 0.28, 250, 3200);
   },
   enemyKill() {
     tone({ freq: 600, to: 200, dur: 0.12, type: "square", vol: 0.28 });
