@@ -227,6 +227,16 @@ function playSrc(src: string, restart = false) {
       first.g.gain.setValueAtTime(0.0001, startAt);
       first.g.gain.linearRampToValueAtTime(1, startAt + fadeDur);
     }
+    // "just run bro" intro: start the track slowed down, then ramp back up
+    // to original speed over 0.5s for a tape-spinning-up effect.
+    if (src === bgmJustRunBro) {
+      try {
+        const rate = first.src.playbackRate;
+        rate.cancelScheduledValues(startAt);
+        rate.setValueAtTime(0.5, startAt);
+        rate.linearRampToValueAtTime(1.0, startAt + 0.5);
+      } catch { /* noop */ }
+    }
     playing = {
       src,
       buffer,
