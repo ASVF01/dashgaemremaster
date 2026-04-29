@@ -283,6 +283,9 @@ const Index = () => {
           )}
         </div>
 
+        {/* touch controls live BELOW the game stage so they never cover the HUD */}
+        <TouchControls visible={screen === "playing"} />
+
         {/* mobile controls hint */}
         <p className="md:hidden text-center font-scribble text-lg mt-2 text-ink/70">
           (best on desktop with a keyboard!)
