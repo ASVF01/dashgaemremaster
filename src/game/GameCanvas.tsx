@@ -126,6 +126,8 @@ interface Player {
   squash: number; // 0..1 transient
   stretch: number; // 0..1 transient
   smearTimer: number;
+  dashAirJumpUsed: boolean; // one bonus mid-air jump available while dashing
+  jumpWasHeld: boolean;     // for rising-edge jump detection
   alive: boolean;
   superDashing: boolean;
   superDashTime: number; // seconds the hold has been active
