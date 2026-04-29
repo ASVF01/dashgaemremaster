@@ -450,9 +450,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     // SUPER DASH (just-run-bro): hold dash to ramp up speed in facing dir.
     if (p.superDashing && p.alive) {
       p.superDashTime += dt;
-      // accel grows over time, capped
-      const t = Math.min(p.superDashTime, 6);
-      const accel = 1800 + t * 900; // up to ~7200 px/s^2
+      // strong baseline accel so it feels fast the instant you hold,
+      // then keeps growing the longer you hold.
+      const t = Math.min(p.superDashTime, 8);
+      const accel = 5200 + t * 1400; // ~5200 -> ~16400 px/s^2
       p.vx += p.facing * accel * dt;
       // continuous stretch while ramping
       p.stretch = 1;
