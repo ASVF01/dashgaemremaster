@@ -648,6 +648,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       });
     }
   }
+
+  function igniteDash(r: GameRefs, p: Player, dx: number, dy: number, jumpAlso: boolean) {
     if (dx === 0 && dy === 0) dx = p.facing;
     const len = Math.hypot(dx, dy) || 1;
     const nx = dx / len, ny = dy / len;
