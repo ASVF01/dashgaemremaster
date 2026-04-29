@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   GRAVITY, MOVE_ACCEL, MAX_SPEED, FRICTION, JUMP_VEL,
   SLIDE_BOOST, SLIDE_FRICTION, PARRY_WINDOW, PARRY_COOLDOWN, PARRY_BOOST,
+  DASH_SPEED, DASH_DURATION, DASH_COOLDOWN,
   PLAYER_W, PLAYER_H, SLIDE_H,
   MACH_THRESHOLDS, MACH_COLORS, MACH_LABELS,
   type Particle, type Projectile, type Enemy,
@@ -20,6 +21,8 @@ interface Player {
   onGround: boolean;
   sliding: boolean;
   diving: boolean;
+  dashTime: number; // remaining seconds of active dash
+  dashCooldown: number;
   parrying: number; // remaining seconds of parry active window
   parryCooldown: number;
   invuln: number;
@@ -79,6 +82,8 @@ export interface HudState {
   progress: number;
   timeMs: number;
   parryReady: boolean;
+  dashCooldown: number;
+  dashCooldownMax: number;
 }
 
 export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey, levelId = "scribble-1" }: Props) {
@@ -112,6 +117,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         onGround: false,
         sliding: false,
         diving: false,
+        dashTime: 0,
+        dashCooldown: 0,
         parrying: 0,
         parryCooldown: 0,
         invuln: 0,
@@ -158,6 +165,24 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
           sfx.parryStart();
         }
       }
+      // dash — bound action
+      if (matchesAction(e.code, "dash") && refs.current) {
+        unlockAudio();
+        const r = refs.current;
+        const p = r.player;
+        if (p.dashCooldown <= 0 && p.dashTime <= 0 && p.alive) {
+          p.dashTime = DASH_DURATION;
+          p.dashCooldown = DASH_COOLDOWN;
+          p.vx = p.facing * DASH_SPEED;
+          p.vy = 0;
+          p.stretch = 1;
+          // brief i-frames during dash
+          if (p.invuln < DASH_DURATION) p.invuln = DASH_DURATION;
+          burst(r, p.x + p.w / 2, p.y + p.h / 2, "#22e2ff", 14, 320);
+          sfx.parryStart();
+          sfx.mach();
+        }
+      }
     };
     const up = (e: KeyboardEvent) => { keysRef.current[e.code] = false; };
     window.addEventListener("keydown", down);
@@ -197,6 +222,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         progress: Math.min(1, r.player.x / r.level.width),
         timeMs: r.finished ? r.finishTime : performance.now() - r.startedAt,
         parryReady: r.player.parryCooldown <= 0,
+        dashCooldown: Math.max(0, r.player.dashCooldown),
+        dashCooldownMax: DASH_COOLDOWN,
       });
 
       if (!r.player.alive && !r.finished) {
@@ -277,7 +304,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     if (right) dir += 1;
     if (dir !== 0) p.facing = dir > 0 ? 1 : -1;
 
-    if (dir !== 0) {
+    if (p.dashTime > 0) {
+      // locked velocity during dash — direction set on activation
+      p.vx = p.facing * DASH_SPEED;
+    } else if (dir !== 0) {
       p.vx += dir * MOVE_ACCEL * dt;
     } else {
       // friction (more if not sliding)
@@ -328,13 +358,30 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     // variable jump
     if (!jumpHeld && p.vy < -300) p.vy = -300;
 
-    // clamp speed
-    const speedCap = MAX_SPEED + (p.sliding ? 120 : 0);
-    if (Math.abs(p.vx) > speedCap) p.vx = Math.sign(p.vx) * speedCap;
+    // clamp speed (dash bypasses)
+    if (p.dashTime <= 0) {
+      const speedCap = MAX_SPEED + (p.sliding ? 120 : 0);
+      if (Math.abs(p.vx) > speedCap) p.vx = Math.sign(p.vx) * speedCap;
+    }
 
-    // gravity
-    p.vy += GRAVITY * dt;
-    if (p.vy > 1400) p.vy = 1400;
+    // gravity (dash floats horizontally)
+    if (p.dashTime > 0) {
+      p.vy = 0;
+    } else {
+      p.vy += GRAVITY * dt;
+      if (p.vy > 1400) p.vy = 1400;
+    }
+
+    // dash timers + spawn extra afterimages while active
+    if (p.dashTime > 0) {
+      p.dashTime -= dt;
+      if (p.dashTime <= 0) {
+        // exit dash with preserved horizontal momentum (capped)
+        const cap = MAX_SPEED + 120;
+        if (Math.abs(p.vx) > cap) p.vx = Math.sign(p.vx) * cap;
+      }
+    }
+    if (p.dashCooldown > 0) p.dashCooldown -= dt;
 
     // parry timers
     if (p.parrying > 0) p.parrying -= dt;
@@ -359,20 +406,20 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     const mach = machTier(speed);
     if (mach > r.bestMach) { r.bestMach = mach; if (mach >= 1) sfx.mach(); }
 
-    // afterimages — spawn when fast or diving
+    // afterimages — spawn when fast, diving, or dashing
     r.afterTimer -= dt;
-    if ((mach >= 1 || p.diving) && r.afterTimer <= 0) {
-      r.afterTimer = Math.max(0.018, 0.05 - mach * 0.008);
-      const life = 0.28 + mach * 0.05;
+    if ((mach >= 1 || p.diving || p.dashTime > 0) && r.afterTimer <= 0) {
+      r.afterTimer = p.dashTime > 0 ? 0.012 : Math.max(0.018, 0.05 - mach * 0.008);
+      const life = p.dashTime > 0 ? 0.35 : 0.28 + mach * 0.05;
       r.afterimages.push({
         x: p.x, y: p.y, w: p.w, h: p.h,
         facing: p.facing,
         sliding: p.sliding,
         diving: p.diving,
         life, maxLife: life,
-        color: p.diving ? "#ffd11a" : MACH_COLORS[Math.max(1, mach)],
+        color: p.dashTime > 0 ? "#22e2ff" : p.diving ? "#ffd11a" : MACH_COLORS[Math.max(1, mach)],
       });
-      if (r.afterimages.length > 24) r.afterimages.shift();
+      if (r.afterimages.length > 32) r.afterimages.shift();
     }
     for (const ai of r.afterimages) ai.life -= dt;
     r.afterimages = r.afterimages.filter((a) => a.life > 0);
