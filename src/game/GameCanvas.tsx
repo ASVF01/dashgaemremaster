@@ -182,6 +182,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       skidDustTimer: 0,
       skidSfxTimer: 0,
       isSkidding: false,
+      rainStars: [],
     };
   }, [resetKey, levelId]);
 
