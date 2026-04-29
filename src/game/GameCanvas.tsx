@@ -224,8 +224,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
           // that direction is preserved + boosted by DASH_BONUS; perpendicular
           // velocity is kept as-is so momentum carries through.
           const along = p.vx * nx + p.vy * ny;
-          const dashImpulse = spamDash ? DASH_IMPULSE * 1.8 : DASH_IMPULSE;
-          const dashBonus = spamDash ? DASH_BONUS * 3 : DASH_BONUS;
+          const dashImpulse = spamDash ? DASH_IMPULSE * 5 : DASH_IMPULSE;
+          const dashBonus = spamDash ? DASH_BONUS * 10 : DASH_BONUS;
           const newAlong = Math.max(along, 0) + dashImpulse + dashBonus;
           // remove old along-component, add the new one
           p.vx += (newAlong - along) * nx;
@@ -430,8 +430,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
 
     // speed cap (dash impulse can briefly exceed it; we let momentum carry)
     const justRun = levelId === "just-run-bro";
-    const baseCap = justRun ? MAX_SPEED * 2.2 : MAX_SPEED;
-    const dashCapBonus = (p.dashTime > 0 ? 600 : 0) * (justRun ? 2.5 : 1);
+    const baseCap = justRun ? MAX_SPEED * 6 : MAX_SPEED;
+    const dashCapBonus = (p.dashTime > 0 ? 600 : 0) * (justRun ? 8 : 1);
     const speedCap = baseCap + (p.sliding ? 120 : 0) + dashCapBonus;
     if (Math.abs(p.vx) > speedCap) p.vx = Math.sign(p.vx) * speedCap;
 
