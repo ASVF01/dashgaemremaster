@@ -2217,6 +2217,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     const speedNow = Math.abs(p.vx);
     const machNow = machTier(speedNow);
     const state: SpriteState =
+      p.hurtTimer > 0 ? "hurt" :
       p.dashTime > 0 ? "dash" :
       p.diving ? "dive" :
       p.sliding ? "slide" :
