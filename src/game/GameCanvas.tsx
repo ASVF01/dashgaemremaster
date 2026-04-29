@@ -287,7 +287,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       p.vx = sign * mag;
     }
 
-    // slide
+    // slide (ground) / dive (air) — both on the slide button
     if (slideHeld && onGround && !p.sliding && Math.abs(p.vx) > 120) {
       p.sliding = true;
       p.h = SLIDE_H;
@@ -295,6 +295,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       // boost in facing dir
       p.vx += p.facing * SLIDE_BOOST;
       spawnParticle(r, { x: p.x, y: p.y + p.h, vx: -p.facing * 200, vy: -80, color: INK, life: 0.4, size: 4, kind: "smear" });
+      sfx.slide();
+    }
+    // dive — pressed while airborne
+    if (slideHeld && !onGround && !p.diving) {
+      p.diving = true;
+      p.vx += p.facing * 260;
+      p.vy = Math.max(p.vy + 200, 520);
+      p.stretch = 1;
+      spawnParticle(r, { x: p.x + p.w / 2, y: p.y, vx: -p.facing * 120, vy: -60, color: INK, life: 0.35, size: 3, kind: "smear" });
       sfx.slide();
     }
     if (!slideHeld && p.sliding) {
@@ -307,11 +316,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       }
     }
 
-    // jump
+    // jump (also cancels dive when grounded — handled by jump flow naturally)
     if (jumpHeld && onGround) {
       p.vy = -JUMP_VEL;
       p.onGround = false;
       p.squash = 1;
+      p.diving = false;
       spawnParticle(r, { x: p.x + p.w / 2, y: p.y + p.h, color: INK, vy: -40, life: 0.3, size: 4, kind: "ring" });
       sfx.jump();
     }
