@@ -1799,11 +1799,14 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       if (ai.rainbowHue !== undefined) {
         const isSomSomAi = ai.color === "rainbow" && ai.rainbowHue === 190;
         const off = isSomSomAi ? getDarkCyanTintedSprite(sprite) : getTintedSprite(sprite, ai.rainbowHue);
-        ctx.globalAlpha = 0.62 * t;
+        // invboi (starman) trail: bumped from 0.62 → 0.85 so the rainbow
+        // ghosts read clearly against bright backgrounds.
+        ctx.globalAlpha = 0.85 * t;
         ctx.drawImage(off, dx, dy, drawW, drawH);
       } else {
-        // Just draw the sprite faintly — no solid color overlay (that made a block).
-        ctx.globalAlpha = 0.5 * t;
+        // Default speedboi mach trail: bumped from 0.5 → 0.8 so each ghost
+        // is clearly visible instead of nearly transparent.
+        ctx.globalAlpha = 0.8 * t;
         ctx.drawImage(sprite, dx, dy, drawW, drawH);
       }
       ctx.restore();
