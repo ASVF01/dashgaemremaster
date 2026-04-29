@@ -889,6 +889,43 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     ctx.restore();
   }
 
+  function drawAfterimage(ctx: CanvasRenderingContext2D, ai: Afterimage, t: number) {
+    // t: 1 (fresh) → 0 (faded)
+    ctx.save();
+    ctx.globalAlpha = 0.55 * t;
+    ctx.fillStyle = ai.color;
+    ctx.strokeStyle = ai.color;
+    ctx.lineWidth = 2;
+    const cx = ai.x + ai.w / 2;
+    const cy = ai.y + ai.h / 2;
+    ctx.translate(cx, cy);
+    // slight stretch in motion direction
+    const sx = ai.diving ? 0.85 : ai.sliding ? 1.25 : 1.05;
+    const sy = ai.diving ? 1.2 : ai.sliding ? 0.7 : 0.95;
+    ctx.scale(sx * ai.facing, sy);
+    ctx.translate(-ai.w / 2, -ai.h / 2);
+
+    if (ai.sliding) {
+      // squat oval
+      ctx.beginPath();
+      ctx.ellipse(ai.w / 2, ai.h / 2, ai.w * 0.7, ai.h * 0.55, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      // head
+      const headR = 12;
+      const headX = ai.w / 2;
+      const headY = headR + 2;
+      ctx.beginPath();
+      ctx.arc(headX, headY, headR, 0, Math.PI * 2);
+      ctx.fill();
+      // body slab
+      ctx.beginPath();
+      ctx.roundRect(headX - 6, headY + headR - 4, 12, ai.h - headY - headR - 6, 4);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
   function drawPlayer(ctx: CanvasRenderingContext2D, r: GameRefs) {
     const p = r.player;
     const speed = Math.abs(p.vx);
