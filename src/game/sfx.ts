@@ -246,6 +246,9 @@ export const sfx = {
   shineStop() { stopShine(); },
   rainStart() { startRain(); },
   rainStop() { stopRain(); },
+  slideStart() { startSlideLoop(); },
+  slideStop() { stopSlideLoop(); },
+  slideIntensity(v: number) { setSlideIntensity(v); },
   thunder() {
     // bright crack, then deep rumble
     noise(0.08, 0.45, 2000, 9000);
@@ -372,4 +375,71 @@ function stopRain() {
     r.out.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
   } catch { /* noop */ }
   try { r.src.stop(t + 0.45); } catch { /* noop */ }
+}
+
+// ---------- looping slide sound (filtered noise + low rumble) ----------
+let slide: { src: AudioBufferSourceNode; out: GainNode; lp: BiquadFilterNode; rumble: OscillatorNode; rumbleGain: GainNode } | null = null;
+let slideTargetVol = 0.22;
+
+function startSlideLoop() {
+  const c = ac(); if (!c || !master || slide) return;
+  const t0 = c.currentTime;
+  // 1.5s of pinkish noise, looped
+  const len = Math.floor(c.sampleRate * 1.5);
+  const buf = c.createBuffer(1, len, c.sampleRate);
+  const data = buf.getChannelData(0);
+  let last = 0;
+  for (let i = 0; i < len; i++) {
+    const white = Math.random() * 2 - 1;
+    last = (last + 0.04 * white) / 1.04;
+    data[i] = last * 2.6 + (Math.random() * 2 - 1) * 0.5;
+  }
+  const src = c.createBufferSource();
+  src.buffer = buf; src.loop = true;
+  const hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 350;
+  const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 4200;
+  const out = c.createGain();
+  out.gain.setValueAtTime(0.0001, t0);
+  out.gain.exponentialRampToValueAtTime(slideTargetVol, t0 + 0.05);
+  src.connect(hp).connect(lp).connect(out).connect(master);
+  src.start(t0);
+
+  // sub rumble for weighty grit
+  const rumble = c.createOscillator();
+  rumble.type = "sawtooth";
+  rumble.frequency.value = 70;
+  const rumbleGain = c.createGain();
+  rumbleGain.gain.value = 0.05;
+  rumble.connect(rumbleGain).connect(out);
+  rumble.start(t0);
+
+  slide = { src, out, lp, rumble, rumbleGain };
+}
+
+function setSlideIntensity(v: number) {
+  // v in [0,1] — modulates volume + brightness
+  slideTargetVol = 0.08 + Math.max(0, Math.min(1, v)) * 0.28;
+  if (!slide) return;
+  const c = ac(); if (!c) return;
+  const t = c.currentTime;
+  try {
+    slide.out.gain.cancelScheduledValues(t);
+    slide.out.gain.setValueAtTime(slide.out.gain.value, t);
+    slide.out.gain.linearRampToValueAtTime(slideTargetVol, t + 0.08);
+    slide.lp.frequency.cancelScheduledValues(t);
+    slide.lp.frequency.linearRampToValueAtTime(2400 + v * 3200, t + 0.08);
+  } catch { /* noop */ }
+}
+
+function stopSlideLoop() {
+  const c = ac(); if (!c || !slide) return;
+  const t = c.currentTime;
+  const s = slide; slide = null;
+  try {
+    s.out.gain.cancelScheduledValues(t);
+    s.out.gain.setValueAtTime(s.out.gain.value, t);
+    s.out.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+  } catch { /* noop */ }
+  try { s.src.stop(t + 0.22); } catch { /* noop */ }
+  try { s.rumble.stop(t + 0.22); } catch { /* noop */ }
 }

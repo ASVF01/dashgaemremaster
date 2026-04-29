@@ -297,7 +297,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       somSomRain: null,
     };
     // Any reset/level change cancels the starman shimmer too.
-    sfx.shineStop(); sfx.rainStop();
+    sfx.shineStop(); sfx.rainStop(); sfx.slideStop();
   }, [resetKey, levelId]);
 
   // BGM: stop on unmount only. The parent (Index) decides which track to
@@ -305,7 +305,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   // with the menu music here. Restart on retry is also driven by the
   // parent via screen/levelId/resetKey transitions.
   useEffect(() => {
-    return () => { stopBgm(); sfx.shineStop(); sfx.rainStop(); };
+    return () => { stopBgm(); sfx.shineStop(); sfx.rainStop(); sfx.slideStop(); };
   }, []);
 
   // BGM: pause/resume with the game's pause state — but keep playing when
@@ -625,6 +625,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       p.vx += p.facing * SLIDE_BOOST;
       spawnParticle(r, { x: p.x, y: p.y + p.h, vx: -p.facing * 200, vy: -80, color: INK, life: 0.4, size: 4, kind: "smear" });
       sfx.slide();
+      sfx.slideStart();
     }
     // dive — pressed while airborne
     if (slideHeld && !onGround && !p.diving) {
@@ -643,6 +644,13 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         p.h = PLAYER_H;
         p.sliding = false;
       }
+    }
+    // Drive the looping slide sfx based on current state + speed.
+    if (p.sliding && p.alive) {
+      const intensity = Math.max(0, Math.min(1, (Math.abs(p.vx) - 120) / 700));
+      sfx.slideIntensity(intensity);
+    } else {
+      sfx.slideStop();
     }
 
     // jump (also cancels dive when grounded — handled by jump flow naturally)
