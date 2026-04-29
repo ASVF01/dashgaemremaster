@@ -627,6 +627,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           burst(r, bx, by, "#ffd11a", 10, 260);
           burst(r, bx, by, "#22e2ff", 6, 200);
           sfx.mach();
+          r.superDashFlash = 1;
+          r.shake = Math.max(r.shake, 0.25);
         }
       } else {
         r.superDashFxTimer = 0;
