@@ -100,6 +100,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const refs = useRef<GameRefs | null>(null);
   const keysRef = useRef<Keys>({});
+  // For "just-run-bro": BGM starts the first time the player actually moves.
+  const bgmDeferredStartedRef = useRef(false);
   const [size, setSize] = useState({ w: 1200, h: 600 });
 
   // resize
