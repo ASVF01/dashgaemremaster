@@ -44,6 +44,24 @@ let started = false;
 // Vibration support. We re-resolve the active gamepad each call rather than
 // caching a reference because Gamepad objects in some browsers are snapshots
 // and the cached one quickly goes stale (its actuator stops working).
+//
+// PlayStation pad notes:
+//   - DualShock 4 / DualSense expose dual-rumble through `vibrationActuator`
+//     in Chromium and Safari (Standard Gamepad mapping).
+//   - Older Firefox builds expose `hapticActuators[]` with a `.pulse(value, ms)`
+//     method instead — we fall back to that.
+//   - DualSense's adaptive triggers ("trigger-rumble") aren't appropriate for
+//     a generic "speed cue" so we stick with classic dual-rumble.
+type VibrationActuator = {
+  playEffect?: (type: string, params: Record<string, number>) => Promise<unknown>;
+  pulse?: (value: number, duration: number) => Promise<unknown>;
+};
+type HapticActuator = { pulse?: (value: number, duration: number) => Promise<unknown> };
+type PadWithHaptics = Gamepad & {
+  vibrationActuator?: VibrationActuator;
+  hapticActuators?: HapticActuator[];
+};
+
 export function rumble(opts: { duration?: number; strong?: number; weak?: number } = {}) {
   const duration = opts.duration ?? 120;
   const strong = Math.max(0, Math.min(1, opts.strong ?? 0.6));
@@ -52,24 +70,37 @@ export function rumble(opts: { duration?: number; strong?: number; weak?: number
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];
     for (const gp of pads) {
       if (!gp || !gp.connected) continue;
-      // Standard: GamepadHapticActuator.playEffect("dual-rumble", ...)
-      const actuator = (gp as Gamepad & {
-        vibrationActuator?: {
-          playEffect?: (type: string, params: Record<string, number>) => Promise<unknown>;
-        };
-      }).vibrationActuator;
-      if (actuator?.playEffect) {
-        actuator.playEffect("dual-rumble", {
+      const pad = gp as PadWithHaptics;
+
+      // 1) Modern path — works for Xbox, DualShock 4, DualSense in Chromium/Safari.
+      if (pad.vibrationActuator?.playEffect) {
+        pad.vibrationActuator.playEffect("dual-rumble", {
           startDelay: 0,
           duration,
           strongMagnitude: strong,
           weakMagnitude: weak,
-        }).catch(() => { /* some browsers reject mid-effect; ignore */ });
-        return; // first connected pad gets the rumble
+        }).catch(() => { /* mid-effect rejection — ignore */ });
+        return;
+      }
+
+      // 2) Single-channel fallback (some Chromium builds expose only .pulse).
+      if (pad.vibrationActuator?.pulse) {
+        pad.vibrationActuator.pulse(Math.max(strong, weak), duration).catch(() => {});
+        return;
+      }
+
+      // 3) Firefox legacy path — DualShock 4 often shows up here.
+      const haptics = pad.hapticActuators;
+      if (haptics && haptics.length > 0) {
+        // Drive every motor we can find at the higher of the two magnitudes.
+        const power = Math.max(strong, weak);
+        for (const h of haptics) h.pulse?.(power, duration)?.catch?.(() => {});
+        return;
       }
     }
-  } catch { /* noop — vibration is best-effort */ }
+  } catch { /* vibration is best-effort */ }
 }
+
 
 
 /** Start the controller polling loop. Idempotent. */
