@@ -970,9 +970,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       // Match drawPlayer's sizing exactly so the trail fits the PNG.
       const ratio = sprite.width / sprite.height;
       const wide = ratio > 1.1;
-      const wideScale = 1.6;
-      const drawH = wide ? ai.w * wideScale / ratio : ai.h;
-      const drawW = wide ? ai.w * wideScale : drawH * ratio;
+      let drawW: number, drawH: number;
+      if (ai.state === "slide") {
+        drawW = ai.w * 2.2;
+        drawH = drawW / ratio;
+      } else if (wide) {
+        drawH = ai.w * 1.6 / ratio;
+        drawW = ai.w * 1.6;
+      } else {
+        drawH = ai.h;
+        drawW = drawH * ratio;
+      }
       const dx = ai.x + ai.w / 2 - drawW / 2;
       const dy = ai.y + ai.h - drawH;
 
@@ -1057,9 +1065,19 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       // by height. Either way the sprite is anchored to the bottom of the box.
       const ratio = sprite.width / sprite.height;
       const wide = ratio > 1.1;
-      const wideScale = 1.6;
-      const drawH = wide ? p.w * wideScale / ratio : p.h;
-      const drawW = wide ? p.w * wideScale : drawH * ratio;
+      // Slide pose lives inside a square PNG, so force a wider render.
+      const slideScale = 2.2;
+      let drawW: number, drawH: number;
+      if (state === "slide") {
+        drawW = p.w * slideScale;
+        drawH = drawW / ratio;
+      } else if (wide) {
+        drawH = p.w * 1.6 / ratio;
+        drawW = p.w * 1.6;
+      } else {
+        drawH = p.h;
+        drawW = drawH * ratio;
+      }
       const dx = p.w / 2 - drawW / 2;
       const dy = p.h - drawH;
       if (flash) {
