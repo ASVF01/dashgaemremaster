@@ -4,6 +4,7 @@
 // no click/gap on loop.
 import bgmTutorial from "@/assets/audio/bgm_tutorial.mp3";
 import bgmJustRunBro from "@/assets/audio/bgm_just_run_bro.mp3";
+import bgmMenu from "@/assets/audio/bgm_menu.mp3";
 import type { LevelId } from "@/game/level";
 
 const TRACKS: Partial<Record<LevelId, string>> = {
@@ -159,18 +160,12 @@ function armNextLoop(c: AudioContext) {
   playing.rafId = requestAnimationFrame(tick);
 }
 
-export function playBgmFor(levelId: LevelId) {
-  const src = TRACKS[levelId];
-  if (!src) {
-    stopBgm();
-    return;
-  }
+function playSrc(src: string) {
   // Already playing this track? leave it alone.
   if (playing && playing.src === src && !playing.stopped) {
     resetLevelEndFx();
     return;
   }
-
   stopBgm();
   resetLevelEndFx();
   const c = ac();
@@ -195,6 +190,19 @@ export function playBgmFor(levelId: LevelId) {
     };
     armNextLoop(c);
   }).catch(() => { /* decode failed; stay silent */ });
+}
+
+export function playBgmFor(levelId: LevelId) {
+  const src = TRACKS[levelId];
+  if (!src) {
+    stopBgm();
+    return;
+  }
+  playSrc(src);
+}
+
+export function playMenuBgm() {
+  playSrc(bgmMenu);
 }
 
 export function stopBgm() {
