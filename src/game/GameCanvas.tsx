@@ -711,6 +711,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     } else if (p.stretch > 0) {
       p.stretch = Math.max(0, p.stretch - dt * 4);
     }
+    if (p.hStretch > 0) p.hStretch = Math.max(0, p.hStretch - dt * 4);
     if (p.smearTimer > 0) p.smearTimer -= dt;
     if (r.superDashBurst) {
       r.superDashBurst.t += dt;
