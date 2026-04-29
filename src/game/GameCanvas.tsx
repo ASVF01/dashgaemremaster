@@ -457,48 +457,6 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       // continuous stretch while ramping
       p.stretch = 1;
       if (p.invuln < 0.05) p.invuln = 0.05;
-
-      // exaggerated electric speed lines — long jagged bolts trailing back
-      const intensity = 0.4 + Math.min(1, t / 3); // 0.4 -> 1.4
-      const boltsPerFrame = 3 + Math.floor(intensity * 4);
-      for (let i = 0; i < boltsPerFrame; i++) {
-        const len = 60 + Math.random() * 140 + intensity * 80;
-        const yOff = (Math.random() - 0.5) * (p.h + 24);
-        const colorPick = Math.random();
-        const color =
-          colorPick < 0.45 ? "#22e2ff" :
-          colorPick < 0.75 ? "#ffffff" :
-          colorPick < 0.9  ? "#fff34a" : "#b14cff";
-        spawnParticle(r, {
-          x: p.x + p.w / 2 - p.facing * (p.w * 0.3 + Math.random() * 20),
-          y: p.y + p.h / 2 + yOff,
-          vx: -p.facing * (Math.abs(p.vx) * 0.7 + 200 + Math.random() * 300),
-          vy: (Math.random() - 0.5) * 40,
-          color,
-          size: len / 2,
-          life: 0.12 + Math.random() * 0.18,
-          kind: "smear",
-        });
-      }
-      // crackling sparks bursting off the body
-      if (Math.random() < 0.6) {
-        const a = Math.random() * Math.PI * 2;
-        const sp = 180 + Math.random() * 260;
-        spawnParticle(r, {
-          x: p.x + p.w / 2 + (Math.random() - 0.5) * p.w,
-          y: p.y + p.h / 2 + (Math.random() - 0.5) * p.h,
-          vx: Math.cos(a) * sp,
-          vy: Math.sin(a) * sp - 40,
-          color: Math.random() < 0.5 ? "#22e2ff" : "#fff34a",
-          size: 2 + Math.random() * 2,
-          life: 0.18 + Math.random() * 0.18,
-          kind: "shard",
-          angle: Math.random() * Math.PI,
-        });
-      }
-      // drive screen distortion via existing glitch field
-      r.glitch = Math.max(r.glitch, 0.5 + intensity * 0.5);
-      r.shake = Math.max(r.shake, 0.15 + intensity * 0.15);
     }
 
     // parry timers
