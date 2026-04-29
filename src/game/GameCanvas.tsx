@@ -900,12 +900,20 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     for (const pl of r.level.platforms) {
       if (pl.x + pl.w < camX - 40 || pl.x > camX + w + 40) continue;
       const isGround = pl.kind === "ground";
-      sketchRect(ctx, pl.x, pl.y, pl.w, pl.h, isGround ? "#e5dfc2" : "#f7f1dc", INK, isGround ? 3 : 2.6, isGround ? 1.6 : 1.2);
-      // hatching
+      // Clip the visible slice so absurdly long platforms (e.g. the
+      // endless ground in "just run bro") don't draw thousands of
+      // off-screen sketch segments + hatching marks every frame.
+      const visX = Math.max(pl.x, camX - 40);
+      const visR = Math.min(pl.x + pl.w, camX + w + 40);
+      const visW = visR - visX;
+      sketchRect(ctx, visX, pl.y, visW, pl.h, isGround ? "#e5dfc2" : "#f7f1dc", INK, isGround ? 3 : 2.6, isGround ? 1.6 : 1.2);
+      // hatching — only over the visible slice
       ctx.save();
       ctx.strokeStyle = "rgba(20,20,20,0.35)";
       ctx.lineWidth = 1;
-      for (let hx = pl.x + 6; hx < pl.x + pl.w - 4; hx += 14) {
+      const hStart = Math.max(pl.x + 6, visX);
+      const hEnd = Math.min(pl.x + pl.w - 4, visR);
+      for (let hx = hStart; hx < hEnd; hx += 14) {
         ctx.beginPath();
         ctx.moveTo(hx, pl.y + 4);
         ctx.lineTo(hx - 6, pl.y + pl.h - 4);
