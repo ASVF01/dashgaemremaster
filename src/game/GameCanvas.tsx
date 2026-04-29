@@ -1177,12 +1177,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   function render(c: HTMLCanvasElement, r: GameRefs, w: number, h: number) {
     const ctx = c.getContext("2d")!;
     ctx.save();
-    // starman cinematic kicks in at 3.85s into the cheat track
+    // starman cinematic kicks in at 3.20s into the cheat track
     const isSomSom = r.player.somSom;
     const starElapsed = r.player.starman
       ? (isSomSom ? (getSomSomElapsed() ?? 0) : (getStarmanElapsed() ?? 0))
       : 0;
-    const starmanFx = r.player.starman && !isSomSom && starElapsed >= 3.85;
+    const starmanFx = r.player.starman && !isSomSom && starElapsed >= 3.20;
 
     // SOM SOM cinematic (just-run-bro invboi):
     //  0..5s   normal paper background
@@ -1197,7 +1197,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     const impactFlash = postImpact ? Math.max(0, 1 - (starElapsed - 6) / 0.45) : 0;
 
     // smooth fade-in of the black backdrop
-    const bgT = starmanFx ? Math.min(1, (starElapsed - 3.85) / 0.6) : 0;
+    const bgT = starmanFx ? Math.min(1, (starElapsed - 3.20) / 0.6) : 0;
     // paper bg (or black during starman fx, or OLED black post-impact for som som)
     if (postImpact) {
       ctx.fillStyle = "#000";
