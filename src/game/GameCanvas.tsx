@@ -993,7 +993,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     if ((mach >= 1 || p.diving || p.dashTime > 0) && r.afterTimer <= 0) {
       const superDazh = p.superDashing && p.superDashTime >= 5;
       r.afterTimer = p.starman ? 0.04 : superDazh ? 0.025 : (p.dashTime > 0 ? 0.012 : Math.max(0.018, 0.05 - mach * 0.008));
-      const life = 0.01;
+      const life = p.starman ? 0.28 : (p.dashTime > 0 ? 0.22 : 0.18);
       const rainbowHue = p.starman
         ? (p.somSom ? 190 : Math.floor(r.time * 90) % 360)
         : superDazh ? 190 : undefined;
@@ -1875,20 +1875,24 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       ctx.restore();
     }
 
-    // chaser red trail (drawn behind enemies)
+    // chaser red trail (drawn behind enemies) — sized to match the spook sprite
     if (r.chaserTrail.length) {
       const tint = getSpookRedTint();
+      const ratio = (spookImg.complete && spookImg.naturalWidth > 0)
+        ? spookImg.naturalWidth / spookImg.naturalHeight
+        : 1;
       for (const ct of r.chaserTrail) {
         if (ct.x + ct.w < camX - 40 || ct.x > camX + w + 40) continue;
         const t = ct.life / ct.maxLife; // 1 → 0
-        const drawW = ct.w * 1.4;
-        const drawH = ct.h * 1.4;
-        const dx = ct.x + ct.w / 2 - drawW / 2;
-        const dy = ct.y + ct.h - drawH;
         ctx.save();
         ctx.imageSmoothingEnabled = false;
         ctx.globalAlpha = 0.55 * t;
         if (tint) {
+          // match drawEnemy's chaser sizing exactly so the ghost overlays the sprite
+          const drawH = ct.h * 1.25;
+          const drawW = drawH * ratio;
+          const dx = ct.x + ct.w / 2 - drawW / 2;
+          const dy = ct.y + ct.h - drawH;
           ctx.drawImage(tint, dx, dy, drawW, drawH);
         } else {
           ctx.fillStyle = "#f5234c";
@@ -2515,20 +2519,24 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       const useHurt = hitFlash > 0;
       const img = useHurt ? spookHurtImg : spookImg;
       const ready = img.complete && img.naturalWidth > 0;
+      // little nervous shake — jitters more when hurt
+      const shakeAmp = useHurt ? 3 : 1.5;
+      const sx = (Math.sin(time * 47.3) + Math.sin(time * 31.7)) * 0.5 * shakeAmp;
+      const sy = (Math.cos(time * 53.1) + Math.sin(time * 39.9)) * 0.5 * shakeAmp;
       if (ready) {
         // size sprite to fill the chaser AABB while preserving aspect.
         const ratio = img.naturalWidth / img.naturalHeight;
         // Make him a bit larger than the hitbox so he reads as a looming threat.
         const drawH = h * 1.25;
         const drawW = drawH * ratio;
-        const dx = w / 2 - drawW / 2;
-        const dy = h - drawH;
+        const dx = w / 2 - drawW / 2 + sx;
+        const dy = h - drawH + sy;
         ctx.imageSmoothingEnabled = false;
         ctx.drawImage(img, dx, dy, drawW, drawH);
       } else {
         // sprite not loaded yet — draw a quick red silhouette so he's visible.
         ctx.fillStyle = "#1a1a1a";
-        ctx.fillRect(0, 0, w, h);
+        ctx.fillRect(sx, sy, w, h);
       }
     }
     ctx.restore();
