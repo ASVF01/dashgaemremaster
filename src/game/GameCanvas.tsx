@@ -1754,11 +1754,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         ctx.restore();
       } else if (rainbowHue !== null) {
         // starman: cached rainbow-tinted sprite clipped to the PNG alpha.
-        const off = getTintedSprite(sprite, rainbowHue);
+        const isSomSomTint = p.somSom && rainbowHue === 190;
+        const off = isSomSomTint ? getDarkCyanTintedSprite(sprite) : getTintedSprite(sprite, rainbowHue);
         ctx.save();
         ctx.imageSmoothingEnabled = false;
         ctx.drawImage(sprite, dx, dy, drawW, drawH);
-        ctx.globalAlpha = 0.65;
+        ctx.globalAlpha = isSomSomTint ? 0.85 : 0.65;
         ctx.drawImage(off, dx, dy, drawW, drawH);
         ctx.restore();
       } else {
