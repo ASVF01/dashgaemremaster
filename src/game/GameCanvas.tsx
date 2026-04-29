@@ -1398,12 +1398,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
 
     // particles
-    const rainbowParticles = r.player.starman;
+    const rainbowParticles = r.player.starman && !r.player.somSom;
+    const cyanParticles = r.player.starman && r.player.somSom;
     for (let pi = 0; pi < r.particles.length; pi++) {
       const pa = r.particles[pi];
       const a = Math.max(0, pa.life / pa.maxLife);
       const drawColor = rainbowParticles
         ? `hsl(${(r.time * 360 + pi * 37) % 360}, 100%, 60%)`
+        : cyanParticles
+        ? (pi % 4 === 0 ? "#ffffff" : "#22e2ff")
         : pa.color;
       ctx.save();
       ctx.globalAlpha = a;
