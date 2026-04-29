@@ -20,11 +20,13 @@ const Index = () => {
   const [finalScore, setFinalScore] = useState(0);
   const [binds] = useKeybinds();
   const [muted, setMuted] = useState(false);
+  const [hasJrbBadge, setHasJrbBadge] = useState(false);
 
   // Load persisted mute pref once.
   useEffect(() => {
     initBgmMutedFromStorage();
     setMuted(isBgmMuted());
+    try { setHasJrbBadge(localStorage.getItem("badge_jrb") === "1"); } catch { /* noop */ }
   }, []);
 
   const toggleMute = () => {
@@ -61,6 +63,13 @@ const Index = () => {
   };
   const backToMenu = () => setScreen("menu");
 
+  // Award the "just run bro" badge and head back to the main menu.
+  const finishCutscene = useCallback(() => {
+    setHasJrbBadge(true);
+    try { localStorage.setItem("badge_jrb", "1"); } catch { /* noop */ }
+    setScreen("menu");
+  }, []);
+
   const currentLevel = LEVELS.find((l) => l.id === levelId);
   // next non-hidden level after the current one (used for "NEXT LEVEL" button)
   const visibleLevels = LEVELS.filter((l) => !l.hidden);
@@ -89,9 +98,19 @@ const Index = () => {
     <main className="min-h-screen w-full bg-paper text-ink overflow-hidden relative">
       {/* page header */}
       <header className="px-6 pt-4 pb-2 flex items-center justify-between max-w-[1500px] mx-auto">
-        <h1 className="font-marker text-3xl md:text-5xl text-ink leading-none">
-          DASH GAEM <span className="text-[hsl(var(--accent))] inline-block -rotate-2">R</span>
-        </h1>
+        <div className="flex items-center gap-3">
+          <h1 className="font-marker text-3xl md:text-5xl text-ink leading-none">
+            DASH GAEM <span className="text-[hsl(var(--accent))] inline-block -rotate-2">R</span>
+          </h1>
+          {hasJrbBadge && (
+            <span
+              title="badge: just ran bro :3"
+              className="scribble-border bg-[hsl(var(--accent))] text-accent-foreground font-marker text-sm md:text-base px-2 py-1 rotate-3 inline-block animate-jitter select-none"
+            >
+              :3
+            </span>
+          )}
+        </div>
         <div className="hidden md:flex items-center gap-3 font-scribble text-xl">
           <button
             onClick={toggleMute}
@@ -140,11 +159,11 @@ const Index = () => {
                   autoPlay
                   playsInline
                   controls={false}
-                  onEnded={() => setScreen("win")}
+                  onEnded={finishCutscene}
                   className="max-h-[70vh] max-w-full scribble-border bg-ink"
                 />
                 <button
-                  onClick={() => setScreen("win")}
+                  onClick={finishCutscene}
                   className="scribble-border bg-paper text-ink font-marker text-xl px-5 py-2 hover:-rotate-2 transition-transform"
                 >
                   SKIP ▶
