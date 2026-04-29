@@ -179,22 +179,39 @@ export function startGamepadBridge(): () => void {
     set("ArrowRight", right && !left);
 
     // Action buttons — exact bindings the user requested:
-    //   X (Cross,  idx 0) → jump
-    //   Square     (idx 2) → parry
-    //   R1         (idx 5) → slide
-    //   R2         (idx 7) → dash (hold = super dash)
-    //   Options    (idx 9) → menu confirm
-    const cross   = pressed(gp, 0);
-    const square  = pressed(gp, 2);
-    const r1      = pressed(gp, 5);
-    const r2      = pressed(gp, 7);
+    //   Standard mapping (Chrome): X=0, Circle=1, Square=2, Triangle=3,
+    //     L1=4, R1=5, L2=6, R2=7, Share=8, Options=9, L3=10, R3=11
+    //   DS4 non-standard (Firefox/Safari): X=1, Circle=2, Square=0,
+    //     Triangle=3, L1=4, R1=5, L2=6, R2=7, Share=8, Options=9
+    //
+    // We honor BOTH layouts so it works regardless of how the browser
+    // interprets the pad. We also accept the right-side trigger axes
+    // (axes 3/4 on some non-standard reports) for R2.
+    const isStd = !isNonStandard;
+
+    // jump: Cross button. Std=0, DS4 non-std=1.
+    const jump = isStd ? pressed(gp, 0) : (pressed(gp, 1) || pressed(gp, 0));
+    // parry: Square. Std=2, DS4 non-std=0.
+    const parry = isStd ? pressed(gp, 2) : (pressed(gp, 0) || pressed(gp, 2));
+    // slide: R1 = idx 5 in both layouts.
+    const slide = pressed(gp, 5);
+    // dash: R2 = idx 7. Some non-standard reports expose R2 as an axis
+    // (axes[3] or axes[4]) ranging -1..1. Treat anything > -0.3 as held.
+    let dashAxis = false;
+    if (isNonStandard) {
+      const a3 = gp.axes[3] ?? -1;
+      const a4 = gp.axes[4] ?? -1;
+      if (a3 > -0.3 || a4 > -0.3) dashAxis = true;
+    }
+    const dash = pressed(gp, 7) || dashAxis;
+    // menu: Options = idx 9 in both layouts.
     const options = pressed(gp, 9);
 
-    set("Space",     cross);   // jump
-    set("ShiftLeft", r1);      // slide
-    set("KeyJ",      square);  // parry
-    set("KeyK",      r2);      // dash / hold for super dash
-    set("Enter",     options); // menu confirm
+    set("Space",     jump);
+    set("ShiftLeft", slide);
+    set("KeyJ",      parry);
+    set("KeyK",      dash);
+    set("Enter",     options);
 
     raf = requestAnimationFrame(tick);
   };
