@@ -624,7 +624,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       p.y += PLAYER_H - SLIDE_H;
       // boost in facing dir
       p.vx += p.facing * SLIDE_BOOST;
-      spawnParticle(r, { x: p.x, y: p.y + p.h, vx: -p.facing * 200, vy: -80, color: INK, life: 0.4, size: 4, kind: "smear" });
+      // chunky dust kick-up burst on slide-start
+      spawnSlideDustBurst(r, p);
       sfx.slide();
       sfx.slideStart();
     }
@@ -646,10 +647,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         p.sliding = false;
       }
     }
-    // Drive the looping slide sfx based on current state + speed.
+    // Drive the looping slide sfx + grinding-dust trail based on state/speed.
     if (p.sliding && p.alive) {
       const intensity = Math.max(0, Math.min(1, (Math.abs(p.vx) - 120) / 700));
       sfx.slideIntensity(intensity);
+      spawnSlideDustTrail(r, p, dt, intensity);
     } else {
       sfx.slideStop();
     }
