@@ -21,9 +21,12 @@ const TRACKS: Partial<Record<LevelId, string>> = {
   "just-run-bro": bgmJustRunBro,
 };
 
-// Crossfade length in seconds. Short enough to be inaudible, long enough
-// to mask the loop seam on any browser.
+// Crossfade length in seconds for the seamless LOOP point inside one track.
+// Short enough to be inaudible, long enough to mask the loop seam.
 const CROSSFADE = 0.12;
+// Longer crossfade used when switching BETWEEN different tracks (level
+// transitions). Long enough to feel musical, short enough to feel snappy.
+const TRACK_FADE = 0.35;
 
 let ctx: AudioContext | null = null;
 let masterGain: GainNode | null = null;
