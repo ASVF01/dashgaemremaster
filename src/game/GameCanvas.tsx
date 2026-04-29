@@ -630,6 +630,14 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       p.superDashing = false;
       p.superDashTime = 0;
     }
+    if (gpDashPressed && levelIdRef.current !== "just-run-bro" && p.dashCooldown <= 0 && p.dashTime <= 0 && p.alive) {
+      let dx = 0, dy = 0;
+      if (left) dx -= 1;
+      if (right) dx += 1;
+      if (jumpHeld) dy -= 1;
+      if (slideHeld) dy += 1;
+      igniteDash(r, p, dx, dy, jumpHeld);
+    }
 
     // horizontal accel
     let dir = 0;
