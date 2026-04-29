@@ -67,7 +67,7 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
 function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {LEVELS.map((lvl) => (
+      {LEVELS.filter((l) => !l.hidden).map((lvl) => (
         <button
           key={lvl.id}
           onClick={() => onPlay(lvl.id)}
