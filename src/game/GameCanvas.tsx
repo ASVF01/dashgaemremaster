@@ -367,6 +367,13 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     if (right) dir += 1;
     if (dir !== 0) p.facing = dir > 0 ? 1 : -1;
 
+    // "just-run-bro": defer BGM start until the player actually starts running.
+    if (levelId === "just-run-bro" && !bgmDeferredStartedRef.current && dir !== 0) {
+      bgmDeferredStartedRef.current = true;
+      playBgmFor("just-run-bro");
+    }
+
+
     if (dir !== 0) {
       p.vx += dir * MOVE_ACCEL * dt;
     } else {
