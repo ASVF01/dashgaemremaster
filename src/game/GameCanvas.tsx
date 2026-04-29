@@ -414,9 +414,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           combo: r.combo,
           progress: Math.min(1, r.player.x / r.level.width),
           timeMs: r.finished ? r.finishTime : performance.now() - r.startedAt,
-          parryReady: r.player.parryCooldown <= 0,
-          dashCooldown: Math.max(0, r.player.dashCooldown),
+          parryReady: r.player.starman ? true : r.player.parryCooldown <= 0,
+          dashCooldown: r.player.starman ? 0 : Math.max(0, r.player.dashCooldown),
           dashCooldownMax: DASH_COOLDOWN,
+          starman: r.player.starman,
         });
       }
 
