@@ -1137,6 +1137,66 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       ctx.fillRect(0, 0, w, h);
       ctx.restore();
     }
+
+    // SUPER DASH screen distortion (just-run-bro only) — chromatic slices,
+    // jagged horizontal tear bands, and crackling electric scanlines.
+    if (r.player.superDashing) {
+      const sdT = Math.min(r.player.superDashTime, 6);
+      const k = 0.35 + Math.min(1, sdT / 2.5); // 0.35 -> 1.35
+      ctx.save();
+
+      // chromatic split bars (cyan / magenta) sliding across
+      const bars = 6 + Math.floor(k * 6);
+      for (let i = 0; i < bars; i++) {
+        const by = Math.random() * h;
+        const bh = 4 + Math.random() * 18;
+        ctx.globalAlpha = 0.18 + Math.random() * 0.25 * k;
+        ctx.fillStyle = Math.random() < 0.5 ? "#22e2ff" : "#f5234c";
+        const xOff = (Math.random() - 0.5) * 30 * k;
+        ctx.fillRect(xOff, by, w, bh);
+      }
+
+      // bright tearing band that races vertically
+      ctx.globalAlpha = 0.35 * k;
+      ctx.fillStyle = "#ffffff";
+      const tearY = ((r.time * 900) % (h + 40)) - 20;
+      ctx.fillRect(0, tearY, w, 2 + Math.random() * 3);
+
+      // jagged electric scanline streaks across the screen
+      ctx.globalAlpha = 0.6;
+      ctx.strokeStyle = "#22e2ff";
+      ctx.lineWidth = 1.2;
+      const streaks = 4 + Math.floor(k * 5);
+      for (let i = 0; i < streaks; i++) {
+        const sy = Math.random() * h;
+        ctx.beginPath();
+        ctx.moveTo(0, sy);
+        let cx = 0;
+        while (cx < w) {
+          const step = 18 + Math.random() * 36;
+          cx += step;
+          ctx.lineTo(cx, sy + (Math.random() - 0.5) * 14 * k);
+        }
+        ctx.stroke();
+      }
+
+      // edge vignette flicker tinted cyan
+      ctx.globalAlpha = 0.25 + Math.random() * 0.15 * k;
+      const eg = ctx.createRadialGradient(w / 2, h / 2, h * 0.25, w / 2, h / 2, h * 0.85);
+      eg.addColorStop(0, "rgba(34,226,255,0)");
+      eg.addColorStop(1, `rgba(34,226,255,${0.35 + 0.25 * k})`);
+      ctx.fillStyle = eg;
+      ctx.fillRect(0, 0, w, h);
+
+      // brief full-screen flash on intensity spikes
+      if (Math.random() < 0.04 * k) {
+        ctx.globalAlpha = 0.18 * k;
+        ctx.fillStyle = "#fff34a";
+        ctx.fillRect(0, 0, w, h);
+      }
+
+      ctx.restore();
+    }
   }
 
   function drawScenery(ctx: CanvasRenderingContext2D, camX: number, w: number, levelH: number) {
