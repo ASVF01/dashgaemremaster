@@ -483,6 +483,24 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
           });
           sfx.shoot();
         }
+      } else if (e.kind === "chaser") {
+        // Pursue forward at base speed; if the player gets too far ahead,
+        // catch up faster. Stay glued to the floor.
+        const stunned = (e.stunTimer ?? 0) > 0;
+        if (stunned) {
+          e.stunTimer = (e.stunTimer ?? 0) - dt;
+          // ride out knockback velocity then settle
+          e.x += e.vx * dt;
+          e.vx *= 1 - Math.min(1, dt * 2.5);
+        } else {
+          const base = e.baseSpeed ?? 360;
+          const gap = (p.x) - (e.x + e.w);
+          // if player pulls ahead, accelerate up to +60% to catch up
+          const catchup = Math.max(1, Math.min(1.6, gap / 600));
+          e.vx = base * catchup;
+          e.x += e.vx * dt;
+        }
+        e.y = (r.level.height - 80) - e.h; // pin to ground
       }
 
       // enemy vs player
