@@ -161,10 +161,13 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     };
   }, [resetKey, levelId]);
 
-  // BGM: start when level mounts/changes, restart on death/reset, stop on unmount
+  // BGM: start when level mounts/changes, restart on death/reset, stop on unmount.
+  // Exception: "just-run-bro" defers BGM start until the player actually starts running.
   useEffect(() => {
     stopBgm();
-    playBgmFor(levelId);
+    if (levelId !== "just-run-bro") {
+      playBgmFor(levelId);
+    }
     return () => { stopBgm(); };
   }, [levelId, resetKey]);
 
