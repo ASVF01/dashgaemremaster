@@ -401,6 +401,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
           r.score += 100 * Math.max(1, r.combo);
           burst(r, e.x + e.w / 2, e.y + e.h / 2, "#f5234c", 14);
           r.shake = 0.4;
+          sfx.enemyKill();
         } else if (p.parrying > 0) {
           // parry kill
           parrySuccess(r, e.x + e.w / 2, e.y + e.h / 2);
@@ -412,6 +413,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
           r.comboTimer = 2.5;
           r.score += 150 * Math.max(1, r.combo);
           r.shake = 0.5;
+          sfx.enemyKill();
         } else if (p.invuln <= 0) {
           damage(r, e.x + e.w / 2, e.y + e.h / 2);
         }
@@ -473,6 +475,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
             r.comboTimer = 2.5;
             r.score += 200 * Math.max(1, r.combo);
             r.shake = 0.4;
+            sfx.enemyKill();
             break;
           }
         }
