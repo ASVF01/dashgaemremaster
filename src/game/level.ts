@@ -25,7 +25,7 @@ export type LevelMeta = {
 };
 
 export const LEVELS: LevelMeta[] = [
-  { id: "tutorial",   name: "TUTORIAL",   subtitle: "learn to scribble",   difficulty: 1, par: 60 },
+  { id: "tutorial",   name: "TUTORIAL",   subtitle: "learn to scribble",   difficulty: 1, par: 90 },
   { id: "scribble-1", name: "INK ALLEY",  subtitle: "warm up those legs",  difficulty: 2, par: 50 },
   { id: "scribble-2", name: "PAPER CUTS", subtitle: "shooters everywhere", difficulty: 3, par: 55 },
   { id: "scribble-3", name: "OVERDRIVE",  subtitle: "go absurdly fast",    difficulty: 4, par: 60 },
@@ -177,7 +177,7 @@ function buildSpeedTest(): Level {
 
 // ---------- TUTORIAL ----------
 function buildTutorial(): Level {
-  const W = 4200;
+  const W = 6400;
   const H = 720;
   const groundY = H - 80;
 
@@ -186,7 +186,10 @@ function buildTutorial(): Level {
     { x: 1000, y: groundY, w: 700,  h: 80, kind: "ground" },
     { x: 1820, y: groundY, w: 900,  h: 80, kind: "ground" },
     { x: 2820, y: groundY, w: 700,  h: 80, kind: "ground" },
-    { x: 3620, y: groundY, w: 580,  h: 80, kind: "ground" },
+    { x: 3620, y: groundY, w: 780,  h: 80, kind: "ground" },
+    // new stretch: super dash hallway + finish
+    { x: 4500, y: groundY, w: 900,  h: 80, kind: "ground" },
+    { x: 5500, y: groundY, w: 900,  h: 80, kind: "ground" },
 
     // jump up tutorial
     { x: 500,  y: groundY - 140, w: 140, h: 22, kind: "block" },
@@ -200,8 +203,22 @@ function buildTutorial(): Level {
     { x: 2150, y: groundY - 280, w: 160, h: 22, kind: "block" },
     { x: 2400, y: groundY - 220, w: 180, h: 22, kind: "block" },
 
-    // parry training platforms
+    // parry training platform
     { x: 3000, y: groundY - 220, w: 200, h: 22, kind: "block" },
+
+    // dive-down chamber: a high block then a pit to dive across
+    { x: 3700, y: groundY - 260, w: 200, h: 22, kind: "block" },
+    { x: 3950, y: groundY - 320, w: 160, h: 22, kind: "block" },
+    { x: 4200, y: groundY - 200, w: 180, h: 22, kind: "block" },
+
+    // super-dash hallway floats — long flat run to build mach
+    { x: 4700, y: groundY - 180, w: 240, h: 22, kind: "block" },
+    { x: 5050, y: groundY - 260, w: 220, h: 22, kind: "block" },
+    { x: 5380, y: groundY - 200, w: 200, h: 22, kind: "block" },
+
+    // finale floats above flag
+    { x: 5800, y: groundY - 240, w: 220, h: 22, kind: "block" },
+    { x: 6100, y: groundY - 320, w: 180, h: 22, kind: "block" },
   ];
 
   const hazards: Hazard[] = [
@@ -209,17 +226,24 @@ function buildTutorial(): Level {
     { x: 1700, y: groundY - 18, w: 120, h: 18 },
     { x: 2720, y: groundY - 18, w: 100, h: 18 },
     { x: 3520, y: groundY - 18, w: 100, h: 18 },
+    // new pits
+    { x: 4400, y: groundY - 18, w: 100, h: 18 },
+    { x: 5400, y: groundY - 18, w: 100, h: 18 },
   ];
 
   const enemies: Enemy[] = [
     // one easy grunt to stomp
-    { x: 1300, y: groundY - 50, w: 32, h: 50, vx: 0,   alive: true, kind: "grunt" },
+    { x: 1300, y: groundY - 50, w: 32, h: 50, vx: 0, alive: true, kind: "grunt" },
     // a shooter for parry practice
-    { x: 3200, y: groundY - 50, w: 32, h: 50, vx: 0,   alive: true, kind: "shooter", shootTimer: 1.6 },
+    { x: 3200, y: groundY - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 1.6 },
+    // a second grunt to test stomp + run momentum
+    { x: 4850, y: groundY - 50, w: 32, h: 50, vx: 0, alive: true, kind: "grunt" },
+    // a final shooter guarding the lane to the flag
+    { x: 5750, y: groundY - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 1.4 },
   ];
 
   const pickups: Pickup[] = [];
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 14; i++) {
     pickups.push({ x: 350 + i * 420, y: groundY - 160 - (i % 3) * 60, collected: false });
   }
 
@@ -229,7 +253,9 @@ function buildTutorial(): Level {
     { x: 1080, y: groundY - 130, text: "hold ↓ / S to SLIDE under stuff" },
     { x: 1880, y: groundY - 110, text: "stomp enemies from above!" },
     { x: 2900, y: groundY - 110, text: "press J to PARRY shots →" },
-    { x: 3700, y: groundY - 110, text: "reach the FLAG to win!" },
+    { x: 3680, y: groundY - 110, text: "in the air, hold ↓ to DIVE down fast" },
+    { x: 4620, y: groundY - 110, text: "build speed → tap SHIFT for a SUPER DASH" },
+    { x: 5950, y: groundY - 110, text: "almost there!! reach the FLAG →" },
   ];
 
   return {
