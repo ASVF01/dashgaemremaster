@@ -393,76 +393,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           const downHeld = isPressed(k, "slide", b) || !!gp?.slide || !!gp?.down;
           if (jumpAlso) dy -= 1;
           if (downHeld) dy += 1;
-          if (dx === 0 && dy === 0) dx = p.facing;
-          const len = Math.hypot(dx, dy) || 1;
-          const nx = dx / len, ny = dy / len;
-          const along = p.vx * nx + p.vy * ny;
-          const newAlong = Math.max(along, 0) + DASH_IMPULSE + DASH_BONUS;
-          p.vx += (newAlong - along) * nx;
-          p.vy += (newAlong - along) * ny;
-          if (jumpAlso && p.onGround) {
-            p.vy = Math.min(p.vy, -JUMP_VEL);
-            p.onGround = false;
-            p.squash = 1;
-            sfx.jump();
-          }
-          p.dashTime = DASH_DURATION;
-          p.dashCooldown = DASH_COOLDOWN;
-          p.dashVx = nx; p.dashVy = ny;
-          // a fresh dash refills the mid-air dash-jump
-          p.dashAirJumpUsed = false;
-          p.facing = dx >= 0 ? 1 : -1;
-          p.hStretch = 1;
-          if (p.invuln < DASH_DURATION) p.invuln = DASH_DURATION;
-          burst(r, p.x + p.w / 2, p.y + p.h / 2, "#22e2ff", 14, 320);
-          // Tactile speed cue: a punchy short rumble at dash ignition.
-          rumble({ duration: 90, strong: 0.7, weak: 0.9 });
-          // Directional "warp" smear: a row of stretched streaks trailing
-          // behind the dash heading, plus a few stacked after-image ghosts
-          // so the eye can read the motion vector clearly.
-          {
-            const cxp = p.x + p.w / 2;
-            const cyp = p.y + p.h / 2;
-            // streaks
-            for (let i = 0; i < 10; i++) {
-              const back = 10 + i * 6;        // distance behind player
-              const jitter = (Math.random() - 0.5) * 14;
-              const sx = cxp - nx * back + (-ny) * jitter;
-              const sy = cyp - ny * back + ( nx) * jitter;
-              spawnParticle(r, {
-                x: sx, y: sy,
-                vx: -nx * (220 + Math.random() * 160),
-                vy: -ny * (220 + Math.random() * 160),
-                color: "#22e2ff",
-                size: 3 + Math.random() * 2,
-                life: 0.18 + Math.random() * 0.12,
-                kind: "smear",
-                angle: Math.atan2(ny, nx),
-              });
-            }
-            // staggered ghost sprites behind the dash heading (mostly horizontal)
-            const dashState: SpriteState = "dash";
-            const ghostFps = 14;
-            const ghostFrame = Math.floor(r.time * ghostFps);
-            for (let i = 1; i <= 4; i++) {
-              const back = i * 14;
-              r.afterimages.push({
-                x: p.x - nx * back,
-                y: p.y - ny * back,
-                w: p.w, h: p.h,
-                facing: p.facing,
-                sliding: false,
-                diving: false,
-                state: dashState,
-                frame: ghostFrame,
-                life: 0.22 - i * 0.02,
-                maxLife: 0.22,
-                color: "#22e2ff",
-              });
-            }
-          }
-          sfx.parryStart();
-          sfx.mach();
+          igniteDash(r, p, dx, dy, jumpAlso);
         }
       }
     };
