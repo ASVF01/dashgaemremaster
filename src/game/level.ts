@@ -13,7 +13,7 @@ export type Level = {
   signs?: { x: number; y: number; text: string }[];
 };
 
-export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "speed-test";
+export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "chase" | "speed-test";
 
 export type LevelMeta = {
   id: LevelId;
@@ -29,6 +29,7 @@ export const LEVELS: LevelMeta[] = [
   { id: "scribble-1", name: "INK ALLEY",  subtitle: "warm up those legs",  difficulty: 2, par: 50 },
   { id: "scribble-2", name: "PAPER CUTS", subtitle: "shooters everywhere", difficulty: 3, par: 55 },
   { id: "scribble-3", name: "OVERDRIVE",  subtitle: "go absurdly fast",    difficulty: 4, par: 60 },
+  { id: "chase",      name: "THE CHASE",  subtitle: "don't look back. parry to push it off.", difficulty: 4, par: 45 },
   { id: "speed-test", name: "??? SPEED TEST ???", subtitle: "the hallway never ends. or does it.", difficulty: 4, par: 30, hidden: true },
 ];
 
@@ -38,8 +39,66 @@ export function buildLevel(id: LevelId = "scribble-1"): Level {
     case "scribble-1": return buildLevel1();
     case "scribble-2": return buildLevel2();
     case "scribble-3": return buildLevel3();
+    case "chase":      return buildChase();
     case "speed-test": return buildSpeedTest();
   }
+}
+
+// ---------- CHASE: long hallway pursued by a wall ----------
+// A long, mostly flat hallway. A "chaser" enemy spawns just behind the
+// player's start and pursues forever. Touching it = damage. Parrying it
+// blasts it back and stuns it briefly so you can recover ground.
+function buildChase(): Level {
+  const W = 14000;
+  const H = 720;
+  const groundY = H - 80;
+
+  const platforms: Platform[] = [
+    { x: 0, y: groundY, w: W, h: 80, kind: "ground" },
+    // ceiling slab to keep it a hallway
+    { x: 0, y: 80, w: W, h: 30, kind: "block" },
+  ];
+
+  // sparse low ceilings to force slides (keep momentum)
+  for (let x = 1400; x < W - 1000; x += 1800) {
+    platforms.push({ x, y: groundY - 80, w: 320, h: 26, kind: "block" });
+  }
+  // small step blocks for rhythm
+  for (let x = 2200; x < W - 800; x += 1300) {
+    platforms.push({ x, y: groundY - 50, w: 90, h: 50, kind: "block" });
+  }
+
+  const hazards: Hazard[] = [];
+  for (let x = 3000; x < W - 800; x += 1700) {
+    hazards.push({ x, y: groundY - 18, w: 60, h: 18 });
+  }
+
+  // The chaser — placed slightly behind the spawn. Tall and wide so it
+  // visually fills the hallway like an encroaching wall.
+  const enemies: Enemy[] = [
+    {
+      x: -260, y: groundY - 220, w: 90, h: 220,
+      vx: 0, alive: true, kind: "chaser",
+      baseSpeed: 360, stunTimer: 0,
+    },
+  ];
+
+  const pickups: Pickup[] = [];
+  for (let x = 500; x < W - 200; x += 220) {
+    pickups.push({ x, y: groundY - 50 - ((x / 220) % 3) * 24, collected: false });
+  }
+
+  const signs = [
+    { x: 120,  y: groundY - 110, text: "RUN. don't stop." },
+    { x: 700,  y: groundY - 110, text: "press J to PARRY when it's close →" },
+  ];
+
+  return {
+    width: W, height: H,
+    spawn: { x: 80, y: groundY - 80 },
+    goal: { x: W - 160, y: groundY - 120, w: 50, h: 120 },
+    platforms, hazards, enemies, pickups, signs,
+  };
 }
 
 // ---------- SECRET: SPEED TEST ----------

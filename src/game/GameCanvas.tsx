@@ -414,6 +414,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       r.afterTimer = p.dashTime > 0 ? 0.012 : Math.max(0.018, 0.05 - mach * 0.008);
       const life = 0.2;
       const aiState: SpriteState =
+        p.dashTime > 0 ? "dash" :
         p.diving ? "dive" :
         p.sliding ? "slide" :
         !p.onGround ? (p.vy > 60 ? "fall" : "jump") :
@@ -483,12 +484,41 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
           });
           sfx.shoot();
         }
+      } else if (e.kind === "chaser") {
+        // Pursue forward at base speed; if the player gets too far ahead,
+        // catch up faster. Stay glued to the floor.
+        const stunned = (e.stunTimer ?? 0) > 0;
+        if (stunned) {
+          e.stunTimer = (e.stunTimer ?? 0) - dt;
+          // ride out knockback velocity then settle
+          e.x += e.vx * dt;
+          e.vx *= 1 - Math.min(1, dt * 2.5);
+        } else {
+          const base = e.baseSpeed ?? 360;
+          const gap = (p.x) - (e.x + e.w);
+          // if player pulls ahead, accelerate up to +60% to catch up
+          const catchup = Math.max(1, Math.min(1.6, gap / 600));
+          e.vx = base * catchup;
+          e.x += e.vx * dt;
+        }
+        e.y = (r.level.height - 80) - e.h; // pin to ground
       }
 
       // enemy vs player
       if (rectOverlap(p.x, p.y, p.w, p.h, e.x, e.y, e.w, e.h)) {
-        // stomp?
-        if (p.vy > 80 && p.y + p.h - 20 < e.y) {
+        if (e.kind === "chaser") {
+          // Chaser is unkillable — only parry pushes it back.
+          if (p.parrying > 0) {
+            // shove it backwards a long way + stun
+            e.vx = -1400;
+            e.stunTimer = 0.9;
+            parrySuccess(r, e.x + e.w / 2, e.y + e.h / 2);
+            e.hitFlash = 0.2;
+          } else if (p.invuln <= 0) {
+            damage(r, e.x + e.w / 2, e.y + e.h / 2);
+          }
+        } else if (p.vy > 80 && p.y + p.h - 20 < e.y) {
+          // stomp
           e.alive = false;
           p.vy = -520;
           r.combo += 1;
@@ -498,7 +528,6 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
           r.shake = 0.4;
           sfx.enemyKill();
         } else if (p.parrying > 0) {
-          // parry kill
           parrySuccess(r, e.x + e.w / 2, e.y + e.h / 2);
           e.alive = false;
         } else if (p.sliding && Math.abs(p.vx) > 350) {
@@ -1034,6 +1063,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
 
     // ---- sprite override (use uploaded PNG if available for current state) ----
     const state: SpriteState =
+      p.dashTime > 0 ? "dash" :
       p.diving ? "dive" :
       p.sliding ? "slide" :
       !p.onGround ? (p.vy > 60 ? "fall" : "jump") :
@@ -1186,7 +1216,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     ctx.restore();
   }
 
-  function drawEnemy(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, kind: "grunt" | "shooter", vx: number, time: number) {
+  function drawEnemy(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, kind: "grunt" | "shooter" | "chaser", vx: number, time: number) {
     const cx = x + w / 2;
     const cy = y + h / 2;
     ctx.save();
@@ -1222,7 +1252,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       const lp = Math.sin(time * 14) * 4;
       sketchLine(ctx, w / 2 - 6, h - 4, w / 2 - 8, h + 2 + lp, 2.4, INK, 1);
       sketchLine(ctx, w / 2 + 6, h - 4, w / 2 + 8, h + 2 - lp, 2.4, INK, 1);
-    } else {
+    } else if (kind === "shooter") {
       // shooter: tall, one big eye, glowing
       sketchRect(ctx, 4, 4, w - 8, h - 8, "#b14cff", INK, 2.6, 1.4);
       sketchCircle(ctx, w / 2, h / 2 - 4, 8, "#fff8d6", INK, 2, 1);
@@ -1231,6 +1261,53 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       // antenna
       sketchLine(ctx, w / 2, 4, w / 2 + Math.sin(time * 4) * 4, -10, 2, INK, 0.8);
       sketchCircle(ctx, w / 2 + Math.sin(time * 4) * 4, -12, 3, "#22e2ff", INK, 1.8, 0.8);
+    } else {
+      // CHASER: looming dark scribble wall
+      // jagged ink mass
+      ctx.fillStyle = "#1a1a1a";
+      ctx.strokeStyle = INK;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      const segs = 10;
+      for (let i = 0; i <= segs; i++) {
+        const t = i / segs;
+        const px = t * w;
+        const py = Math.sin(time * 6 + i) * 6;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.lineTo(w, h);
+      ctx.lineTo(0, h);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      // hungry eyes
+      const eyeY = h * 0.35;
+      ctx.fillStyle = "#f5234c";
+      ctx.beginPath(); ctx.arc(w * 0.35, eyeY, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(w * 0.65, eyeY, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#fff8d6";
+      ctx.beginPath(); ctx.arc(w * 0.35 + Math.sin(time * 5) * 1.5, eyeY, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(w * 0.65 + Math.sin(time * 5) * 1.5, eyeY, 2, 0, Math.PI * 2); ctx.fill();
+      // jagged teeth
+      ctx.strokeStyle = "#fff8d6";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      const teethY = h * 0.55;
+      for (let i = 0; i < 7; i++) {
+        const tx = (i / 6) * (w - 16) + 8;
+        ctx.moveTo(tx, teethY);
+        ctx.lineTo(tx + 6, teethY + 10);
+        ctx.lineTo(tx + 12, teethY);
+      }
+      ctx.stroke();
+      // wispy tendrils trailing behind
+      ctx.strokeStyle = INK;
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 4; i++) {
+        const ty = h * (0.3 + i * 0.18);
+        const sway = Math.sin(time * 3 + i) * 8;
+        sketchLine(ctx, 0, ty, -22 - i * 6, ty + sway, 2, INK, 0.8);
+      }
     }
     ctx.restore();
   }

@@ -27,9 +27,12 @@ export type Platform = { x: number; y: number; w: number; h: number; kind?: "gro
 export type Hazard = { x: number; y: number; w: number; h: number };
 export type Enemy = {
   x: number; y: number; w: number; h: number;
-  vx: number; alive: boolean; kind: "grunt" | "shooter";
+  vx: number; alive: boolean; kind: "grunt" | "shooter" | "chaser";
   shootTimer?: number;
   hitFlash?: number;
+  // chaser-only:
+  baseSpeed?: number;     // normal pursue speed
+  stunTimer?: number;     // seconds it's knocked back / harmless
 };
 export type Projectile = {
   x: number; y: number; vx: number; vy: number; alive: boolean; r: number; danger: boolean;
