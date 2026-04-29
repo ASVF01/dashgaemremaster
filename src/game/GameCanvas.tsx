@@ -698,7 +698,18 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     if (p.invuln > 0) p.invuln -= dt;
     if (p.hitFlash > 0) p.hitFlash -= dt;
     if (p.squash > 0) p.squash = Math.max(0, p.squash - dt * 4);
-    if (p.stretch > 0) p.stretch = Math.max(0, p.stretch - dt * 4);
+    // While airborne and falling, stretch the sprite vertically based on
+    // downward speed. Drives the squash&stretch render below; gives a juicy
+    // "diving raindrop" silhouette before landing. Other systems (jump,
+    // ramp boosts) still spike `stretch` to 1 and we just take the max so
+    // those moments aren't dampened by this passive driver.
+    if (!p.onGround && p.vy > 60) {
+      const fallStretch = Math.min(1, (p.vy - 60) / 700);
+      if (fallStretch > p.stretch) p.stretch = fallStretch;
+      else p.stretch = Math.max(0, p.stretch - dt * 4);
+    } else if (p.stretch > 0) {
+      p.stretch = Math.max(0, p.stretch - dt * 4);
+    }
     if (p.smearTimer > 0) p.smearTimer -= dt;
     if (r.superDashBurst) {
       r.superDashBurst.t += dt;
@@ -1894,9 +1905,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     const cx = p.x + p.w / 2;
     const cy = p.y + p.h / 2;
     ctx.translate(cx, cy);
-    // squash & stretch
-    const sx = 1 + p.stretch * 0.3 + p.squash * 0.3;
-    const sy = 1 - p.stretch * 0.2 - p.squash * 0.2;
+    // squash (landing) → wide + short. stretch (falling/ramping) → tall + thin.
+    const sx = 1 + p.squash * 0.3 - p.stretch * 0.18;
+    const sy = 1 - p.squash * 0.2 + p.stretch * 0.28;
     // (running tilt removed — sprite stays upright)
     ctx.scale(sx * p.facing, sy);
     ctx.translate(-p.w / 2, -p.h / 2);
