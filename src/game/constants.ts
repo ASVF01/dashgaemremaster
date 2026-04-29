@@ -13,6 +13,9 @@ export const SLIDE_FRICTION = 600;
 export const PARRY_WINDOW = 0.22; // seconds
 export const PARRY_COOLDOWN = 0.35;
 export const PARRY_BOOST = 320;
+export const DASH_SPEED = 1100;
+export const DASH_DURATION = 0.18; // seconds of locked dash velocity
+export const DASH_COOLDOWN = 2.5;
 
 export const PLAYER_W = 28;
 export const PLAYER_H = 56;
