@@ -4,11 +4,15 @@ import Hud from "@/game/Hud";
 import MainMenu from "@/game/MainMenu";
 import { LEVELS, type LevelId } from "@/game/level";
 import { useKeybinds, keyLabel, type ActionId } from "@/game/keybinds";
-import { playMenuBgm, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor } from "@/game/bgm";
+import { playMenuBgm, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor, isSameTrackAs } from "@/game/bgm";
 import cutsceneJustRunBro from "@/assets/video/mcdonalds_sprite_2.mp4";
 import { sfx, unlockAudio } from "@/game/sfx";
 
-type Screen = "menu" | "playing" | "dead" | "win" | "cutscene";
+type Screen = "menu" | "loading" | "playing" | "dead" | "win" | "cutscene";
+
+// Levels whose music should hard-restart on entry. Everything else shares
+// the "champion play" track and lets it keep looping across transitions.
+const RESTART_BGM_ON_ENTRY: ReadonlyArray<LevelId> = ["tutorial", "chase", "just-run-bro"];
 
 const Index = () => {
   const [screen, setScreen] = useState<Screen>("menu");
