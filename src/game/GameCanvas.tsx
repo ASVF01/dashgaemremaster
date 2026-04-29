@@ -1227,7 +1227,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       r.lightningCooldown -= 0.0166;
       if (r.lightningCooldown <= 0) {
         const roll = Math.random();
-        const wait = roll < 0.34 ? 1 : roll < 0.67 ? 5 : 10;
+        // Storm makes lightning much more frequent: ~0.3s / 1s / 2.5s
+        // Calm post-impact (no storm yet): 1s / 5s / 10s
+        const wait = r.somSomStorm
+          ? (roll < 0.5 ? 0.3 : roll < 0.85 ? 1 : 2.5)
+          : (roll < 0.34 ? 1 : roll < 0.67 ? 5 : 10);
         r.lightningCooldown = wait;
         const bx = 40 + Math.random() * (w - 80);
         const segs: { x: number; y: number }[] = [];
