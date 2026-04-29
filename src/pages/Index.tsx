@@ -90,6 +90,7 @@ const Index = () => {
             onFinish={handleFinish}
             onDeath={handleDeath}
             paused={screen !== "playing"}
+            keepAudio={screen === "dead" || screen === "win"}
             resetKey={resetKey}
             levelId={levelId}
           />
