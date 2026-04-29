@@ -1319,19 +1319,38 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       if (r.somSomCloudX !== null) {
         r.somSomCloudX += 1400 * dtR;
         const cx = r.somSomCloudX;
-        const cy = h * 0.18;
+        const bandH = Math.max(110, h * 0.22); // chunky band across the top
         ctx.save();
-        ctx.fillStyle = "rgba(120,128,138,0.85)";
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, 90, 28, 0, 0, Math.PI * 2);
-        ctx.ellipse(cx + 60, cy - 14, 60, 24, 0, 0, Math.PI * 2);
-        ctx.ellipse(cx - 50, cy - 8, 50, 20, 0, 0, Math.PI * 2);
-        ctx.ellipse(cx + 30, cy + 12, 70, 22, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "rgba(120,128,138,0.25)";
-        ctx.fillRect(cx - 240, cy - 18, 200, 36);
+        // base cloud band covering the entire top of the screen
+        const grad = ctx.createLinearGradient(0, 0, 0, bandH);
+        grad.addColorStop(0, "rgba(90,98,110,0.95)");
+        grad.addColorStop(0.7, "rgba(120,128,138,0.85)");
+        grad.addColorStop(1, "rgba(120,128,138,0)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, bandH);
+
+        // big rolling puffs riding the band (looped horizontally for fast motion)
+        ctx.fillStyle = "rgba(80,88,100,0.9)";
+        const puffY = bandH * 0.78;
+        const span = w + 480;
+        const offset = ((cx % span) + span) % span;
+        for (let i = -1; i < 4; i++) {
+          const px = offset + i * 360 - 240;
+          ctx.beginPath();
+          ctx.ellipse(px,        puffY,        160, 52, 0, 0, Math.PI * 2);
+          ctx.ellipse(px + 110,  puffY - 26,  110, 44, 0, 0, Math.PI * 2);
+          ctx.ellipse(px - 90,   puffY - 14,   95, 38, 0, 0, Math.PI * 2);
+          ctx.ellipse(px + 60,   puffY + 22,  130, 40, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // motion smear streaks across the whole band
+        ctx.fillStyle = "rgba(60,68,80,0.35)";
+        for (let i = 0; i < 6; i++) {
+          const sy = (i / 6) * bandH + (offset * 0.05) % (bandH / 6);
+          ctx.fillRect(0, sy, w, 2);
+        }
         ctx.restore();
-        if (cx > w + 260) r.somSomCloudX = -260;
       }
 
       const rain = r.somSomRain;
