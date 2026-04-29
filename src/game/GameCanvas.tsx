@@ -2078,7 +2078,21 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       ctx.imageSmoothingEnabled = false;
       // Cached rainbow tint for starman afterimages; avoids repainting an
       // offscreen sprite for every ghost every frame.
-      if (ai.rainbowHue !== undefined) {
+      if (ai.tintColor) {
+        // Solid-color tint (e.g., red hurt trail). Draw sprite alpha mask
+        // then fill with the tint inside the alpha.
+        const off = document.createElement("canvas");
+        off.width = sprite.width;
+        off.height = sprite.height;
+        const octx = off.getContext("2d")!;
+        octx.imageSmoothingEnabled = false;
+        octx.drawImage(sprite, 0, 0);
+        octx.globalCompositeOperation = "source-in";
+        octx.fillStyle = ai.tintColor;
+        octx.fillRect(0, 0, off.width, off.height);
+        ctx.globalAlpha = 0.75 * t * (ai.alphaBoost ?? 1);
+        ctx.drawImage(off, dx, dy, drawW, drawH);
+      } else if (ai.rainbowHue !== undefined) {
         const isSomSomAi = ai.color === "rainbow" && ai.rainbowHue === 190;
         const off = isSomSomAi ? getDarkCyanTintedSprite(sprite) : getTintedSprite(sprite, ai.rainbowHue);
         // invboi (starman) trail: bumped from 0.62 → 0.85 so the rainbow
