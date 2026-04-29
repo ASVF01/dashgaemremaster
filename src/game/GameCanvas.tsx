@@ -434,7 +434,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         p.diving ? "dive" :
         p.sliding ? "slide" :
         !p.onGround ? (p.vy > 60 ? "fall" : "jump") :
-        Math.abs(p.vx) > 60 ? "run" :
+        Math.abs(p.vx) > 60 ? (mach >= 2 ? "runFast" : "run") :
         "idle";
       r.afterimages.push({
         x: p.x, y: p.y, w: p.w, h: p.h,
@@ -1078,14 +1078,20 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     const inkCol = flash ? "#f5234c" : INK;
 
     // ---- sprite override (use uploaded PNG if available for current state) ----
+    const speedNow = Math.abs(p.vx);
+    const machNow = machTier(speedNow);
     const state: SpriteState =
       p.dashTime > 0 ? "dash" :
       p.diving ? "dive" :
       p.sliding ? "slide" :
       !p.onGround ? (p.vy > 60 ? "fall" : "jump") :
-      Math.abs(p.vx) > 60 ? "run" :
+      speedNow > 60 ? (machNow >= 2 ? "runFast" : "run") :
       "idle";
-    const sprite = getSprite(state);
+    // Animation frame: cycles faster the faster you go (mach 2..4).
+    // ~14 fps at mach 2, ~22 fps at mach 4.
+    const fps = 12 + machNow * 3;
+    const frame = Math.floor(r.time * fps);
+    const sprite = getSprite(state, frame);
     if (sprite) {
       // Fit the sprite to the player AABB. For wide sprites (slide/dive) we
       // size by width so the pose stays readable; for tall sprites we size
