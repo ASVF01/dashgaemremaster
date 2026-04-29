@@ -76,30 +76,29 @@ const Index = () => {
 
   // One owner for BGM. The "loading" screen handles the actual track switch
   // before "playing" begins, so we leave that case alone here.
-  const prevScreenRef = useRef<Screen>("menu");
+  // `cameFromDeathRef` is set when the player dies, then consumed when we
+  // re-enter "playing" so we know to leave the BGM alone on a death-retry.
+  const cameFromDeathRef = useRef(false);
   useEffect(() => {
-    const prev = prevScreenRef.current;
-    prevScreenRef.current = screen;
     if (screen === "menu") playMenuBgm();
     else if (screen === "loading") {
       // handled by startLevel's preload+play sequence below
       return;
     }
     else if (screen === "playing") {
-      // If we just came back from a death (dead → loading → playing) and the
-      // same track is still going, leave the music alone — never reset BGM
-      // on death/retry. Otherwise fall back to normal restart logic.
-      const fromDeath = prev === "dead" || prev === "loading";
+      const fromDeath = cameFromDeathRef.current;
+      cameFromDeathRef.current = false;
+      // Never reset BGM on a death-retry: if the same track is already
+      // playing, leave it alone entirely.
+      if (fromDeath && isSameTrackAs(levelId)) return;
       // Only restart BGM for levels that have a unique track. For shared-
       // track levels, if the same track is already playing, leave it alone.
       const restart = !fromDeath && (RESTART_BGM_ON_ENTRY.includes(levelId) || !isSameTrackAs(levelId));
-      // If coming from death and the same track is already playing, skip
-      // playBgmFor entirely so we don't even risk a re-trigger.
-      if (fromDeath && isSameTrackAs(levelId)) return;
       playBgmFor(levelId, restart);
     }
     else if (screen === "cutscene") stopBgm(0.35);
-    else if (screen === "dead" || screen === "win") return;
+    else if (screen === "dead") { cameFromDeathRef.current = true; return; }
+    else if (screen === "win") return;
     else stopBgm(0.35);
   }, [screen, levelId]);
 
