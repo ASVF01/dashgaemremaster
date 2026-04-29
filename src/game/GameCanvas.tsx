@@ -1329,13 +1329,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, w, bandH);
 
-        // big rolling puffs riding the band (looped horizontally for fast motion)
+        // big rolling puffs riding the band — tiled across the full width
+        // with a fixed stride and modulo-wrapped offset for a seamless loop.
         ctx.fillStyle = "rgba(80,88,100,0.9)";
         const puffY = bandH * 0.78;
-        const span = w + 480;
-        const offset = ((cx % span) + span) % span;
-        for (let i = -1; i < 4; i++) {
-          const px = offset + i * 360 - 240;
+        const STRIDE = 280; // < puff visual width so clusters overlap (no gaps)
+        const offset = ((cx % STRIDE) + STRIDE) % STRIDE;
+        const tiles = Math.ceil(w / STRIDE) + 2;
+        for (let i = -1; i < tiles; i++) {
+          const px = i * STRIDE + offset;
           ctx.beginPath();
           ctx.ellipse(px,        puffY,        160, 52, 0, 0, Math.PI * 2);
           ctx.ellipse(px + 110,  puffY - 26,  110, 44, 0, 0, Math.PI * 2);
