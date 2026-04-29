@@ -16,6 +16,8 @@ import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, 
 import weSfxUrl from "@/assets/audio/impact_aura_charge.ogg";
 import { getSettings } from "@/game/settings";
 import { getSprite, type SpriteState } from "@/game/sprites";
+import spookUrl from "@/assets/sprites/spook.png";
+import spookHurtUrl from "@/assets/sprites/spook_hurt.png";
 
 type Keys = Record<string, boolean>;
 
