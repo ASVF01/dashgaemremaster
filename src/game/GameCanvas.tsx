@@ -100,8 +100,6 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const refs = useRef<GameRefs | null>(null);
   const keysRef = useRef<Keys>({});
-  // For "just-run-bro": BGM starts the first time the player actually moves.
-  const bgmDeferredStartedRef = useRef(false);
   const [size, setSize] = useState({ w: 1200, h: 600 });
 
   // resize
@@ -163,14 +161,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     };
   }, [resetKey, levelId]);
 
-  // BGM: start when level mounts/changes, restart on death/reset, stop on unmount.
-  // Exception: "just-run-bro" defers BGM start until the player actually starts running.
+  // BGM: start when level mounts/changes, restart on death/reset, stop on unmount
   useEffect(() => {
     stopBgm();
-    bgmDeferredStartedRef.current = false;
-    if (levelId !== "just-run-bro") {
-      playBgmFor(levelId);
-    }
+    playBgmFor(levelId);
     return () => { stopBgm(); };
   }, [levelId, resetKey]);
 
@@ -205,8 +199,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         unlockAudio();
         const r = refs.current;
         const p = r.player;
-        const spamDash = levelId === "just-run-bro";
-        if ((spamDash || (p.dashCooldown <= 0 && p.dashTime <= 0)) && p.alive) {
+        if (p.dashCooldown <= 0 && p.dashTime <= 0 && p.alive) {
           const k = keysRef.current;
           const b = getLiveBinds();
           let dx = 0, dy = 0;
@@ -224,9 +217,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
           // that direction is preserved + boosted by DASH_BONUS; perpendicular
           // velocity is kept as-is so momentum carries through.
           const along = p.vx * nx + p.vy * ny;
-          const dashImpulse = spamDash ? DASH_IMPULSE * 5 : DASH_IMPULSE;
-          const dashBonus = spamDash ? DASH_BONUS * 10 : DASH_BONUS;
-          const newAlong = Math.max(along, 0) + dashImpulse + dashBonus;
+          const newAlong = Math.max(along, 0) + DASH_IMPULSE + DASH_BONUS;
           // remove old along-component, add the new one
           p.vx += (newAlong - along) * nx;
           p.vy += (newAlong - along) * ny;
@@ -238,7 +229,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
             sfx.jump();
           }
           p.dashTime = DASH_DURATION;        // visual / i-frame window only
-          p.dashCooldown = spamDash ? 0 : DASH_COOLDOWN;
+          p.dashCooldown = DASH_COOLDOWN;
           p.dashVx = nx; p.dashVy = ny;      // store aim for sprite/afterimage tinting
           p.facing = dx >= 0 ? 1 : -1;
           p.stretch = 1;
@@ -370,13 +361,6 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     if (right) dir += 1;
     if (dir !== 0) p.facing = dir > 0 ? 1 : -1;
 
-    // "just-run-bro": defer BGM start until the player actually starts running.
-    if (levelId === "just-run-bro" && !bgmDeferredStartedRef.current && dir !== 0) {
-      bgmDeferredStartedRef.current = true;
-      playBgmFor("just-run-bro");
-    }
-
-
     if (dir !== 0) {
       p.vx += dir * MOVE_ACCEL * dt;
     } else {
@@ -429,10 +413,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     if (!jumpHeld && p.vy < -300) p.vy = -300;
 
     // speed cap (dash impulse can briefly exceed it; we let momentum carry)
-    const justRun = levelId === "just-run-bro";
-    const baseCap = justRun ? MAX_SPEED * 6 : MAX_SPEED;
-    const dashCapBonus = (p.dashTime > 0 ? 600 : 0) * (justRun ? 8 : 1);
-    const speedCap = baseCap + (p.sliding ? 120 : 0) + dashCapBonus;
+    const speedCap = MAX_SPEED + (p.sliding ? 120 : 0) + (p.dashTime > 0 ? 600 : 0);
     if (Math.abs(p.vx) > speedCap) p.vx = Math.sign(p.vx) * speedCap;
 
     // gravity — always on; dash no longer freezes vertical motion
@@ -466,18 +447,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     const mach = machTier(speed);
     if (mach > r.bestMach) { r.bestMach = mach; if (mach >= 1) sfx.mach(); }
 
-    // afterimages — spawn when fast, diving, or dashing.
-    // Trail length, density, and lifetime all scale with current speed so
-    // higher velocities read as longer streaks for clarity.
+    // afterimages — spawn when fast, diving, or dashing
     r.afterTimer -= dt;
-    // Speed factor 0..1 across the readable range (140..2400 px/s).
-    const sp = Math.min(1, Math.max(0, (speed - 140) / 2260));
     if ((mach >= 1 || p.diving || p.dashTime > 0) && r.afterTimer <= 0) {
-      // Faster spawning at higher speed (denser trail). Dash gets the densest.
-      const baseInterval = p.dashTime > 0 ? 0.006 : Math.max(0.010, 0.05 - mach * 0.008 - sp * 0.020);
-      r.afterTimer = baseInterval;
-      // Longer-lived afterimages when going fast → visibly longer trail.
-      const life = (p.dashTime > 0 ? 0.42 : 0.22) + sp * 0.35;
+      r.afterTimer = p.dashTime > 0 ? 0.012 : Math.max(0.018, 0.05 - mach * 0.008);
+      const life = 0.2;
       const aiState: SpriteState =
         p.dashTime > 0 ? "dash" :
         p.diving ? "dive" :
@@ -499,35 +473,14 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         life, maxLife: life,
         color: p.dashTime > 0 ? "#22e2ff" : p.diving ? "#ffd11a" : MACH_COLORS[Math.max(1, mach)],
       });
-      // Keep more ghosts on screen the faster you go (max 96).
-      const cap = Math.floor(32 + sp * 64);
-      while (r.afterimages.length > cap) r.afterimages.shift();
+      if (r.afterimages.length > 32) r.afterimages.shift();
     }
     for (const ai of r.afterimages) ai.life -= dt;
     r.afterimages = r.afterimages.filter((a) => a.life > 0);
 
-    // Horizontal motion-blur smears — emitted while dashing or above mach 2.
-    // Length and emission rate scale with raw speed for readability.
-    // Color is monochrome white so it reads as motion, not as a mach tint.
-    if ((p.dashTime > 0 || mach >= 2) && Math.random() < 0.5 + sp * 0.5) {
-      const len = 18 + sp * 70 + (p.dashTime > 0 ? 20 : 0);
-      const yJit = (Math.random() - 0.5) * (p.h - 8);
-      spawnParticle(r, {
-        x: p.x + p.w / 2 - p.facing * (p.w * 0.3 + Math.random() * 20),
-        y: p.y + p.h / 2 + yJit,
-        vx: -p.facing * (speed * 0.4 + 120),
-        vy: 0,
-        color: "#ffffff",
-        size: len / 2,
-        life: 0.14 + sp * 0.12,
-        kind: "smear",
-      });
-    }
-
-
     // Thin speed lines while running on the ground (any speed above a small threshold).
     if (p.onGround && Math.abs(p.vx) > 140 && Math.random() < 0.55) {
-      const len = 8 + Math.random() * 10 + Math.min(22, Math.abs(p.vx) * 0.025);
+      const len = 14 + Math.random() * 18 + Math.min(40, Math.abs(p.vx) * 0.04);
       spawnParticle(r, {
         x: p.x + p.w / 2 - p.facing * (p.w * 0.4 + Math.random() * 30),
         y: p.y + 4 + Math.random() * (p.h - 8),
@@ -535,7 +488,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         vy: 0,
         color: "#ffffff",
         size: len / 2,
-        life: 0.14 + Math.random() * 0.10,
+        life: 0.18 + Math.random() * 0.12,
         kind: "smear",
       });
     }
@@ -1068,7 +1021,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         sketchCircle(ctx, pa.x, pa.y, (1 - a) * 24 + 4, null, pa.color, 2, 1);
       } else if (pa.kind === "smear") {
         ctx.fillStyle = pa.color;
-        ctx.fillRect(pa.x - pa.size, pa.y - 1, pa.size * 2, 2);
+        ctx.fillRect(pa.x - pa.size, pa.y - 2, pa.size * 2, 4);
       } else if (pa.kind === "shard") {
         ctx.fillStyle = pa.color;
         ctx.translate(pa.x, pa.y);
@@ -1155,8 +1108,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         drawH = ai.w * 1.6 / ratio;
         drawW = ai.w * 1.6;
       } else {
-        // Match drawPlayer: scale tall sprites so they fill the AABB visually.
-        drawH = ai.h * 1.4;
+        drawH = ai.h;
         drawW = drawH * ratio;
       }
       const dx = ai.x + ai.w / 2 - drawW / 2;
@@ -1171,8 +1123,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
 
       ctx.imageSmoothingEnabled = false;
       // Just draw the sprite faintly — no solid color overlay (that made a block).
-      // Slightly stronger alpha so the longer trail still reads at speed.
-      ctx.globalAlpha = 0.6 * t;
+      ctx.globalAlpha = 0.5 * t;
       ctx.drawImage(sprite, dx, dy, drawW, drawH);
       ctx.restore();
       return;
@@ -1262,9 +1213,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         drawH = p.w * 1.6 / ratio;
         drawW = p.w * 1.6;
       } else {
-        // Tall sprites — scale up so the figure fills the AABB visually
-        // (new stand/walk PNGs have a lot of headroom).
-        drawH = p.h * 1.4;
+        drawH = p.h;
         drawW = drawH * ratio;
       }
       const dx = p.w / 2 - drawW / 2;
@@ -1333,16 +1282,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         sketchLine(ctx, headX + 4, bodyBot, headX + 10, p.h - 6, 2.8, inkCol, 1.4);
       }
 
-      // smear frame — visible at mach 3+ or while dashing.
-      // Width and opacity scale with speed for clearer motion readability.
-      const sm_speed = Math.abs(p.vx);
-      const sm_sp = Math.min(1, Math.max(0, (sm_speed - 140) / 2260));
-      if (mach >= 3 || p.dashTime > 0) {
+      // smear frame at high mach
+      if (mach >= 3) {
         ctx.save();
-        ctx.globalAlpha = 0.30 + sm_sp * 0.30;
-        ctx.fillStyle = p.dashTime > 0 ? "#22e2ff" : MACH_COLORS[Math.max(3, mach)];
-        const smearW = p.w * (0.6 + sm_sp * 1.8);
-        ctx.fillRect(-smearW, headY - 2, smearW, p.h - headY + 6);
+        ctx.globalAlpha = 0.35;
+        ctx.fillStyle = MACH_COLORS[mach];
+        ctx.fillRect(-p.w * 0.6, headY - 2, p.w * 0.6, p.h - headY + 6);
         ctx.restore();
       }
     }
