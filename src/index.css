@@ -103,7 +103,7 @@
   }
   /* gentler variant for the SPEED meter — easier on photosensitive players */
   .rainbow-bar-slow {
-    animation-duration: 6s;
+    animation-duration: 3.6s;
   }
   .rainbow-text {
     background-image: linear-gradient(
