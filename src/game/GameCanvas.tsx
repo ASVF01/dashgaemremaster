@@ -36,6 +36,8 @@ interface Player {
   stretch: number; // 0..1 transient
   smearTimer: number;
   alive: boolean;
+  superDashing: boolean;
+  superDashTime: number; // seconds the hold has been active
 }
 
 interface Afterimage {
