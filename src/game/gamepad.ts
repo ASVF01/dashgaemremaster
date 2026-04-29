@@ -41,6 +41,37 @@ function fire(type: "keydown" | "keyup", code: SynthCode) {
 
 let started = false;
 
+// Vibration support. We re-resolve the active gamepad each call rather than
+// caching a reference because Gamepad objects in some browsers are snapshots
+// and the cached one quickly goes stale (its actuator stops working).
+export function rumble(opts: { duration?: number; strong?: number; weak?: number } = {}) {
+  const duration = opts.duration ?? 120;
+  const strong = Math.max(0, Math.min(1, opts.strong ?? 0.6));
+  const weak   = Math.max(0, Math.min(1, opts.weak   ?? 0.4));
+  try {
+    const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    for (const gp of pads) {
+      if (!gp || !gp.connected) continue;
+      // Standard: GamepadHapticActuator.playEffect("dual-rumble", ...)
+      const actuator = (gp as Gamepad & {
+        vibrationActuator?: {
+          playEffect?: (type: string, params: Record<string, number>) => Promise<unknown>;
+        };
+      }).vibrationActuator;
+      if (actuator?.playEffect) {
+        actuator.playEffect("dual-rumble", {
+          startDelay: 0,
+          duration,
+          strongMagnitude: strong,
+          weakMagnitude: weak,
+        }).catch(() => { /* some browsers reject mid-effect; ignore */ });
+        return; // first connected pad gets the rumble
+      }
+    }
+  } catch { /* noop — vibration is best-effort */ }
+}
+
+
 /** Start the controller polling loop. Idempotent. */
 export function startGamepadBridge(): () => void {
   if (started) return () => {};

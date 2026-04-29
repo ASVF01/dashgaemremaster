@@ -11,6 +11,7 @@ import { buildLevel, type Level, type LevelId } from "@/game/level";
 import { sketchLine, sketchRect, sketchCircle, jaggedBolt, INK } from "@/game/draw";
 import { isPressed, matchesAction, getLiveBinds } from "@/game/keybinds";
 import { sfx, unlockAudio } from "@/game/sfx";
+import { rumble } from "@/game/gamepad";
 import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, getStarmanElapsed, playSomSomBgm, getSomSomElapsed } from "@/game/bgm";
 import { getSprite, type SpriteState } from "@/game/sprites";
 
@@ -412,6 +413,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           p.hStretch = 1;
           if (p.invuln < DASH_DURATION) p.invuln = DASH_DURATION;
           burst(r, p.x + p.w / 2, p.y + p.h / 2, "#22e2ff", 14, 320);
+          // Tactile speed cue: a punchy short rumble at dash ignition.
+          rumble({ duration: 90, strong: 0.7, weak: 0.9 });
           // Directional "warp" smear: a row of stretched streaks trailing
           // behind the dash heading, plus a few stacked after-image ghosts
           // so the eye can read the motion vector clearly.
@@ -1182,6 +1185,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // refresh i-frames briefly so chained parries stay safe
     if (r.player.invuln < 0.4) r.player.invuln = 0.4;
     sfx.parryHit();
+    // Tactile timing cue: short, sharp jolt on successful parry.
+    rumble({ duration: 140, strong: 0.85, weak: 0.55 });
     // boost in facing dir
     r.player.vx += r.player.facing * PARRY_BOOST;
     r.player.vy = -220;
