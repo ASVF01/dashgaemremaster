@@ -833,19 +833,6 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       const headX = p.w / 2;
       const headY = headR + 2;
       sketchCircle(ctx, headX, headY, headR, "#fff8d6", inkCol, 2.6, 1.2);
-      // hair tufts (asymmetric)
-      ctx.save();
-      ctx.strokeStyle = inkCol;
-      ctx.lineWidth = 2.6;
-      ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.moveTo(headX - 10, headY - 10); ctx.lineTo(headX - 14, headY - 22);
-      ctx.moveTo(headX - 4, headY - 14); ctx.lineTo(headX - 2, headY - 26);
-      ctx.moveTo(headX + 4, headY - 14); ctx.lineTo(headX + 10, headY - 24);
-      ctx.moveTo(headX + 12, headY - 8); ctx.lineTo(headX + 18, headY - 16);
-      ctx.stroke();
-      ctx.restore();
-
       drawFace(ctx, headX, headY, headR, inkCol, mach >= 3 ? "feral" : mach >= 1 ? "intense" : "calm");
 
       // body
@@ -892,15 +879,6 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     ctx.strokeStyle = col;
     ctx.fillStyle = col;
     ctx.lineWidth = 2;
-    // split-tone marking on left half
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(cx, cy, r - 1, Math.PI * 0.5, Math.PI * 1.5);
-    ctx.closePath();
-    ctx.fillStyle = "rgba(245,35,76,0.8)";
-    ctx.fill();
-    ctx.restore();
-
     // eyes
     if (mood === "calm") {
       ctx.beginPath(); ctx.arc(cx - 4, cy - 2, 1.6, 0, Math.PI * 2); ctx.fill();
