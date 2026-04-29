@@ -2,7 +2,7 @@
 // Decodes each track to an AudioBuffer once, then schedules overlapping
 // source nodes with an equal-power crossfade at the loop point so there's
 // no click/gap on loop.
-import bgmJustRunBro from "@/assets/audio/bgm_just_run_bro.mp3";
+import bgmJustRunBro from "@/assets/audio/bgm_just_run_bro_ts.wav";
 import bgmMenu from "@/assets/audio/bgm_menu.mp3";
 import bgmChampionPlay from "@/assets/audio/bgm_champion_play.mp3";
 import bgmChampionDuel2 from "@/assets/audio/bgm_champion_duel2.mp3";
@@ -226,6 +226,16 @@ function playSrc(src: string, restart = false) {
       first.g.gain.cancelScheduledValues(startAt);
       first.g.gain.setValueAtTime(0.0001, startAt);
       first.g.gain.linearRampToValueAtTime(1, startAt + fadeDur);
+    }
+    // "just run bro" intro: start the track slowed down, then ramp back up
+    // to original speed over 0.5s for a tape-spinning-up effect.
+    if (src === bgmJustRunBro) {
+      try {
+        const rate = first.src.playbackRate;
+        rate.cancelScheduledValues(startAt);
+        rate.setValueAtTime(0.5, startAt);
+        rate.linearRampToValueAtTime(1.0, startAt + 0.5);
+      } catch { /* noop */ }
     }
     playing = {
       src,
