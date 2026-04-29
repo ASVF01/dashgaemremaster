@@ -1325,8 +1325,13 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
 
     // particles
-    for (const pa of r.particles) {
+    const rainbowParticles = r.player.starman;
+    for (let pi = 0; pi < r.particles.length; pi++) {
+      const pa = r.particles[pi];
       const a = Math.max(0, pa.life / pa.maxLife);
+      const drawColor = rainbowParticles
+        ? `hsl(${(r.time * 360 + pi * 37) % 360}, 100%, 60%)`
+        : pa.color;
       ctx.save();
       ctx.globalAlpha = a;
       if (pa.kind === "ring") {
