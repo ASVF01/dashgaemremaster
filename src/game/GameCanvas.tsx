@@ -1087,6 +1087,52 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     // player
     drawPlayer(ctx, r);
 
+    // super dash burst VFX
+    if (r.superDashBurst) {
+      const b = r.superDashBurst;
+      const dur = 0.18;
+      const k = Math.min(1, b.t / dur);    // 0 → 1
+      const inv = 1 - k;
+      ctx.save();
+      // bright flash core (fades fast)
+      const flashA = Math.max(0, 1 - k * 2.2);
+      if (flashA > 0) {
+        ctx.globalAlpha = flashA * 0.9;
+        ctx.fillStyle = "#fffbe6";
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, 18 + k * 30, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // shockwave rings
+      ctx.globalAlpha = inv;
+      sketchCircle(ctx, b.x, b.y, 10 + k * 70, null, INK, 3, 1.2);
+      ctx.globalAlpha = inv * 0.7;
+      sketchCircle(ctx, b.x, b.y, 4 + k * 44, null, INK, 2, 1);
+      // radial speed lines
+      ctx.globalAlpha = inv;
+      ctx.strokeStyle = INK;
+      ctx.lineWidth = 2.5;
+      const spokes = 14;
+      for (let i = 0; i < spokes; i++) {
+        const ang = (i / spokes) * Math.PI * 2 + b.t * 6;
+        const r0 = 14 + k * 30;
+        const r1 = r0 + 18 + inv * 22;
+        ctx.beginPath();
+        ctx.moveTo(b.x + Math.cos(ang) * r0, b.y + Math.sin(ang) * r0);
+        ctx.lineTo(b.x + Math.cos(ang) * r1, b.y + Math.sin(ang) * r1);
+        ctx.stroke();
+      }
+      // forward streak in facing dir
+      ctx.globalAlpha = inv * 0.85;
+      ctx.lineWidth = 4;
+      const sx = b.x + b.facing * (10 + k * 20);
+      const ex = b.x + b.facing * (50 + k * 90);
+      jaggedBolt(ctx, sx, b.y, ex, b.y, INK, 3, 4, 6);
+      jaggedBolt(ctx, sx, b.y - 6, ex - b.facing * 10, b.y - 6, INK, 2, 3, 5);
+      jaggedBolt(ctx, sx, b.y + 6, ex - b.facing * 10, b.y + 6, INK, 2, 3, 5);
+      ctx.restore();
+    }
+
     // particles
     for (const pa of r.particles) {
       const a = Math.max(0, pa.life / pa.maxLife);
