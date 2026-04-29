@@ -264,6 +264,13 @@ export function playMenuBgm() {
   playSrc(bgmMenu);
 }
 
+// Play the Starman cheat track (replaces whatever is playing with a crossfade).
+export function playStarmanBgm() {
+  ac();
+  loadBuffer(bgmStarman).catch(() => { /* ignore */ });
+  playSrc(bgmStarman, true);
+}
+
 export function stopBgm(fade = 0) {
   playRequestId++;
   if (!playing) return;
