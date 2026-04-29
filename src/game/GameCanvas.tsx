@@ -485,6 +485,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     const inputOpposing = dir !== 0 && moveSign !== 0 && dir !== moveSign;
     const decelerating = (dir === 0 || inputOpposing) && speedAbs > 80;
     const isSkidding = p.onGround && !p.sliding && decelerating;
+    r.isSkidding = p.onGround && !p.sliding && inputOpposing && speedAbs > 120;
 
     if (isSkidding) {
       // dust particle puffs from the trailing foot
@@ -1163,6 +1164,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       p.diving ? "dive" :
       p.sliding ? "slide" :
       !p.onGround ? (p.vy > 60 ? "fall" : "jump") :
+      r.isSkidding ? "skid" :
       speedNow > 60 ? (machNow >= 2 ? "runFast" : "run") :
       "idle";
     // Animation frame: cycles faster the faster you go (mach 2..4).
