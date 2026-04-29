@@ -171,6 +171,14 @@ const Index = () => {
           >
             {muted ? "🔇 MUSIC OFF" : "🔊 MUSIC ON"}
           </button>
+          <button
+            onClick={toggleDark}
+            aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+            title={dark ? "Light mode" : "Dark mode (save your eyes)"}
+            className="scribble-border bg-paper px-3 py-1 font-marker text-base text-ink hover:rotate-2 transition-transform"
+          >
+            {dark ? "☀️ LIGHT" : "🌙 DARK"}
+          </button>
           {screen === "playing" && (
             <button
               onClick={backToMenu}
