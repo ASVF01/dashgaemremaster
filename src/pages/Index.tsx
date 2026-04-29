@@ -6,6 +6,7 @@ import { LEVELS, type LevelId } from "@/game/level";
 import { useKeybinds, keyLabel, type ActionId } from "@/game/keybinds";
 import { playMenuBgm, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm } from "@/game/bgm";
 import cutsceneJustRunBro from "@/assets/video/mcdonalds_sprite_2.mp4";
+import { sfx, unlockAudio } from "@/game/sfx";
 
 type Screen = "menu" | "playing" | "dead" | "win" | "cutscene";
 
@@ -21,6 +22,7 @@ const Index = () => {
   const [binds] = useKeybinds();
   const [muted, setMuted] = useState(false);
   const [hasJrbBadge, setHasJrbBadge] = useState(false);
+  const [badgeFace, setBadgeFace] = useState<":3" | "X3">(":3");
 
   // Load persisted mute pref once.
   useEffect(() => {
@@ -103,12 +105,18 @@ const Index = () => {
             DASH GAEM <span className="text-[hsl(var(--accent))] inline-block -rotate-2">R</span>
           </h1>
           {hasJrbBadge && (
-            <span
+            <button
+              type="button"
               title="badge: just ran bro :3"
-              className="scribble-border bg-[hsl(var(--accent))] text-accent-foreground font-marker text-sm md:text-base px-2 py-1 rotate-3 inline-block animate-jitter select-none"
+              onClick={() => {
+                unlockAudio();
+                sfx.meow();
+                setBadgeFace((f) => (f === ":3" ? "X3" : ":3"));
+              }}
+              className="scribble-border bg-[hsl(var(--accent))] text-accent-foreground font-marker text-sm md:text-base px-2 py-1 rotate-3 inline-block animate-jitter select-none hover:rotate-6 active:scale-95 transition-transform cursor-pointer"
             >
-              :3
-            </span>
+              {badgeFace}
+            </button>
           )}
         </div>
         <div className="hidden md:flex items-center gap-3 font-scribble text-xl">
