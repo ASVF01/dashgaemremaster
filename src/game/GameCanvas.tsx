@@ -1507,7 +1507,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     if (impactFlash > 0) {
       ctx.save();
       ctx.globalCompositeOperation = "lighter";
-      ctx.fillStyle = `rgba(34,226,255,${0.85 * impactFlash})`;
+      ctx.fillStyle = `rgba(15,181,207,${0.85 * impactFlash})`;
       ctx.fillRect(0, 0, w, h);
       ctx.restore();
     }
