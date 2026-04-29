@@ -86,6 +86,14 @@ export const sfx = {
   slide() {
     noise(0.35, 0.18, 400, 5000);
   },
+  step() {
+    // soft, short footstep — pitched noise blip
+    noise(0.05, 0.12, 300, 2200);
+    tone({ freq: 110 + Math.random() * 30, dur: 0.04, type: "triangle", vol: 0.06 });
+  },
+  skid() {
+    noise(0.18, 0.14, 500, 4500);
+  },
   parryStart() {
     tone({ freq: 1200, to: 1800, dur: 0.06, type: "triangle", vol: 0.18 });
   },

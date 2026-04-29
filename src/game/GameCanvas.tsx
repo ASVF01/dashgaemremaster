@@ -67,6 +67,9 @@ interface GameRefs {
   startedAt: number;
   finished: boolean;
   finishTime: number;
+  walkTimer: number;
+  skidDustTimer: number;
+  skidSfxTimer: number;
 }
 
 interface Props {
@@ -149,6 +152,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       startedAt: performance.now(),
       finished: false,
       finishTime: 0,
+      walkTimer: 0,
+      skidDustTimer: 0,
+      skidSfxTimer: 0,
     };
   }, [resetKey, levelId]);
 
@@ -469,6 +475,70 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         life: 0.18 + Math.random() * 0.12,
         kind: "smear",
       });
+    }
+
+    // ----- Skid dust + walking SFX -----
+    const speedAbs = Math.abs(p.vx);
+    const moveSign = Math.sign(p.vx);
+    const inputOpposing = dir !== 0 && moveSign !== 0 && dir !== moveSign;
+    const decelerating = (dir === 0 || inputOpposing) && speedAbs > 80;
+    const isSkidding = p.onGround && !p.sliding && decelerating;
+
+    if (isSkidding) {
+      // dust particle puffs from the trailing foot
+      r.skidDustTimer -= dt;
+      if (r.skidDustTimer <= 0) {
+        r.skidDustTimer = 0.025;
+        const intensity = Math.min(1, speedAbs / 500) * (inputOpposing ? 1.4 : 1);
+        const puffs = 1 + Math.floor(intensity * 2);
+        for (let i = 0; i < puffs; i++) {
+          const px = p.x + p.w / 2 - moveSign * (p.w * 0.45 + Math.random() * 6);
+          const py = p.y + p.h - 2 - Math.random() * 4;
+          spawnParticle(r, {
+            x: px, y: py,
+            vx: -moveSign * (40 + Math.random() * 80) + (Math.random() - 0.5) * 30,
+            vy: -30 - Math.random() * 60,
+            color: "#bdbdbd",
+            size: 3 + Math.random() * 3,
+            life: 0.3 + Math.random() * 0.25,
+            kind: "ring",
+          });
+        }
+      }
+      // skid sfx (throttled)
+      r.skidSfxTimer -= dt;
+      if (r.skidSfxTimer <= 0 && speedAbs > 180) {
+        r.skidSfxTimer = 0.18;
+        sfx.skid();
+      }
+    } else {
+      r.skidDustTimer = 0;
+      r.skidSfxTimer = 0;
+    }
+
+    // Walking footsteps — on ground, moving with input, sub-mach speeds, not sliding/skidding
+    const isWalking = p.onGround && !p.sliding && dir !== 0 && !inputOpposing && speedAbs > 60 && mach < 2;
+    if (isWalking) {
+      // step rate scales with speed: faster = quicker steps
+      const stepInterval = Math.max(0.18, 0.5 - speedAbs * 0.0006);
+      r.walkTimer -= dt;
+      if (r.walkTimer <= 0) {
+        r.walkTimer = stepInterval;
+        sfx.step();
+        // tiny dust puff under foot
+        spawnParticle(r, {
+          x: p.x + p.w / 2 - moveSign * (p.w * 0.3),
+          y: p.y + p.h - 1,
+          vx: -moveSign * (10 + Math.random() * 30),
+          vy: -20 - Math.random() * 25,
+          color: "#cfcfcf",
+          size: 2 + Math.random() * 2,
+          life: 0.25 + Math.random() * 0.15,
+          kind: "ring",
+        });
+      }
+    } else if (!p.onGround) {
+      r.walkTimer = 0;
     }
 
     // (mach color trail removed — speed lines + afterimage handle the feedback)
