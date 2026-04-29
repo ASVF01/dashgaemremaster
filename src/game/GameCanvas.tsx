@@ -413,11 +413,18 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     if ((mach >= 1 || p.diving || p.dashTime > 0) && r.afterTimer <= 0) {
       r.afterTimer = p.dashTime > 0 ? 0.012 : Math.max(0.018, 0.05 - mach * 0.008);
       const life = p.dashTime > 0 ? 0.35 : 0.28 + mach * 0.05;
+      const aiState: SpriteState =
+        p.diving ? "dive" :
+        p.sliding ? "slide" :
+        !p.onGround ? (p.vy > 60 ? "fall" : "jump") :
+        Math.abs(p.vx) > 60 ? "run" :
+        "idle";
       r.afterimages.push({
         x: p.x, y: p.y, w: p.w, h: p.h,
         facing: p.facing,
         sliding: p.sliding,
         diving: p.diving,
+        state: aiState,
         life, maxLife: life,
         color: p.dashTime > 0 ? "#22e2ff" : p.diving ? "#ffd11a" : MACH_COLORS[Math.max(1, mach)],
       });
