@@ -184,6 +184,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       isSkidding: false,
       rainStars: [],
     };
+    // Any reset/level change cancels the starman shimmer too.
+    sfx.shineStop();
   }, [resetKey, levelId]);
 
   // BGM: stop on unmount only. The parent (Index) decides which track to
@@ -191,7 +193,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   // with the menu music here. Restart on retry is also driven by the
   // parent via screen/levelId/resetKey transitions.
   useEffect(() => {
-    return () => { stopBgm(); };
+    return () => { stopBgm(); sfx.shineStop(); };
   }, []);
 
   // BGM: pause/resume with the game's pause state — but keep playing when
@@ -217,6 +219,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
             r.player.invuln = Math.max(r.player.invuln, 9999);
             unlockAudio();
             playStarmanBgm();
+            sfx.shineStart();
             burst(r, r.player.x + r.player.w / 2, r.player.y + r.player.h / 2, "#ffd11a", 24, 380);
           }
           cheatBuf = "";

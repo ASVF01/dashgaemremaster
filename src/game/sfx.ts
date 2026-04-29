@@ -150,4 +150,84 @@ export const sfx = {
     tone({ freq: 760, to: 460, dur: 0.18, type: "triangle", vol: 0.2, attack: 0.02, release: 0.08, delay: 0.13 });
     tone({ freq: 260, to: 320, dur: 0.18, type: "sine", vol: 0.08, delay: 0.0 });
   },
+  shineStart() { startShine(); },
+  shineStop() { stopShine(); },
 };
+
+// ---------- looping "shine" sound for the invboi (starman) state ----------
+type ShineNodes = {
+  osc1: OscillatorNode; osc2: OscillatorNode;
+  lfo: OscillatorNode; lfoGain: GainNode;
+  bell: OscillatorNode; bellGain: GainNode;
+  master: GainNode;
+};
+let shine: ShineNodes | null = null;
+let shineSparkleId: number | null = null;
+
+function startShine() {
+  const c = ac(); if (!c || !master || shine) return;
+  const t0 = c.currentTime;
+  const out = c.createGain();
+  out.gain.setValueAtTime(0.0001, t0);
+  out.gain.exponentialRampToValueAtTime(0.18, t0 + 0.25);
+  out.connect(master);
+
+  // two detuned high triangle waves for a glistening pad
+  const osc1 = c.createOscillator();
+  osc1.type = "triangle";
+  osc1.frequency.value = 1760;
+  const osc2 = c.createOscillator();
+  osc2.type = "triangle";
+  osc2.frequency.value = 2637; // high E
+  // slow LFO modulating amplitude to "shimmer"
+  const lfo = c.createOscillator();
+  lfo.type = "sine";
+  lfo.frequency.value = 6;
+  const lfoGain = c.createGain();
+  lfoGain.gain.value = 0.08;
+  const ampMix = c.createGain();
+  ampMix.gain.value = 0.12;
+  lfo.connect(lfoGain).connect(ampMix.gain);
+  osc1.connect(ampMix);
+  osc2.connect(ampMix);
+  ampMix.connect(out);
+
+  // soft bell on top
+  const bell = c.createOscillator();
+  bell.type = "sine";
+  bell.frequency.value = 3520;
+  const bellGain = c.createGain();
+  bellGain.gain.value = 0.05;
+  bell.connect(bellGain).connect(out);
+
+  osc1.start(t0); osc2.start(t0); lfo.start(t0); bell.start(t0);
+
+  shine = { osc1, osc2, lfo, lfoGain, bell, bellGain, master: out };
+
+  // sprinkle little "ting" sparkles every ~280ms while active
+  const sparkle = () => {
+    if (!shine) return;
+    const f = 2200 + Math.random() * 2200;
+    tone({ freq: f, to: f * 1.2, dur: 0.12, type: "triangle", vol: 0.12, attack: 0.005, release: 0.1 });
+    shineSparkleId = window.setTimeout(sparkle, 220 + Math.random() * 200);
+  };
+  shineSparkleId = window.setTimeout(sparkle, 200);
+}
+
+function stopShine() {
+  const c = ac(); if (!c || !shine) return;
+  const t = c.currentTime;
+  const s = shine;
+  shine = null;
+  if (shineSparkleId != null) { clearTimeout(shineSparkleId); shineSparkleId = null; }
+  try {
+    s.master.gain.cancelScheduledValues(t);
+    s.master.gain.setValueAtTime(s.master.gain.value, t);
+    s.master.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+  } catch { /* noop */ }
+  const stopAt = t + 0.3;
+  try { s.osc1.stop(stopAt); } catch { /* noop */ }
+  try { s.osc2.stop(stopAt); } catch { /* noop */ }
+  try { s.lfo.stop(stopAt); } catch { /* noop */ }
+  try { s.bell.stop(stopAt); } catch { /* noop */ }
+}
