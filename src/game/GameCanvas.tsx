@@ -469,7 +469,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       // strong baseline accel so it feels fast the instant you hold,
       // then keeps growing the longer you hold.
       const t = Math.min(p.superDashTime, 8);
-      const accel = 5200 + t * 1400; // ~5200 -> ~16400 px/s^2
+      const accel = 1800 + t * 600; // ~1800 -> ~6600 px/s^2 (slower ramp)
       p.vx += p.facing * accel * dt;
       // continuous stretch while ramping
       p.stretch = 1;
