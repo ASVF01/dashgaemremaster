@@ -38,6 +38,8 @@ interface Player {
   alive: boolean;
   superDashing: boolean;
   superDashTime: number; // seconds the hold has been active
+  starman: boolean; // "invboi" cheat — rainbow + star sparkles + custom BGM
+  starTimer: number; // timer for emitting star particles
 }
 
 interface Afterimage {
