@@ -8,6 +8,7 @@ import { useKeybinds, keyLabel, type ActionId } from "@/game/keybinds";
 import { playMenuBgm, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor, isSameTrackAs } from "@/game/bgm";
 import cutsceneJustRunBro from "@/assets/video/mcdonalds_sprite_2.mp4";
 import { sfx, unlockAudio } from "@/game/sfx";
+import { startGamepadBridge } from "@/game/gamepad";
 
 type Screen = "menu" | "loading" | "playing" | "dead" | "win" | "cutscene";
 
@@ -40,6 +41,10 @@ const Index = () => {
       setDark(d);
       document.documentElement.classList.toggle("dark", d);
     } catch { /* noop */ }
+    // Controller support: bridge gamepad input to the keyboard pipeline so
+    // every existing system (rebinds, dash, parry, super dash) just works.
+    const stopGamepad = startGamepadBridge();
+    return () => { stopGamepad(); };
   }, []);
 
   const toggleDark = () => {
