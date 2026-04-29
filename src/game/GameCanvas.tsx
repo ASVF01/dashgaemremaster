@@ -70,6 +70,7 @@ interface GameRefs {
   walkTimer: number;
   skidDustTimer: number;
   skidSfxTimer: number;
+  isSkidding: boolean;
 }
 
 interface Props {
@@ -155,6 +156,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       walkTimer: 0,
       skidDustTimer: 0,
       skidSfxTimer: 0,
+      isSkidding: false,
     };
   }, [resetKey, levelId]);
 
