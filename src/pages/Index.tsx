@@ -152,24 +152,22 @@ const Index = () => {
           {screen === "menu" && <MainMenu onPlay={startLevel} />}
 
           {screen === "cutscene" && (
-            <Overlay>
-              <div className="flex flex-col items-center gap-4 px-4 w-full">
-                <video
-                  src={cutsceneJustRunBro}
-                  autoPlay
-                  playsInline
-                  controls={false}
-                  onEnded={finishCutscene}
-                  className="max-h-[70vh] max-w-full scribble-border bg-ink"
-                />
-                <button
-                  onClick={finishCutscene}
-                  className="scribble-border bg-paper text-ink font-marker text-xl px-5 py-2 hover:-rotate-2 transition-transform"
-                >
-                  SKIP ▶
-                </button>
-              </div>
-            </Overlay>
+            <div className="fixed inset-0 z-50 bg-ink flex items-center justify-center">
+              <video
+                src={cutsceneJustRunBro}
+                autoPlay
+                playsInline
+                controls={false}
+                onEnded={finishCutscene}
+                className="w-screen h-screen object-cover"
+              />
+              <button
+                onClick={finishCutscene}
+                className="absolute bottom-6 right-6 scribble-border bg-paper text-ink font-marker text-xl px-5 py-2 hover:-rotate-2 transition-transform"
+              >
+                SKIP ▶
+              </button>
+            </div>
           )}
 
           {screen === "dead" && (
