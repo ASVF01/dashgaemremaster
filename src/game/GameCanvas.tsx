@@ -468,8 +468,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       p.superDashTime += dt;
       // strong baseline accel so it feels fast the instant you hold,
       // then keeps growing the longer you hold.
-      const t = Math.min(p.superDashTime, 8);
-      const accel = 1800 + t * 600; // ~1800 -> ~6600 px/s^2 (slower ramp)
+      const t = Math.min(p.superDashTime, 12);
+      // Slower ramp-up so reaching top speed takes commitment, but the
+      // ceiling is higher so the payoff is bigger.
+      const accel = 700 + t * 320; // ~700 -> ~4540 px/s^2 over 12s
       p.vx += p.facing * accel * dt;
       // continuous stretch while ramping
       p.stretch = 1;

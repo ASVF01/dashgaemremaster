@@ -160,22 +160,7 @@ const Index = () => {
           {screen === "menu" && <MainMenu onPlay={startLevel} />}
 
           {screen === "cutscene" && (
-            <div className="fixed inset-0 z-50 bg-ink flex items-center justify-center">
-              <video
-                src={cutsceneJustRunBro}
-                autoPlay
-                playsInline
-                controls={false}
-                onEnded={finishCutscene}
-                className="w-screen h-screen object-cover"
-              />
-              <button
-                onClick={finishCutscene}
-                className="absolute bottom-6 right-6 scribble-border bg-paper text-ink font-marker text-xl px-5 py-2 hover:-rotate-2 transition-transform"
-              >
-                SKIP ▶
-              </button>
-            </div>
+            <CutscenePlayer src={cutsceneJustRunBro} onDone={finishCutscene} />
           )}
 
           {screen === "dead" && (
@@ -266,6 +251,73 @@ function Overlay({ children }: { children: React.ReactNode }) {
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-paper/85 backdrop-blur-[2px]">
       {children}
+    </div>
+  );
+}
+
+function CutscenePlayer({ src, onDone }: { src: string; onDone: () => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [loading, setLoading] = useState(true);
+  const [dots, setDots] = useState("");
+
+  // animate the loading dots
+  useEffect(() => {
+    if (!loading) return;
+    const id = setInterval(() => setDots((d) => (d.length >= 3 ? "" : d + ".")), 350);
+    return () => clearInterval(id);
+  }, [loading]);
+
+  // Try hard to play. Browsers block autoplay-with-sound until a gesture, so
+  // if the first play() rejects we retry muted (and surface a tap-to-play).
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    let cancelled = false;
+    const tryPlay = async () => {
+      try {
+        await v.play();
+      } catch {
+        if (cancelled) return;
+        // fall back to muted autoplay so it at least starts
+        v.muted = true;
+        try { await v.play(); } catch { /* user will click skip */ }
+      }
+    };
+    tryPlay();
+    return () => { cancelled = true; };
+  }, [src]);
+
+  return (
+    <div className="fixed inset-0 z-50 bg-ink flex items-center justify-center">
+      <video
+        ref={videoRef}
+        src={src}
+        autoPlay
+        playsInline
+        controls={false}
+        preload="auto"
+        onLoadedData={() => setLoading(false)}
+        onCanPlay={() => setLoading(false)}
+        onWaiting={() => setLoading(true)}
+        onPlaying={() => setLoading(false)}
+        onEnded={onDone}
+        onClick={() => { const v = videoRef.current; if (v && v.paused) v.play().catch(() => {}); }}
+        className="w-screen h-screen object-cover"
+      />
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-ink text-paper pointer-events-none">
+          <div className="text-center">
+            <div className="font-marker text-5xl md:text-7xl mb-2 animate-jitter">LOADING{dots}</div>
+            <div className="font-scribble text-xl md:text-2xl opacity-80">cooking the cutscene…</div>
+          </div>
+        </div>
+      )}
+      <button
+        onClick={onDone}
+        className="absolute bottom-6 right-6 scribble-border bg-paper text-ink font-marker text-xl px-5 py-2 hover:-rotate-2 transition-transform"
+      >
+        SKIP ▶
+      </button>
     </div>
   );
 }
