@@ -11,7 +11,7 @@ import { buildLevel, type Level, type LevelId } from "@/game/level";
 import { sketchLine, sketchRect, sketchCircle, jaggedBolt, INK } from "@/game/draw";
 import { isPressed, matchesAction, getLiveBinds } from "@/game/keybinds";
 import { sfx, unlockAudio } from "@/game/sfx";
-import { rumble, getGamepadActions, type GamepadActions } from "@/game/gamepad";
+
 import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, getStarmanElapsed, playSomSomBgm, getSomSomElapsed } from "@/game/bgm";
 import { getSprite, type SpriteState } from "@/game/sprites";
 
@@ -217,7 +217,6 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const refs = useRef<GameRefs | null>(null);
   const keysRef = useRef<Keys>({});
-  const prevGamepadRef = useRef<GamepadActions | null>(null);
   const levelIdRef = useRef<LevelId>(levelId);
   levelIdRef.current = levelId;
   const [size, setSize] = useState({ w: 1200, h: 600 });
@@ -383,14 +382,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         }
         if (p.dashCooldown <= 0 && p.dashTime <= 0 && p.alive) {
           const k = keysRef.current;
-          const gp = prevGamepadRef.current;
           const b = getLiveBinds();
           let dx = 0, dy = 0;
-          if (isPressed(k, "left",  b) || gp?.left) dx -= 1;
-          if (isPressed(k, "right", b) || gp?.right) dx += 1;
-          // up = jump key currently held; down = slide key currently held
-          const jumpAlso = isPressed(k, "jump", b) || !!gp?.jump || !!gp?.up;
-          const downHeld = isPressed(k, "slide", b) || !!gp?.slide || !!gp?.down;
+          if (isPressed(k, "left",  b)) dx -= 1;
+          if (isPressed(k, "right", b)) dx += 1;
+          const jumpAlso = isPressed(k, "jump", b);
+          const downHeld = isPressed(k, "slide", b);
           if (jumpAlso) dy -= 1;
           if (downHeld) dy += 1;
           igniteDash(r, p, dx, dy, jumpAlso);
@@ -541,7 +538,6 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     p.hStretch = 1;
     if (p.invuln < DASH_DURATION) p.invuln = DASH_DURATION;
     burst(r, p.x + p.w / 2, p.y + p.h / 2, "#22e2ff", 14, 320);
-    rumble({ duration: 90, strong: 0.7, weak: 0.9 });
 
     const cxp = p.x + p.w / 2;
     const cyp = p.y + p.h / 2;
@@ -595,49 +591,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       p.parryCooldown = 0;
     }
 
-    // input (bound). Read gamepad state directly here too — the keyboard-event
-    // bridge can be blocked by browser focus, but polling inside the game loop
-    // still drives the same actions when the browser exposes a pad.
+    // input (bound).
     const b = getLiveBinds();
-    const gp = getGamepadActions();
-    const prevGp = prevGamepadRef.current;
-    prevGamepadRef.current = gp;
-    const left = isPressed(keys, "left", b) || gp.left;
-    const right = isPressed(keys, "right", b) || gp.right;
-    const jumpHeld = isPressed(keys, "jump", b) || gp.jump || gp.up;
-    const slideHeld = isPressed(keys, "slide", b) || gp.slide || gp.down;
-    const gpParryPressed = gp.parry && !prevGp?.parry;
-    const gpDashPressed = gp.dash && !prevGp?.dash;
-
-    if (gpParryPressed && r.player.parryCooldown <= 0 && r.player.parrying <= 0) {
-      unlockAudio();
-      r.player.parrying = PARRY_WINDOW;
-      r.player.parryCooldown = PARRY_COOLDOWN + PARRY_WINDOW;
-      if (r.player.invuln < PARRY_WINDOW) r.player.invuln = PARRY_WINDOW;
-      sfx.parryStart();
-    }
-
-    if (gpDashPressed && levelIdRef.current === "just-run-bro" && !p.superDashing && p.alive) {
-      unlockAudio();
-      p.superDashing = true;
-      p.superDashTime = 0;
-      p.hStretch = 1;
-      sfx.superDash();
-      r.superDashBurst = { x: p.x + p.w / 2, y: p.y + p.h / 2, t: 0, facing: p.facing };
-      r.shake = Math.max(r.shake, 0.35);
-    }
-    if (!gp.dash && prevGp?.dash && p.superDashing) {
-      p.superDashing = false;
-      p.superDashTime = 0;
-    }
-    if (gpDashPressed && levelIdRef.current !== "just-run-bro" && p.dashCooldown <= 0 && p.dashTime <= 0 && p.alive) {
-      let dx = 0, dy = 0;
-      if (left) dx -= 1;
-      if (right) dx += 1;
-      if (jumpHeld) dy -= 1;
-      if (slideHeld) dy += 1;
-      igniteDash(r, p, dx, dy, jumpHeld);
-    }
+    const left = isPressed(keys, "left", b);
+    const right = isPressed(keys, "right", b);
+    const jumpHeld = isPressed(keys, "jump", b);
+    const slideHeld = isPressed(keys, "slide", b);
 
     // horizontal accel
     let dir = 0;
@@ -1231,8 +1190,6 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // refresh i-frames briefly so chained parries stay safe
     if (r.player.invuln < 0.4) r.player.invuln = 0.4;
     sfx.parryHit();
-    // Tactile timing cue: short, sharp jolt on successful parry.
-    rumble({ duration: 140, strong: 0.85, weak: 0.55 });
     // boost in facing dir
     r.player.vx += r.player.facing * PARRY_BOOST;
     r.player.vy = -220;
