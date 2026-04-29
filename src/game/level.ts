@@ -13,7 +13,7 @@ export type Level = {
   signs?: { x: number; y: number; text: string }[];
 };
 
-export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3";
+export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "speed-test";
 
 export type LevelMeta = {
   id: LevelId;
@@ -21,6 +21,7 @@ export type LevelMeta = {
   subtitle: string;
   difficulty: 1 | 2 | 3 | 4;
   par: number; // seconds
+  hidden?: boolean;
 };
 
 export const LEVELS: LevelMeta[] = [
@@ -28,6 +29,7 @@ export const LEVELS: LevelMeta[] = [
   { id: "scribble-1", name: "INK ALLEY",  subtitle: "warm up those legs",  difficulty: 2, par: 50 },
   { id: "scribble-2", name: "PAPER CUTS", subtitle: "shooters everywhere", difficulty: 3, par: 55 },
   { id: "scribble-3", name: "OVERDRIVE",  subtitle: "go absurdly fast",    difficulty: 4, par: 60 },
+  { id: "speed-test", name: "??? SPEED TEST ???", subtitle: "the hallway never ends. or does it.", difficulty: 4, par: 30, hidden: true },
 ];
 
 export function buildLevel(id: LevelId = "scribble-1"): Level {
@@ -36,7 +38,56 @@ export function buildLevel(id: LevelId = "scribble-1"): Level {
     case "scribble-1": return buildLevel1();
     case "scribble-2": return buildLevel2();
     case "scribble-3": return buildLevel3();
+    case "speed-test": return buildSpeedTest();
   }
+}
+
+// ---------- SECRET: SPEED TEST ----------
+// A long, flat hallway with a low ceiling so you must get fast. Pickups every
+// stretch act as speed checkpoints. The goal sits at the very end.
+function buildSpeedTest(): Level {
+  const W = 24000;
+  const H = 720;
+  const groundY = H - 80;
+  const ceilY = groundY - 220;
+
+  const platforms: Platform[] = [
+    // continuous floor
+    { x: 0, y: groundY, w: W, h: 80, kind: "ground" },
+    // continuous ceiling slab — far above so jumps work, but bounds the hallway
+    { x: 0, y: 80, w: W, h: 30, kind: "block" },
+  ];
+
+  // periodic low-ceiling slide tunnels to reward sliding momentum
+  for (let x = 1200; x < W - 800; x += 1600) {
+    platforms.push({ x, y: groundY - 80, w: 360, h: 28, kind: "block" });
+  }
+
+  // little speed-pad blocks every so often (visual landmarks)
+  for (let x = 800; x < W - 400; x += 800) {
+    platforms.push({ x, y: ceilY, w: 60, h: 14, kind: "block" });
+  }
+
+  const hazards: Hazard[] = [];
+  // sparse spikes you must dash/parry through later in the run
+  for (let x = 8000; x < W - 600; x += 2400) {
+    hazards.push({ x, y: groundY - 18, w: 60, h: 18 });
+  }
+
+  const enemies: Enemy[] = [];
+
+  // pickup chains — visible ribbon down the hallway
+  const pickups: Pickup[] = [];
+  for (let x = 400; x < W - 200; x += 140) {
+    pickups.push({ x, y: groundY - 40 - ((x / 140) % 3) * 18, collected: false });
+  }
+
+  return {
+    width: W, height: H,
+    spawn: { x: 80, y: groundY - 80 },
+    goal: { x: W - 160, y: groundY - 120, w: 50, h: 120 },
+    platforms, hazards, enemies, pickups,
+  };
 }
 
 // ---------- TUTORIAL ----------
