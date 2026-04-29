@@ -519,23 +519,25 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       r.skidSfxTimer = 0;
     }
 
-    // Walking footsteps — on ground, moving with input, sub-mach speeds, not sliding/skidding
-    const isWalking = p.onGround && !p.sliding && dir !== 0 && !inputOpposing && speedAbs > 60 && mach < 2;
-    if (isWalking) {
-      // step rate scales with speed: faster = quicker steps
-      const stepInterval = Math.max(0.18, 0.5 - speedAbs * 0.0006);
+    // Footsteps — on ground, moving with input, not sliding/skidding.
+    // Walks at low speed, runs (faster cadence + punchier sfx) at mach >= 1.
+    const isMoving = p.onGround && !p.sliding && dir !== 0 && !inputOpposing && speedAbs > 60;
+    if (isMoving) {
+      const running = mach >= 1;
+      const stepInterval = running
+        ? Math.max(0.09, 0.22 - speedAbs * 0.00018)
+        : Math.max(0.18, 0.5 - speedAbs * 0.0006);
       r.walkTimer -= dt;
       if (r.walkTimer <= 0) {
         r.walkTimer = stepInterval;
-        sfx.step();
-        // tiny dust puff under foot
+        if (running) sfx.run(); else sfx.step();
         spawnParticle(r, {
           x: p.x + p.w / 2 - moveSign * (p.w * 0.3),
           y: p.y + p.h - 1,
-          vx: -moveSign * (10 + Math.random() * 30),
-          vy: -20 - Math.random() * 25,
-          color: "#cfcfcf",
-          size: 2 + Math.random() * 2,
+          vx: -moveSign * (10 + Math.random() * (running ? 60 : 30)),
+          vy: -20 - Math.random() * (running ? 45 : 25),
+          color: running ? "#bdbdbd" : "#cfcfcf",
+          size: (running ? 3 : 2) + Math.random() * 2,
           life: 0.25 + Math.random() * 0.15,
           kind: "ring",
         });
