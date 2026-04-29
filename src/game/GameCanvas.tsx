@@ -1277,8 +1277,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       r.lightningCooldown = 0;
     }
 
-    // SOM SOM "32.65" event: white fade-out flash + fast grey cloud + optimized rain.
-    const STORM_T = 32.65;
+    // SOM SOM "32.50" event: white fade-out flash + fast grey cloud + optimized rain.
+    const STORM_T = 32.50;
     if (somSomActive && starElapsed >= STORM_T && !r.somSomStorm) {
       r.somSomStorm = true;
       r.somSomStormFlash = 0;
@@ -1292,11 +1292,13 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         buf[i * 4 + 3] = 10 + Math.random() * 10;
       }
       r.somSomRain = buf;
+      sfx.rainStart();
     } else if (!somSomActive && r.somSomStorm) {
       r.somSomStorm = false;
       r.somSomStormFlash = -1;
       r.somSomCloudX = null;
       r.somSomRain = null;
+      sfx.rainStop();
     }
 
     if (r.somSomStorm) {
