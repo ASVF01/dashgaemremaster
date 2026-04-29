@@ -4,8 +4,11 @@ import {
   ACTIONS, DEFAULT_BINDS, type ActionId, type Keybinds,
   keyLabel, useKeybinds,
 } from "@/game/keybinds";
+import { useSettings, DEFAULT_SETTINGS, type Settings } from "@/game/settings";
+import { setSfxVolume } from "@/game/sfx";
+import { setBgmVolume } from "@/game/bgm";
 
-export type MenuTab = "play" | "tutorial" | "keybinds" | "credits";
+export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "credits";
 
 interface Props {
   onPlay: (id: LevelId) => void;
@@ -34,6 +37,7 @@ export default function MainMenu({ onPlay }: Props) {
           <TabBtn active={tab === "play"}     onClick={() => setTab("play")}>PLAY</TabBtn>
           <TabBtn active={tab === "tutorial"} onClick={() => setTab("tutorial")}>HOW TO PLAY</TabBtn>
           <TabBtn active={tab === "keybinds"} onClick={() => setTab("keybinds")}>KEYBINDS</TabBtn>
+          <TabBtn active={tab === "settings"} onClick={() => setTab("settings")}>SETTINGS</TabBtn>
           <TabBtn active={tab === "credits"}  onClick={() => setTab("credits")}>CREDITS</TabBtn>
         </nav>
 
@@ -42,6 +46,7 @@ export default function MainMenu({ onPlay }: Props) {
           {tab === "play"     && <PlayTab onPlay={onPlay} />}
           {tab === "tutorial" && <TutorialTab onStartTutorial={() => onPlay("tutorial")} />}
           {tab === "keybinds" && <KeybindsTab />}
+          {tab === "settings" && <SettingsTab />}
           {tab === "credits"  && <CreditsTab />}
         </div>
       </div>
