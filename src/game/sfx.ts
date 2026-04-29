@@ -136,4 +136,12 @@ export const sfx = {
     tone({ freq: 200, to: 1200, dur: 0.18, type: "square", vol: 0.22 });
     noise(0.2, 0.18, 600, 6000, 0.02);
   },
+  superDash() {
+    // long, sweeping whoosh — used as the one-shot for hold-to-superdash
+    tone({ freq: 180, to: 1600, dur: 0.55, type: "sawtooth", vol: 0.28 });
+    tone({ freq: 360, to: 2400, dur: 0.5, type: "square", vol: 0.18, delay: 0.02 });
+    tone({ freq: 90, to: 40, dur: 0.6, type: "sine", vol: 0.22, delay: 0.0 });
+    noise(0.6, 0.28, 400, 9000, 0.0);
+    noise(0.5, 0.18, 1200, 6000, 0.08);
+  },
 };
