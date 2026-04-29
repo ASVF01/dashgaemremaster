@@ -1,7 +1,7 @@
 // Keybinds — persisted in localStorage, shared between menu UI and GameCanvas.
 import { useEffect, useState } from "react";
 
-export type ActionId = "left" | "right" | "jump" | "slide" | "parry";
+export type ActionId = "left" | "right" | "jump" | "slide" | "parry" | "dash";
 
 export type Keybinds = Record<ActionId, string[]>; // KeyboardEvent.code values
 
@@ -9,8 +9,9 @@ export const ACTIONS: { id: ActionId; label: string; desc: string }[] = [
   { id: "left",  label: "MOVE LEFT",  desc: "run left" },
   { id: "right", label: "MOVE RIGHT", desc: "run right" },
   { id: "jump",  label: "JUMP",       desc: "hold for higher jump" },
-  { id: "slide", label: "SLIDE",      desc: "slide under low ceilings" },
+  { id: "slide", label: "SLIDE / DIVE", desc: "slide on ground, dive in air" },
   { id: "parry", label: "PARRY",      desc: "deflect projectiles + counter" },
+  { id: "dash",  label: "DASH",       desc: "burst forward (2.5s cooldown)" },
 ];
 
 export const DEFAULT_BINDS: Keybinds = {
@@ -18,7 +19,8 @@ export const DEFAULT_BINDS: Keybinds = {
   right: ["ArrowRight", "KeyD"],
   jump:  ["Space", "KeyW", "ArrowUp"],
   slide: ["ShiftLeft", "KeyS", "ArrowDown"],
-  parry: ["KeyJ", "KeyK", "ShiftRight"],
+  parry: ["KeyJ", "ShiftRight"],
+  dash:  ["KeyK"],
 };
 
 const STORAGE_KEY = "scribble-rush.keybinds.v1";
