@@ -217,6 +217,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
             r.player.invuln = Math.max(r.player.invuln, 9999);
             unlockAudio();
             playStarmanBgm();
+            sfx.shineStart();
             burst(r, r.player.x + r.player.w / 2, r.player.y + r.player.h / 2, "#ffd11a", 24, 380);
           }
           cheatBuf = "";
