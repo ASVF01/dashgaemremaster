@@ -26,6 +26,7 @@ const Index = () => {
   useEffect(() => {
     initBgmMutedFromStorage();
     setMuted(isBgmMuted());
+    try { setHasJrbBadge(localStorage.getItem("badge_jrb") === "1"); } catch { /* noop */ }
   }, []);
 
   const toggleMute = () => {
