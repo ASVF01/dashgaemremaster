@@ -392,6 +392,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   useEffect(() => {
     let raf = 0;
     let last = performance.now();
+    let lastHud = 0;
+    let lastPausedRender = 0;
 
     const loop = (t: number) => {
       raf = requestAnimationFrame(loop);
@@ -403,23 +405,28 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       if (!paused && !r.finished && r.player.alive) {
         update(r, dt, keysRef.current);
       }
+      if (paused && t - lastPausedRender < 250) return;
+      if (paused) lastPausedRender = t;
       render(c, r, size.w, size.h);
 
       // HUD
-      const speed = Math.abs(r.player.vx);
-      const mach = machTier(speed);
-      onHud({
-        hp: r.player.hp,
-        mach,
-        speed,
-        score: r.score,
-        combo: r.combo,
-        progress: Math.min(1, r.player.x / r.level.width),
-        timeMs: r.finished ? r.finishTime : performance.now() - r.startedAt,
-        parryReady: r.player.parryCooldown <= 0,
-        dashCooldown: Math.max(0, r.player.dashCooldown),
-        dashCooldownMax: DASH_COOLDOWN,
-      });
+      if (t - lastHud >= 100 || r.finished || !r.player.alive) {
+        lastHud = t;
+        const speed = Math.abs(r.player.vx);
+        const mach = machTier(speed);
+        onHud({
+          hp: r.player.hp,
+          mach,
+          speed,
+          score: r.score,
+          combo: r.combo,
+          progress: Math.min(1, r.player.x / r.level.width),
+          timeMs: r.finished ? r.finishTime : performance.now() - r.startedAt,
+          parryReady: r.player.parryCooldown <= 0,
+          dashCooldown: Math.max(0, r.player.dashCooldown),
+          dashCooldownMax: DASH_COOLDOWN,
+        });
+      }
 
       if (!r.player.alive && !r.finished) {
         r.finished = true;
