@@ -1387,12 +1387,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
     // hit flash
     const flash = p.hitFlash > 0 && Math.floor(r.time * 30) % 2 === 0;
-    const blink = p.invuln > 0 && Math.floor(r.time * 20) % 2 === 0;
+    // suppress invuln blink while starman is active so the rainbow stays solid
+    const blink = !p.starman && p.invuln > 0 && Math.floor(r.time * 20) % 2 === 0;
     if (blink && p.hitFlash <= 0) {
       ctx.globalAlpha = 0.4;
     }
 
     const inkCol = flash ? "#f5234c" : INK;
+    // rainbow tint color cycling for starman cheat
+    const rainbowCol = p.starman ? `hsl(${Math.floor(r.time * 720) % 360}, 95%, 55%)` : null;
 
     // ---- sprite override (use uploaded PNG if available for current state) ----
     const speedNow = Math.abs(p.vx);
