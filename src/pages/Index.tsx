@@ -160,22 +160,7 @@ const Index = () => {
           {screen === "menu" && <MainMenu onPlay={startLevel} />}
 
           {screen === "cutscene" && (
-            <div className="fixed inset-0 z-50 bg-ink flex items-center justify-center">
-              <video
-                src={cutsceneJustRunBro}
-                autoPlay
-                playsInline
-                controls={false}
-                onEnded={finishCutscene}
-                className="w-screen h-screen object-cover"
-              />
-              <button
-                onClick={finishCutscene}
-                className="absolute bottom-6 right-6 scribble-border bg-paper text-ink font-marker text-xl px-5 py-2 hover:-rotate-2 transition-transform"
-              >
-                SKIP ▶
-              </button>
-            </div>
+            <CutscenePlayer src={cutsceneJustRunBro} onDone={finishCutscene} />
           )}
 
           {screen === "dead" && (
