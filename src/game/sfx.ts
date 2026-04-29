@@ -102,7 +102,7 @@ function ac(): AudioContext | null {
   return ctx;
 }
 
-export function unlockAudio() { ac(); }
+export function unlockAudio() { ac(); loadSample(nySampleUrl); }
 export function setMuted(v: boolean) {
   muted = v;
   if (master) master.gain.value = v ? 0 : 0.35;
