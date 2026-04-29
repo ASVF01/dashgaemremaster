@@ -1438,6 +1438,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     burst(r, x, y, "#f5234c", 18, 240);
     sfx.hit();
     if (p.hp <= 0) {
+      // third/final hit — layer the impactful 3s stinger on top of the normal hit
+      sfx.fatalHit();
       p.alive = false;
     }
   }
