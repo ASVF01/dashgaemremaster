@@ -1214,7 +1214,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     ctx.restore();
   }
 
-  function drawEnemy(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, kind: "grunt" | "shooter", vx: number, time: number) {
+  function drawEnemy(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, kind: "grunt" | "shooter" | "chaser", vx: number, time: number) {
     const cx = x + w / 2;
     const cy = y + h / 2;
     ctx.save();
