@@ -276,10 +276,13 @@ export const sfx = {
     noise(0.2, 0.18, 600, 6000, 0.02);
   },
   superDash() {
-    // sped-up swing/swipe + punchy transient for impact
-    playSample(swingSwipeUrl, { vol: 0.75, rate: 1.7 });
+    // procedural-only impact: punchy noise transient + low sweep
     noise(0.04, 0.45, 1500, 8000);
     tone({ freq: 180, to: 60, dur: 0.1, type: "sawtooth", vol: 0.32, release: 0.05 });
+  },
+  dash() {
+    // sped-up swing/swipe sample, used for the normal dash
+    playSample(swingSwipeUrl, { vol: 0.7, rate: 1.7 });
   },
   meow() {
     // cute lil kitten "mrow" — two pitched sweeps, second a bit higher
