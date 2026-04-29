@@ -91,6 +91,11 @@ export const sfx = {
     noise(0.05, 0.12, 300, 2200);
     tone({ freq: 110 + Math.random() * 30, dur: 0.04, type: "triangle", vol: 0.06 });
   },
+  run() {
+    // punchier, faster footstep for running speeds
+    noise(0.06, 0.2, 250, 3000);
+    tone({ freq: 140 + Math.random() * 40, dur: 0.05, type: "triangle", vol: 0.1 });
+  },
   skid() {
     noise(0.18, 0.14, 500, 4500);
   },
