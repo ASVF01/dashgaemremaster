@@ -936,7 +936,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       p.hurtAfterTimer -= dt;
       if (p.hurtAfterTimer <= 0) {
         p.hurtAfterTimer = 0.04;
-        const life = 0.32;
+        const life = 0.01;
         r.afterimages.push({
           x: p.x, y: p.y, w: p.w, h: p.h,
           facing: p.facing,
@@ -991,7 +991,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     if ((mach >= 1 || p.diving || p.dashTime > 0) && r.afterTimer <= 0) {
       const superDazh = p.superDashing && p.superDashTime >= 5;
       r.afterTimer = p.starman ? 0.04 : superDazh ? 0.025 : (p.dashTime > 0 ? 0.012 : Math.max(0.018, 0.05 - mach * 0.008));
-      const life = p.starman ? 0.16 : superDazh ? 0.22 : 0.2;
+      const life = 0.01;
       const rainbowHue = p.starman
         ? (p.somSom ? 190 : Math.floor(r.time * 90) % 360)
         : superDazh ? 190 : undefined;
@@ -2319,13 +2319,23 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       const dx = p.w / 2 - drawW / 2;
       const dy = p.h - drawH;
       if (flash) {
-        // flash tint: draw red silhouette behind the sprite
+        // Tint the player red on hit. Build the red silhouette in an
+        // offscreen canvas (clipped to the PNG alpha) and overlay it on the
+        // sprite, so the tint never paints a square red box behind/around
+        // the player.
         ctx.save();
-        ctx.globalCompositeOperation = "source-over";
+        ctx.imageSmoothingEnabled = false;
         ctx.drawImage(sprite, dx, dy, drawW, drawH);
-        ctx.globalCompositeOperation = "source-atop";
-        ctx.fillStyle = "#f5234c";
-        ctx.fillRect(dx, dy, drawW, drawH);
+        const off = document.createElement("canvas");
+        off.width = sprite.width;
+        off.height = sprite.height;
+        const octx = off.getContext("2d")!;
+        octx.imageSmoothingEnabled = false;
+        octx.drawImage(sprite, 0, 0);
+        octx.globalCompositeOperation = "source-in";
+        octx.fillStyle = "#f5234c";
+        octx.fillRect(0, 0, off.width, off.height);
+        ctx.drawImage(off, dx, dy, drawW, drawH);
         ctx.restore();
       } else if (rainbowHue !== null) {
         // starman: cached rainbow-tinted sprite clipped to the PNG alpha.
