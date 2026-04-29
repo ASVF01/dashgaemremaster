@@ -4,6 +4,7 @@ import beamCriticalUrl from "@/assets/audio/beam_critical2.mp3";
 import wwHitUrl from "@/assets/audio/ww.ogg";
 import notBadUrl from "@/assets/audio/not_bad.ogg";
 import auraUrl from "@/assets/audio/aura.mp3";
+import swingSwipeUrl from "@/assets/audio/swing_swipe.ogg";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -90,12 +91,13 @@ function playPixelSample(url: string, opts: { vol?: number; bits?: number; rateD
   src.start(t0);
 }
 
-function playSample(url: string, opts: { vol?: number } = {}) {
+function playSample(url: string, opts: { vol?: number; rate?: number } = {}) {
   const c = ac(); if (!c || !master) return;
   const buf = sampleCache.get(url);
   if (!buf) { loadSample(url); return; }
   const src = c.createBufferSource();
   src.buffer = buf;
+  if (opts.rate) src.playbackRate.value = opts.rate;
   const g = c.createGain();
   g.gain.value = opts.vol ?? 0.55;
   src.connect(g).connect(master);
@@ -138,7 +140,7 @@ function ac(): AudioContext | null {
   return ctx;
 }
 
-export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); loadSample(wwHitUrl); loadSample(auraUrl); }
+export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); loadSample(wwHitUrl); loadSample(auraUrl); loadSample(swingSwipeUrl); }
 let baseVol = 0.35;
 export function setMuted(v: boolean) {
   muted = v;
@@ -274,7 +276,10 @@ export const sfx = {
     noise(0.2, 0.18, 600, 6000, 0.02);
   },
   superDash() {
-    playSample(beamCriticalUrl, { vol: 0.7 });
+    // sped-up swing/swipe + punchy transient for impact
+    playSample(swingSwipeUrl, { vol: 0.75, rate: 1.7 });
+    noise(0.04, 0.45, 1500, 8000);
+    tone({ freq: 180, to: 60, dur: 0.1, type: "sawtooth", vol: 0.32, release: 0.05 });
   },
   meow() {
     // cute lil kitten "mrow" — two pitched sweeps, second a bit higher
