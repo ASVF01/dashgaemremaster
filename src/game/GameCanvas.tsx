@@ -18,7 +18,12 @@ type Keys = Record<string, boolean>;
 
 const RAINBOW_BUCKETS = 18;
 const tintCache = new Map<string, HTMLCanvasElement>();
+const darkTintCache = new Map<string, HTMLCanvasElement>();
 const starCache = new Map<string, HTMLCanvasElement>();
+
+// Darker cyan used by SOM SOM (invboi-in-just-run-bro). Single hue, lower lightness.
+const DARK_CYAN = "#0fb5cf";
+const DARK_CYAN_SOFT = "#1199b0";
 
 function hueBucket(hue: number) {
   return ((Math.round(hue / (360 / RAINBOW_BUCKETS)) % RAINBOW_BUCKETS) + RAINBOW_BUCKETS) % RAINBOW_BUCKETS;
@@ -45,6 +50,26 @@ function getTintedSprite(sprite: HTMLImageElement, hue: number): HTMLCanvasEleme
   octx.globalCompositeOperation = "source-over";
   if (tintCache.size > 96) tintCache.clear();
   tintCache.set(key, off);
+  return off;
+}
+
+// Darker variant used for SOM SOM cyan. Lower lightness, slightly less saturated.
+function getDarkCyanTintedSprite(sprite: HTMLImageElement): HTMLCanvasElement {
+  const key = sprite.currentSrc || sprite.src;
+  const cached = darkTintCache.get(key);
+  if (cached) return cached;
+  const off = document.createElement("canvas");
+  off.width = sprite.width;
+  off.height = sprite.height;
+  const octx = off.getContext("2d")!;
+  octx.imageSmoothingEnabled = false;
+  octx.drawImage(sprite, 0, 0);
+  octx.globalCompositeOperation = "source-in";
+  octx.fillStyle = "hsl(190, 85%, 42%)";
+  octx.fillRect(0, 0, off.width, off.height);
+  octx.globalCompositeOperation = "source-over";
+  if (darkTintCache.size > 64) darkTintCache.clear();
+  darkTintCache.set(key, off);
   return off;
 }
 
@@ -148,6 +173,9 @@ interface GameRefs {
   skidSfxTimer: number;
   isSkidding: boolean;
   rainStars: { x: number; y: number; vy: number; size: number; phase: number; hue: number }[];
+  // SOM SOM lightning: spawned occasionally over the OLED-black backdrop.
+  lightningCooldown: number;
+  lightningBolts: { x: number; t: number; life: number; segs: { x: number; y: number }[]; flash: number }[];
 }
 
 interface Props {
@@ -249,6 +277,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       skidSfxTimer: 0,
       isSkidding: false,
       rainStars: [],
+      lightningCooldown: 0,
+      lightningBolts: [],
     };
     // Any reset/level change cancels the starman shimmer too.
     sfx.shineStop();
@@ -612,11 +642,14 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
             const lx = p.x + p.w / 2 + (Math.random() - 0.5) * (p.w * 2.2);
             const ly = p.y + p.h + 6 + Math.random() * 18;
             const len = 22 + Math.random() * 30;
+            const lineCol = p.somSom
+              ? (Math.random() < 0.25 ? "#9be8f5" : DARK_CYAN)
+              : (Math.random() < 0.25 ? "#ffffff" : "#22e2ff");
             spawnParticle(r, {
               x: lx, y: ly,
               vx: 0,
               vy: -(520 + Math.random() * 380),
-              color: Math.random() < 0.25 ? "#ffffff" : "#22e2ff",
+              color: lineCol,
               size: len / 2,
               life: 0.22 + Math.random() * 0.12,
               kind: "smear",
@@ -1179,6 +1212,61 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       r.shake = 0.5;
     }
 
+    // SOM SOM: lightning bolts over the OLED-black background.
+    // Random chance every cycle: 10s, 5s, or 1s wait between strikes.
+    if (postImpact) {
+      r.lightningCooldown -= 0.0166;
+      if (r.lightningCooldown <= 0) {
+        const roll = Math.random();
+        const wait = roll < 0.34 ? 1 : roll < 0.67 ? 5 : 10;
+        r.lightningCooldown = wait;
+        const bx = 40 + Math.random() * (w - 80);
+        const segs: { x: number; y: number }[] = [];
+        let cy = -8;
+        let cx = bx;
+        while (cy < h * (0.55 + Math.random() * 0.4)) {
+          segs.push({ x: cx, y: cy });
+          cy += 18 + Math.random() * 28;
+          cx += (Math.random() - 0.5) * 36;
+        }
+        segs.push({ x: cx, y: cy });
+        r.lightningBolts.push({ x: bx, t: 0, life: 0.45, segs, flash: 1 });
+      }
+      for (let i = r.lightningBolts.length - 1; i >= 0; i--) {
+        const b = r.lightningBolts[i];
+        b.t += 0.0166;
+        b.flash = Math.max(0, 1 - b.t / b.life);
+        if (b.t >= b.life) r.lightningBolts.splice(i, 1);
+      }
+      if (r.lightningBolts.length) {
+        ctx.save();
+        for (const b of r.lightningBolts) {
+          const a = b.flash;
+          if (a > 0.6) {
+            ctx.fillStyle = `rgba(15,181,207,${(a - 0.6) * 0.35})`;
+            ctx.fillRect(0, 0, w, h);
+          }
+          ctx.strokeStyle = `rgba(155,232,245,${0.55 * a})`;
+          ctx.lineWidth = 6;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(b.segs[0].x, b.segs[0].y);
+          for (let s = 1; s < b.segs.length; s++) ctx.lineTo(b.segs[s].x, b.segs[s].y);
+          ctx.stroke();
+          ctx.strokeStyle = `rgba(15,181,207,${0.95 * a})`;
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.moveTo(b.segs[0].x, b.segs[0].y);
+          for (let s = 1; s < b.segs.length; s++) ctx.lineTo(b.segs[s].x, b.segs[s].y);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+    } else if (r.lightningBolts.length || r.lightningCooldown !== 0) {
+      r.lightningBolts.length = 0;
+      r.lightningCooldown = 0;
+    }
+
     // starman: rainbow stars rain down (BACKGROUND layer, behind level assets)
     // (suppressed for SOM SOM variant — no rain, no rainbow)
     const maxRainStars = Math.min(64, Math.max(28, Math.floor((w * h) / 17000)));
@@ -1408,7 +1496,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       const drawColor = rainbowParticles
         ? `hsl(${(r.time * 360 + pi * 37) % 360}, 100%, 60%)`
         : cyanParticles
-        ? (pi % 4 === 0 ? "#ffffff" : "#22e2ff")
+        ? (pi % 4 === 0 ? "#9be8f5" : DARK_CYAN)
         : pa.color;
       ctx.save();
       ctx.globalAlpha = a;
@@ -1477,7 +1565,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     if (impactFlash > 0) {
       ctx.save();
       ctx.globalCompositeOperation = "lighter";
-      ctx.fillStyle = `rgba(34,226,255,${0.85 * impactFlash})`;
+      ctx.fillStyle = `rgba(15,181,207,${0.85 * impactFlash})`;
       ctx.fillRect(0, 0, w, h);
       ctx.restore();
     }
@@ -1559,7 +1647,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       // Cached rainbow tint for starman afterimages; avoids repainting an
       // offscreen sprite for every ghost every frame.
       if (ai.rainbowHue !== undefined) {
-        const off = getTintedSprite(sprite, ai.rainbowHue);
+        const isSomSomAi = ai.color === "rainbow" && ai.rainbowHue === 190;
+        const off = isSomSomAi ? getDarkCyanTintedSprite(sprite) : getTintedSprite(sprite, ai.rainbowHue);
         ctx.globalAlpha = 0.62 * t;
         ctx.drawImage(off, dx, dy, drawW, drawH);
       } else {
@@ -1723,11 +1812,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         ctx.restore();
       } else if (rainbowHue !== null) {
         // starman: cached rainbow-tinted sprite clipped to the PNG alpha.
-        const off = getTintedSprite(sprite, rainbowHue);
+        const isSomSomTint = p.somSom && rainbowHue === 190;
+        const off = isSomSomTint ? getDarkCyanTintedSprite(sprite) : getTintedSprite(sprite, rainbowHue);
         ctx.save();
         ctx.imageSmoothingEnabled = false;
         ctx.drawImage(sprite, dx, dy, drawW, drawH);
-        ctx.globalAlpha = 0.65;
+        ctx.globalAlpha = isSomSomTint ? 0.85 : 0.65;
         ctx.drawImage(off, dx, dy, drawW, drawH);
         ctx.restore();
       } else {
