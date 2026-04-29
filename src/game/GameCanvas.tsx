@@ -183,11 +183,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
           let dx = 0, dy = 0;
           if (isPressed(k, "left",  b)) dx -= 1;
           if (isPressed(k, "right", b)) dx += 1;
-          if (isPressed(k, "up",    b)) dy -= 1;
-          if (isPressed(k, "down",  b)) dy += 1;
-          // dash-jump: if jump is also held, bias upward
+          // up = jump key currently held; down = slide key currently held
           const jumpAlso = isPressed(k, "jump", b);
+          const downHeld = isPressed(k, "slide", b);
           if (jumpAlso) dy -= 1;
+          if (downHeld) dy += 1;
           if (dx === 0 && dy === 0) dx = p.facing;
           const len = Math.hypot(dx, dy) || 1;
           p.dashVx = (dx / len) * DASH_SPEED;
