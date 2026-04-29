@@ -123,8 +123,9 @@ interface Player {
   invuln: number;
   hp: number;
   hitFlash: number;
-  squash: number; // 0..1 transient
-  stretch: number; // 0..1 transient
+  squash: number; // 0..1 transient (landing — wide & short)
+  stretch: number; // 0..1 transient (falling/dive — tall & thin)
+  hStretch: number; // 0..1 transient (dash — wide & slightly short)
   smearTimer: number;
   dashAirJumpUsed: boolean; // one bonus mid-air jump available while dashing
   jumpWasHeld: boolean;     // for rising-edge jump detection
@@ -252,7 +253,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         invuln: 0,
         hp: 3,
         hitFlash: 0,
-        squash: 0, stretch: 0, smearTimer: 0,
+        squash: 0, stretch: 0, hStretch: 0, smearTimer: 0,
         dashAirJumpUsed: false,
         jumpWasHeld: false,
         alive: true,
@@ -365,7 +366,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           if (!p.superDashing && p.alive && !e.repeat) {
             p.superDashing = true;
             p.superDashTime = 0;
-            p.stretch = 1;
+            p.hStretch = 1;
             sfx.superDash();
             // dedicated super-dash burst VFX (~0.18s)
             r.superDashBurst = {
@@ -408,7 +409,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           // a fresh dash refills the mid-air dash-jump
           p.dashAirJumpUsed = false;
           p.facing = dx >= 0 ? 1 : -1;
-          p.stretch = 1;
+          p.hStretch = 1;
           if (p.invuln < DASH_DURATION) p.invuln = DASH_DURATION;
           burst(r, p.x + p.w / 2, p.y + p.h / 2, "#22e2ff", 14, 320);
           sfx.parryStart();
@@ -654,8 +655,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       // hard cap on super dash top speed
       const SUPER_DASH_CAP = 5300;
       if (Math.abs(p.vx) > SUPER_DASH_CAP) p.vx = Math.sign(p.vx) * SUPER_DASH_CAP;
-      // continuous stretch while ramping
-      p.stretch = 1;
+      // gentle continuous horizontal stretch while ramping
+      if (p.hStretch < 0.5) p.hStretch = 0.5;
       if (p.invuln < 0.05) p.invuln = 0.05;
 
       // SUPER DAZH animation FX (only after the ramp threshold)
@@ -710,6 +711,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     } else if (p.stretch > 0) {
       p.stretch = Math.max(0, p.stretch - dt * 4);
     }
+    if (p.hStretch > 0) p.hStretch = Math.max(0, p.hStretch - dt * 4);
     if (p.smearTimer > 0) p.smearTimer -= dt;
     if (r.superDashBurst) {
       r.superDashBurst.t += dt;
@@ -1905,9 +1907,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     const cx = p.x + p.w / 2;
     const cy = p.y + p.h / 2;
     ctx.translate(cx, cy);
-    // squash (landing) → wide + short. stretch (falling/ramping) → tall + thin.
-    const sx = 1 + p.squash * 0.3 - p.stretch * 0.18;
-    const sy = 1 - p.squash * 0.2 + p.stretch * 0.28;
+    // squash (landing) → wide + short. stretch (falling) → tall + thin.
+    // hStretch (dash / super dash) → wide + slightly short, motion-streak feel.
+    const sx = 1 + p.squash * 0.3 - p.stretch * 0.18 + p.hStretch * 0.35;
+    const sy = 1 - p.squash * 0.2 + p.stretch * 0.28 - p.hStretch * 0.12;
     // (running tilt removed — sprite stays upright)
     ctx.scale(sx * p.facing, sy);
     ctx.translate(-p.w / 2, -p.h / 2);
