@@ -765,6 +765,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       r.finishTime = performance.now() - r.startedAt;
       r.score += Math.max(0, 5000 - Math.floor(r.finishTime / 10));
       sfx.win();
+      bgmLevelEnd();
       onFinish(r.finishTime, r.score);
     }
 
