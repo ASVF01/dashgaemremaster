@@ -6,13 +6,13 @@ import bgmJustRunBro from "@/assets/audio/bgm_just_run_bro.mp3";
 import bgmMenu from "@/assets/audio/bgm_menu.mp3";
 import bgmChampionPlay from "@/assets/audio/bgm_champion_play.mp3";
 import bgmChampionDuel2 from "@/assets/audio/bgm_champion_duel2.mp3";
+import bgmTutorial from "@/assets/audio/bgm_tutorial.mp3";
 import type { LevelId } from "@/game/level";
 
-// Champion play is the default for every level (it's just THAT good).
-// Specific levels can override below. "just-run-bro" stays silent /
-// vibes-only as the user requested.
+// Tutorial keeps its own original track. Champion play is the default for
+// the rest, with chase getting the duel theme and just-run-bro its vibes.
 const TRACKS: Partial<Record<LevelId, string>> = {
-  tutorial: bgmChampionPlay,
+  tutorial: bgmTutorial,
   "scribble-1": bgmChampionPlay,
   "scribble-2": bgmChampionPlay,
   "scribble-3": bgmChampionPlay,
