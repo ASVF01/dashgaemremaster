@@ -1395,8 +1395,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       ctx.globalAlpha = 0.4;
     }
 
-    const inkCol = flash ? "#f5234c" : INK;
-    // rainbow tint color cycling for starman cheat
+    const inkCol = flash ? "#f5234c" : (p.starman ? `hsl(${Math.floor(r.time * 720) % 360}, 95%, 55%)` : INK);
+    // rainbow tint color cycling for starman cheat (used for glow only now)
     const rainbowCol = p.starman ? `hsl(${Math.floor(r.time * 720) % 360}, 95%, 55%)` : null;
 
     // ---- sprite override (use uploaded PNG if available for current state) ----
