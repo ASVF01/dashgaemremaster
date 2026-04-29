@@ -102,6 +102,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const refs = useRef<GameRefs | null>(null);
   const keysRef = useRef<Keys>({});
+  const levelIdRef = useRef<LevelId>(levelId);
+  levelIdRef.current = levelId;
   const [size, setSize] = useState({ w: 1200, h: 600 });
 
   // resize
