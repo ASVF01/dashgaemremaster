@@ -188,8 +188,8 @@ export const sfx = {
     tone({ freq: 1200, to: 1800, dur: 0.06, type: "triangle", vol: 0.18 });
   },
   parryHit() {
-    // 16-bit-ish "ny" sample for successful parries (still a touch crunchy).
-    playPixelSample(nySampleUrl, { vol: 0.55, bits: 16, rateDiv: 2, lp: 12000 });
+    // 8-bit "ny" sample for successful parries.
+    playPixelSample(nySampleUrl, { vol: 0.55, bits: 8, rateDiv: 4, lp: 8000 });
   },
   hit() {
     tone({ freq: 220, to: 70, dur: 0.18, type: "sawtooth", vol: 0.35 });
