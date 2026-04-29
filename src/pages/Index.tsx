@@ -21,6 +21,7 @@ const Index = () => {
   const [binds] = useKeybinds();
   const [muted, setMuted] = useState(false);
   const [hasJrbBadge, setHasJrbBadge] = useState(false);
+  const [badgeFace, setBadgeFace] = useState<":3" | "X3">(":3");
 
   // Load persisted mute pref once.
   useEffect(() => {
