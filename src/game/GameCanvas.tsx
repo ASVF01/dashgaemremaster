@@ -82,6 +82,8 @@ export interface HudState {
   progress: number;
   timeMs: number;
   parryReady: boolean;
+  dashCooldown: number;
+  dashCooldownMax: number;
 }
 
 export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey, levelId = "scribble-1" }: Props) {
@@ -220,6 +222,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         progress: Math.min(1, r.player.x / r.level.width),
         timeMs: r.finished ? r.finishTime : performance.now() - r.startedAt,
         parryReady: r.player.parryCooldown <= 0,
+        dashCooldown: Math.max(0, r.player.dashCooldown),
+        dashCooldownMax: DASH_COOLDOWN,
       });
 
       if (!r.player.alive && !r.finished) {
