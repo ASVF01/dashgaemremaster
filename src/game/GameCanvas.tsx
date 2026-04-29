@@ -570,7 +570,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         state: aiState,
         frame: aiFrame,
         life, maxLife: life,
-        color: p.dashTime > 0 ? "#22e2ff" : p.diving ? "#ffd11a" : MACH_COLORS[Math.max(1, mach)],
+        color: p.starman
+          ? `hsl(${Math.floor(r.time * 720) % 360}, 95%, 60%)`
+          : p.dashTime > 0 ? "#22e2ff" : p.diving ? "#ffd11a" : MACH_COLORS[Math.max(1, mach)],
       });
       if (r.afterimages.length > 32) r.afterimages.shift();
     }
