@@ -1875,20 +1875,24 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       ctx.restore();
     }
 
-    // chaser red trail (drawn behind enemies)
+    // chaser red trail (drawn behind enemies) — sized to match the spook sprite
     if (r.chaserTrail.length) {
       const tint = getSpookRedTint();
+      const ratio = (spookImg.complete && spookImg.naturalWidth > 0)
+        ? spookImg.naturalWidth / spookImg.naturalHeight
+        : 1;
       for (const ct of r.chaserTrail) {
         if (ct.x + ct.w < camX - 40 || ct.x > camX + w + 40) continue;
         const t = ct.life / ct.maxLife; // 1 → 0
-        const drawW = ct.w * 1.4;
-        const drawH = ct.h * 1.4;
-        const dx = ct.x + ct.w / 2 - drawW / 2;
-        const dy = ct.y + ct.h - drawH;
         ctx.save();
         ctx.imageSmoothingEnabled = false;
         ctx.globalAlpha = 0.55 * t;
         if (tint) {
+          // match drawEnemy's chaser sizing exactly so the ghost overlays the sprite
+          const drawH = ct.h * 1.25;
+          const drawW = drawH * ratio;
+          const dx = ct.x + ct.w / 2 - drawW / 2;
+          const dy = ct.y + ct.h - drawH;
           ctx.drawImage(tint, dx, dy, drawW, drawH);
         } else {
           ctx.fillStyle = "#f5234c";
