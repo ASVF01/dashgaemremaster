@@ -40,6 +40,7 @@ interface Afterimage {
   facing: 1 | -1;
   sliding: boolean;
   diving: boolean;
+  state: SpriteState;
   life: number; maxLife: number;
   color: string;
 }
