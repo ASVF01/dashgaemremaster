@@ -157,57 +157,44 @@ export function startGamepadBridge(): () => void {
       id.includes("dualsense") ||
       id.includes("054c");      // Sony USB vendor id
 
-    // Axes (left stick) + dpad.
-    const ax = gp.axes[0] ?? 0;
-    const ay = gp.axes[1] ?? 0;
+    // Movement: left stick (axes 0/1), right stick (axes 2/3), or D-pad.
+    // Per user binds, both sticks should move the character left/right.
+    const lx = gp.axes[0] ?? 0;
+    const rx = gp.axes[2] ?? 0;
 
-    // Hat-switch dpad fallback: many non-standard PS pads encode the dpad as
-    // a single axis (axis 9) with discrete values for each direction.
-    let hatLeft = false, hatRight = false, hatUp = false, hatDown = false;
+    // Hat-switch dpad fallback: some non-standard PS pads encode the dpad
+    // as a single axis (axis 9) with discrete values for each direction.
+    let hatLeft = false, hatRight = false;
     if (isNonStandard && isPlayStation && gp.axes.length > 9) {
       const h = gp.axes[9];
-      // Values cluster near these multiples of 1/7. Use windows for slop.
       const near = (target: number) => Math.abs(h - target) < 0.15;
-      hatUp    = near(-1) || near(-0.71) || near(-0.43);
       hatRight = near(-0.43) || near(-0.14) || near(0.14);
-      hatDown  = near(0.14) || near(0.43) || near(0.71);
       hatLeft  = near(0.71) || near(1) || near(-1);
     }
 
-    const left  = ax < -STICK_DEADZONE || pressed(gp, 14) || hatLeft;
-    const right = ax >  STICK_DEADZONE || pressed(gp, 15) || hatRight;
-    const up    = ay < -STICK_DEADZONE || pressed(gp, 12) || hatUp;
-    const down  = ay >  STICK_DEADZONE || pressed(gp, 13) || hatDown;
+    const left  = lx < -STICK_DEADZONE || rx < -STICK_DEADZONE || pressed(gp, 14) || hatLeft;
+    const right = lx >  STICK_DEADZONE || rx >  STICK_DEADZONE || pressed(gp, 15) || hatRight;
 
     set("ArrowLeft",  left  && !right);
     set("ArrowRight", right && !left);
 
-    // Face buttons. Indices match between Xbox Standard and PS Standard,
-    // so the same numbers work for DualShock/DualSense:
-    //   PS Cross    = idx 0  → jump (Xbox A)
-    //   PS Circle   = idx 1  → slide (Xbox B)
-    //   PS Square   = idx 2  → parry (Xbox X)
-    //   PS Triangle = idx 3  → dash  (Xbox Y)
-    const a = pressed(gp, 0);
-    const b = pressed(gp, 1);
-    const x = pressed(gp, 2);
-    const y = pressed(gp, 3);
-    const lb = pressed(gp, 4);
-    const rb = pressed(gp, 5);
-    const lt = pressed(gp, 6);
-    const rt = pressed(gp, 7);
-    const start = pressed(gp, 9); // PS: Options
+    // Action buttons — exact bindings the user requested:
+    //   X (Cross,  idx 0) → jump
+    //   Square     (idx 2) → parry
+    //   R1         (idx 5) → slide
+    //   R2         (idx 7) → dash (hold = super dash)
+    //   Options    (idx 9) → menu confirm
+    const cross   = pressed(gp, 0);
+    const square  = pressed(gp, 2);
+    const r1      = pressed(gp, 5);
+    const r2      = pressed(gp, 7);
+    const options = pressed(gp, 9);
 
-    // Jump: Cross / A / up direction
-    set("Space", a || up);
-    // Slide / dive: Circle / B / L1 / L2 / down direction
-    set("ShiftLeft", b || lb || lt || down);
-    // Parry: Square / X
-    set("KeyJ", x);
-    // Dash / hold for super dash: Triangle / Y / R1 / R2
-    set("KeyK", y || rt || rb);
-    // Menu confirm: Options / Start
-    set("Enter", start);
+    set("Space",     cross);   // jump
+    set("ShiftLeft", r1);      // slide
+    set("KeyJ",      square);  // parry
+    set("KeyK",      r2);      // dash / hold for super dash
+    set("Enter",     options); // menu confirm
 
     raf = requestAnimationFrame(tick);
   };
