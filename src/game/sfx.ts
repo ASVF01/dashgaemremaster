@@ -379,37 +379,33 @@ function stopRain() {
 
 // ---------- looping slide sound (filtered noise + low rumble) ----------
 let slide: { src: AudioBufferSourceNode; out: GainNode; lp: BiquadFilterNode; rumble: OscillatorNode; rumbleGain: GainNode } | null = null;
-let slideTargetVol = 0.22;
+let slideTargetVol = 0.06;
 
 function startSlideLoop() {
   const c = ac(); if (!c || !master || slide) return;
   const t0 = c.currentTime;
-  // 1.5s of pinkish noise, looped
+  // 1.5s of plain noise, looped — match walk/run footstep timbre.
   const len = Math.floor(c.sampleRate * 1.5);
   const buf = c.createBuffer(1, len, c.sampleRate);
   const data = buf.getChannelData(0);
-  let last = 0;
-  for (let i = 0; i < len; i++) {
-    const white = Math.random() * 2 - 1;
-    last = (last + 0.04 * white) / 1.04;
-    data[i] = last * 2.6 + (Math.random() * 2 - 1) * 0.5;
-  }
+  for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
   const src = c.createBufferSource();
   src.buffer = buf; src.loop = true;
-  const hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 350;
-  const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 4200;
+  // Same band as the walk/run noise: hp ~280, lp ~2600 — soft, papery.
+  const hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 280;
+  const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2600;
   const out = c.createGain();
   out.gain.setValueAtTime(0.0001, t0);
-  out.gain.exponentialRampToValueAtTime(slideTargetVol, t0 + 0.05);
+  out.gain.exponentialRampToValueAtTime(slideTargetVol, t0 + 0.06);
   src.connect(hp).connect(lp).connect(out).connect(master);
   src.start(t0);
 
-  // sub rumble for weighty grit
+  // very light low body so it doesn't feel hollow; quieter than before
   const rumble = c.createOscillator();
-  rumble.type = "sawtooth";
-  rumble.frequency.value = 70;
+  rumble.type = "triangle";
+  rumble.frequency.value = 95;
   const rumbleGain = c.createGain();
-  rumbleGain.gain.value = 0.05;
+  rumbleGain.gain.value = 0.012;
   rumble.connect(rumbleGain).connect(out);
   rumble.start(t0);
 
@@ -417,17 +413,17 @@ function startSlideLoop() {
 }
 
 function setSlideIntensity(v: number) {
-  // v in [0,1] — modulates volume + brightness
-  slideTargetVol = 0.08 + Math.max(0, Math.min(1, v)) * 0.28;
+  // v in [0,1] — modulates volume + brightness, kept quiet to feel like footsteps.
+  slideTargetVol = 0.025 + Math.max(0, Math.min(1, v)) * 0.09;
   if (!slide) return;
   const c = ac(); if (!c) return;
   const t = c.currentTime;
   try {
     slide.out.gain.cancelScheduledValues(t);
     slide.out.gain.setValueAtTime(slide.out.gain.value, t);
-    slide.out.gain.linearRampToValueAtTime(slideTargetVol, t + 0.08);
+    slide.out.gain.linearRampToValueAtTime(slideTargetVol, t + 0.1);
     slide.lp.frequency.cancelScheduledValues(t);
-    slide.lp.frequency.linearRampToValueAtTime(2400 + v * 3200, t + 0.08);
+    slide.lp.frequency.linearRampToValueAtTime(1800 + v * 1400, t + 0.1);
   } catch { /* noop */ }
 }
 
