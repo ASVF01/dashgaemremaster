@@ -583,13 +583,13 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // SUPER DASH (just-run-bro): hold dash to ramp up speed in facing dir.
     if (p.superDashing && p.alive) {
       p.superDashTime += dt;
-      // strong baseline accel so it feels fast the instant you hold,
-      // then keeps growing the longer you hold.
+      // Nerfed: gentler accel and a hard top-speed ceiling so it caps out.
       const t = Math.min(p.superDashTime, 12);
-      // Slower ramp-up so reaching top speed takes commitment, but the
-      // ceiling is higher so the payoff is bigger.
-      const accel = 700 + t * 320; // ~700 -> ~4540 px/s^2 over 12s
+      const accel = 500 + t * 160; // ~500 -> ~2420 px/s^2 over 12s
       p.vx += p.facing * accel * dt;
+      // hard cap on super dash top speed
+      const SUPER_DASH_CAP = 2200;
+      if (Math.abs(p.vx) > SUPER_DASH_CAP) p.vx = Math.sign(p.vx) * SUPER_DASH_CAP;
       // continuous stretch while ramping
       p.stretch = 1;
       if (p.invuln < 0.05) p.invuln = 0.05;
@@ -620,7 +620,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         // It stays in world space, so it visually trails behind the player.
         r.superDashFxTimer -= dt;
         if (r.superDashFxTimer <= 0) {
-          r.superDashFxTimer = 0.1;
+          r.superDashFxTimer = 0.2;
           const cx = p.x + p.w / 2;
           const cy = p.y + p.h / 2;
           // cyan glow bar
