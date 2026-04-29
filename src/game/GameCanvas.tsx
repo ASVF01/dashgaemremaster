@@ -1190,15 +1190,21 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   }
 
   function parrySuccess(r: GameRefs, x: number, y: number) {
+    // Anti-spam: while the 2.5s parry i-frames are still ticking, ignore
+    // further successful-parry triggers entirely (no sound, no boost, no fx).
+    // We piggyback on `invuln` since a successful parry sets it to 2.5s.
+    if (r.player.invuln > 2.0) return;
     r.combo += 2;
     r.comboTimer = 3;
     r.score += 250 * Math.max(1, r.combo);
     r.shake = 0.7;
     r.glitch = 0.7;
     r.freezeFrames = 4;
-    r.player.parryCooldown = 0.15; // refund cooldown a bit
-    // refresh i-frames briefly so chained parries stay safe
-    if (r.player.invuln < 0.4) r.player.invuln = 0.4;
+    // 2.5s i-frames per successful parry. Also park the parry on cooldown
+    // for the same duration so the active window can't re-fire mid-iframes.
+    r.player.invuln = Math.max(r.player.invuln, 2.5);
+    r.player.parrying = 0;
+    r.player.parryCooldown = 2.5;
     sfx.parryHit();
     // boost in facing dir
     r.player.vx += r.player.facing * PARRY_BOOST;
