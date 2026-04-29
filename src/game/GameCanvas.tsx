@@ -67,6 +67,7 @@ interface GameRefs {
   score: number;
   bestMach: number;
   glitch: number;
+  superDashBurst: { x: number; y: number; t: number; facing: 1 | -1 } | null;
   startedAt: number;
   finished: boolean;
   finishTime: number;
@@ -157,6 +158,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       score: 0,
       bestMach: 0,
       glitch: 0,
+      superDashBurst: null,
       startedAt: performance.now(),
       finished: false,
       finishTime: 0,
@@ -213,20 +215,14 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
             p.superDashTime = 0;
             p.stretch = 1;
             sfx.superDash();
-            // burst effect (~0.1s)
-            const cx = p.x + p.w / 2;
-            const cy = p.y + p.h / 2;
-            spawnParticle(r, { x: cx, y: cy, color: INK, life: 0.1, size: 14, kind: "ring" });
-            spawnParticle(r, { x: cx, y: cy, color: INK, life: 0.1, size: 8, kind: "ring" });
-            for (let i = 0; i < 12; i++) {
-              const ang = (i / 12) * Math.PI * 2;
-              spawnParticle(r, {
-                x: cx, y: cy,
-                vx: Math.cos(ang) * 320,
-                vy: Math.sin(ang) * 320,
-                color: INK, life: 0.1, size: 3, kind: "spark",
-              });
-            }
+            // dedicated super-dash burst VFX (~0.18s)
+            r.superDashBurst = {
+              x: p.x + p.w / 2,
+              y: p.y + p.h / 2,
+              t: 0,
+              facing: p.facing,
+            };
+            r.shake = Math.max(r.shake, 0.35);
           }
           return;
         }
@@ -484,6 +480,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     if (p.squash > 0) p.squash = Math.max(0, p.squash - dt * 4);
     if (p.stretch > 0) p.stretch = Math.max(0, p.stretch - dt * 4);
     if (p.smearTimer > 0) p.smearTimer -= dt;
+    if (r.superDashBurst) {
+      r.superDashBurst.t += dt;
+      if (r.superDashBurst.t >= 0.18) r.superDashBurst = null;
+    }
 
     // move + collide axis-separated
     moveAxis(r, "x", p.vx * dt);
@@ -1086,6 +1086,52 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
 
     // player
     drawPlayer(ctx, r);
+
+    // super dash burst VFX
+    if (r.superDashBurst) {
+      const b = r.superDashBurst;
+      const dur = 0.18;
+      const k = Math.min(1, b.t / dur);    // 0 → 1
+      const inv = 1 - k;
+      ctx.save();
+      // bright flash core (fades fast)
+      const flashA = Math.max(0, 1 - k * 2.2);
+      if (flashA > 0) {
+        ctx.globalAlpha = flashA * 0.9;
+        ctx.fillStyle = "#fffbe6";
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, 18 + k * 30, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // shockwave rings
+      ctx.globalAlpha = inv;
+      sketchCircle(ctx, b.x, b.y, 10 + k * 70, null, INK, 3, 1.2);
+      ctx.globalAlpha = inv * 0.7;
+      sketchCircle(ctx, b.x, b.y, 4 + k * 44, null, INK, 2, 1);
+      // radial speed lines
+      ctx.globalAlpha = inv;
+      ctx.strokeStyle = INK;
+      ctx.lineWidth = 2.5;
+      const spokes = 14;
+      for (let i = 0; i < spokes; i++) {
+        const ang = (i / spokes) * Math.PI * 2 + b.t * 6;
+        const r0 = 14 + k * 30;
+        const r1 = r0 + 18 + inv * 22;
+        ctx.beginPath();
+        ctx.moveTo(b.x + Math.cos(ang) * r0, b.y + Math.sin(ang) * r0);
+        ctx.lineTo(b.x + Math.cos(ang) * r1, b.y + Math.sin(ang) * r1);
+        ctx.stroke();
+      }
+      // forward streak in facing dir
+      ctx.globalAlpha = inv * 0.85;
+      ctx.lineWidth = 4;
+      const sx = b.x + b.facing * (10 + k * 20);
+      const ex = b.x + b.facing * (50 + k * 90);
+      jaggedBolt(ctx, sx, b.y, ex, b.y, INK, 3, 4, 6);
+      jaggedBolt(ctx, sx, b.y - 6, ex - b.facing * 10, b.y - 6, INK, 2, 3, 5);
+      jaggedBolt(ctx, sx, b.y + 6, ex - b.facing * 10, b.y + 6, INK, 2, 3, 5);
+      ctx.restore();
+    }
 
     // particles
     for (const pa of r.particles) {
