@@ -251,6 +251,29 @@ export const sfx = {
     tone({ freq: 220, to: 70, dur: 0.16, type: "sawtooth", vol: 0.3 });
     noise(0.14, 0.28, 250, 3200);
   },
+  fatalHit() {
+    // ~3s cinematic "final hit" stinger — layered impact + long rumble tail.
+    // 1) bright crash transient (the "smack")
+    noise(0.06, 0.85, 4000, 14000);
+    // 2) huge sub-boom drop
+    tone({ freq: 180, to: 30, dur: 0.45, type: "sine", vol: 0.7, attack: 0.001, release: 0.25 });
+    // 3) body weight — descending sawtooth for impact mass
+    tone({ freq: 380, to: 60, dur: 0.4, type: "sawtooth", vol: 0.5, attack: 0.002, release: 0.15 });
+    // 4) metallic screech, slightly delayed so it reads as the "ring" after impact
+    tone({ freq: 1600, to: 380, dur: 0.9, type: "square", vol: 0.22, attack: 0.005, release: 0.5, delay: 0.05 });
+    // 5) mid whoosh tail
+    noise(0.9, 0.45, 200, 2400, 0.08);
+    // 6) long sub rumble carrying the rest of the ~3s
+    tone({ freq: 70, to: 35, dur: 2.4, type: "sine", vol: 0.45, attack: 0.02, release: 0.5, delay: 0.15 });
+    tone({ freq: 55, to: 28, dur: 2.6, type: "triangle", vol: 0.28, attack: 0.05, release: 0.6, delay: 0.2 });
+    // 7) low filtered noise rumble that fades over the full duration
+    noise(2.6, 0.32, 40, 500, 0.25);
+    // 8) sparse high "debris" ticks fading out
+    tone({ freq: 2200, to: 1400, dur: 0.08, type: "triangle", vol: 0.16, release: 0.05, delay: 0.5 });
+    tone({ freq: 1800, to: 900, dur: 0.08, type: "triangle", vol: 0.13, release: 0.05, delay: 0.95 });
+    tone({ freq: 1500, to: 700, dur: 0.09, type: "triangle", vol: 0.10, release: 0.06, delay: 1.6 });
+    tone({ freq: 1100, to: 500, dur: 0.09, type: "triangle", vol: 0.08, release: 0.06, delay: 2.3 });
+  },
   enemyKill() {
     tone({ freq: 600, to: 200, dur: 0.12, type: "square", vol: 0.28 });
     noise(0.1, 0.2, 400, 4000);
