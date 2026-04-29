@@ -934,6 +934,16 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     if (p.parryCooldown > 0) p.parryCooldown -= dt;
     if (p.invuln > 0) p.invuln -= dt;
     if (p.hitFlash > 0) p.hitFlash -= dt;
+    // critical-hp heartbeat: faint, fast lub-dub when hp is 1
+    if (p.alive && p.hp === 1 && getSettings().lowHpHeartbeat) {
+      r.heartbeatTimer -= dt;
+      if (r.heartbeatTimer <= 0) {
+        sfx.heartbeat();
+        r.heartbeatTimer = 0.55; // a bit fast, ~110 bpm
+      }
+    } else {
+      r.heartbeatTimer = 0;
+    }
     // hurt window: leave red afterimages behind for ~0.5s after a hit
     if (p.hurtTimer > 0) {
       p.hurtTimer -= dt;
