@@ -1666,7 +1666,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // tint hue: rainbow during starman, fixed cyan during SUPER DAZH
     const superDazhActive = p.superDashing && p.superDashTime >= 5;
     const rainbowHue = p.starman
-      ? Math.floor(r.time * 720) % 360
+      ? (p.somSom ? 190 : Math.floor(r.time * 720) % 360)
       : superDazhActive ? 190 : null;
 
     // ---- sprite override (use uploaded PNG if available for current state) ----
