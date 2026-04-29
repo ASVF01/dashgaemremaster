@@ -208,6 +208,7 @@ const Index = () => {
             levelId={levelId}
           />
           {screen === "playing" && <Hud hud={hud} />}
+          <TouchControls visible={screen === "playing"} />
 
           {screen === "menu" && <MainMenu onPlay={startLevel} />}
 
