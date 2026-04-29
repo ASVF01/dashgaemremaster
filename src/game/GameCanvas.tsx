@@ -1276,6 +1276,90 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       r.lightningCooldown = 0;
     }
 
+    // SOM SOM "32.65" event: white fade-out flash + fast grey cloud + optimized rain.
+    const STORM_T = 32.65;
+    if (somSomActive && starElapsed >= STORM_T && !r.somSomStorm) {
+      r.somSomStorm = true;
+      r.somSomStormFlash = 0;
+      r.somSomCloudX = -260;
+      const N = 220;
+      const buf = new Float32Array(N * 4);
+      for (let i = 0; i < N; i++) {
+        buf[i * 4 + 0] = Math.random() * w;
+        buf[i * 4 + 1] = Math.random() * h - h;
+        buf[i * 4 + 2] = 900 + Math.random() * 600;
+        buf[i * 4 + 3] = 10 + Math.random() * 10;
+      }
+      r.somSomRain = buf;
+    } else if (!somSomActive && r.somSomStorm) {
+      r.somSomStorm = false;
+      r.somSomStormFlash = -1;
+      r.somSomCloudX = null;
+      r.somSomRain = null;
+    }
+
+    if (r.somSomStorm) {
+      const dtR = 0.0166;
+      if (r.somSomStormFlash >= 0) {
+        r.somSomStormFlash += dtR;
+        const f = r.somSomStormFlash;
+        let alpha = 0;
+        if (f < 0.12) alpha = f / 0.12;
+        else if (f < 0.9) alpha = 1 - (f - 0.12) / 0.78;
+        if (alpha > 0) {
+          ctx.save();
+          ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+          ctx.fillRect(0, 0, w, h);
+          ctx.restore();
+        } else {
+          r.somSomStormFlash = -1;
+        }
+      }
+
+      if (r.somSomCloudX !== null) {
+        r.somSomCloudX += 1400 * dtR;
+        const cx = r.somSomCloudX;
+        const cy = h * 0.18;
+        ctx.save();
+        ctx.fillStyle = "rgba(120,128,138,0.85)";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, 90, 28, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx + 60, cy - 14, 60, 24, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx - 50, cy - 8, 50, 20, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx + 30, cy + 12, 70, 22, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(120,128,138,0.25)";
+        ctx.fillRect(cx - 240, cy - 18, 200, 36);
+        ctx.restore();
+        if (cx > w + 260) r.somSomCloudX = -260;
+      }
+
+      const rain = r.somSomRain;
+      if (rain) {
+        const len = rain.length / 4;
+        ctx.save();
+        ctx.strokeStyle = "rgba(170,200,220,0.55)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let i = 0; i < len; i++) {
+          const o = i * 4;
+          rain[o + 1] += rain[o + 2] * dtR;
+          if (rain[o + 1] > h) {
+            rain[o + 1] = -10;
+            rain[o + 0] = Math.random() * w;
+          }
+          const x = rain[o];
+          const y = rain[o + 1];
+          const l = rain[o + 3];
+          ctx.moveTo(x, y);
+          ctx.lineTo(x - 2, y + l);
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+
     // starman: rainbow stars rain down (BACKGROUND layer, behind level assets)
     // (suppressed for SOM SOM variant — no rain, no rainbow)
     const maxRainStars = Math.min(64, Math.max(28, Math.floor((w * h) / 17000)));
