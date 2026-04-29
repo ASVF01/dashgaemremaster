@@ -148,6 +148,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         alive: true,
         superDashing: false,
         superDashTime: 0,
+        starman: false,
+        starTimer: 0,
       },
       projectiles: [],
       particles: [],
