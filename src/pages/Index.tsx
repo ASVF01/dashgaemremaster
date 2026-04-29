@@ -216,6 +216,7 @@ const Index = () => {
             levelId={levelId}
           />
           {screen === "playing" && <Hud hud={hud} />}
+          <FpsOverlay />
 
           {screen === "menu" && <MainMenu onPlay={startLevel} />}
 
