@@ -791,7 +791,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           p.vy = -480;
           parrySuccess(r, cx, cy);
         } else if (p.invuln <= 0) {
+          // Knock player up and back AWAY from hazard so they don't fall
+          // into the pit the spike is guarding.
+          const cx = h.x + h.w / 2;
+          const awayX = (p.x + p.w / 2) < cx ? -1 : 1;
           damage(r, p.x + p.w / 2, p.y + p.h);
+          p.vx = awayX * 360;
+          p.vy = -560;
+          // lift the player above the spike so they don't immediately re-overlap
+          p.y = h.y - p.h - 2;
         }
       }
     }
