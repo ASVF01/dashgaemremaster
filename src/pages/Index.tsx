@@ -2,13 +2,15 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import GameCanvas, { type HudState } from "@/game/GameCanvas";
 import Hud from "@/game/Hud";
 import TouchControls from "@/game/TouchControls";
+import FpsOverlay from "@/game/FpsOverlay";
 
 import MainMenu from "@/game/MainMenu";
 import { LEVELS, type LevelId } from "@/game/level";
 import { useKeybinds, keyLabel, type ActionId } from "@/game/keybinds";
-import { playMenuBgm, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor, isSameTrackAs } from "@/game/bgm";
+import { playMenuBgm, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor, isSameTrackAs, setBgmVolume } from "@/game/bgm";
 import cutsceneJustRunBro from "@/assets/video/mcdonalds_sprite_2.mp4";
-import { sfx, unlockAudio } from "@/game/sfx";
+import { sfx, unlockAudio, setSfxVolume } from "@/game/sfx";
+import { getSettings } from "@/game/settings";
 
 
 type Screen = "menu" | "loading" | "playing" | "dead" | "win" | "cutscene";
@@ -42,6 +44,10 @@ const Index = () => {
       setDark(d);
       document.documentElement.classList.toggle("dark", d);
     } catch { /* noop */ }
+    // Apply persisted volume settings on app start.
+    const s = getSettings();
+    setSfxVolume(s.sfxVolume);
+    setBgmVolume(s.bgmVolume * 0.5);
   }, []);
 
   const toggleDark = () => {
