@@ -1615,8 +1615,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
 
     const inkCol = flash ? "#f5234c" : INK;
-    // rainbow tint color cycling for starman cheat (applied to PNG sprite)
-    const rainbowHue = p.starman ? Math.floor(r.time * 720) % 360 : null;
+    // tint hue: rainbow during starman, fixed cyan during SUPER DAZH
+    const superDazhActive = p.superDashing && p.superDashTime >= 5;
+    const rainbowHue = p.starman
+      ? Math.floor(r.time * 720) % 360
+      : superDazhActive ? 190 : null;
 
     // ---- sprite override (use uploaded PNG if available for current state) ----
     const speedNow = Math.abs(p.vx);
