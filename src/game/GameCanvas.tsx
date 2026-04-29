@@ -1416,8 +1416,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     const fps = state === "superDash" ? 8 : 12 + machNow * 3;
     const frame = Math.floor(r.time * fps);
     const sprite = getSprite(state, frame);
-    // starman: bypass PNG sprite so the stick figure (drawn below) gets the rainbow
-    if (sprite && !p.starman) {
+    if (sprite) {
       // Fit the sprite to the player AABB. For wide sprites (slide/dive) we
       // size by width so the pose stays readable; for tall sprites we size
       // by height. Either way the sprite is anchored to the bottom of the box.
