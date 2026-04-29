@@ -63,7 +63,7 @@ export default function Hud({ hud }: { hud: HudState }) {
           </div>
           <div className="h-3 border-2 border-ink bg-paper relative overflow-hidden">
             <div
-              className={`h-full transition-[width] duration-75 ${sm ? invBarClass : ""}`}
+              className={`h-full transition-[width] duration-75 ${sm ? speedBarClass : ""}`}
               style={{
                 width: `${sm ? 100 : Math.min(100, (hud.speed / 980) * 100)}%`,
                 background: sm ? invBarBg : machColor,
