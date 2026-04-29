@@ -397,15 +397,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     p.vy += GRAVITY * dt;
     if (p.vy > 1400) p.vy = 1400;
 
-    // dash timers + spawn extra afterimages while active
-    if (p.dashTime > 0) {
-      p.dashTime -= dt;
-      if (p.dashTime <= 0) {
-        // exit dash with preserved horizontal momentum (capped)
-        const cap = MAX_SPEED + 120;
-        if (Math.abs(p.vx) > cap) p.vx = Math.sign(p.vx) * cap;
-      }
-    }
+    // dash visual / i-frame window timer (velocity is no longer locked)
+    if (p.dashTime > 0) p.dashTime -= dt;
     if (p.dashCooldown > 0) p.dashCooldown -= dt;
 
     // parry timers
