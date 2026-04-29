@@ -1240,6 +1240,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         }
         segs.push({ x: cx, y: cy });
         r.lightningBolts.push({ x: bx, t: 0, life: 0.45, segs, flash: 1 });
+        sfx.thunder();
       }
       for (let i = r.lightningBolts.length - 1; i >= 0; i--) {
         const b = r.lightningBolts[i];
