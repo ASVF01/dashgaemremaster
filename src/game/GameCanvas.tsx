@@ -699,6 +699,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       p.squash = 1;
       sfx.jump();
     }
+    sfx.dash();
     p.dashTime = DASH_DURATION;
     p.dashCooldown = DASH_COOLDOWN;
     p.dashVx = nx; p.dashVy = ny;
