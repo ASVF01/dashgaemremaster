@@ -808,23 +808,23 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     }
 
     // camera follow with lookahead
-    // Camera follow with lookahead. Center the player horizontally,
-    // with a slight lookahead in facing/velocity direction. Boost the
-    // lerp by speed so super-dash can't outrun the camera, and hard-clamp
-    // so the player is never pushed off the visible window.
+    // Camera follow: center the player horizontally with a slight
+    // lookahead. Lerp speed scales with player velocity so super-dash
+    // can't outrun the camera. Final safety clamp guarantees the player
+    // is always inside the viewport.
     const speedNow = Math.abs(p.vx);
     const targetCam = (p.x + p.w / 2) - size.w * 0.5 + p.facing * 60 + p.vx * 0.08;
-    const lerp = Math.min(1, dt * (6 + speedNow * 0.01));
+    const lerp = Math.min(1, dt * (6 + speedNow * 0.02));
     r.cameraX += (targetCam - r.cameraX) * lerp;
-    // hard clamp: keep player fully on-screen with a margin
-    const margin = 80;
-    const minCam = p.x + p.w - size.w + margin;
-    const maxCam = p.x - margin;
-    if (r.cameraX < minCam) r.cameraX = minCam;
-    if (r.cameraX > maxCam) r.cameraX = maxCam;
     // world bounds
     if (r.cameraX < 0) r.cameraX = 0;
     if (r.cameraX > r.level.width - size.w) r.cameraX = r.level.width - size.w;
+    // safety: if player would still leave the screen (extreme speed),
+    // snap the camera so they sit at the visible edge with a margin.
+    const margin = 100;
+    const playerScreenX = (p.x + p.w / 2) - r.cameraX;
+    if (playerScreenX < margin) r.cameraX = (p.x + p.w / 2) - margin;
+    if (playerScreenX > size.w - margin) r.cameraX = (p.x + p.w / 2) - (size.w - margin);
   }
 
   function damage(r: GameRefs, x: number, y: number) {
