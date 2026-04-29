@@ -5,10 +5,10 @@ import {
   keyLabel, useKeybinds,
 } from "@/game/keybinds";
 import { useSettings, type Settings } from "@/game/settings";
-import { setSfxVolume } from "@/game/sfx";
+import { sfx, setSfxVolume, unlockAudio } from "@/game/sfx";
 import { setBgmVolume } from "@/game/bgm";
 
-export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "credits";
+export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" | "credits";
 
 interface Props {
   onPlay: (id: LevelId) => void;
