@@ -596,7 +596,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
       // SUPER DAZH animation FX (only after the ramp threshold)
       if (p.superDashTime >= 5) {
-        // vertical speed lines streaking upward past the player
+        // vertical cyan speed lines streaking upward past the player
         r.superDashLineTimer -= dt;
         if (r.superDashLineTimer <= 0) {
           r.superDashLineTimer = 0.012;
@@ -609,61 +609,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
               x: lx, y: ly,
               vx: 0,
               vy: -(520 + Math.random() * 380),
-              color: "#ffffff",
+              color: Math.random() < 0.25 ? "#ffffff" : "#22e2ff",
               size: len / 2,
               life: 0.22 + Math.random() * 0.12,
               kind: "smear",
             });
           }
         }
-        // every 0.1s drop a cyan vertical line at the player's current pos.
-        // It stays in world space, so it visually trails behind the player.
-        r.superDashFxTimer -= dt;
-        if (r.superDashFxTimer <= 0) {
-          r.superDashFxTimer = 0.2;
-          const cx = p.x + p.w / 2;
-          const cy = p.y + p.h / 2;
-          // cyan glow bar
-          spawnParticle(r, {
-            x: cx, y: cy, vx: 0, vy: 0,
-            color: "#22e2ff",
-            size: p.h * 1.2,
-            life: 0.45,
-            kind: "shard",
-            angle: Math.PI / 2,
-          });
-          // bright white core
-          spawnParticle(r, {
-            x: cx, y: cy, vx: 0, vy: 0,
-            color: "#ffffff",
-            size: p.h * 1.0,
-            life: 0.3,
-            kind: "shard",
-            angle: Math.PI / 2,
-          });
-          sfx.mach();
-        }
-
-        // continuous cyan flame trail in front of player — emits each frame
-        // so the flame leaves an afterimage trail in world space.
-        const fcx = p.x + p.w / 2;
-        const fcy = p.y + p.h / 2;
-        const tipX = fcx + p.facing * (p.w * 0.6);
-        for (let i = 0; i < 2; i++) {
-          spawnParticle(r, {
-            x: tipX + p.facing * Math.random() * 6,
-            y: fcy + (Math.random() - 0.5) * (p.h * 0.5),
-            vx: 0, vy: -20 - Math.random() * 30,
-            color: Math.random() < 0.3 ? "#ffffff" : "#22e2ff",
-            size: 5 + Math.random() * 4,
-            life: 0.35 + Math.random() * 0.15,
-            kind: "ring",
-          });
-        }
       } else {
-        r.superDashFxTimer = 0;
         r.superDashLineTimer = 0;
       }
+      r.superDashFxTimer = 0;
     } else {
       r.superDashFxTimer = 0;
       r.superDashLineTimer = 0;
@@ -699,9 +655,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // afterimages — spawn when fast, diving, or dashing
     r.afterTimer -= dt;
     if ((mach >= 1 || p.diving || p.dashTime > 0) && r.afterTimer <= 0) {
-      r.afterTimer = p.starman ? 0.04 : (p.dashTime > 0 ? 0.012 : Math.max(0.018, 0.05 - mach * 0.008));
-      const life = p.starman ? 0.16 : 0.2;
-      const rainbowHue = p.starman ? Math.floor(r.time * 720) % 360 : undefined;
+      const superDazh = p.superDashing && p.superDashTime >= 5;
+      r.afterTimer = p.starman ? 0.04 : superDazh ? 0.025 : (p.dashTime > 0 ? 0.012 : Math.max(0.018, 0.05 - mach * 0.008));
+      const life = p.starman ? 0.16 : superDazh ? 0.22 : 0.2;
+      const rainbowHue = p.starman
+        ? Math.floor(r.time * 720) % 360
+        : superDazh ? 190 : undefined;
       const aiState: SpriteState =
         p.dashTime > 0 ? "dash" :
         p.diving ? "dive" :
@@ -724,6 +683,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         life, maxLife: life,
         color: p.starman
           ? "rainbow"
+          : superDazh ? "#22e2ff"
           : p.dashTime > 0 ? "#22e2ff" : p.diving ? "#ffd11a" : MACH_COLORS[Math.max(1, mach)],
         rainbowHue,
       });
@@ -1655,8 +1615,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
 
     const inkCol = flash ? "#f5234c" : INK;
-    // rainbow tint color cycling for starman cheat (applied to PNG sprite)
-    const rainbowHue = p.starman ? Math.floor(r.time * 720) % 360 : null;
+    // tint hue: rainbow during starman, fixed cyan during SUPER DAZH
+    const superDazhActive = p.superDashing && p.superDashTime >= 5;
+    const rainbowHue = p.starman
+      ? Math.floor(r.time * 720) % 360
+      : superDazhActive ? 190 : null;
 
     // ---- sprite override (use uploaded PNG if available for current state) ----
     const speedNow = Math.abs(p.vx);
