@@ -263,12 +263,6 @@ export function startGamepadBridge(): () => void {
     fire(want ? "keydown" : "keyup", code);
   }
 
-  function pressed(gp: Gamepad, idx: number): boolean {
-    const b = gp.buttons[idx];
-    if (!b) return false;
-    return typeof b === "object" ? (b.pressed || b.value > TRIGGER_THRESHOLD) : (b as unknown as number) > TRIGGER_THRESHOLD;
-  }
-
   let raf = 0;
   const tick = () => {
     const pads = safeGetGamepads();
