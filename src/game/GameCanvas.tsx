@@ -284,6 +284,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       rainStars: [],
       lightningCooldown: 0,
       lightningBolts: [],
+      somSomStorm: false,
+      somSomStormFlash: -1,
+      somSomCloudX: null,
+      somSomRain: null,
     };
     // Any reset/level change cancels the starman shimmer too.
     sfx.shineStop();
