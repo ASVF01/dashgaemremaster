@@ -278,6 +278,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       particles: [],
       afterimages: [],
       afterTimer: 0,
+      chaserTrail: [],
+      chaserTrailTimer: 0,
       cameraX: 0,
       shake: 0,
       freezeFrames: 0,
