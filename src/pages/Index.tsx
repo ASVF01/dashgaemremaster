@@ -46,12 +46,14 @@ const Index = () => {
   }, [levelId]);
   const handleDeath = useCallback(() => setScreen("dead"), []);
 
-  // When the player returns to the menu, swap to the menu BGM. (Other
-  // screens have their music driven by GameCanvas / bgmLevelEnd.)
+  // One owner for BGM: every screen/level transition cancels any pending
+  // track first so loading delays can never stack songs on top of each other.
   useEffect(() => {
     if (screen === "menu") playMenuBgm();
-    else if (screen === "playing") playBgmFor(levelId);
+    else if (screen === "playing") playBgmFor(levelId, true);
     else if (screen === "cutscene") stopBgm();
+    else if (screen === "dead" || screen === "win") return;
+    else stopBgm();
   }, [screen, levelId]);
 
   const startLevel = (id: LevelId) => {
