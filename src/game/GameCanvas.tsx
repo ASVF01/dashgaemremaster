@@ -1328,12 +1328,16 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
         sketchLine(ctx, headX + 4, bodyBot, headX + 10, p.h - 6, 2.8, inkCol, 1.4);
       }
 
-      // smear frame at high mach
-      if (mach >= 3) {
+      // smear frame — visible at mach 3+ or while dashing.
+      // Width and opacity scale with speed for clearer motion readability.
+      const sm_speed = Math.abs(p.vx);
+      const sm_sp = Math.min(1, Math.max(0, (sm_speed - 140) / 2260));
+      if (mach >= 3 || p.dashTime > 0) {
         ctx.save();
-        ctx.globalAlpha = 0.35;
-        ctx.fillStyle = MACH_COLORS[mach];
-        ctx.fillRect(-p.w * 0.6, headY - 2, p.w * 0.6, p.h - headY + 6);
+        ctx.globalAlpha = 0.30 + sm_sp * 0.30;
+        ctx.fillStyle = p.dashTime > 0 ? "#22e2ff" : MACH_COLORS[Math.max(3, mach)];
+        const smearW = p.w * (0.6 + sm_sp * 1.8);
+        ctx.fillRect(-smearW, headY - 2, smearW, p.h - headY + 6);
         ctx.restore();
       }
     }
