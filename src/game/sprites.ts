@@ -5,8 +5,9 @@ import walkUrl from "@/assets/sprites/walk.png";
 import jumpUrl from "@/assets/sprites/jump.png";
 import slideUrl from "@/assets/sprites/slide.png";
 import diveUrl from "@/assets/sprites/dive.png";
+import dashUrl from "@/assets/sprites/dash.png";
 
-export type SpriteState = "idle" | "run" | "jump" | "fall" | "slide" | "dive";
+export type SpriteState = "idle" | "run" | "jump" | "fall" | "slide" | "dive" | "dash";
 
 const URLS: Partial<Record<SpriteState, string>> = {
   idle: standUrl,
@@ -15,6 +16,7 @@ const URLS: Partial<Record<SpriteState, string>> = {
   // fall: fallUrl,  // (falls back to jump until you upload one)
   slide: slideUrl,
   dive: diveUrl,
+  dash: dashUrl,
 };
 
 const cache: Partial<Record<SpriteState, HTMLImageElement>> = {};
@@ -42,6 +44,7 @@ export function getSprite(state: SpriteState): HTMLImageElement | null {
     state === "dive"  ? ["dive", "slide", "jump", "idle"] :
     state === "slide" ? ["slide", "idle"] :
     state === "jump"  ? ["jump", "idle"] :
+    state === "dash"  ? ["dash", "run", "idle"] :
     state === "run"   ? ["run", "idle"] :
                         ["idle"];
   for (const s of order) {
