@@ -969,14 +969,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
       }
 
       ctx.imageSmoothingEnabled = false;
-      // Draw the actual sprite faintly so the stick figure is visible.
-      ctx.globalAlpha = 0.45 * t;
+      // Just draw the sprite faintly — no solid color overlay (that made a block).
+      ctx.globalAlpha = 0.5 * t;
       ctx.drawImage(sprite, dx, dy, drawW, drawH);
-      // Subtle color wash on top of just the sprite pixels.
-      ctx.globalAlpha = 0.25 * t;
-      ctx.globalCompositeOperation = "source-atop";
-      ctx.fillStyle = ai.color;
-      ctx.fillRect(dx, dy, drawW, drawH);
       ctx.restore();
       return;
     }
