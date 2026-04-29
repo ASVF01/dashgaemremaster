@@ -82,6 +82,8 @@ interface Props {
   onFinish: (timeMs: number, score: number) => void;
   onDeath: () => void;
   paused: boolean;
+  /** When true, do not pause the BGM even if the game is paused (e.g. win/death overlays). */
+  keepAudio?: boolean;
   resetKey: number;
   levelId?: LevelId;
 }
@@ -99,7 +101,7 @@ export interface HudState {
   dashCooldownMax: number;
 }
 
-export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey, levelId = "scribble-1" }: Props) {
+export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio = false, resetKey, levelId = "scribble-1" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const refs = useRef<GameRefs | null>(null);
   const keysRef = useRef<Keys>({});
@@ -176,10 +178,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, resetKey,
     return () => { stopBgm(); };
   }, [levelId, resetKey]);
 
-  // BGM: pause/resume with the game's pause state
+  // BGM: pause/resume with the game's pause state — but keep playing when
+  // an overlay (win/death) wants the music to continue in the background.
   useEffect(() => {
-    if (paused) pauseBgm(); else resumeBgm();
-  }, [paused]);
+    if (paused && !keepAudio) pauseBgm(); else resumeBgm();
+  }, [paused, keepAudio]);
 
   // keys
   useEffect(() => {
