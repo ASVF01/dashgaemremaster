@@ -1335,18 +1335,18 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       ctx.save();
       ctx.globalAlpha = a;
       if (pa.kind === "ring") {
-        sketchCircle(ctx, pa.x, pa.y, (1 - a) * 24 + 4, null, pa.color, 2, 1);
+        sketchCircle(ctx, pa.x, pa.y, (1 - a) * 24 + 4, null, drawColor, 2, 1);
       } else if (pa.kind === "smear") {
-        ctx.fillStyle = pa.color;
+        ctx.fillStyle = drawColor;
         ctx.fillRect(pa.x - pa.size, pa.y - 2, pa.size * 2, 4);
       } else if (pa.kind === "shard") {
-        ctx.fillStyle = pa.color;
+        ctx.fillStyle = drawColor;
         ctx.translate(pa.x, pa.y);
         ctx.rotate(pa.angle ?? 0);
         ctx.fillRect(-pa.size, -1, pa.size * 2, 2);
       } else if (pa.kind === "star") {
         // 5-point star
-        ctx.fillStyle = pa.color;
+        ctx.fillStyle = drawColor;
         ctx.strokeStyle = "#fff";
         ctx.lineWidth = 1;
         ctx.translate(pa.x, pa.y);
@@ -1366,7 +1366,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         ctx.fill();
         ctx.stroke();
       } else {
-        ctx.fillStyle = pa.color;
+        ctx.fillStyle = drawColor;
         ctx.beginPath();
         ctx.arc(pa.x, pa.y, pa.size, 0, Math.PI * 2);
         ctx.fill();
