@@ -16,15 +16,6 @@ import { getSprite, type SpriteState } from "@/game/sprites";
 
 type Keys = Record<string, boolean>;
 
-// Reusable offscreen canvas for sprite tinting (starman rainbow).
-let _tintCanvas: HTMLCanvasElement | null = null;
-function getTintCanvas(w: number, h: number): HTMLCanvasElement {
-  if (!_tintCanvas) _tintCanvas = document.createElement("canvas");
-  if (_tintCanvas.width !== w) _tintCanvas.width = w;
-  if (_tintCanvas.height !== h) _tintCanvas.height = h;
-  return _tintCanvas;
-}
-
 const RAINBOW_BUCKETS = 18;
 const tintCache = new Map<string, HTMLCanvasElement>();
 const starCache = new Map<string, HTMLCanvasElement>();
