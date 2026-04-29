@@ -44,24 +44,24 @@ export default function Hud({ hud }: { hud: HudState }) {
       </div>
 
       {/* mach indicator (bottom-left) */}
-      <div className="mt-auto flex items-end justify-between gap-4">
-        <div className="scribble-border bg-paper px-4 py-3 min-w-[260px]">
-          <div className="flex items-center justify-between mb-1">
-            <span className="font-marker text-ink text-sm tracking-widest">SPEED</span>
+      <div className="mt-auto flex items-end justify-between gap-2">
+        <div className="scribble-border bg-paper px-2 py-1.5 min-w-[180px]">
+          <div className="flex items-center justify-between mb-0.5 gap-2">
+            <span className="font-marker text-ink text-[10px] tracking-widest">SPEED</span>
             <span
-              className={`font-bungee text-xl ${sm && !ss ? "rainbow-text animate-jitter" : sm && ss ? "animate-jitter" : hud.mach >= 3 ? "animate-jitter" : ""}`}
+              className={`font-bungee text-sm leading-none ${sm && !ss ? "rainbow-text animate-jitter" : sm && ss ? "animate-jitter" : hud.mach >= 3 ? "animate-jitter" : ""}`}
               style={
                 sm && ss
-                  ? { color: "#22e2ff", textShadow: "2px 2px 0 #22e2ff55" }
+                  ? { color: "#22e2ff", textShadow: "1px 1px 0 #22e2ff55" }
                   : sm
                   ? undefined
-                  : { color: machColor, textShadow: hud.mach >= 2 ? `2px 2px 0 ${machColor}55` : "none" }
+                  : { color: machColor, textShadow: hud.mach >= 2 ? `1px 1px 0 ${machColor}55` : "none" }
               }
             >
               {sm ? (ss ? "SPEEDBOI!!" : "INVBOI!!") : machLabel}
             </span>
           </div>
-          <div className="h-3 border-2 border-ink bg-paper relative overflow-hidden">
+          <div className="h-2 border-2 border-ink bg-paper relative overflow-hidden">
             <div
               className={`h-full transition-[width] duration-75 ${sm ? speedBarClass : ""}`}
               style={{
@@ -76,18 +76,18 @@ export default function Hud({ hud }: { hud: HudState }) {
         </div>
 
         {/* parry meter */}
-        <div className="scribble-border bg-paper px-4 py-3">
-          <div className="font-marker text-ink text-sm tracking-widest mb-1">PARRY [J]</div>
+        <div className="scribble-border bg-paper px-2 py-1.5">
+          <div className="font-marker text-ink text-[10px] tracking-widest mb-0.5">PARRY [J]</div>
           <div
-            className={`w-20 h-3 border-2 border-ink ${sm ? invBarClass : hud.parryReady ? "bg-parry" : "bg-paper"}`}
+            className={`w-14 h-2 border-2 border-ink ${sm ? invBarClass : hud.parryReady ? "bg-parry" : "bg-paper"}`}
             style={sm && ss ? { background: "#22e2ff" } : undefined}
           />
         </div>
 
         {/* dash meter */}
-        <div className="scribble-border bg-paper px-4 py-3">
-          <div className="font-marker text-ink text-sm tracking-widest mb-1">DASH [K]</div>
-          <div className="w-20 h-3 border-2 border-ink bg-paper relative overflow-hidden">
+        <div className="scribble-border bg-paper px-2 py-1.5">
+          <div className="font-marker text-ink text-[10px] tracking-widest mb-0.5">DASH [K]</div>
+          <div className="w-14 h-2 border-2 border-ink bg-paper relative overflow-hidden">
             <div
               className={`h-full ${sm ? invBarClass : ""}`}
               style={{
@@ -100,16 +100,16 @@ export default function Hud({ hud }: { hud: HudState }) {
         </div>
 
         {/* progress */}
-        <div className="scribble-border bg-paper px-4 py-3 flex-1 max-w-md">
-          <div className="font-marker text-ink text-sm tracking-widest mb-1">LEVEL PROGRESS</div>
-          <div className="h-3 border-2 border-ink bg-paper relative">
+        <div className="scribble-border bg-paper px-2 py-1.5 flex-1 max-w-xs">
+          <div className="font-marker text-ink text-[10px] tracking-widest mb-0.5">LEVEL PROGRESS</div>
+          <div className="h-2 border-2 border-ink bg-paper relative">
             <div
               className="h-full bg-ink"
               style={{ width: `${hud.progress * 100}%` }}
             />
             <div
-              className="absolute -top-1 w-3 h-5 bg-[hsl(var(--accent))] border-2 border-ink"
-              style={{ left: `calc(${hud.progress * 100}% - 6px)` }}
+              className="absolute -top-1 w-2 h-4 bg-[hsl(var(--accent))] border-2 border-ink"
+              style={{ left: `calc(${hud.progress * 100}% - 4px)` }}
             />
           </div>
         </div>
