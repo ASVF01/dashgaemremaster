@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import GameCanvas, { type HudState } from "@/game/GameCanvas";
 import Hud from "@/game/Hud";
 import MainMenu from "@/game/MainMenu";
@@ -36,6 +36,28 @@ const Index = () => {
   const backToMenu = () => setScreen("menu");
 
   const currentLevel = LEVELS.find((l) => l.id === levelId);
+  // next non-hidden level after the current one (used for "NEXT LEVEL" button)
+  const visibleLevels = LEVELS.filter((l) => !l.hidden);
+  const currentIdx = visibleLevels.findIndex((l) => l.id === levelId);
+  const nextLevel = currentIdx >= 0 ? visibleLevels[currentIdx + 1] : undefined;
+
+  // secret code: type "testpls" anywhere to launch the speed test level
+  useEffect(() => {
+    let buf = "";
+    const target = "testpls";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key.length !== 1) return;
+      buf = (buf + e.key.toLowerCase()).slice(-target.length);
+      if (buf === target) {
+        buf = "";
+        startLevel("speed-test");
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 
   return (
     <main className="min-h-screen w-full bg-paper text-ink overflow-hidden relative">
@@ -112,10 +134,22 @@ const Index = () => {
                     <div className="font-bungee text-3xl text-[hsl(var(--accent))]">{finalScore}</div>
                   </div>
                 </div>
-                <div className="flex gap-3 justify-center">
-                  <button onClick={retry} className="scribble-border bg-[hsl(var(--accent))] text-accent-foreground font-marker text-2xl px-6 py-3 hover:-rotate-2 transition-transform">
+                <div className="flex gap-3 justify-center flex-wrap">
+                  <button onClick={retry} className="scribble-border bg-paper text-ink font-marker text-2xl px-6 py-3 hover:-rotate-2 transition-transform">
                     RUN IT BACK
                   </button>
+                  {nextLevel ? (
+                    <button
+                      onClick={() => startLevel(nextLevel.id)}
+                      className="scribble-border bg-[hsl(var(--accent))] text-accent-foreground font-marker text-2xl px-6 py-3 hover:rotate-2 transition-transform animate-jitter"
+                    >
+                      NEXT LEVEL →
+                    </button>
+                  ) : (
+                    <div className="scribble-border bg-paper px-4 py-3 font-marker text-xl text-ink/70 self-center">
+                      BOSS COMING SOON…
+                    </div>
+                  )}
                   <button onClick={backToMenu} className="scribble-border bg-paper text-ink font-marker text-2xl px-6 py-3 hover:rotate-1 transition-transform">
                     MAIN MENU
                   </button>
