@@ -11,7 +11,7 @@ import { buildLevel, type Level, type LevelId } from "@/game/level";
 import { sketchLine, sketchRect, sketchCircle, jaggedBolt, INK } from "@/game/draw";
 import { isPressed, matchesAction, getLiveBinds } from "@/game/keybinds";
 import { sfx, unlockAudio } from "@/game/sfx";
-import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm } from "@/game/bgm";
+import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, getStarmanElapsed } from "@/game/bgm";
 import { getSprite, type SpriteState } from "@/game/sprites";
 
 type Keys = Record<string, boolean>;
@@ -86,6 +86,7 @@ interface GameRefs {
   skidDustTimer: number;
   skidSfxTimer: number;
   isSkidding: boolean;
+  rainStars: { x: number; y: number; vy: number; size: number; phase: number; hue: number }[];
 }
 
 interface Props {
@@ -181,6 +182,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       skidDustTimer: 0,
       skidSfxTimer: 0,
       isSkidding: false,
+      rainStars: [],
     };
   }, [resetKey, levelId]);
 
@@ -1009,8 +1011,21 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   function render(c: HTMLCanvasElement, r: GameRefs, w: number, h: number) {
     const ctx = c.getContext("2d")!;
     ctx.save();
-    // paper bg
-    ctx.fillStyle = "#f0ead6";
+    // starman cinematic kicks in at 3.85s into the cheat track
+    const starElapsed = r.player.starman ? (getStarmanElapsed() ?? 0) : 0;
+    const starmanFx = r.player.starman && starElapsed >= 3.85;
+    // smooth fade-in of the black backdrop
+    const bgT = starmanFx ? Math.min(1, (starElapsed - 3.85) / 0.6) : 0;
+    // paper bg (or black during starman fx)
+    if (bgT >= 1) {
+      ctx.fillStyle = "#000";
+    } else if (bgT > 0) {
+      ctx.fillStyle = "#f0ead6";
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = `rgba(0,0,0,${bgT})`;
+    } else {
+      ctx.fillStyle = "#f0ead6";
+    }
     ctx.fillRect(0, 0, w, h);
 
     // shake
@@ -1254,6 +1269,66 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
 
     ctx.restore();
+
+    // starman: rainbow stars rain down slowly (screen-space overlay)
+    if (starmanFx) {
+      // spawn rate scales with the fade-in
+      const spawnPerFrame = 0.6 + bgT * 1.4;
+      let toSpawn = spawnPerFrame;
+      while (toSpawn > 0) {
+        if (Math.random() < toSpawn) {
+          r.rainStars.push({
+            x: Math.random() * w,
+            y: -10 - Math.random() * 40,
+            vy: 40 + Math.random() * 50, // slow rain
+            size: 4 + Math.random() * 5,
+            phase: Math.random() * Math.PI * 2,
+            hue: Math.random() * 360,
+          });
+        }
+        toSpawn -= 1;
+      }
+    }
+    // advance + draw rain stars (keep drawing as they fall, even after fx ends)
+    if (r.rainStars.length) {
+      const dtFrame = 1 / 60;
+      ctx.save();
+      for (const s of r.rainStars) {
+        s.y += s.vy * dtFrame;
+        s.x += Math.sin(s.phase + r.time * 1.3) * 0.6;
+        const hue = (s.hue + r.time * 120) % 360;
+        ctx.save();
+        ctx.translate(s.x, s.y);
+        ctx.rotate(r.time * 1.4 + s.phase);
+        ctx.fillStyle = `hsl(${hue}, 95%, 60%)`;
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 1;
+        ctx.shadowColor = `hsl(${hue}, 95%, 65%)`;
+        ctx.shadowBlur = 10;
+        const sp = 5;
+        const outer = s.size;
+        const inner = outer * 0.45;
+        ctx.beginPath();
+        for (let k = 0; k < sp * 2; k++) {
+          const rr = k % 2 === 0 ? outer : inner;
+          const an = (k / (sp * 2)) * Math.PI * 2 - Math.PI / 2;
+          const x = Math.cos(an) * rr;
+          const y = Math.sin(an) * rr;
+          if (k === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+      ctx.restore();
+      // cull off-screen
+      r.rainStars = r.rainStars.filter((s) => s.y < h + 40);
+      // also clear when starman ends and they've all fallen
+      if (!r.player.starman && !starmanFx) {
+        // let them fall off naturally (already filtered above)
+      }
+    }
 
     // vignette / mach overlay
     const vmach = machTier(Math.abs(r.player.vx));

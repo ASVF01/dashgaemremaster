@@ -273,10 +273,38 @@ export function playMenuBgm() {
 }
 
 // Play the Starman cheat track (replaces whatever is playing with a crossfade).
+// Returns a promise resolving to the ctx-time when the track actually began
+// playing (or null if audio is unavailable). Callers can use this to sync
+// visuals to a specific timestamp inside the song.
+let starmanStartCtxTime: number | null = null;
 export function playStarmanBgm() {
   ac();
   loadBuffer(bgmStarman).catch(() => { /* ignore */ });
+  starmanStartCtxTime = null;
   playSrc(bgmStarman, true);
+  // poll briefly until playSrc has set up `playing`
+  const c = ac();
+  if (c) {
+    const start = performance.now();
+    const tick = () => {
+      if (playing && playing.src === bgmStarman && !playing.stopped) {
+        starmanStartCtxTime = playing.startedAt;
+        return;
+      }
+      if (performance.now() - start > 4000) return;
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+}
+
+// Seconds elapsed since the Starman track started playing, or null if it
+// isn't currently playing.
+export function getStarmanElapsed(): number | null {
+  const c = ac();
+  if (!c || !playing || playing.src !== bgmStarman || playing.stopped) return null;
+  if (starmanStartCtxTime == null) return null;
+  return c.currentTime - starmanStartCtxTime;
 }
 
 export function stopBgm(fade = 0) {
