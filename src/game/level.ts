@@ -13,7 +13,7 @@ export type Level = {
   signs?: { x: number; y: number; text: string }[];
 };
 
-export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "chase" | "speed-test" | "just-run-bro" | "roaring-knight";
+export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "chase" | "speed-test" | "just-run-bro" | "roaring-knight" | "aftermath-1" | "aftermath-2" | "aftermath-3";
 
 export type LevelMeta = {
   id: LevelId;
@@ -33,6 +33,9 @@ export const LEVELS: LevelMeta[] = [
   { id: "speed-test", name: "??? SPEED TEST ???", subtitle: "the hallway never ends. or does it.", difficulty: 4, par: 30, hidden: true },
   { id: "just-run-bro", name: "JUST RUN BRO..", subtitle: "no obstacles. no enemies. just vibes.", difficulty: 1, par: 9999 },
   { id: "roaring-knight", name: "THE ROARING KNIGHT", subtitle: "dodge. parry. dash to strike.", difficulty: 4, par: 120 },
+  { id: "aftermath-1", name: "ASHEN MARGINS",  subtitle: "after the knight, the ink keeps bleeding.", difficulty: 4, par: 60 },
+  { id: "aftermath-2", name: "TORN PAGES",     subtitle: "shooters in the gaps. mind the rips.",     difficulty: 4, par: 65 },
+  { id: "aftermath-3", name: "FINAL DRAFT",    subtitle: "everything you've learned. one run.",      difficulty: 4, par: 75 },
 ];
 
 export function buildLevel(id: LevelId = "scribble-1"): Level {
@@ -46,6 +49,9 @@ export function buildLevel(id: LevelId = "scribble-1"): Level {
     case "speed-test": lv = buildSpeedTest(); break;
     case "just-run-bro": lv = buildJustRunBro(); break;
     case "roaring-knight": lv = buildRoaringKnight(); break;
+    case "aftermath-1": lv = buildAftermath1(); break;
+    case "aftermath-2": lv = buildAftermath2(); break;
+    case "aftermath-3": lv = buildAftermath3(); break;
   }
   // Fill any pit directly below a hazard with a ground platform so spikes
   // sit on solid floor instead of marking a bottomless gap.
