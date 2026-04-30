@@ -237,6 +237,21 @@ const Index = () => {
     return () => { setSfxMuted(false); };
   }, [introPhase]);
 
+  // CELESTIAL MARATHON speedrun timer: tick the display every frame while
+  // the run is active. The actual elapsed time is always derived from
+  // marathonStartRef so a missed frame can't drift the clock.
+  useEffect(() => {
+    if (marathonStep == null) return;
+    let raf = 0;
+    const tick = () => {
+      const start = marathonStartRef.current;
+      if (start != null) setMarathonMs(performance.now() - start);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [marathonStep]);
+
   // Open the chase tutorial popup whenever we enter the chase level on the
   // playing screen (once per resetKey so retries re-show it).
   useEffect(() => {
