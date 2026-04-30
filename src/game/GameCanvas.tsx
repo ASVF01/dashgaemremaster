@@ -2279,27 +2279,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     boss.hoverPhase += dt * 2.2;
     if (boss.hitFlash > 0) boss.hitFlash = Math.max(0, boss.hitFlash - dt * 4);
     if (boss.shakeT > 0) boss.shakeT = Math.max(0, boss.shakeT - dt);
-    const { drawW: bDrawW } = bossScreenAnchor(r, boss, screenW);
+    bossScreenAnchor(r, boss, screenW);
 
-    // ----- BOSS RULE: player can't run past the knight -----
-    // The knight's world X is camera + screenX. Block the player from passing
-    // a soft barrier just left of him; if they push into it, convert their
-    // forward momentum into a small vertical bob so they "ride" up and down
-    // along the wall instead of running through.
-    if (!boss.defeated) {
-      const p = r.player;
-      const bossWorldX = r.cameraX + boss.screenX;
-      const wallX = bossWorldX - bDrawW * 0.45;
-      if (p.x + p.w > wallX) {
-        p.x = wallX - p.w;
-        if (p.vx > 0) {
-          // Convert forward speed into upward lift so the player bobs up,
-          // then gravity brings them back down — produces a vertical motion
-          // along the invisible wall.
-          p.vy = Math.min(p.vy, -Math.max(180, p.vx * 0.45));
-          p.vx = 0;
-        }
-      }
+    // Shake-in-fear when invboi (starman) is active — knight visibly trembles.
+    if (r.player.starman && !boss.defeated) {
+      boss.shakeT = Math.max(boss.shakeT, 0.18);
     }
 
     // afterimages — screen-space, drift right, ignore world camera.
@@ -2381,9 +2365,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
             sl.hit = true;
             parrySuccess(r, pcx, pcy);
           } else if (p.alive) {
-            // BOSS RULE: no i-frames in this fight. Player must parry to block.
-            sl.hit = true;
-            damage(r, pcx, pcy);
+            // BOSS RULE: no i-frames in this fight — player must parry to block.
+            // Exception: invboi (starman) keeps its i-frames so the cheat still
+            // makes you invincible.
+            if (p.starman && p.invuln > 0) {
+              sl.hit = true;
+            } else {
+              sl.hit = true;
+              damage(r, pcx, pcy);
+            }
           }
         }
       }
