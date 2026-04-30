@@ -360,6 +360,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
   const keysRef = useRef<Keys>({});
   const levelIdRef = useRef<LevelId>(levelId);
   levelIdRef.current = levelId;
+  const onInvboiPickupRef = useRef<(() => void) | undefined>(onInvboiPickup);
+  onInvboiPickupRef.current = onInvboiPickup;
   const [size, setSize] = useState({ w: 1200, h: 600 });
 
   // resize
