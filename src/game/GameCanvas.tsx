@@ -455,6 +455,19 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       boss: levelId === "roaring-knight" ? makeBoss() : null,
       beams: [],
     };
+    // Pre-place the invboi star if this level configures one (e.g. meet-invboi).
+    if (level.invboiStart) {
+      refs.current.invboiPickup = {
+        x: level.invboiStart.x,
+        y: level.invboiStart.y,
+        t: 0,
+        bobPhase: 0,
+        // Skip the spawn streak — it's been here all along.
+        spawnT: 999,
+        spawnFromX: level.invboiStart.x,
+        facing: level.invboiStart.facing,
+      };
+    }
     // Any reset/level change cancels the starman shimmer too.
     sfx.shineStop(); sfx.rainStop(); sfx.slideStop(); sfx.laserStop();
     setCelestialMode(false);
