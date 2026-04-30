@@ -123,25 +123,65 @@ function buildJustRunBro(): Level {
 // On grab, GameCanvas fires onInvboiPickup so the parent can show the
 // instructions overlay.
 function buildMeetInvboi(): Level {
-  const W = 4800;
+  const W = 14000;
   const H = 720;
   const groundY = H - 80;
   const platforms: Platform[] = [
     { x: 0, y: groundY, w: W, h: 80, kind: "ground" },
-    // a couple of decorative blocks to play with after grabbing the star
+
+    // ---- pre-star: short stretch with the floating star ahead ----
     { x: 1400, y: groundY - 140, w: 160, h: 22, kind: "block" },
     { x: 1700, y: groundY - 220, w: 160, h: 22, kind: "block" },
     { x: 2000, y: groundY - 160, w: 160, h: 22, kind: "block" },
+
+    // ---- post-star playground: enemies + obstacles to plow through ----
     { x: 2600, y: groundY - 200, w: 200, h: 22, kind: "block" },
     { x: 3100, y: groundY - 280, w: 200, h: 22, kind: "block" },
     { x: 3600, y: groundY - 180, w: 200, h: 22, kind: "block" },
+    { x: 4200, y: groundY - 240, w: 220, h: 22, kind: "block" },
+    { x: 4700, y: groundY - 320, w: 200, h: 22, kind: "block" },
+    { x: 5200, y: groundY - 200, w: 200, h: 22, kind: "block" },
+    { x: 5800, y: groundY - 280, w: 220, h: 22, kind: "block" },
+    { x: 6400, y: groundY - 220, w: 200, h: 22, kind: "block" },
+    { x: 7000, y: groundY - 340, w: 220, h: 22, kind: "block" },
+    { x: 7600, y: groundY - 200, w: 200, h: 22, kind: "block" },
+    { x: 8200, y: groundY - 280, w: 220, h: 22, kind: "block" },
+    { x: 8800, y: groundY - 240, w: 200, h: 22, kind: "block" },
+    { x: 9400, y: groundY - 320, w: 220, h: 22, kind: "block" },
+    { x: 10000, y: groundY - 200, w: 200, h: 22, kind: "block" },
+    { x: 10600, y: groundY - 280, w: 220, h: 22, kind: "block" },
+    { x: 11200, y: groundY - 220, w: 200, h: 22, kind: "block" },
+    { x: 11900, y: groundY - 340, w: 220, h: 22, kind: "block" },
+    { x: 12600, y: groundY - 240, w: 200, h: 22, kind: "block" },
+    { x: 13300, y: groundY - 300, w: 220, h: 22, kind: "block" },
+
+    // a couple of slide tunnels (trivial as invboi but fun)
+    { x: 4400, y: groundY - 90, w: 320, h: 28, kind: "block" },
+    { x: 7200, y: groundY - 90, w: 320, h: 28, kind: "block" },
+    { x: 10400, y: groundY - 90, w: 320, h: 28, kind: "block" },
   ];
-  // A few light enemies AFTER the star so invboi feels powerful.
+  // Enemies sprinkled across the playground — invboi obliterates on touch.
   const enemies: Enemy[] = [
     { x: 1900, y: groundY - 50, w: 32, h: 50, vx: -70, alive: true, kind: "grunt" },
     { x: 2400, y: groundY - 50, w: 32, h: 50, vx: 80, alive: true, kind: "grunt" },
     { x: 3100, y: groundY - 280 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 1.2 },
     { x: 3700, y: groundY - 50, w: 32, h: 50, vx: -90, alive: true, kind: "grunt" },
+    { x: 4300, y: groundY - 50, w: 32, h: 50, vx: 90, alive: true, kind: "grunt" },
+    { x: 4720, y: groundY - 320 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 1.0 },
+    { x: 5400, y: groundY - 50, w: 32, h: 50, vx: -100, alive: true, kind: "grunt" },
+    { x: 5820, y: groundY - 280 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 1.1 },
+    { x: 6500, y: groundY - 50, w: 32, h: 50, vx: 100, alive: true, kind: "grunt" },
+    { x: 7020, y: groundY - 340 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 0.9 },
+    { x: 7700, y: groundY - 50, w: 32, h: 50, vx: -110, alive: true, kind: "grunt" },
+    { x: 8220, y: groundY - 280 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 1.0 },
+    { x: 8900, y: groundY - 50, w: 32, h: 50, vx: 110, alive: true, kind: "grunt" },
+    { x: 9420, y: groundY - 320 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 0.9 },
+    { x: 10100, y: groundY - 50, w: 32, h: 50, vx: -110, alive: true, kind: "grunt" },
+    { x: 10620, y: groundY - 280 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 1.0 },
+    { x: 11300, y: groundY - 50, w: 32, h: 50, vx: 120, alive: true, kind: "grunt" },
+    { x: 11920, y: groundY - 340 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 0.9 },
+    { x: 12700, y: groundY - 50, w: 32, h: 50, vx: -120, alive: true, kind: "grunt" },
+    { x: 13320, y: groundY - 300 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 0.9 },
   ];
   // Star location — right in front of the player spawn.
   const starX = 320;
@@ -156,6 +196,9 @@ function buildMeetInvboi(): Level {
     pickups: [],
     signs: [
       { x: starX, y: groundY - 170, text: "Hey you! grab this!" },
+      { x: 5000, y: groundY - 110, text: "go nuts. nothing can hurt you." },
+      { x: 9000, y: groundY - 110, text: "spam that dash bro" },
+      { x: 13000, y: groundY - 110, text: "flag's right there →" },
     ],
     invboiStart: { x: starX, y: starY, facing: 1 },
   };
