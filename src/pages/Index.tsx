@@ -442,6 +442,21 @@ const Index = () => {
             levelId={levelId}
           />
           {screen === "playing" && !invboiIntroOpen && !chaseIntroOpen && <Hud hud={hud} />}
+          {screen === "playing" && marathonStep != null && !invboiIntroOpen && !chaseIntroOpen && (
+            <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-20">
+              <div className="scribble-border bg-paper px-4 py-1.5 -rotate-1 flex items-center gap-3">
+                <span className="font-marker text-sm tracking-widest text-[hsl(var(--accent))]">
+                  ✦ MARATHON ✦
+                </span>
+                <span className="font-bungee text-2xl text-ink tabular-nums leading-none">
+                  {fmtMarathon(marathonMs)}
+                </span>
+                <span className="font-marker text-xs text-ink/60">
+                  {Math.min(marathonStep + 1, MARATHON_SEQUENCE.length)}/{MARATHON_SEQUENCE.length}
+                </span>
+              </div>
+            </div>
+          )}
           <FpsOverlay />
 
           {screen === "playing" && invboiIntroOpen && (
