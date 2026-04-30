@@ -2111,18 +2111,34 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
     // starman: rainbow stars rain down (BACKGROUND layer, behind level assets)
     // (suppressed for SOM SOM variant — no rain, no rainbow)
-    const maxRainStars = Math.min(64, Math.max(28, Math.floor((w * h) / 17000)));
-    if (starmanFx && r.rainStars.length < maxRainStars) {
-      const spawnRate = 0.2 + bgT * 0.55;
-      if (Math.random() < spawnRate) {
+    // Starts as a heavy 2-second downpour at t=6.15s (synced with the BGM hit),
+    // then tapers off into a gentle drizzle. Nothing rains before then.
+    const RAIN_START = 6.15;
+    const RAIN_BURST_END = RAIN_START + 2.0; // heavy burst window
+    const inRainBurst = starmanFx && starElapsed >= RAIN_START && starElapsed < RAIN_BURST_END;
+    const inRainTail  = starmanFx && starElapsed >= RAIN_BURST_END;
+    const burstMaxStars = Math.min(220, Math.max(140, Math.floor((w * h) / 5500)));
+    const tailMaxStars  = Math.min(64,  Math.max(28,  Math.floor((w * h) / 17000)));
+    const maxRainStars = inRainBurst ? burstMaxStars : tailMaxStars;
+    if ((inRainBurst || inRainTail) && r.rainStars.length < maxRainStars) {
+      // Burst: ramp in fast, hold, then fall off as we hit the tail.
+      const burstT = inRainBurst ? (starElapsed - RAIN_START) / 2.0 : 1; // 0→1
+      const burstRate = inRainBurst
+        ? (burstT < 0.15 ? burstT / 0.15 : 1) * 4.5  // up to ~4.5 stars/frame
+        : 0.35;                                       // gentle drizzle after
+      // spawn possibly multiple per frame for the heavy downpour
+      let toSpawn = burstRate;
+      while (toSpawn > 0 && r.rainStars.length < maxRainStars) {
+        if (toSpawn < 1 && Math.random() >= toSpawn) break;
         r.rainStars.push({
           x: Math.random() * w,
-          y: -10 - Math.random() * 40,
-          vy: 32 + Math.random() * 34,
+          y: -10 - Math.random() * 60,
+          vy: (inRainBurst ? 90 : 32) + Math.random() * (inRainBurst ? 110 : 34),
           size: 4 + Math.random() * 4,
           phase: Math.random() * Math.PI * 2,
           hue: Math.random() * 360,
         });
+        toSpawn -= 1;
       }
     }
     if (r.rainStars.length) {
