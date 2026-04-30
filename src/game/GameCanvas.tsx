@@ -1540,7 +1540,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // for the same duration so the active window can't re-fire mid-iframes.
     r.player.invuln = Math.max(r.player.invuln, 2.5);
     r.player.parrying = 0;
-    r.player.parryCooldown = 2.5;
+    r.player.parryCooldown = r.boss ? 0.25 : 2.5;
     sfx.parryHit();
     // boost in facing dir
     r.player.vx += r.player.facing * PARRY_BOOST;
