@@ -2353,7 +2353,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           if (p.parrying > 0) {
             sl.hit = true;
             parrySuccess(r, pcx, pcy);
-          } else if (p.invuln <= 0 && p.alive) {
+          } else if (p.alive) {
+            // BOSS RULE: no i-frames in this fight. Player must parry to block.
             sl.hit = true;
             damage(r, pcx, pcy);
           }
