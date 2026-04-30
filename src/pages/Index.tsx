@@ -387,7 +387,8 @@ const Index = () => {
             onDeath={handleDeath}
             onInvboiPickup={handleInvboiPickup}
             paused={screen !== "playing" || invboiIntroOpen}
-            keepAudio={screen === "dead" || screen === "win" || invboiIntroOpen}
+            keepAudio={screen === "dead" || screen === "win" || invboiIntroOpen || marathonStep != null}
+            startAsInvboi={marathonStep != null}
             resetKey={resetKey}
             levelId={levelId}
           />
