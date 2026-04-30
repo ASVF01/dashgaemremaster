@@ -94,6 +94,7 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
         <button
           key={lvl.id}
           onClick={() => onPlay(lvl.id)}
+          onMouseEnter={() => sfx.menuHover()}
           className="scribble-border bg-paper p-4 text-left hover:-rotate-1 hover:bg-[hsl(var(--accent))/0.15] transition-transform group"
         >
           <div className="flex items-baseline justify-between mb-1">
