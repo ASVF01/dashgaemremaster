@@ -3377,25 +3377,40 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     const p = r.player;
     const cx = p.x + p.w / 2;
     const cy = p.y + p.h / 2;
-    const rx = Math.max(p.w, p.h) * 0.95;
-    const ry = Math.max(p.w, p.h) * 0.75;
-    const count = 8;
-    const LIFE = 0.4;       // each shimmer visible for 0.4s
-    const CYCLE = 0.65;     // slightly longer than LIFE so there's a tiny gap
-    for (let i = 0; i < count; i++) {
-      const phase = i / count;
-      // Per-slot stagger so all 8 don't blink at once.
-      const offset = phase * CYCLE;
+    // Random-ish anchor points scattered across the stick figure's body
+    // (head, torso, arms, legs). Coordinates are normalized offsets from
+    // player center: x in [-0.5..0.5] * p.w, y in [-0.5..0.5] * p.h.
+    const SLOTS: Array<[number, number]> = [
+      [ 0.00, -0.42], // head top
+      [-0.12, -0.30], // head side
+      [ 0.10, -0.18], // neck
+      [-0.20, -0.05], // shoulder L
+      [ 0.22, -0.02], // shoulder R
+      [-0.05,  0.05], // chest
+      [ 0.08,  0.18], // belly
+      [-0.28,  0.20], // hand L
+      [ 0.30,  0.12], // hand R
+      [-0.15,  0.35], // thigh L
+      [ 0.18,  0.32], // thigh R
+      [-0.10,  0.46], // foot L
+    ];
+    const LIFE = 0.4;
+    const CYCLE = 0.9;
+    for (let i = 0; i < SLOTS.length; i++) {
+      const phase = i / SLOTS.length;
+      const offset = phase * CYCLE + (Math.sin(i * 12.9898) * 0.5 + 0.5) * 0.15;
       const local = ((r.time - offset) % CYCLE + CYCLE) % CYCLE;
       if (local > LIFE) continue;
-      const lifeT = local / LIFE; // 0..1 across its 0.4s life
-      // Ease in/out alpha so it pops in then fades.
-      const a = Math.sin(lifeT * Math.PI); // 0 → 1 → 0
-      // Fixed offset relative to player → sticks to player as it moves.
-      const ang = phase * Math.PI * 2;
-      const sx = cx + Math.cos(ang) * rx;
-      const sy = cy + Math.sin(ang) * ry;
-      const scale = 0.5 + a * 1.0;
+      const lifeT = local / LIFE;
+      const a = Math.sin(lifeT * Math.PI);
+      // Tiny per-cycle jitter so the same slot doesn't land on the exact pixel.
+      const cycleIdx = Math.floor((r.time - offset) / CYCLE);
+      const seed = i * 73 + cycleIdx * 131;
+      const jx = ((Math.sin(seed) * 0.5 + 0.5) - 0.5) * p.w * 0.12;
+      const jy = ((Math.sin(seed * 1.7) * 0.5 + 0.5) - 0.5) * p.h * 0.12;
+      const sx = cx + SLOTS[i][0] * p.w + jx;
+      const sy = cy + SLOTS[i][1] * p.h + jy;
+      const scale = 0.5 + a * 0.9;
       // Slight per-frame ink jitter for sketchy feel.
       const jx = (Math.random() - 0.5) * 1.4;
       const jy = (Math.random() - 0.5) * 1.4;
