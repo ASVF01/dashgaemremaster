@@ -276,6 +276,7 @@ interface GameRefs {
   somSomStorm: boolean;
   somSomStormFlash: number; // seconds since flash trigger
   somSomCloudX: number | null;
+  somSomSlowCloudX: number; // grey cloud drift during postImpact (pre-storm)
   somSomRain: Float32Array | null; // packed [x, y, speed, len] * N
   heartbeatTimer: number;
   // Roaring Knight boss state (only present in the boss level).
