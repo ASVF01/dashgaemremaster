@@ -2175,16 +2175,24 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   }
 
   function spawnBossSlash(r: GameRefs, boss: Boss) {
-    // Telegraph a thin diagonal slash near the player.
+    // Long thin beam-slash that originates from the boss and passes through
+    // the player's position, extending well past on the far side — matches
+    // the Deltarune reference (knight slashes a line across the screen).
     const p = r.player;
-    const cx = p.x + p.w / 2 + (Math.random() - 0.5) * 80;
-    const cy = p.y + p.h / 2 + (Math.random() - 0.5) * 60;
-    const ang = (Math.random() - 0.5) * 1.2 + Math.PI / 4 * (Math.random() < 0.5 ? 1 : -1);
-    const len = 280 + Math.random() * 120;
-    const dx = Math.cos(ang) * len / 2;
-    const dy = Math.sin(ang) * len / 2;
+    const bossWorldX = r.cameraX + boss.screenX;
+    const bossWorldY = boss.screenY;
+    const px = p.x + p.w / 2 + (Math.random() - 0.5) * 30;
+    const py = p.y + p.h / 2 + (Math.random() - 0.5) * 24;
+    const dx = px - bossWorldX;
+    const dy = py - bossWorldY;
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = dx / len, ny = dy / len;
+    const reach = 1800;
     boss.warnings.push({
-      x1: cx - dx, y1: cy - dy, x2: cx + dx, y2: cy + dy,
+      x1: bossWorldX,
+      y1: bossWorldY,
+      x2: bossWorldX + nx * reach,
+      y2: bossWorldY + ny * reach,
       t: 0, dur: 0.5, fired: false,
     });
   }
