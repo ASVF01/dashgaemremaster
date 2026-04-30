@@ -311,6 +311,7 @@ export const sfx = {
       tone({ freq: 95, to: 60, dur: 0.30, type: "sine", vol: 0.18, release: 0.18 });
     }
     celestialShimmer({ base: 1400, count: 3, intensity: 1.0, spread: 0.05 });
+    thunderBoom({ intensity: 0.85, rumbleDur: 0.6 });
   },
   land() {
     if (!shimmerReplaces()) {
@@ -320,6 +321,7 @@ export const sfx = {
       noise(0.11, 0.26, 3500, 8500, 0.018);
     }
     celestialShimmer({ base: 1100, count: 3, intensity: 1.1, spread: 0.03, lo: true });
+    thunderBoom({ intensity: 1.15, rumbleDur: 0.9 });
   },
   slide() {
     if (!shimmerReplaces()) {
@@ -327,6 +329,7 @@ export const sfx = {
       noise(0.35, 0.16, 900, 5500);
     }
     celestialShimmer({ base: 1800, count: 2, intensity: 0.9, spread: 0.06 });
+    thunderBoom({ intensity: 0.7, crack: false, rumbleDur: 0.8 });
   },
   slideEnd() {
     if (!shimmerReplaces()) {
@@ -335,6 +338,7 @@ export const sfx = {
       tone({ freq: 280, to: 140, dur: 0.12, type: "triangle", vol: 0.1, attack: 0.005, release: 0.08 });
     }
     celestialShimmer({ base: 1500, count: 2, intensity: 0.9 });
+    thunderBoom({ intensity: 0.7, rumbleDur: 0.5 });
   },
   step() {
     if (!shimmerReplaces()) {
@@ -343,18 +347,28 @@ export const sfx = {
     }
     // tiny twinkle — like landing on a star
     celestialShimmer({ base: 1900, count: 1, intensity: 0.7 });
+    // small rolling rumble — like distant thunder beneath each step
+    if (thunderMode) {
+      tone({ freq: 70, to: 40, dur: 0.22, type: "sine", vol: 0.32, attack: 0.003, release: 0.14 });
+      noise(0.18, 0.16, 50, 380, 0.01);
+    }
   },
   run() {
     if (!shimmerReplaces()) {
       noise(0.06, 0.22, 280, 2800);
     }
     celestialShimmer({ base: 1900, count: 1, intensity: 0.8 });
+    if (thunderMode) {
+      tone({ freq: 80, to: 42, dur: 0.24, type: "sine", vol: 0.36, attack: 0.003, release: 0.14 });
+      noise(0.2, 0.18, 50, 420, 0.01);
+    }
   },
   skid() {
     if (!shimmerReplaces()) {
       noise(0.18, 0.14, 500, 4500);
     }
     celestialShimmer({ base: 1700, count: 2, intensity: 0.9, spread: 0.05 });
+    thunderBoom({ intensity: 0.8, rumbleDur: 0.55 });
   },
   parryStart() {
     tone({ freq: 1200, to: 1800, dur: 0.06, type: "triangle", vol: 0.18 });
@@ -366,6 +380,7 @@ export const sfx = {
       playPixelSample(nySampleUrl, { vol: 0.55, bits: 8, rateDiv: 4, lp: 8000 });
     }
     celestialShimmer({ base: 2200, count: 3, intensity: 1.2, spread: 0.04, lo: true });
+    thunderBoom({ intensity: 1.1, rumbleDur: 0.8 });
   },
   hit() {
     // long, soft fade-out on the voice sample
@@ -403,6 +418,7 @@ export const sfx = {
       noise(0.1, 0.2, 400, 4000);
     }
     celestialShimmer({ base: 2000, count: 2, intensity: 1.0 });
+    thunderBoom({ intensity: 1.0, rumbleDur: 0.7 });
   },
   pickup() {
     if (!shimmerReplaces()) {
@@ -427,6 +443,7 @@ export const sfx = {
       noise(0.2, 0.18, 600, 6000, 0.02);
     }
     celestialShimmer({ base: 1800, count: 3, intensity: 1.1, spread: 0.04, lo: true });
+    thunderBoom({ intensity: 1.2, rumbleDur: 1.0 });
   },
   superDash() {
     if (!shimmerReplaces()) {
@@ -439,6 +456,7 @@ export const sfx = {
       tone({ freq: 1800, to: 600, dur: 0.06, type: "square", vol: 0.18, release: 0.04 });
     }
     celestialShimmer({ base: 1600, count: 3, intensity: 1.3, spread: 0.05, lo: true });
+    thunderBoom({ intensity: 1.4, rumbleDur: 1.2 });
   },
   dash() {
     if (!shimmerReplaces()) {
@@ -446,6 +464,7 @@ export const sfx = {
       playSample(swingSwipeUrl, { vol: 0.7, rate: 1.7 });
     }
     celestialShimmer({ base: 2000, count: 2, intensity: 1.0, spread: 0.04 });
+    thunderBoom({ intensity: 1.0, rumbleDur: 0.7 });
   },
   meow() {
     // cute lil kitten "mrow" — two pitched sweeps, second a bit higher
