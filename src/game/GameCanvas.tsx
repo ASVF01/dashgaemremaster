@@ -10,7 +10,7 @@ import {
 import { buildLevel, type Level, type LevelId } from "@/game/level";
 import { sketchLine, sketchRect, sketchCircle, jaggedBolt, INK } from "@/game/draw";
 import { isPressed, matchesAction, getLiveBinds } from "@/game/keybinds";
-import { sfx, unlockAudio, setCelestialMode } from "@/game/sfx";
+import { sfx, unlockAudio, setCelestialMode, setThunderMode } from "@/game/sfx";
 
 import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, getStarmanElapsed, playSomSomBgm, getSomSomElapsed } from "@/game/bgm";
 import weSfxUrl from "@/assets/audio/impact_aura_charge.ogg";
@@ -444,6 +444,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // Any reset/level change cancels the starman shimmer too.
     sfx.shineStop(); sfx.rainStop(); sfx.slideStop(); sfx.laserStop();
     setCelestialMode(false);
+    setThunderMode(false);
   }, [resetKey, levelId]);
 
   // BGM: stop on unmount only. The parent (Index) decides which track to
@@ -451,7 +452,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   // with the menu music here. Restart on retry is also driven by the
   // parent via screen/levelId/resetKey transitions.
   useEffect(() => {
-    return () => { stopBgm(); sfx.shineStop(); sfx.rainStop(); sfx.slideStop(); sfx.laserStop(); setCelestialMode(false); };
+    return () => { stopBgm(); sfx.shineStop(); sfx.rainStop(); sfx.slideStop(); sfx.laserStop(); setCelestialMode(false); setThunderMode(false); };
   }, []);
 
   // BGM: pause/resume with the game's pause state — but keep playing when
@@ -482,6 +483,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
             else playStarmanBgm();
             sfx.shineStart();
             setCelestialMode(true, { replaceDefaults: !inJrb });
+            setThunderMode(inJrb);
             burst(r, r.player.x + r.player.w / 2, r.player.y + r.player.h / 2, inJrb ? "#22e2ff" : "#ffd11a", 24, 380);
           }
           cheatBuf = "";
