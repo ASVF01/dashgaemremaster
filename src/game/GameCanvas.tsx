@@ -1408,13 +1408,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           // Cancel most of gravity that was added this frame and apply gentle hover.
           pl.vy -= GRAVITY * dt; // negate gravity
           pl.vy += 80 * dt;      // very soft drift
-          // Hover-rise while jump held
+          // Vertical control: jump = up, slide = down
           const bnd = getLiveBinds();
           const jumpHeldNow = isPressed(keysRef.current, "jump", bnd);
-          if (jumpHeldNow) pl.vy = Math.max(pl.vy - 1200 * dt, -360);
+          const downHeldNow = isPressed(keysRef.current, "slide", bnd);
+          if (jumpHeldNow) pl.vy = Math.max(pl.vy - 1600 * dt, -380);
+          if (downHeldNow) pl.vy = Math.min(pl.vy + 1600 * dt, 380);
           // Soft vertical clamp so floating feels stable
-          if (pl.vy > 220) pl.vy = 220;
-          if (pl.vy < -360) pl.vy = -360;
+          if (pl.vy > 380) pl.vy = 380;
+          if (pl.vy < -380) pl.vy = -380;
         } else {
           // Out of float — laser stays on but gravity returns; if you land, fine.
         }
