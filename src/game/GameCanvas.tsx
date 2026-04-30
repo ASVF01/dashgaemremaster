@@ -19,6 +19,7 @@ import { getSprite, type SpriteState } from "@/game/sprites";
 import spookUrl from "@/assets/sprites/spook.png";
 import spookHurtUrl from "@/assets/sprites/spook_hurt.png";
 import roaringKnightUrl from "@/assets/roaring_knight.webp";
+import roaringKnightVulnUrl from "@/assets/roaring_knight_vulnerable.png";
 import bossBgUrl from "@/assets/boss_bg.gif";
 import bossBgSheetUrl from "@/assets/boss_bg_sheet.webp";
 
