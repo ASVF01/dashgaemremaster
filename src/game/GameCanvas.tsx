@@ -625,7 +625,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           }
           return;
         }
-        if ((p.starman || (p.dashCooldown <= 0 && p.dashTime <= 0)) && p.alive) {
+        // Invboi: shorter cooldown + must finish most of the active dash
+        // before re-igniting (prevents single-frame spam, still feels fast).
+        const canDash = p.starman
+          ? (p.dashCooldown <= DASH_COOLDOWN * 0.55 && p.dashTime <= DASH_DURATION * 0.35)
+          : (p.dashCooldown <= 0 && p.dashTime <= 0);
+        if (canDash && p.alive) {
           const k = keysRef.current;
           const b = getLiveBinds();
           let dx = 0, dy = 0;
