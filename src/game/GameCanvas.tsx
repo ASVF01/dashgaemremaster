@@ -79,6 +79,7 @@ function makeBoss() {
     wornWorldX: 0,            // pinned world X while staggered (un-sticks from camera)
     wornAnchored: false,
     hitFlash: 0,
+    hurtT: 0,
     shakeT: 0,
     afterTimer: 0,
     // afterimages drift right in screen-space and ignore world camera
