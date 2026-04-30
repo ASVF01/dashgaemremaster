@@ -2787,12 +2787,18 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     const sx = boss.screenX + wx;
     const sy = boss.screenY + wy;
     if (boss.defeated) {
-      // fade out + tilt as he falls
-      const k = Math.min(1, boss.defeatT / 1.6);
+      // Retreat animation: knight rockets up-and-right with a wobble + tilt.
+      const t = boss.defeatT;
+      const wob = Math.sin(t * 22) * 6 * Math.max(0, 1 - t / 3.2);
+      const tilt = -0.35 + Math.sin(t * 14) * 0.25; // shaking/tilting in fear
+      const rx = sx + boss.retreatX;
+      const ry = sy + boss.retreatY + wob;
+      // fade only at the very end so retreat stays readable
+      const fade = t < 2.6 ? 1 : Math.max(0, 1 - (t - 2.6) / 0.6);
       ctx.save();
-      ctx.translate(sx, sy + k * 80);
-      ctx.rotate(k * 0.6);
-      ctx.globalAlpha = 1 - k;
+      ctx.translate(rx, ry);
+      ctx.rotate(tilt);
+      ctx.globalAlpha = fade;
       drawBossSpriteAt(ctx, 0, 0, drawW, drawH, 1, false, false);
       ctx.restore();
     } else {
