@@ -2230,8 +2230,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     const drawW = KNIGHT_DRAW_H * (knightImg.naturalWidth && knightImg.naturalHeight
       ? knightImg.naturalWidth / knightImg.naturalHeight : 1);
     const cameraBaseX = screenW - margin - drawW / 2;
-    const baseY = margin + KNIGHT_DRAW_H / 2;
-    const hover = Math.sin(boss.hoverPhase) * 12;
+    // Keep the knight inside the arena vicinity (between ceiling block ~y=84
+    // and ground top ~y=640). Hover up high; when staggered, drop into the
+    // middle of the arena but still above the lower platform so the player
+    // can dash-strike him from below or beside.
+    const baseY = 240;
+    const hover = Math.sin(boss.hoverPhase) * 14;
 
     const wantLow = boss.worn > 0 && !boss.defeated;
     if (wantLow) {
@@ -2245,8 +2249,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
 
     const targetScreenX = wantLow ? boss.wornWorldX - r.cameraX : cameraBaseX;
-    // Floating up-and-down (extra bob while staggered low).
-    const wornTargetY = 360 + Math.sin(boss.hoverPhase * 1.4) * 12;
+    // Floating up-and-down (extra bob while staggered low). Vulnerable Y sits
+    // around 470 — well above the ground (top y=640) so the dash hitbox lines
+    // up with the player's reach.
+    const wornTargetY = 470 + Math.sin(boss.hoverPhase * 1.4) * 16;
     const baseTargetY = baseY + hover;
     const targetY = wantLow ? wornTargetY : baseTargetY;
 
