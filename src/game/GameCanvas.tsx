@@ -276,6 +276,7 @@ interface GameRefs {
   somSomStorm: boolean;
   somSomStormFlash: number; // seconds since flash trigger
   somSomCloudX: number | null;
+  somSomSlowCloudX: number; // grey cloud drift during postImpact (pre-storm)
   somSomRain: Float32Array | null; // packed [x, y, speed, len] * N
   heartbeatTimer: number;
   // Roaring Knight boss state (only present in the boss level).
@@ -436,6 +437,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       somSomStorm: false,
       somSomStormFlash: -1,
       somSomCloudX: null,
+      somSomSlowCloudX: 0,
       somSomRain: null,
       heartbeatTimer: 0,
       boss: levelId === "roaring-knight" ? makeBoss() : null,
@@ -1907,6 +1909,42 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // SOM SOM: lightning bolts over the OLED-black background.
     // Random chance every cycle: 10s, 5s, or 1s wait between strikes.
     if (postImpact) {
+      // Slow-drifting grey clouds during the post-impact lull (before the
+      // 32.5s storm kicks in). Same look as storm clouds, gentler speed.
+      if (!r.somSomStorm) {
+        const dtR = 0.0166;
+        r.somSomSlowCloudX += 220 * dtR;
+        const cx = r.somSomSlowCloudX;
+        const bandH = Math.max(110, h * 0.22);
+        ctx.save();
+        const grad = ctx.createLinearGradient(0, 0, 0, bandH);
+        grad.addColorStop(0, "rgba(90,98,110,0.95)");
+        grad.addColorStop(0.7, "rgba(120,128,138,0.85)");
+        grad.addColorStop(1, "rgba(120,128,138,0)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, bandH);
+        ctx.fillStyle = "rgba(80,88,100,0.9)";
+        const puffY = bandH * 0.78;
+        const STRIDE = 280;
+        const offset = ((cx % STRIDE) + STRIDE) % STRIDE;
+        const tiles = Math.ceil(w / STRIDE) + 2;
+        for (let i = -1; i < tiles; i++) {
+          const px = i * STRIDE + offset;
+          ctx.beginPath();
+          ctx.ellipse(px,        puffY,        160, 52, 0, 0, Math.PI * 2);
+          ctx.ellipse(px + 110,  puffY - 26,  110, 44, 0, 0, Math.PI * 2);
+          ctx.ellipse(px - 90,   puffY - 14,   95, 38, 0, 0, Math.PI * 2);
+          ctx.ellipse(px + 60,   puffY + 22,  130, 40, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = "rgba(60,68,80,0.25)";
+        for (let i = 0; i < 6; i++) {
+          const sy = (i / 6) * bandH + (offset * 0.05) % (bandH / 6);
+          ctx.fillRect(0, sy, w, 2);
+        }
+        ctx.restore();
+      }
+
       r.lightningCooldown -= 0.0166;
       if (r.lightningCooldown <= 0) {
         const roll = Math.random();
