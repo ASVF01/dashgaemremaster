@@ -409,7 +409,7 @@ const Index = () => {
             resetKey={resetKey}
             levelId={levelId}
           />
-          {screen === "playing" && !invboiIntroOpen && <Hud hud={hud} />}
+          {screen === "playing" && !invboiIntroOpen && !chaseIntroOpen && <Hud hud={hud} />}
           <FpsOverlay />
 
           {screen === "playing" && invboiIntroOpen && (
