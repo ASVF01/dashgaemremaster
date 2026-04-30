@@ -134,11 +134,36 @@ const Index = () => {
   const handleHud = useCallback((h: HudState) => setHud(h), []);
   const handleFinish = useCallback((t: number, s: number) => {
     setFinalTime(t); setFinalScore(s);
-    setScreen((prev) => prev); // no-op for type
+    // MARATHON: advance to the next sub-level instead of going to win, unless
+    // we just cleared the last one. Skip the just-run-bro cutscene too —
+    // marathon doesn't break the flow for it.
+    if (marathonStep != null) {
+      const nextStep = marathonStep + 1;
+      if (nextStep < MARATHON_SEQUENCE.length) {
+        const nextId = MARATHON_SEQUENCE[nextStep];
+        setMarathonStep(nextStep);
+        setLevelId(nextId);
+        setResetKey((k) => k + 1);
+        // Stay on "playing" so the GameCanvas remounts state cleanly while
+        // the starman BGM keeps playing uninterrupted.
+        return;
+      }
+      // All sub-levels cleared → finish the marathon.
+      setMarathonStep(null);
+      setScreen("win");
+      return;
+    }
     // play cutscene after just-run-bro, else go straight to win
     setScreen(levelId === "just-run-bro" ? "cutscene" : "win");
-  }, [levelId]);
+  }, [levelId, marathonStep]);
   const handleDeath = useCallback(() => {
+    // Marathon: invboi can't die, but the boss death-cutscene path still
+    // runs if somehow triggered. Bail back to menu cleanly.
+    if (marathonStep != null) {
+      setMarathonStep(null);
+      setScreen("dead");
+      return;
+    }
     if (levelId === "roaring-knight") {
       // boss death → unskippable cutscene, then kick to menu
       stopBgm(0.2);
@@ -147,7 +172,7 @@ const Index = () => {
     } else {
       setScreen("dead");
     }
-  }, [levelId]);
+  }, [levelId, marathonStep]);
 
   // One owner for BGM. The "loading" screen handles the actual track switch
   // before "playing" begins, so we leave that case alone here.
