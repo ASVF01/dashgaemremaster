@@ -8,6 +8,7 @@ import { useSettings, type Settings } from "@/game/settings";
 import { sfx, setSfxVolume, unlockAudio } from "@/game/sfx";
 import { setBgmVolume } from "@/game/bgm";
 import BgmPlayer from "@/game/BgmPlayer";
+import { SPRITE_GALLERY } from "@/game/sprites";
 
 export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" | "credits";
 
@@ -491,6 +492,35 @@ function ExtrasTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
               </button>
             );
           })}
+        </div>
+      </div>
+
+      {/* SPRITE GALLERY */}
+      <div className="scribble-border bg-paper p-5">
+        <div className="font-marker text-3xl text-ink -rotate-1 mb-3">SPRITE GALLERY</div>
+        <p className="font-scribble text-base text-ink/70 mb-3">
+          Every player sprite, in all its scribbly glory.
+        </p>
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+          {SPRITE_GALLERY.map((s) => (
+            <div
+              key={s.id}
+              className="scribble-border bg-paper p-2 flex flex-col items-center hover:-rotate-2 transition-transform"
+            >
+              <div className="w-full aspect-square flex items-center justify-center bg-[hsl(var(--paper))]">
+                <img
+                  src={s.url}
+                  alt={s.label}
+                  className="max-w-full max-h-full object-contain"
+                  style={{ imageRendering: "pixelated" }}
+                  draggable={false}
+                />
+              </div>
+              <div className="font-marker text-xs md:text-sm text-ink mt-1 text-center leading-tight">
+                {s.label}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
