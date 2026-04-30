@@ -761,8 +761,32 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         angle: Math.random() * Math.PI,
       });
     }
-  }
+    }
 
+    // invboi-star pickup (spawned by pressing E). Bobs in place; touching
+    // the player turns them into invboi (same as the cheat code).
+    if (r.invboiPickup) {
+      const pk = r.invboiPickup;
+      pk.t += dt;
+      const drawY = pk.y + Math.sin(pk.bobPhase + pk.t * 3.2) * 6;
+      const HALF = 18;
+      if (rectOverlap(p.x, p.y, p.w, p.h, pk.x - HALF, drawY - HALF, HALF * 2, HALF * 2)
+          && p.alive && !r.finished && !p.starman) {
+        r.invboiPickup = null;
+        p.starman = true;
+        p.starTimer = 0;
+        const inJrb = levelIdRef.current === "just-run-bro";
+        p.somSom = inJrb;
+        p.invuln = Math.max(p.invuln, 9999);
+        unlockAudio();
+        if (inJrb) playSomSomBgm();
+        else playStarmanBgm();
+        sfx.shineStart();
+        setCelestialMode(true, { replaceDefaults: !inJrb });
+        setThunderMode(inJrb);
+        burst(r, p.x + p.w / 2, p.y + p.h / 2, inJrb ? "#22e2ff" : "#ffd11a", 24, 380);
+      }
+    }
 
   function spawnSlideDustBurst(r: GameRefs, p: Player) {
     const reduced = getSettings().reducedFx;
