@@ -16,7 +16,7 @@ export type Level = {
   invboiStart?: { x: number; y: number; facing: 1 | -1 };
 };
 
-export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "chase" | "speed-test" | "just-run-bro" | "meet-invboi" | "roaring-knight" | "aftermath-1" | "aftermath-2" | "aftermath-3";
+export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "chase" | "speed-test" | "just-run-bro" | "meet-invboi" | "roaring-knight" | "aftermath-1" | "aftermath-2" | "aftermath-3" | "celestial-marathon";
 
 export type LevelMeta = {
   id: LevelId;
