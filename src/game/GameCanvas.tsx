@@ -335,6 +335,8 @@ interface Props {
   paused: boolean;
   /** When true, do not pause the BGM even if the game is paused (e.g. win/death overlays). */
   keepAudio?: boolean;
+  /** Marathon mode: start the player already as invboi without restarting BGM/cinematic. */
+  startAsInvboi?: boolean;
   resetKey: number;
   levelId?: LevelId;
 }
