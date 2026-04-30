@@ -1997,7 +1997,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
 
     // boss world-space FX (warnings + slashes)
-    if (r.boss) drawBossWorldFx(ctx, r.boss);
+    if (r.boss) drawBossWorldFx(ctx, r, r.boss);
     drawGoal(ctx, r.level.goal.x, r.level.goal.y, r.level.goal.w, r.level.goal.h, r.time);
 
     // afterimages — draw before player so player sits on top
@@ -2445,7 +2445,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   }
 
   function drawBossScreen(ctx: CanvasRenderingContext2D, r: GameRefs, boss: Boss, screenW: number) {
-    const { drawW, drawH } = bossScreenAnchor(boss, screenW);
+    const { drawW, drawH } = bossScreenAnchor(r, boss, screenW);
     // afterimages (screen-space, ignore world camera)
     for (const ai of boss.afterimages) {
       const t = ai.life / ai.maxLife; // 1 → 0
