@@ -208,8 +208,13 @@ interface Player {
   somSom: boolean; // invboi while in just-run-bro — cyan variant
   starTimer: number; // timer for emitting star particles
   beamTime: number; // remaining seconds the beam pose is held
-  beamCooldown: number; // small fire-rate cap on beams
+  beamCooldown: number; // small fire-rate cap on beams (legacy, kept for compat)
   beamGrounded: boolean; // whether the beam was fired from ground (pose select)
+  laserActive: boolean; // held-laser attack (invboi vs boss only)
+  laserFloatBudget: number; // seconds of float remaining (max 10)
+  laserDir: 1 | -1; // direction the laser is pointed
+  laserDamageTick: number; // accumulator for periodic boss damage
+  laserWasHeld: boolean; // edge-detect for re-arming float per press
 }
 
 interface Afterimage {
@@ -378,6 +383,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         beamTime: 0,
         beamCooldown: 0,
         beamGrounded: true,
+        laserActive: false,
+        laserFloatBudget: 10,
+        laserDir: 1,
+        laserDamageTick: 0,
+        laserWasHeld: false,
       },
       projectiles: [],
       particles: [],
