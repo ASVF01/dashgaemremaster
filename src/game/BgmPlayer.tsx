@@ -243,6 +243,20 @@ export default function BgmPlayer() {
         </div>
       </div>
 
+      {/* Visualizer */}
+      <div className="scribble-border bg-paper p-1 mb-3 relative overflow-hidden">
+        <canvas
+          ref={vizCanvasRef}
+          className="block w-full h-24 sm:h-28"
+          aria-hidden="true"
+        />
+        {!playing && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none font-marker text-xl text-ink/40">
+            ♪ press play ♪
+          </div>
+        )}
+      </div>
+
       {/* Seek bar */}
       <input
         type="range"
