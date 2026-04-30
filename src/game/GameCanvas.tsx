@@ -987,6 +987,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // dash visual / i-frame window timer (velocity is no longer locked)
     if (p.dashTime > 0) p.dashTime -= dt;
     if (p.dashCooldown > 0) p.dashCooldown -= dt;
+    if (p.beamTime > 0) p.beamTime -= dt;
+    if (p.beamCooldown > 0) p.beamCooldown -= dt;
 
     // SUPER DASH (just-run-bro): hold dash to ramp up speed in facing dir.
     if (p.superDashing && p.alive) {
