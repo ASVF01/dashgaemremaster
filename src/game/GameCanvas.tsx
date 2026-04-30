@@ -298,6 +298,7 @@ interface Boss {
   wornWorldX: number; // pinned world X while staggered (un-sticks from camera)
   wornAnchored: boolean;
   hitFlash: number; // 0..1 white flash overlay on the sprite
+  hurtT: number; // seconds remaining showing the "hurt" sprite + red flash on damage
   shakeT: number; // residual shake time (own little wiggle on hit)
   // afterimages (screen-space, ignore camera) — drift right via vx
   afterTimer: number;
