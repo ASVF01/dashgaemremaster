@@ -2562,6 +2562,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
     // (rainbow star rain is rendered earlier as a background layer)
 
+    // INVBOI: white fade-in flash when the rainbow-star downpour begins
+    // at t=RAIN_START. Triangle envelope over 0.5s.
+    if (r.player.starman && !isSomSom && starElapsed >= RAIN_START && starElapsed < RAIN_START + 0.5) {
+      const f = (starElapsed - RAIN_START) / 0.5; // 0 → 1
+      const alpha = f < 0.5 ? f * 2 : (1 - f) * 2;
+      ctx.save();
+      ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+      ctx.fillRect(0, 0, w, h);
+      ctx.restore();
+    }
+
     // SOM SOM cinematic overlays: white-out (5..6s) then cyan impact flash (6..6.45s)
     if (whiteOut > 0) {
       ctx.save();
