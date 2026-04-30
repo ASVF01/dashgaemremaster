@@ -2195,34 +2195,39 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       jaggedBolt(ctx, pr.x, pr.y, pr.x - pr.vx * 0.04, pr.y - pr.vy * 0.04, col, 2, 4, 4);
     }
 
-    // player beams (invboi vs boss)
-    if (r.beams.length) {
+    // HELD LASER (invboi vs boss): big static beam from player to screen edge
+    if (r.player.laserActive && r.boss && !r.boss.defeated) {
+      const pl = r.player;
+      const dir = pl.laserDir;
+      const x0 = pl.x + pl.w / 2 + dir * 8;
+      const y0 = pl.y + pl.h * 0.4;
+      // End point: across the screen in firing direction (in world coords).
+      const x1 = dir > 0 ? r.cameraX + size.w + 200 : r.cameraX - 200;
+      // subtle thickness pulse but mostly static
+      const pulse = 1 + Math.sin(r.time * 30) * 0.04;
       ctx.save();
-      for (const beam of r.beams) {
-        const fade = 1 - beam.life / beam.maxLife;
-        const dir = Math.sign(beam.vx) || 1;
-        const tailLen = 90;
-        ctx.lineCap = "round";
-        // outer glow
-        ctx.strokeStyle = `rgba(255, 220, 60, ${0.35 * fade})`;
-        ctx.lineWidth = 14;
-        ctx.beginPath();
-        ctx.moveTo(beam.x - dir * tailLen, beam.y);
-        ctx.lineTo(beam.x + dir * 18, beam.y);
-        ctx.stroke();
-        // bright core
-        ctx.strokeStyle = `rgba(255, 255, 255, ${0.95 * fade})`;
-        ctx.lineWidth = 5;
-        ctx.beginPath();
-        ctx.moveTo(beam.x - dir * tailLen, beam.y);
-        ctx.lineTo(beam.x + dir * 24, beam.y);
-        ctx.stroke();
-        // hot tip
-        ctx.fillStyle = `rgba(255, 240, 120, ${fade})`;
-        ctx.beginPath();
-        ctx.arc(beam.x + dir * 8, beam.y, 6, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      ctx.lineCap = "butt";
+      // huge outer halo
+      ctx.strokeStyle = "rgba(255, 200, 60, 0.22)";
+      ctx.lineWidth = 70 * pulse;
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y0); ctx.stroke();
+      // outer glow
+      ctx.strokeStyle = "rgba(255, 220, 80, 0.55)";
+      ctx.lineWidth = 42 * pulse;
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y0); ctx.stroke();
+      // mid yellow body
+      ctx.strokeStyle = "rgba(255, 240, 120, 0.9)";
+      ctx.lineWidth = 22 * pulse;
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y0); ctx.stroke();
+      // bright white core
+      ctx.strokeStyle = "rgba(255, 255, 255, 1)";
+      ctx.lineWidth = 8 * pulse;
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y0); ctx.stroke();
+      // muzzle burst at player
+      ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+      ctx.beginPath(); ctx.arc(x0, y0, 16, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "rgba(255, 220, 80, 0.55)";
+      ctx.beginPath(); ctx.arc(x0, y0, 28, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
     }
 
