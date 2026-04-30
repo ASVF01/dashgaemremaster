@@ -157,7 +157,11 @@ const Index = () => {
         // the starman BGM keeps playing uninterrupted.
         return;
       }
-      // All sub-levels cleared → finish the marathon.
+      // All sub-levels cleared → finish the marathon. Freeze the timer.
+      const finalMs = marathonStartRef.current != null ? performance.now() - marathonStartRef.current : marathonMs;
+      setMarathonFinalMs(finalMs);
+      setMarathonMs(finalMs);
+      marathonStartRef.current = null;
       setMarathonStep(null);
       setScreen("win");
       return;
