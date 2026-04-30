@@ -2279,7 +2279,28 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     boss.hoverPhase += dt * 2.2;
     if (boss.hitFlash > 0) boss.hitFlash = Math.max(0, boss.hitFlash - dt * 4);
     if (boss.shakeT > 0) boss.shakeT = Math.max(0, boss.shakeT - dt);
-    bossScreenAnchor(r, boss, screenW);
+    const { drawW: bDrawW } = bossScreenAnchor(r, boss, screenW);
+
+    // ----- BOSS RULE: player can't run past the knight -----
+    // The knight's world X is camera + screenX. Block the player from passing
+    // a soft barrier just left of him; if they push into it, convert their
+    // forward momentum into a small vertical bob so they "ride" up and down
+    // along the wall instead of running through.
+    if (!boss.defeated) {
+      const p = r.player;
+      const bossWorldX = r.cameraX + boss.screenX;
+      const wallX = bossWorldX - bDrawW * 0.45;
+      if (p.x + p.w > wallX) {
+        p.x = wallX - p.w;
+        if (p.vx > 0) {
+          // Convert forward speed into upward lift so the player bobs up,
+          // then gravity brings them back down — produces a vertical motion
+          // along the invisible wall.
+          p.vy = Math.min(p.vy, -Math.max(180, p.vx * 0.45));
+          p.vx = 0;
+        }
+      }
+    }
 
     // afterimages — screen-space, drift right, ignore world camera.
     boss.afterTimer -= dt;
