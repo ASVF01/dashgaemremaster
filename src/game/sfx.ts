@@ -7,6 +7,7 @@ import auraUrl from "@/assets/audio/aura.mp3";
 import swingSwipeUrl from "@/assets/audio/swing_swipe.ogg";
 import sfxCompleteUrl from "@/assets/audio/sfx_complete.ogg";
 import sfxYesUrl from "@/assets/audio/sfx_yes.ogg";
+import laserBeamUrl from "@/assets/audio/weapon_beam3_3.mp3";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
