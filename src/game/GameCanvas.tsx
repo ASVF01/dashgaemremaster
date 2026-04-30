@@ -526,7 +526,41 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           // whoosh: short pitched sweep + airy noise burst
           sfx.spawnWhoosh();
           // little burst at the spawn point
-          burst(r, p.x + p.w / 2 + ahead, p.y + p.h * 0.4, "#fff5a3", 12, 240);
+          const sx0 = p.x + p.w / 2 + ahead;
+          const sy0 = p.y + p.h * 0.4;
+          burst(r, sx0, sy0, "#fff5a3", 12, 240);
+          // Sketchy stick-figure sparkle particles — small "star" particles
+          // (rendered as sketchy stars by the existing particle renderer)
+          // plus a few ink-dark shards for hand-drawn texture.
+          for (let i = 0; i < 10; i++) {
+            const a = Math.random() * Math.PI * 2;
+            const sp = 80 + Math.random() * 200;
+            spawnParticle(r, {
+              x: sx0 + (Math.random() - 0.5) * 14,
+              y: sy0 + (Math.random() - 0.5) * 14,
+              vx: Math.cos(a) * sp,
+              vy: Math.sin(a) * sp - 60,
+              color: Math.random() < 0.5 ? "#ffd11a" : "#fff5a3",
+              size: 3 + Math.random() * 3,
+              life: 0.45 + Math.random() * 0.35,
+              kind: "star",
+              angle: Math.random() * Math.PI,
+            });
+          }
+          for (let i = 0; i < 6; i++) {
+            const a = Math.random() * Math.PI * 2;
+            const sp = 60 + Math.random() * 160;
+            spawnParticle(r, {
+              x: sx0, y: sy0,
+              vx: Math.cos(a) * sp,
+              vy: Math.sin(a) * sp - 40,
+              color: "#1a1a1a",
+              size: 1.5 + Math.random() * 1.5,
+              life: 0.30 + Math.random() * 0.25,
+              kind: "shard",
+              angle: Math.random() * Math.PI,
+            });
+          }
         }
       }
       if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) {
