@@ -364,6 +364,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
   levelIdRef.current = levelId;
   const onInvboiPickupRef = useRef<(() => void) | undefined>(onInvboiPickup);
   onInvboiPickupRef.current = onInvboiPickup;
+  // True while CELESTIAL MARATHON is running. Used to keep the marathon
+  // BGM playing across sub-level transitions (e.g. don't stopBgm after
+  // just-run-bro because the boss level needs the same track to continue).
+  const marathonRef = useRef<boolean>(startAsInvboi);
+  marathonRef.current = startAsInvboi;
   const [size, setSize] = useState({ w: 1200, h: 600 });
 
   // resize
@@ -1820,10 +1825,14 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       }
       // For "just-run-bro" we hand off straight to the cutscene MP4 — skip
       // the win sfx/fanfare so the video starts immediately and clean.
+      // BUT: in CELESTIAL MARATHON there's no cutscene; we chain straight
+      // to the next sub-level, so keep the marathon BGM playing.
       if (levelId !== "just-run-bro") {
         sfx.win();
         // Duck + lowpass the BGM under the WIN overlay (still audible).
         bgmLevelEnd();
+      } else if (marathonRef.current) {
+        // Marathon: don't kill the track — Index handles the transition.
       } else {
         stopBgm();
       }
