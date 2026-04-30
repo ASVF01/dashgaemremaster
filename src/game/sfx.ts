@@ -211,9 +211,10 @@ export const sfx = {
     tone({ freq: 95, to: 60, dur: 0.30, type: "sine", vol: 0.18, release: 0.18 });
   },
   land() {
-    // "psh" — short plosive "p" pop + airy "sh" hiss tail
-    noise(0.012, 0.34, 180, 1100);                                // "p" pop
-    noise(0.10, 0.24, 3500, 8500, 0.012);                         // "sh" hiss tail
+    // "bsh" — voiced "b" thump + airy "sh" hiss tail
+    tone({ freq: 130, to: 70, dur: 0.05, type: "sine", vol: 0.42, attack: 0.002, release: 0.03 }); // "b" body thump
+    noise(0.018, 0.28, 120, 900);                                 // "b" burst
+    noise(0.11, 0.26, 3500, 8500, 0.018);                         // "sh" hiss tail
   },
   slide() {
     // "thhh" — sustained airy noise around speech band
