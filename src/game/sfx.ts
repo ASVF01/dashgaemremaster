@@ -161,6 +161,64 @@ export function setSfxVolume(v: number) {
   if (master && !muted) master.gain.value = baseVol;
 }
 
+// ---------- CELESTIAL MODE (invboi / rainboi) ----------
+// When on, movement-style sfx layer a sparkly bell-tone shimmer on top so
+// every step / slide / dash sounds like the player is interacting with
+// shining magical surfaces. Toggled by GameCanvas based on starman/somSom.
+let celestialMode = false;
+export function setCelestialMode(on: boolean) {
+  celestialMode = on;
+  if (on) startSlideShimmer(); else stopSlideShimmer();
+}
+export function isCelestialMode() { return celestialMode; }
+
+// Pick a frequency from a pleasant pentatonic scale around the given base.
+const PENTATONIC_RATIOS = [1, 9 / 8, 5 / 4, 3 / 2, 5 / 3, 2, 9 / 4, 5 / 2, 3];
+function pentaPick(base: number, idx?: number) {
+  const i = idx == null ? Math.floor(Math.random() * PENTATONIC_RATIOS.length) : idx;
+  return base * PENTATONIC_RATIOS[Math.abs(i) % PENTATONIC_RATIOS.length];
+}
+
+// Layered "twinkle on shiny stuff" — a couple of short bright bells +
+// a tiny airy hiss. Cheap, stacks freely, sits on top of any sfx.
+// `intensity` 0..1 scales the volume; `count` 1..3 layered notes.
+function celestialShimmer(opts: { base?: number; intensity?: number; count?: number; spread?: number; lo?: boolean } = {}) {
+  if (!celestialMode) return;
+  const base = opts.base ?? 1600;
+  const intensity = opts.intensity ?? 1;
+  const count = opts.count ?? 2;
+  const spread = opts.spread ?? 0.04;
+  for (let i = 0; i < count; i++) {
+    const f = pentaPick(base);
+    const vol = (0.10 + 0.05 * Math.random()) * intensity;
+    tone({
+      freq: f, to: f * (1.5 + Math.random() * 0.5),
+      dur: 0.22 + Math.random() * 0.18,
+      type: "triangle",
+      vol,
+      attack: 0.003,
+      release: 0.18,
+      delay: i * spread + Math.random() * 0.01,
+    });
+    // soft sine "halo" beneath the bell for body
+    tone({
+      freq: f * 0.5, to: f * 0.5,
+      dur: 0.18,
+      type: "sine",
+      vol: vol * 0.5,
+      attack: 0.005,
+      release: 0.12,
+      delay: i * spread,
+    });
+  }
+  // tiny sparkle hiss in the very high band
+  noise(0.10 * intensity, 0.06 * intensity, 5500, 14000);
+  if (opts.lo) {
+    // optional sub bell for big impacts (super dash, mach)
+    tone({ freq: base * 0.25, dur: 0.4, type: "sine", vol: 0.18 * intensity, attack: 0.01, release: 0.25 });
+  }
+}
+
 type ToneOpts = {
   freq: number;
   to?: number;
