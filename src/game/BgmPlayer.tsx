@@ -179,6 +179,8 @@ export default function BgmPlayer() {
       setBgmMuted(true);
       mutedGameRef.current = true;
     }
+    ensureAnalyser();
+    try { await audioCtxRef.current?.resume(); } catch { /* noop */ }
     try { await a.play(); setPlaying(true); } catch { /* user gesture needed */ }
   };
 
