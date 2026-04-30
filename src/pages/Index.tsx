@@ -22,6 +22,22 @@ type Screen = "menu" | "loading" | "playing" | "dead" | "win" | "cutscene" | "de
 // the "champion play" track and lets it keep looping across transitions.
 const RESTART_BGM_ON_ENTRY: ReadonlyArray<LevelId> = ["tutorial", "chase", "just-run-bro", "roaring-knight"];
 
+// CELESTIAL MARATHON: every gameplay level chained back-to-back. Player
+// stays as invboi the whole time and the starman BGM keeps playing across
+// transitions (no rain re-cinematic).
+const MARATHON_SEQUENCE: ReadonlyArray<LevelId> = [
+  "tutorial",
+  "scribble-1",
+  "scribble-2",
+  "scribble-3",
+  "chase",
+  "just-run-bro",
+  "roaring-knight",
+  "aftermath-1",
+  "aftermath-2",
+  "aftermath-3",
+];
+
 const Index = () => {
   const [screen, setScreen] = useState<Screen>("menu");
   const [levelId, setLevelId] = useState<LevelId>("tutorial");
