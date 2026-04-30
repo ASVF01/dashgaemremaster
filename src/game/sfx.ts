@@ -431,8 +431,8 @@ export const sfx = {
   laserStop() { stopLaser(); },
   rainStart() { startRain(); },
   rainStop() { stopRain(); },
-  slideStart() { if (!shimmerReplaces()) startSlideLoop(); },
-  slideStop() { stopSlideLoop(); },
+  slideStart() { slideActive = true; if (!shimmerReplaces()) startSlideLoop(); },
+  slideStop() { slideActive = false; stopSlideLoop(); },
   slideIntensity(v: number) { setSlideIntensity(v); },
   thunder() {
     // bright crack, then deep rumble
@@ -589,6 +589,9 @@ function stopRain() {
 
 // ---------- looping slide sound (filtered noise + low rumble) ----------
 let slide: { src: AudioBufferSourceNode; out: GainNode; lp: BiquadFilterNode; rumble: OscillatorNode; rumbleGain: GainNode } | null = null;
+// Tracks whether the player is currently sliding, independent of whether the
+// regular slide noise loop is running (it's suppressed during invboi-replace).
+let slideActive = false;
 let slideTargetVol = 0.06;
 
 function startSlideLoop() {
@@ -753,7 +756,7 @@ function startSlideShimmer() {
   if (slideShimmer) return;
   const tick = () => {
     if (!slideShimmer) return;
-    if (celestialMode && slide) {
+    if (celestialMode && slideActive) {
       // tiny bell sparkle per tick
       celestialShimmer({ base: 2400, count: 1, intensity: 0.55 });
     }
