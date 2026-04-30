@@ -213,7 +213,8 @@ function KeybindsTab() {
       <div className="flex items-center justify-between mb-4">
         <div className="font-marker text-3xl text-ink -rotate-1">REBIND KEYS</div>
         <button
-          onClick={() => setBinds(DEFAULT_BINDS)}
+          onClick={() => { sfx.menuBack(); setBinds(DEFAULT_BINDS); }}
+          onMouseEnter={() => sfx.menuHover()}
           className="scribble-border bg-paper px-3 py-1 font-marker text-lg text-ink hover:-rotate-2 transition-transform"
         >
           RESET DEFAULTS
