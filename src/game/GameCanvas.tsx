@@ -2282,6 +2282,62 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       ctx.fillStyle = "rgba(255, 220, 80, 0.55)";
       ctx.beginPath(); ctx.arc(x0, y0, 28, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
+
+      // === RAINBOW DUST out the OPPOSITE end of the beam (back of player) ===
+      // Spawn a few particles per frame, drifting away from the firing dir.
+      const dustCount = 3;
+      for (let i = 0; i < dustCount; i++) {
+        const hue = (r.time * 240 + i * 40 + Math.random() * 30) % 360;
+        const back = -dir;
+        const spd = 220 + Math.random() * 260;
+        const spread = (Math.random() - 0.5) * 220;
+        spawnParticle(r, {
+          x: x0 - dir * 6,
+          y: y0,
+          vx: back * spd,
+          vy: spread,
+          color: `hsl(${hue}, 100%, 60%)`,
+          size: 2 + Math.random() * 3,
+          life: 0.35 + Math.random() * 0.35,
+          kind: "spark",
+        });
+      }
+
+      // === SPINNING BALLS along the beam, vertical orbit, advancing toward target ===
+      // Balls are computed per-frame from r.time so they "travel" along the beam.
+      ctx.save();
+      const beamLen = Math.abs(x1 - x0);
+      const ballCount = 6;
+      const orbitRadius = 18; // vertical orbit radius
+      const travelSpeed = 900; // px/sec along the beam
+      const spinSpeed = 14;    // rad/sec
+      for (let i = 0; i < ballCount; i++) {
+        // Each ball has its own offset so they're spaced along the beam.
+        const spacing = beamLen / ballCount;
+        // Position along the beam, looping forward over time.
+        const along = ((r.time * travelSpeed + i * spacing) % beamLen);
+        const bx = x0 + dir * along;
+        // Orbit phase — rotate around the beam axis (vertical plane = up/down).
+        const phase = r.time * spinSpeed + i * 1.05;
+        const by = y0 + Math.sin(phase) * orbitRadius;
+        // Depth scale: balls "behind" (sin < 0) appear smaller/dimmer.
+        const depth = (Math.cos(phase) + 1) / 2; // 0..1 (1 = front)
+        const radius = 5 + depth * 6;
+        const hue = (r.time * 260 + i * 60) % 360;
+        // outer glow
+        ctx.globalAlpha = 0.35 + 0.5 * depth;
+        ctx.fillStyle = `hsl(${hue}, 100%, 65%)`;
+        ctx.beginPath(); ctx.arc(bx, by, radius * 1.8, 0, Math.PI * 2); ctx.fill();
+        // core
+        ctx.globalAlpha = 0.7 + 0.3 * depth;
+        ctx.fillStyle = `hsl(${hue}, 100%, 80%)`;
+        ctx.beginPath(); ctx.arc(bx, by, radius, 0, Math.PI * 2); ctx.fill();
+        // bright center dot
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath(); ctx.arc(bx, by, Math.max(1.5, radius * 0.45), 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
     }
 
     // boss world-space FX (warnings + slashes)
