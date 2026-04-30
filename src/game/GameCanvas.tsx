@@ -2132,6 +2132,37 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       jaggedBolt(ctx, pr.x, pr.y, pr.x - pr.vx * 0.04, pr.y - pr.vy * 0.04, col, 2, 4, 4);
     }
 
+    // player beams (invboi vs boss)
+    if (r.beams.length) {
+      ctx.save();
+      for (const beam of r.beams) {
+        const fade = 1 - beam.life / beam.maxLife;
+        const dir = Math.sign(beam.vx) || 1;
+        const tailLen = 90;
+        ctx.lineCap = "round";
+        // outer glow
+        ctx.strokeStyle = `rgba(255, 220, 60, ${0.35 * fade})`;
+        ctx.lineWidth = 14;
+        ctx.beginPath();
+        ctx.moveTo(beam.x - dir * tailLen, beam.y);
+        ctx.lineTo(beam.x + dir * 18, beam.y);
+        ctx.stroke();
+        // bright core
+        ctx.strokeStyle = `rgba(255, 255, 255, ${0.95 * fade})`;
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(beam.x - dir * tailLen, beam.y);
+        ctx.lineTo(beam.x + dir * 24, beam.y);
+        ctx.stroke();
+        // hot tip
+        ctx.fillStyle = `rgba(255, 240, 120, ${fade})`;
+        ctx.beginPath();
+        ctx.arc(beam.x + dir * 8, beam.y, 6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
     // boss world-space FX (warnings + slashes)
     if (r.boss) drawBossWorldFx(ctx, r, r.boss);
     drawGoal(ctx, r.level.goal.x, r.level.goal.y, r.level.goal.w, r.level.goal.h, r.time);
