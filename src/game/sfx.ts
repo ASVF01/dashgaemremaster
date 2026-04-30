@@ -166,11 +166,17 @@ export function setSfxVolume(v: number) {
 // every step / slide / dash sounds like the player is interacting with
 // shining magical surfaces. Toggled by GameCanvas based on starman/somSom.
 let celestialMode = false;
-export function setCelestialMode(on: boolean) {
+// When `replaceDefaults` is true, movement/action sfx skip their normal
+// synth body and play ONLY the shimmer — so the player sounds purely
+// celestial. We enable this only for invboi (rainboi), not som-som.
+let celestialReplace = false;
+export function setCelestialMode(on: boolean, opts: { replaceDefaults?: boolean } = {}) {
   celestialMode = on;
+  celestialReplace = !!(on && opts.replaceDefaults);
   if (on) startSlideShimmer(); else stopSlideShimmer();
 }
 export function isCelestialMode() { return celestialMode; }
+function shimmerReplaces() { return celestialMode && celestialReplace; }
 
 // Pick a frequency from a pleasant pentatonic scale around the given base.
 const PENTATONIC_RATIOS = [1, 9 / 8, 5 / 4, 3 / 2, 5 / 3, 2, 9 / 4, 5 / 2, 3];
