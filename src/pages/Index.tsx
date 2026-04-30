@@ -438,7 +438,33 @@ const Index = () => {
             </Overlay>
           )}
 
-          {screen === "menu" && <MainMenu onPlay={startLevel} />}
+          {screen === "playing" && chaseIntroOpen && (
+            <Overlay>
+              <div className="text-center px-6 max-w-2xl">
+                <div className="font-marker text-5xl md:text-6xl text-[hsl(var(--accent))] mb-3 -rotate-2 inline-block animate-jitter">
+                  THE CHASE!
+                </div>
+                <p className="font-scribble text-2xl md:text-3xl text-ink mb-4">
+                  something's hunting you down the hallway. <b>don't stop running.</b>
+                </p>
+                <ul className="font-scribble text-lg md:text-xl text-ink/90 mb-6 space-y-2 text-left inline-block">
+                  <li>✦ <b>RUN</b> right with → / D — never slow down</li>
+                  <li>✦ <b>SLIDE</b> with ↓ / S to fit under low ceilings (keeps your speed!)</li>
+                  <li>✦ <b>JUMP</b> or <b>DASH</b> over spikes — never tank a hit, you'll lose ground</li>
+                  <li>✦ <b>SUPER DASH</b> (hold SHIFT at high speed) to pull WAY ahead</li>
+                  <li>✦ if it gets close, <b>PARRY</b> with J — knocks it back & stuns it briefly</li>
+                  <li>✦ touching the chaser hurts. parry > tank. <b>always.</b></li>
+                </ul>
+                <button
+                  onClick={() => setChaseIntroOpen(false)}
+                  className="scribble-border bg-[hsl(var(--accent))] text-accent-foreground font-marker text-3xl px-8 py-4 hover:rotate-2 transition-transform animate-jitter"
+                >
+                  RUN!! →
+                </button>
+              </div>
+            </Overlay>
+          )}
+
 
           {screen === "loading" && (
             <Overlay>
