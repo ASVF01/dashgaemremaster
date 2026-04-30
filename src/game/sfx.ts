@@ -150,6 +150,12 @@ export function setMuted(v: boolean) {
   if (master) master.gain.value = v ? 0 : baseVol;
 }
 export function isMuted() { return muted; }
+// Hard-stop everything currently playing through the master bus and silence
+// future sfx until unmuted. Used for the boss-death cutscene.
+export function silenceAllSfx() {
+  try { stopLaser(); } catch { /* noop */ }
+  setMuted(true);
+}
 export function setSfxVolume(v: number) {
   baseVol = Math.max(0, Math.min(1, v)) * 0.5; // cap so 1.0 = current loud-ish max
   if (master && !muted) master.gain.value = baseVol;
