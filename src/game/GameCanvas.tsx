@@ -1634,21 +1634,37 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // paper bg (or black during starman fx, or OLED black post-impact for som som,
     // or the boss-level cyan-flame backdrop)
     if (isBossLevel) {
-      // Solid black under the bg image, then draw the image stretched/cover.
+      // Solid black under the bg image.
       ctx.fillStyle = "#000";
       ctx.fillRect(0, 0, w, h);
-      if (bossBgImg.complete && bossBgImg.naturalWidth) {
+      // Animated cyan-flame: cycle frames from the sprite sheet.
+      const sheetReady = bossBgSheet.complete && bossBgSheet.naturalWidth;
+      const fallback = bossBgImg.complete && bossBgImg.naturalWidth;
+      if (sheetReady || fallback) {
         ctx.save();
         ctx.imageSmoothingEnabled = false;
-        // cover-fit: scale image to fill the screen while preserving aspect
-        const ir = bossBgImg.naturalWidth / bossBgImg.naturalHeight;
+        const srcW = sheetReady ? BOSS_BG_FW : bossBgImg.naturalWidth;
+        const srcH = sheetReady ? BOSS_BG_FH : bossBgImg.naturalHeight;
+        // cover-fit
+        const ir = srcW / srcH;
         const sr = w / h;
         let dw = w, dh = h;
         if (ir > sr) { dh = h; dw = h * ir; } else { dw = w; dh = w / ir; }
         const dx = (w - dw) / 2;
         const dy = (h - dh) / 2;
         ctx.globalAlpha = 0.95;
-        ctx.drawImage(bossBgImg, dx, dy, dw, dh);
+        if (sheetReady) {
+          const frame = Math.floor(r.time * BOSS_BG_FPS) % BOSS_BG_FRAMES;
+          const col = frame % BOSS_BG_COLS;
+          const row = Math.floor(frame / BOSS_BG_COLS);
+          ctx.drawImage(
+            bossBgSheet,
+            col * BOSS_BG_FW, row * BOSS_BG_FH, BOSS_BG_FW, BOSS_BG_FH,
+            dx, dy, dw, dh
+          );
+        } else {
+          ctx.drawImage(bossBgImg, dx, dy, dw, dh);
+        }
         ctx.restore();
       }
     } else {
