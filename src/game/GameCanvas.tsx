@@ -18,6 +18,7 @@ import { getSettings } from "@/game/settings";
 import { getSprite, type SpriteState } from "@/game/sprites";
 import spookUrl from "@/assets/sprites/spook.png";
 import spookHurtUrl from "@/assets/sprites/spook_hurt.png";
+import roaringKnightUrl from "@/assets/roaring_knight.webp";
 
 type Keys = Record<string, boolean>;
 
@@ -46,6 +47,30 @@ function getSpookRedTint(): HTMLCanvasElement | null {
   octx.fillRect(0, 0, off.width, off.height);
   spookRedTint = off;
   return off;
+}
+
+// Roaring Knight boss sprite. Drawn in screen-space (top-right, hovers).
+const knightImg = new Image(); knightImg.src = roaringKnightUrl;
+const KNIGHT_DRAW_H = 180; // rendered height in screen pixels (sprite is square-ish)
+
+function makeBoss() {
+  return {
+    hp: 5,
+    maxHp: 5,
+    screenX: 0, screenY: 0,
+    hoverPhase: 0,
+    attackTimer: 2.0,         // grace period before first slash
+    attacksRemaining: 3,      // slashes per burst
+    worn: 0,                  // vulnerable window
+    hitFlash: 0,
+    shakeT: 0,
+    afterTimer: 0,
+    afterimages: [] as { sx: number; sy: number; life: number; maxLife: number; flipped: boolean }[],
+    warnings: [] as { x1: number; y1: number; x2: number; y2: number; t: number; dur: number; fired: boolean }[],
+    slashes: [] as { x1: number; y1: number; x2: number; y2: number; t: number; dur: number; hit: boolean }[],
+    defeated: false,
+    defeatT: 0,
+  };
 }
 
 // Darker cyan used by SOM SOM (invboi-in-just-run-bro). Single hue, lower lightness.
@@ -218,6 +243,32 @@ interface GameRefs {
   somSomCloudX: number | null;
   somSomRain: Float32Array | null; // packed [x, y, speed, len] * N
   heartbeatTimer: number;
+  // Roaring Knight boss state (only present in the boss level).
+  boss: Boss | null;
+}
+
+// Boss is rendered in screen-space (top-right). World-space slashes attack the player.
+interface Boss {
+  hp: number;
+  maxHp: number;
+  // Screen-space anchor (camera-locked). Drawn at this position.
+  screenX: number;
+  screenY: number;
+  hoverPhase: number;
+  // attack cycle
+  attackTimer: number; // counts down to next attack burst
+  attacksRemaining: number; // attacks left in current burst before "worn out"
+  worn: number; // seconds remaining of "worn out" / vulnerable window
+  hitFlash: number; // 0..1 white flash overlay on the sprite
+  shakeT: number; // residual shake time (own little wiggle on hit)
+  // afterimages (screen-space, ignore camera)
+  afterTimer: number;
+  afterimages: { sx: number; sy: number; life: number; maxLife: number; flipped: boolean }[];
+  // active slashes (world-space) and incoming warning lines
+  warnings: { x1: number; y1: number; x2: number; y2: number; t: number; dur: number; fired: boolean }[];
+  slashes: { x1: number; y1: number; x2: number; y2: number; t: number; dur: number; hit: boolean }[];
+  defeated: boolean;
+  defeatT: number;
 }
 
 interface Props {
@@ -332,6 +383,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       somSomCloudX: null,
       somSomRain: null,
       heartbeatTimer: 0,
+      boss: levelId === "roaring-knight" ? makeBoss() : null,
     };
     // Any reset/level change cancels the starman shimmer too.
     sfx.shineStop(); sfx.rainStop(); sfx.slideStop();
@@ -1246,6 +1298,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       }
     }
 
+    // boss
+    if (r.boss) updateBoss(r, dt, size.w);
+
     // projectiles
     for (const pr of r.projectiles) {
       if (!pr.alive) continue;
@@ -1932,7 +1987,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       jaggedBolt(ctx, pr.x, pr.y, pr.x - pr.vx * 0.04, pr.y - pr.vy * 0.04, col, 2, 4, 4);
     }
 
-    // goal
+    // boss world-space FX (warnings + slashes)
+    if (r.boss) drawBossWorldFx(ctx, r.boss);
     drawGoal(ctx, r.level.goal.x, r.level.goal.y, r.level.goal.w, r.level.goal.h, r.time);
 
     // afterimages — draw before player so player sits on top
@@ -2060,6 +2116,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
     ctx.restore();
 
+    // boss screen-space layer (sprite + afterimages + hp pip) — draws on top of world.
+    if (r.boss) drawBossScreen(ctx, r, r.boss, w);
+
     // (rainbow star rain is rendered earlier as a background layer)
 
     // SOM SOM cinematic overlays: white-out (5..6s) then cyan impact flash (6..6.45s)
@@ -2100,6 +2159,278 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       ctx.restore();
     }
 
+  }
+
+  // ----- BOSS: Roaring Knight -----
+  function bossScreenAnchor(boss: Boss, screenW: number) {
+    const margin = 40;
+    const drawW = KNIGHT_DRAW_H * (knightImg.naturalWidth && knightImg.naturalHeight
+      ? knightImg.naturalWidth / knightImg.naturalHeight : 1);
+    const baseX = screenW - margin - drawW / 2;
+    const baseY = margin + KNIGHT_DRAW_H / 2;
+    const hover = Math.sin(boss.hoverPhase) * 12;
+    boss.screenX = baseX;
+    boss.screenY = baseY + hover;
+    return { drawW, drawH: KNIGHT_DRAW_H };
+  }
+
+  function spawnBossSlash(r: GameRefs, boss: Boss) {
+    // Telegraph a thin diagonal slash near the player.
+    const p = r.player;
+    const cx = p.x + p.w / 2 + (Math.random() - 0.5) * 80;
+    const cy = p.y + p.h / 2 + (Math.random() - 0.5) * 60;
+    const ang = (Math.random() - 0.5) * 1.2 + Math.PI / 4 * (Math.random() < 0.5 ? 1 : -1);
+    const len = 280 + Math.random() * 120;
+    const dx = Math.cos(ang) * len / 2;
+    const dy = Math.sin(ang) * len / 2;
+    boss.warnings.push({
+      x1: cx - dx, y1: cy - dy, x2: cx + dx, y2: cy + dy,
+      t: 0, dur: 0.5, fired: false,
+    });
+  }
+
+  function updateBoss(r: GameRefs, dt: number, screenW: number) {
+    const boss = r.boss!;
+    boss.hoverPhase += dt * 2.2;
+    if (boss.hitFlash > 0) boss.hitFlash = Math.max(0, boss.hitFlash - dt * 4);
+    if (boss.shakeT > 0) boss.shakeT = Math.max(0, boss.shakeT - dt);
+    bossScreenAnchor(boss, screenW);
+
+    // afterimages — screen-space, every ~30ms, life 0.2s
+    boss.afterTimer -= dt;
+    if (boss.afterTimer <= 0 && !boss.defeated) {
+      boss.afterTimer = 0.03;
+      boss.afterimages.push({ sx: boss.screenX, sy: boss.screenY, life: 0.2, maxLife: 0.2, flipped: false });
+      if (boss.afterimages.length > 12) boss.afterimages.splice(0, boss.afterimages.length - 12);
+    }
+    for (const ai of boss.afterimages) ai.life -= dt;
+    boss.afterimages = boss.afterimages.filter((a) => a.life > 0);
+
+    if (boss.defeated) {
+      boss.defeatT += dt;
+      if (boss.defeatT > 1.6 && !r.finished) {
+        r.finished = true;
+        r.finishTime = performance.now() - r.startedAt;
+        r.score += 5000;
+        sfx.win();
+        bgmLevelEnd();
+        onFinish(r.finishTime, r.score);
+      }
+      return;
+    }
+
+    // Attack scheduling
+    if (boss.worn > 0) {
+      boss.worn -= dt;
+      if (boss.worn <= 0) {
+        // back to attacking
+        boss.attacksRemaining = 3;
+        boss.attackTimer = 1.0;
+      }
+    } else {
+      boss.attackTimer -= dt;
+      if (boss.attackTimer <= 0 && boss.attacksRemaining > 0) {
+        spawnBossSlash(r, boss);
+        boss.attacksRemaining -= 1;
+        boss.attackTimer = 0.85;
+        if (boss.attacksRemaining <= 0) {
+          // burst done — vulnerable window
+          boss.worn = 2.6;
+        }
+      }
+    }
+
+    // Update warnings → spawn slashes
+    for (const wn of boss.warnings) {
+      wn.t += dt;
+      if (!wn.fired && wn.t >= wn.dur) {
+        wn.fired = true;
+        boss.slashes.push({ x1: wn.x1, y1: wn.y1, x2: wn.x2, y2: wn.y2, t: 0, dur: 0.2, hit: false });
+        sfx.slashShing();
+      }
+    }
+    boss.warnings = boss.warnings.filter((w) => !w.fired);
+
+    // Update slashes — collide with player unless parrying / iframes
+    for (const sl of boss.slashes) {
+      sl.t += dt;
+      if (!sl.hit) {
+        const p = r.player;
+        if (segRectOverlap(sl.x1, sl.y1, sl.x2, sl.y2, p.x, p.y, p.w, p.h)) {
+          if (p.parrying > 0) {
+            sl.hit = true;
+            parrySuccess(r, (sl.x1 + sl.x2) / 2, (sl.y1 + sl.y2) / 2);
+          } else if (p.invuln <= 0 && p.alive) {
+            sl.hit = true;
+            damage(r, (sl.x1 + sl.x2) / 2, (sl.y1 + sl.y2) / 2);
+          }
+        }
+      }
+    }
+    boss.slashes = boss.slashes.filter((s) => s.t < s.dur);
+
+    // Player dash hit on boss — only when worn-out (vulnerable)
+    if (boss.worn > 0 && r.player.dashTime > 0 && r.player.alive) {
+      const p = r.player;
+      const { drawW, drawH } = bossScreenAnchor(boss, screenW);
+      // boss hitbox in world space (anchored to camera)
+      const bx = r.cameraX + boss.screenX - drawW * 0.35;
+      const by = boss.screenY - drawH * 0.4;
+      const bw = drawW * 0.7;
+      const bh = drawH * 0.8;
+      if (rectOverlap(p.x, p.y, p.w, p.h, bx, by, bw, bh)) {
+        boss.hp -= 1;
+        boss.hitFlash = 1;
+        boss.shakeT = 0.35;
+        boss.worn = 0; // reset: he goes back to attacking
+        boss.attacksRemaining = 3;
+        boss.attackTimer = 1.6;
+        r.shake = Math.max(r.shake, 0.5);
+        r.freezeFrames = Math.max(r.freezeFrames, 4);
+        r.score += 500;
+        burst(r, bx + bw / 2, by + bh / 2, "#fff34a", 22, 360);
+        sfx.bossHurt();
+        // bounce player back so they can't multi-hit on one dash
+        p.vx = -p.facing * 380;
+        p.vy = -260;
+        p.invuln = Math.max(p.invuln, 0.4);
+        if (boss.hp <= 0) {
+          boss.defeated = true;
+          boss.defeatT = 0;
+          r.shake = Math.max(r.shake, 1.0);
+          burst(r, bx + bw / 2, by + bh / 2, "#ffffff", 60, 520);
+        }
+      }
+    }
+  }
+
+  function segRectOverlap(x1: number, y1: number, x2: number, y2: number, rx: number, ry: number, rw: number, rh: number) {
+    // Sample the segment; cheap and accurate enough for thin slashes.
+    const steps = 16;
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const x = x1 + (x2 - x1) * t;
+      const y = y1 + (y2 - y1) * t;
+      if (x >= rx && x <= rx + rw && y >= ry && y <= ry + rh) return true;
+    }
+    return false;
+  }
+
+  function drawBossWorldFx(ctx: CanvasRenderingContext2D, boss: Boss) {
+    // red warning lines
+    for (const wn of boss.warnings) {
+      const k = Math.min(1, wn.t / wn.dur); // 0 → 1
+      const alpha = 0.3 + 0.5 * k + 0.2 * Math.sin(wn.t * 30);
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, alpha);
+      ctx.strokeStyle = "#f5234c";
+      ctx.lineWidth = 2 + 2 * k;
+      ctx.shadowColor = "#f5234c";
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.moveTo(wn.x1, wn.y1);
+      ctx.lineTo(wn.x2, wn.y2);
+      ctx.stroke();
+      ctx.restore();
+    }
+    // white slashes — start thick, shrink/thin to nothing
+    for (const sl of boss.slashes) {
+      const k = Math.min(1, sl.t / sl.dur); // 0 → 1
+      const thickness = Math.max(0.5, 9 * (1 - k));
+      const alpha = 1 - k * 0.7;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = thickness;
+      ctx.lineCap = "round";
+      ctx.shadowColor = "#ffffff";
+      ctx.shadowBlur = 16 * (1 - k);
+      ctx.beginPath();
+      ctx.moveTo(sl.x1, sl.y1);
+      ctx.lineTo(sl.x2, sl.y2);
+      ctx.stroke();
+      // thin core
+      ctx.globalAlpha = alpha * 0.9;
+      ctx.strokeStyle = "rgba(255,255,255,0.95)";
+      ctx.lineWidth = Math.max(0.4, thickness * 0.4);
+      ctx.shadowBlur = 0;
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function drawBossSpriteAt(ctx: CanvasRenderingContext2D, sx: number, sy: number, drawW: number, drawH: number, alpha: number, white: boolean) {
+    if (!knightImg.complete || !knightImg.naturalWidth) return;
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(knightImg, sx - drawW / 2, sy - drawH / 2, drawW, drawH);
+    if (white) {
+      // white flash overlay using source-atop on a temp canvas would be ideal,
+      // but a cheap approach: redraw with a white-tinted multiply via composite.
+      ctx.globalCompositeOperation = "source-atop";
+      ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+      ctx.fillRect(sx - drawW / 2, sy - drawH / 2, drawW, drawH);
+    }
+    ctx.restore();
+  }
+
+  function drawBossScreen(ctx: CanvasRenderingContext2D, r: GameRefs, boss: Boss, screenW: number) {
+    const { drawW, drawH } = bossScreenAnchor(boss, screenW);
+    // afterimages (screen-space, ignore world camera)
+    for (const ai of boss.afterimages) {
+      const t = ai.life / ai.maxLife; // 1 → 0
+      drawBossSpriteAt(ctx, ai.sx, ai.sy, drawW, drawH, 0.35 * t, false);
+    }
+    // little wiggle on hit
+    let wx = 0, wy = 0;
+    if (boss.shakeT > 0) {
+      const k = boss.shakeT;
+      wx = (Math.random() - 0.5) * 10 * k;
+      wy = (Math.random() - 0.5) * 10 * k;
+    }
+    const sx = boss.screenX + wx;
+    const sy = boss.screenY + wy;
+    if (boss.defeated) {
+      // fade out + tilt as he falls
+      const k = Math.min(1, boss.defeatT / 1.6);
+      ctx.save();
+      ctx.translate(sx, sy + k * 80);
+      ctx.rotate(k * 0.6);
+      ctx.globalAlpha = 1 - k;
+      drawBossSpriteAt(ctx, 0, 0, drawW, drawH, 1, false);
+      ctx.restore();
+    } else {
+      drawBossSpriteAt(ctx, sx, sy, drawW, drawH, 1, boss.hitFlash > 0.05);
+    }
+    // HP pips
+    const pipY = sy + drawH / 2 + 14;
+    const pipW = 18, pipGap = 6;
+    const totalW = boss.maxHp * pipW + (boss.maxHp - 1) * pipGap;
+    let px = sx - totalW / 2;
+    for (let i = 0; i < boss.maxHp; i++) {
+      ctx.save();
+      ctx.fillStyle = i < boss.hp ? "#f5234c" : "rgba(0,0,0,0.2)";
+      ctx.strokeStyle = INK;
+      ctx.lineWidth = 1.5;
+      ctx.fillRect(px, pipY, pipW, 8);
+      ctx.strokeRect(px, pipY, pipW, 8);
+      ctx.restore();
+      px += pipW + pipGap;
+    }
+    // "VULNERABLE!" hint when worn-out
+    if (boss.worn > 0) {
+      ctx.save();
+      ctx.font = "bold 14px monospace";
+      ctx.fillStyle = "#fff34a";
+      ctx.strokeStyle = INK;
+      ctx.lineWidth = 3;
+      ctx.textAlign = "center";
+      const txt = "DASH!";
+      ctx.strokeText(txt, sx, pipY + 28);
+      ctx.fillText(txt, sx, pipY + 28);
+      ctx.restore();
+    }
   }
 
   function drawScenery(ctx: CanvasRenderingContext2D, camX: number, w: number, levelH: number) {

@@ -343,6 +343,18 @@ export const sfx = {
     tone({ freq: 90, to: 55, dur: 0.05, type: "sine", vol: 0.16, attack: 0.003, release: 0.05 });
     tone({ freq: 75, to: 45, dur: 0.06, type: "sine", vol: 0.12, attack: 0.003, release: 0.06, delay: 0.11 });
   },
+  slashShing() {
+    // bright metallic "shing" — fast rising tone + airy hiss
+    tone({ freq: 1800, to: 4200, dur: 0.12, type: "triangle", vol: 0.28, attack: 0.002, release: 0.08 });
+    tone({ freq: 2600, to: 5200, dur: 0.10, type: "square", vol: 0.10, attack: 0.002, release: 0.06, delay: 0.01 });
+    noise(0.13, 0.18, 4000, 12000);
+  },
+  bossHurt() {
+    // quick wet "thock" + bright spark
+    tone({ freq: 320, to: 90, dur: 0.18, type: "sawtooth", vol: 0.42, attack: 0.002, release: 0.1 });
+    noise(0.06, 0.36, 600, 5500);
+    tone({ freq: 1500, to: 700, dur: 0.1, type: "triangle", vol: 0.18, release: 0.06 });
+  },
 };
 
 // ---------- looping "shine" sound for the invboi (starman) state ----------
