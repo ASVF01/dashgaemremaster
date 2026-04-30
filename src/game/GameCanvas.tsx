@@ -642,8 +642,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         r.finished = true;
         r.finishTime = performance.now() - r.startedAt;
         sfx.die();
-        // Don't touch BGM on death — let the level's music keep playing
-        // through the death overlay and into the retry.
+        // Duck + lowpass the BGM so the "OOPS" overlay feels muffled.
+        // (boss-level deaths are handled by Index — it stops BGM and plays
+        // the death cutscene, so a duck here is harmless.)
+        bgmLevelEnd();
         onDeath();
       }
       if (r.finished && r.player.alive && r.finishTime === 0) {
