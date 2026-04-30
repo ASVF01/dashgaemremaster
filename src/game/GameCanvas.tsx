@@ -719,10 +719,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         r.finished = true;
         r.finishTime = performance.now() - r.startedAt;
         sfx.die();
-        // Duck + lowpass the BGM so the "OOPS" overlay feels muffled.
-        // (boss-level deaths are handled by Index — it stops BGM and plays
-        // the death cutscene, so a duck here is harmless.)
-        bgmLevelEnd();
+        // Keep BGM playing at full volume on the death overlay — no duck.
+        // (Boss-level deaths are handled by Index, which stops BGM and
+        // plays the death cutscene separately.)
         onDeath();
       }
       if (r.finished && r.player.alive && r.finishTime === 0) {
@@ -1771,7 +1770,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       // the win sfx/fanfare so the video starts immediately and clean.
       if (levelId !== "just-run-bro") {
         sfx.win();
-        bgmLevelEnd();
+        // Keep BGM playing through the win overlay — no duck/lowpass.
       } else {
         stopBgm();
       }
@@ -2929,7 +2928,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         r.finishTime = performance.now() - r.startedAt;
         r.score += 5000;
         sfx.win();
-        bgmLevelEnd();
+        // Keep boss-victory BGM going — overlay handles the rest.
         onFinish(r.finishTime, r.score);
       }
       return;
