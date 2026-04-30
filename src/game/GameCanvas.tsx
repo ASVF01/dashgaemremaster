@@ -20,6 +20,7 @@ import spookUrl from "@/assets/sprites/spook.png";
 import spookHurtUrl from "@/assets/sprites/spook_hurt.png";
 import roaringKnightUrl from "@/assets/roaring_knight.webp";
 import bossBgUrl from "@/assets/boss_bg.gif";
+import bossBgSheetUrl from "@/assets/boss_bg_sheet.webp";
 
 type Keys = Record<string, boolean>;
 
@@ -53,6 +54,13 @@ function getSpookRedTint(): HTMLCanvasElement | null {
 // Roaring Knight boss sprite. Drawn in screen-space (top-right, hovers).
 const knightImg = new Image(); knightImg.src = roaringKnightUrl;
 const bossBgImg = new Image(); bossBgImg.src = bossBgUrl;
+// Animated boss bg: 31 frames, 6 cols × 6 rows, each 320×180.
+const bossBgSheet = new Image(); bossBgSheet.src = bossBgSheetUrl;
+const BOSS_BG_FRAMES = 31;
+const BOSS_BG_COLS = 6;
+const BOSS_BG_FW = 320;
+const BOSS_BG_FH = 180;
+const BOSS_BG_FPS = 18;
 const KNIGHT_DRAW_H = 180; // rendered height in screen pixels (sprite is square-ish)
 
 function makeBoss() {
@@ -1626,21 +1634,37 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // paper bg (or black during starman fx, or OLED black post-impact for som som,
     // or the boss-level cyan-flame backdrop)
     if (isBossLevel) {
-      // Solid black under the bg image, then draw the image stretched/cover.
+      // Solid black under the bg image.
       ctx.fillStyle = "#000";
       ctx.fillRect(0, 0, w, h);
-      if (bossBgImg.complete && bossBgImg.naturalWidth) {
+      // Animated cyan-flame: cycle frames from the sprite sheet.
+      const sheetReady = bossBgSheet.complete && bossBgSheet.naturalWidth;
+      const fallback = bossBgImg.complete && bossBgImg.naturalWidth;
+      if (sheetReady || fallback) {
         ctx.save();
         ctx.imageSmoothingEnabled = false;
-        // cover-fit: scale image to fill the screen while preserving aspect
-        const ir = bossBgImg.naturalWidth / bossBgImg.naturalHeight;
+        const srcW = sheetReady ? BOSS_BG_FW : bossBgImg.naturalWidth;
+        const srcH = sheetReady ? BOSS_BG_FH : bossBgImg.naturalHeight;
+        // cover-fit
+        const ir = srcW / srcH;
         const sr = w / h;
         let dw = w, dh = h;
         if (ir > sr) { dh = h; dw = h * ir; } else { dw = w; dh = w / ir; }
         const dx = (w - dw) / 2;
         const dy = (h - dh) / 2;
         ctx.globalAlpha = 0.95;
-        ctx.drawImage(bossBgImg, dx, dy, dw, dh);
+        if (sheetReady) {
+          const frame = Math.floor(r.time * BOSS_BG_FPS) % BOSS_BG_FRAMES;
+          const col = frame % BOSS_BG_COLS;
+          const row = Math.floor(frame / BOSS_BG_COLS);
+          ctx.drawImage(
+            bossBgSheet,
+            col * BOSS_BG_FW, row * BOSS_BG_FH, BOSS_BG_FW, BOSS_BG_FH,
+            dx, dy, dw, dh
+          );
+        } else {
+          ctx.drawImage(bossBgImg, dx, dy, dw, dh);
+        }
         ctx.restore();
       }
     } else {
