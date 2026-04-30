@@ -11,6 +11,7 @@ import { playMenuBgm, playMenuBgmFadeIn, playBgmFor, setBgmMuted, isBgmMuted, in
 import cutsceneJustRunBro from "@/assets/video/mcdonalds_sprite_2.mp4";
 import cutsceneBossDeath from "@/assets/video/boss_death_cutscene.mp4";
 import introCardImg from "@/assets/intro_card.png";
+import introBeginUrl from "@/assets/audio/intro_begin.ogg";
 import { sfx, unlockAudio, setSfxVolume, silenceAllSfx, setMuted as setSfxMuted } from "@/game/sfx";
 import { getSettings } from "@/game/settings";
 
@@ -34,7 +35,7 @@ const Index = () => {
   const [muted, setMuted] = useState(false);
   const [hasJrbBadge, setHasJrbBadge] = useState(false);
   const [badgeFace, setBadgeFace] = useState<":3" | "X3">(":3");
-  const [dark, setDark] = useState(false);
+  const [dark, setDark] = useState(true);
 
   // Intro card shown once on app start: fade in → hold 9s → fade out.
   // Phases: "in" (opacity 0→1), "hold" (opacity 1), "out" (1→0), "done".
@@ -42,6 +43,13 @@ const Index = () => {
   useEffect(() => {
     const FADE = 800; // ms
     const HOLD = 9000; // ms fully visible
+    // Make absolutely sure no BGM is playing while the intro is on screen.
+    stopBgm();
+    // Play the intro sting alongside the card fade-in.
+    const introAudio = new Audio(introBeginUrl);
+    introAudio.preload = "auto";
+    introAudio.volume = 0.9;
+    introAudio.play().catch(() => { /* autoplay blocked — will play after a gesture */ });
     const t1 = window.setTimeout(() => setIntroPhase("hold"), 30); // trigger fade-in next frame
     const t2 = window.setTimeout(() => {
       setIntroPhase("out");
@@ -49,7 +57,10 @@ const Index = () => {
       playMenuBgmFadeIn(FADE);
     }, 30 + FADE + HOLD);
     const t3 = window.setTimeout(() => setIntroPhase("done"), 30 + FADE + HOLD + FADE);
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+    return () => {
+      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
+      try { introAudio.pause(); } catch { /* noop */ }
+    };
   }, []);
 
   // Load persisted prefs once.
@@ -58,7 +69,9 @@ const Index = () => {
     setMuted(isBgmMuted());
     try { setHasJrbBadge(localStorage.getItem("badge_jrb") === "1"); } catch { /* noop */ }
     try {
-      const d = localStorage.getItem("dark_mode") === "1";
+      // Default to dark unless explicitly turned off.
+      const stored = localStorage.getItem("dark_mode");
+      const d = stored == null ? true : stored === "1";
       setDark(d);
       document.documentElement.classList.toggle("dark", d);
     } catch { /* noop */ }
