@@ -149,6 +149,8 @@ const Index = () => {
     setSfxMuted(false);
     setScreen("menu");
   }, []);
+
+  const currentLevel = LEVELS.find((l) => l.id === levelId);
   // next non-hidden level after the current one (used for "NEXT LEVEL" button)
   const visibleLevels = LEVELS.filter((l) => !l.hidden);
   const currentIdx = visibleLevels.findIndex((l) => l.id === levelId);
