@@ -54,6 +54,7 @@ function getSpookRedTint(): HTMLCanvasElement | null {
 
 // Roaring Knight boss sprite. Drawn in screen-space (top-right, hovers).
 const knightImg = new Image(); knightImg.src = roaringKnightUrl;
+const knightVulnImg = new Image(); knightVulnImg.src = roaringKnightVulnUrl;
 const bossBgImg = new Image(); bossBgImg.src = bossBgUrl;
 // Animated boss bg: 31 frames, 6 cols × 6 rows, each 320×180.
 const bossBgSheet = new Image(); bossBgSheet.src = bossBgSheetUrl;
