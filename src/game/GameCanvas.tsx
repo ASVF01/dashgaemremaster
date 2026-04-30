@@ -2868,7 +2868,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       }
     }
     // "VULNERABLE!" hint when worn-out
-    if (boss.worn > 0) {
+    if (boss.worn > 0 && !boss.defeated) {
       ctx.save();
       ctx.font = "bold 14px monospace";
       ctx.fillStyle = "#fff34a";
@@ -2876,8 +2876,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       ctx.lineWidth = 3;
       ctx.textAlign = "center";
       const txt = "DASH!";
-      ctx.strokeText(txt, sx, pipY + 28);
-      ctx.fillText(txt, sx, pipY + 28);
+      const ty = sy + drawH / 2 + 50;
+      ctx.strokeText(txt, sx, ty);
+      ctx.fillText(txt, sx, ty);
       ctx.restore();
     }
   }
