@@ -2183,7 +2183,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       ctx.imageSmoothingEnabled = false;
       // Cap brightness a touch so the eternal downpour reads softer —
       // stars never fully fade out, just sit a little dimmer.
-      const STAR_BRIGHTNESS = 0.78;
+      const STAR_BRIGHTNESS = 0.95;
       const visAlpha = fadeIn * STAR_BRIGHTNESS;
       const prevAlpha = ctx.globalAlpha;
       ctx.globalAlpha = prevAlpha * visAlpha;
