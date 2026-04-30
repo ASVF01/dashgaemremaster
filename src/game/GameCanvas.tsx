@@ -2372,49 +2372,57 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     return false;
   }
 
-  function drawBossWorldFx(ctx: CanvasRenderingContext2D, boss: Boss) {
-    // Thin red warning line — clean, no glow, steady alpha (matches reference).
+  function drawBossWorldFx(ctx: CanvasRenderingContext2D, r: GameRefs, boss: Boss) {
+    const bossWX = r.cameraX + boss.screenX;
+    const bossWY = boss.screenY;
+    // Red telegraph — spins (re-aimed in update) and starts THICK then thins out
+    // over its 0.5s life, matching the reference gif.
     for (const wn of boss.warnings) {
+      const k = Math.min(1, wn.t / wn.dur); // 0 → 1
+      // Thick at spawn (~6px), thins down to ~1.2px as it locks on.
+      const thickness = Math.max(1.2, 6 * (1 - k * 0.85));
+      const alpha = 0.55 + 0.4 * (1 - k); // a touch brighter at start
+      const x2 = bossWX + Math.cos(wn.angle) * wn.len;
+      const y2 = bossWY + Math.sin(wn.angle) * wn.len;
       ctx.save();
-      ctx.globalAlpha = 0.9;
+      ctx.globalAlpha = alpha;
       ctx.strokeStyle = "#ff1f3a";
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = thickness;
       ctx.lineCap = "butt";
       ctx.beginPath();
-      ctx.moveTo(wn.x1, wn.y1);
-      ctx.lineTo(wn.x2, wn.y2);
+      ctx.moveTo(bossWX, bossWY);
+      ctx.lineTo(x2, y2);
       ctx.stroke();
       ctx.restore();
     }
-    // White slash — starts thin (~3px) and rapidly thins to a hair, with a
-    // brief glow on the snap. Same path as the warning.
+    // White slash — slightly thicker (~5px), thins out over 0.2s with brief glow.
     for (const sl of boss.slashes) {
-      const k = Math.min(1, sl.t / sl.dur); // 0 → 1
-      const thickness = Math.max(0.3, 3 * (1 - k));
+      const k = Math.min(1, sl.t / sl.dur);
+      const thickness = Math.max(0.4, 5 * (1 - k));
       const alpha = 1 - k * 0.5;
+      const x2 = bossWX + Math.cos(sl.angle) * sl.len;
+      const y2 = bossWY + Math.sin(sl.angle) * sl.len;
       ctx.save();
       ctx.lineCap = "butt";
-      // soft outer glow only at the start
       const glow = Math.max(0, 1 - k * 3);
       if (glow > 0) {
         ctx.globalAlpha = 0.45 * glow;
         ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = thickness + 4 * glow;
+        ctx.lineWidth = thickness + 5 * glow;
         ctx.shadowColor = "#ffffff";
-        ctx.shadowBlur = 12 * glow;
+        ctx.shadowBlur = 14 * glow;
         ctx.beginPath();
-        ctx.moveTo(sl.x1, sl.y1);
-        ctx.lineTo(sl.x2, sl.y2);
+        ctx.moveTo(bossWX, bossWY);
+        ctx.lineTo(x2, y2);
         ctx.stroke();
         ctx.shadowBlur = 0;
       }
-      // crisp white core that thins out
       ctx.globalAlpha = alpha;
       ctx.strokeStyle = "#ffffff";
       ctx.lineWidth = thickness;
       ctx.beginPath();
-      ctx.moveTo(sl.x1, sl.y1);
-      ctx.lineTo(sl.x2, sl.y2);
+      ctx.moveTo(bossWX, bossWY);
+      ctx.lineTo(x2, y2);
       ctx.stroke();
       ctx.restore();
     }
