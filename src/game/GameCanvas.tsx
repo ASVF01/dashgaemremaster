@@ -554,6 +554,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           p.superDashing = false;
           p.superDashTime = 0;
         }
+        if (p.laserActive) {
+          p.laserActive = false;
+          sfx.laserStop();
+        }
       }
     };
     window.addEventListener("keydown", down);
