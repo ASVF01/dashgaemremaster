@@ -3412,10 +3412,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       const sy = cy + SLOTS[i][1] * p.h + jy;
       const scale = 0.5 + a * 0.9;
       // Slight per-frame ink jitter for sketchy feel.
-      const jx = (Math.random() - 0.5) * 1.4;
-      const jy = (Math.random() - 0.5) * 1.4;
+      const ijx = (Math.random() - 0.5) * 1.4;
+      const ijy = (Math.random() - 0.5) * 1.4;
       ctx.save();
-      ctx.translate(sx + jx, sy + jy);
+      ctx.translate(sx + ijx, sy + ijy);
       ctx.rotate((Math.sin(r.time * 0.9 + phase * 4) * 0.25));
       // 4-point star: long N/S/E/W spikes + thin pinched waist (classic
       // sparkle / "shimmer" shape).
