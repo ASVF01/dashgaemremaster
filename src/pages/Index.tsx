@@ -291,6 +291,8 @@ const Index = () => {
       return;
     }
     setMarathonStep(null);
+    marathonStartRef.current = null;
+    setMarathonFinalMs(null);
     setLevelId(id);
     setResetKey((k) => k + 1);
     setInvboiIntroOpen(false); setChaseIntroOpen(false);
