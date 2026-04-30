@@ -3369,9 +3369,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     ctx.restore();
   }
 
-  // Sketchy gold 4-point star shimmers around the player during invboi.
-  // No orbit — they pop in/out at semi-fixed offsets with a hand-drawn vibe
-  // (ink outline, gold fill, slight jitter, twinkle scale).
+  // Sketchy gold 4-point star shimmers that stick to the player during invboi.
+  // No orbit — each shimmer pops in at a fixed offset relative to the player,
+  // lives ~0.4s, then disappears. New waves spawn on a staggered cycle so the
+  // aura always feels alive but is never crowded.
   function drawStarmanStars(ctx: CanvasRenderingContext2D, r: GameRefs) {
     const p = r.player;
     const cx = p.x + p.w / 2;
@@ -3379,16 +3380,21 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     const rx = Math.max(p.w, p.h) * 0.95;
     const ry = Math.max(p.w, p.h) * 0.75;
     const count = 8;
+    const LIFE = 0.4;       // each shimmer visible for 0.4s
+    const CYCLE = 0.65;     // slightly longer than LIFE so there's a tiny gap
     for (let i = 0; i < count; i++) {
       const phase = i / count;
-      // Fixed angular slot per shimmer (no orbit), with a tiny breathing offset.
-      const ang = phase * Math.PI * 2 + Math.sin(r.time * 1.3 + phase * 5) * 0.18;
+      // Per-slot stagger so all 8 don't blink at once.
+      const offset = phase * CYCLE;
+      const local = ((r.time - offset) % CYCLE + CYCLE) % CYCLE;
+      if (local > LIFE) continue;
+      const lifeT = local / LIFE; // 0..1 across its 0.4s life
+      // Ease in/out alpha so it pops in then fades.
+      const a = Math.sin(lifeT * Math.PI); // 0 → 1 → 0
+      // Fixed offset relative to player → sticks to player as it moves.
+      const ang = phase * Math.PI * 2;
       const sx = cx + Math.cos(ang) * rx;
       const sy = cy + Math.sin(ang) * ry;
-      // Twinkle: pop in and out on its own offset cycle.
-      const blink = (Math.sin(r.time * 7 + phase * 9.1) + 1) * 0.5;
-      if (blink < 0.30) continue;
-      const a = (blink - 0.30) / 0.70; // 0..1
       const scale = 0.5 + a * 1.0;
       // Slight per-frame ink jitter for sketchy feel.
       const jx = (Math.random() - 0.5) * 1.4;
