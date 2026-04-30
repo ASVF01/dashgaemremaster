@@ -1878,7 +1878,30 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         ctx.stroke();
         ctx.restore();
       }
-    }
+  }
+
+  function fireBeam(r: GameRefs, p: Player) {
+    const speed = 1600;
+    const cx = p.x + p.w / 2;
+    const cy = p.y + p.h * 0.4;
+    const vx = p.facing * speed;
+    r.beams.push({
+      x: cx + p.facing * 18,
+      y: cy,
+      vx,
+      vy: 0,
+      life: 0,
+      maxLife: 0.6,
+      hit: false,
+    });
+    p.beamTime = 0.18;
+    p.beamGrounded = p.onGround;
+    p.beamCooldown = 0.22;
+    // little muzzle pop
+    burst(r, cx + p.facing * 22, cy, "#ffe34a", 6, 220);
+    sfx.dash();
+    r.shake = Math.max(r.shake, 0.18);
+  }
 
 
     // starman: rainbow stars rain down (BACKGROUND layer, behind level assets)
