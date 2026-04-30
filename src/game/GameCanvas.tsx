@@ -19,6 +19,7 @@ import { getSprite, type SpriteState } from "@/game/sprites";
 import spookUrl from "@/assets/sprites/spook.png";
 import spookHurtUrl from "@/assets/sprites/spook_hurt.png";
 import roaringKnightUrl from "@/assets/roaring_knight.webp";
+import bossBgUrl from "@/assets/boss_bg.gif";
 
 type Keys = Record<string, boolean>;
 
@@ -51,6 +52,7 @@ function getSpookRedTint(): HTMLCanvasElement | null {
 
 // Roaring Knight boss sprite. Drawn in screen-space (top-right, hovers).
 const knightImg = new Image(); knightImg.src = roaringKnightUrl;
+const bossBgImg = new Image(); bossBgImg.src = bossBgUrl;
 const KNIGHT_DRAW_H = 180; // rendered height in screen pixels (sprite is square-ish)
 
 function makeBoss() {
@@ -1620,19 +1622,41 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
     // smooth fade-in of the black backdrop
     const bgT = starmanFx ? Math.min(1, (starElapsed - 3.20) / 0.6) : 0;
-    // paper bg (or black during starman fx, or OLED black post-impact for som som)
-    if (postImpact) {
+    const isBossLevel = levelIdRef.current === "roaring-knight";
+    // paper bg (or black during starman fx, or OLED black post-impact for som som,
+    // or the boss-level cyan-flame backdrop)
+    if (isBossLevel) {
+      // Solid black under the bg image, then draw the image stretched/cover.
       ctx.fillStyle = "#000";
-    } else if (bgT >= 1) {
-      ctx.fillStyle = "#000";
-    } else if (bgT > 0) {
-      ctx.fillStyle = "#f0ead6";
       ctx.fillRect(0, 0, w, h);
-      ctx.fillStyle = `rgba(0,0,0,${bgT})`;
+      if (bossBgImg.complete && bossBgImg.naturalWidth) {
+        ctx.save();
+        ctx.imageSmoothingEnabled = false;
+        // cover-fit: scale image to fill the screen while preserving aspect
+        const ir = bossBgImg.naturalWidth / bossBgImg.naturalHeight;
+        const sr = w / h;
+        let dw = w, dh = h;
+        if (ir > sr) { dh = h; dw = h * ir; } else { dw = w; dh = w / ir; }
+        const dx = (w - dw) / 2;
+        const dy = (h - dh) / 2;
+        ctx.globalAlpha = 0.95;
+        ctx.drawImage(bossBgImg, dx, dy, dw, dh);
+        ctx.restore();
+      }
     } else {
-      ctx.fillStyle = "#f0ead6";
+      if (postImpact) {
+        ctx.fillStyle = "#000";
+      } else if (bgT >= 1) {
+        ctx.fillStyle = "#000";
+      } else if (bgT > 0) {
+        ctx.fillStyle = "#f0ead6";
+        ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = `rgba(0,0,0,${bgT})`;
+      } else {
+        ctx.fillStyle = "#f0ead6";
+      }
+      ctx.fillRect(0, 0, w, h);
     }
-    ctx.fillRect(0, 0, w, h);
 
     // SOM SOM: small persistent shake after the impact (light, ongoing)
     if (postImpact) {
@@ -1866,19 +1890,19 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     drawScenery(ctx, camX, w, r.level.height);
 
     // platforms
+    const bossPlatforms = levelIdRef.current === "roaring-knight";
     for (const pl of r.level.platforms) {
       if (pl.x + pl.w < camX - 40 || pl.x > camX + w + 40) continue;
       const isGround = pl.kind === "ground";
-      // Clip the visible slice so absurdly long platforms (e.g. the
-      // endless ground in "just run bro") don't draw thousands of
-      // off-screen sketch segments + hatching marks every frame.
       const visX = Math.max(pl.x, camX - 40);
       const visR = Math.min(pl.x + pl.w, camX + w + 40);
       const visW = visR - visX;
-      sketchRect(ctx, visX, pl.y, visW, pl.h, isGround ? "#e5dfc2" : "#f7f1dc", INK, isGround ? 3 : 2.6, isGround ? 1.6 : 1.2);
+      const fill = bossPlatforms ? "#000000" : (isGround ? "#e5dfc2" : "#f7f1dc");
+      const stroke = bossPlatforms ? "#ffffff" : INK;
+      sketchRect(ctx, visX, pl.y, visW, pl.h, fill, stroke, isGround ? 3 : 2.6, isGround ? 1.6 : 1.2);
       // hatching — only over the visible slice
       ctx.save();
-      ctx.strokeStyle = "rgba(20,20,20,0.35)";
+      ctx.strokeStyle = bossPlatforms ? "rgba(255,255,255,0.45)" : "rgba(20,20,20,0.35)";
       ctx.lineWidth = 1;
       const hStart = Math.max(pl.x + 6, visX);
       const hEnd = Math.min(pl.x + pl.w - 4, visR);
@@ -2207,15 +2231,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     return { drawW, drawH: KNIGHT_DRAW_H };
   }
 
-  function spawnBossWarning(r: GameRefs, boss: Boss) {
-    // Spinning red telegraph that re-aims toward the player while spinning,
-    // then locks in and fires a white slash. Length is fixed (long beam).
-    const p = r.player;
-    const bossWorldX = r.cameraX + boss.screenX;
-    const bossWorldY = boss.screenY;
-    const dx = p.x + p.w / 2 - bossWorldX;
-    const dy = p.y + p.h / 2 - bossWorldY;
-    const angle = Math.atan2(dy, dx);
+  function spawnBossWarning(_r: GameRefs, boss: Boss) {
+    // Player-centered telegraph at a RANDOM angle. The line is detached from
+    // the knight and follows the player at this fixed angle for its lifetime.
+    const angle = Math.random() * Math.PI * 2;
     boss.warnings.push({
       t: 0, dur: 0.5, fired: false,
       angle,
@@ -2279,20 +2298,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       }
     }
 
-    // Update warnings: spin + re-aim toward player while spinning, then fire slash.
+    // Warnings + slashes are now PLAYER-CENTERED at a random angle picked at
+    // spawn time. They translate with the player but the angle stays locked,
+    // so the line "sticks" on the player from a fixed random direction.
     const p = r.player;
     const pcx = p.x + p.w / 2;
     const pcy = p.y + p.h / 2;
     for (const wn of boss.warnings) {
       wn.t += dt;
-      // continuously steer the angle toward the player so the red line "tracks" them
-      const bossWX = r.cameraX + boss.screenX;
-      const bossWY = boss.screenY;
-      const targetAngle = Math.atan2(pcy - bossWY, pcx - bossWX);
-      // shortest-arc lerp
-      let diff = ((targetAngle - wn.angle + Math.PI) % (Math.PI * 2)) - Math.PI;
-      if (diff < -Math.PI) diff += Math.PI * 2;
-      wn.angle += diff * Math.min(1, dt * 9);
+      // angle stays as picked at spawn (random) — no re-aiming, no spinning
       if (!wn.fired && wn.t >= wn.dur) {
         wn.fired = true;
         boss.slashes.push({ angle: wn.angle, len: wn.len, t: 0, dur: 0.2, hit: false });
@@ -2301,27 +2315,21 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
     boss.warnings = boss.warnings.filter((w) => !w.fired);
 
-    // Update slashes — re-aim to follow the player every frame ("stay on the player").
+    // Slashes — centered on the player, stretch len/2 each direction.
     for (const sl of boss.slashes) {
       sl.t += dt;
-      const bossWX = r.cameraX + boss.screenX;
-      const bossWY = boss.screenY;
-      const targetAngle = Math.atan2(pcy - bossWY, pcx - bossWX);
-      let diff = ((targetAngle - sl.angle + Math.PI) % (Math.PI * 2)) - Math.PI;
-      if (diff < -Math.PI) diff += Math.PI * 2;
-      // tighter tracking on active slash so it sticks on player
-      sl.angle += diff * Math.min(1, dt * 14);
       if (!sl.hit) {
-        const x1 = bossWX, y1 = bossWY;
-        const x2 = bossWX + Math.cos(sl.angle) * sl.len;
-        const y2 = bossWY + Math.sin(sl.angle) * sl.len;
+        const half = sl.len / 2;
+        const cx = Math.cos(sl.angle), cy = Math.sin(sl.angle);
+        const x1 = pcx - cx * half, y1 = pcy - cy * half;
+        const x2 = pcx + cx * half, y2 = pcy + cy * half;
         if (segRectOverlap(x1, y1, x2, y2, p.x, p.y, p.w, p.h)) {
           if (p.parrying > 0) {
             sl.hit = true;
-            parrySuccess(r, (x1 + x2) / 2, (y1 + y2) / 2);
+            parrySuccess(r, pcx, pcy);
           } else if (p.invuln <= 0 && p.alive) {
             sl.hit = true;
-            damage(r, (x1 + x2) / 2, (y1 + y2) / 2);
+            damage(r, pcx, pcy);
           }
         }
       }
@@ -2372,38 +2380,46 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     return false;
   }
 
-  function drawBossWorldFx(ctx: CanvasRenderingContext2D, r: GameRefs, boss: Boss) {
-    const bossWX = r.cameraX + boss.screenX;
-    const bossWY = boss.screenY;
-    // Red telegraph — spins (re-aimed in update) and starts THICK then thins out
-    // over its 0.5s life, matching the reference gif.
+  function drawBossWorldFx(ctx: CanvasRenderingContext2D, r: GameRefs, _boss: Boss) {
+    const boss = _boss;
+    // Lines are PLAYER-CENTERED — origin = player center, extend len/2 each side
+    // along the locked random angle. Detached from the knight entirely.
+    const p = r.player;
+    const pcx = p.x + p.w / 2;
+    const pcy = p.y + p.h / 2;
+
+    // Red telegraph — starts THICK then thins out over its 0.5s life.
     for (const wn of boss.warnings) {
-      const k = Math.min(1, wn.t / wn.dur); // 0 → 1
-      // Thick at spawn (~6px), thins down to ~1.2px as it locks on.
+      const k = Math.min(1, wn.t / wn.dur);
       const thickness = Math.max(1.2, 6 * (1 - k * 0.85));
-      const alpha = 0.55 + 0.4 * (1 - k); // a touch brighter at start
-      const x2 = bossWX + Math.cos(wn.angle) * wn.len;
-      const y2 = bossWY + Math.sin(wn.angle) * wn.len;
+      const alpha = 0.55 + 0.4 * (1 - k);
+      const half = wn.len / 2;
+      const cx = Math.cos(wn.angle), cy = Math.sin(wn.angle);
+      const x1 = pcx - cx * half, y1 = pcy - cy * half;
+      const x2 = pcx + cx * half, y2 = pcy + cy * half;
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.strokeStyle = "#ff1f3a";
       ctx.lineWidth = thickness;
       ctx.lineCap = "butt";
       ctx.beginPath();
-      ctx.moveTo(bossWX, bossWY);
+      ctx.moveTo(x1, y1);
       ctx.lineTo(x2, y2);
       ctx.stroke();
       ctx.restore();
     }
-    // White slash — slightly thicker (~5px), thins out over 0.2s with brief glow.
+    // White slash — black outline + white core, thins over 0.2s with brief glow.
     for (const sl of boss.slashes) {
       const k = Math.min(1, sl.t / sl.dur);
       const thickness = Math.max(0.4, 5 * (1 - k));
       const alpha = 1 - k * 0.5;
-      const x2 = bossWX + Math.cos(sl.angle) * sl.len;
-      const y2 = bossWY + Math.sin(sl.angle) * sl.len;
+      const half = sl.len / 2;
+      const cx = Math.cos(sl.angle), cy = Math.sin(sl.angle);
+      const x1 = pcx - cx * half, y1 = pcy - cy * half;
+      const x2 = pcx + cx * half, y2 = pcy + cy * half;
       ctx.save();
       ctx.lineCap = "butt";
+      // glow at the snap
       const glow = Math.max(0, 1 - k * 3);
       if (glow > 0) {
         ctx.globalAlpha = 0.45 * glow;
@@ -2412,16 +2428,23 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         ctx.shadowColor = "#ffffff";
         ctx.shadowBlur = 14 * glow;
         ctx.beginPath();
-        ctx.moveTo(bossWX, bossWY);
+        ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
         ctx.stroke();
         ctx.shadowBlur = 0;
       }
+      // BLACK outline first (thicker), then white core on top
       ctx.globalAlpha = alpha;
+      ctx.strokeStyle = "#000000";
+      ctx.lineWidth = thickness + 3;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
       ctx.strokeStyle = "#ffffff";
       ctx.lineWidth = thickness;
       ctx.beginPath();
-      ctx.moveTo(bossWX, bossWY);
+      ctx.moveTo(x1, y1);
       ctx.lineTo(x2, y2);
       ctx.stroke();
       ctx.restore();
