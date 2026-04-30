@@ -40,6 +40,7 @@ export const LEVELS: LevelMeta[] = [
   { id: "aftermath-1", name: "ASHEN MARGINS",  subtitle: "after the knight, the ink keeps bleeding.", difficulty: 4, par: 60 },
   { id: "aftermath-2", name: "TORN PAGES",     subtitle: "shooters in the gaps. mind the rips.",     difficulty: 4, par: 65 },
   { id: "aftermath-3", name: "FINAL DRAFT",    subtitle: "everything you've learned. one run.",      difficulty: 4, par: 75 },
+  { id: "celestial-marathon", name: "CELESTIAL MARATHON", subtitle: "every level. one breath. invboi forever.", difficulty: 4, par: 9999 },
 ];
 
 export function buildLevel(id: LevelId = "scribble-1"): Level {
