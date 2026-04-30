@@ -269,6 +269,9 @@ interface GameRefs {
   skidSfxTimer: number;
   isSkidding: boolean;
   rainStars: { x: number; y: number; vy: number; size: number; phase: number; hue: number }[];
+  // Floating "invboi star" pickup spawned by pressing E. Touching it turns
+  // the player into invboi (same as typing the cheat code).
+  invboiPickup: { x: number; y: number; t: number; bobPhase: number } | null;
   // SOM SOM lightning: spawned occasionally over the OLED-black backdrop.
   lightningCooldown: number;
   lightningBolts: { x: number; t: number; life: number; segs: { x: number; y: number }[]; flash: number }[];
