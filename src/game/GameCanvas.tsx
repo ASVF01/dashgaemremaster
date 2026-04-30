@@ -271,7 +271,13 @@ interface GameRefs {
   rainStars: { x: number; y: number; vy: number; size: number; phase: number; hue: number }[];
   // Floating "invboi star" pickup spawned by pressing E. Touching it turns
   // the player into invboi (same as typing the cheat code).
-  invboiPickup: { x: number; y: number; t: number; bobPhase: number } | null;
+  invboiPickup: {
+    x: number; y: number; t: number; bobPhase: number;
+    // spawn anim: brief flash/scale-up + horizontal streak trail.
+    spawnT: number;          // seconds since spawn (0 → SPAWN_DUR)
+    spawnFromX: number;      // origin X of the streak (player edge)
+    facing: 1 | -1;
+  } | null;
   // SOM SOM lightning: spawned occasionally over the OLED-black backdrop.
   lightningCooldown: number;
   lightningBolts: { x: number; t: number; life: number; segs: { x: number; y: number }[]; flash: number }[];
