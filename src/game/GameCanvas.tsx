@@ -2928,7 +2928,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       drawBossSpriteAt(ctx, 0, 0, drawW, drawH, 1, false, false);
       ctx.restore();
     } else {
-      drawBossSpriteAt(ctx, sx, sy, drawW, drawH, 1, boss.hitFlash > 0.05, vuln);
+      drawBossSpriteAt(ctx, sx, sy, drawW, drawH, 1, boss.hitFlash > 0.05 && boss.hurtT <= 0, vuln, boss.hurtT > 0);
     }
     // HP pips (hide during defeat retreat)
     if (!boss.defeated) {
