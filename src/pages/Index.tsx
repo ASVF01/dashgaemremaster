@@ -558,18 +558,27 @@ const Index = () => {
               <div className="text-center px-6">
                 <div className="font-marker text-6xl md:text-7xl text-ink mb-2 -rotate-2 inline-block">YOU DID IT</div>
                 <div className="font-marker text-3xl text-[hsl(var(--mach-3))] mb-4 animate-jitter inline-block">
-                  {currentLevel?.name} cleared
+                  {marathonFinalMs != null ? "CELESTIAL MARATHON cleared" : `${currentLevel?.name} cleared`}
                 </div>
-                <div className="grid grid-cols-2 gap-4 mb-6 max-w-md mx-auto">
-                  <div className="scribble-border bg-paper p-3">
-                    <div className="font-scribble text-lg text-ink/70">TIME</div>
-                    <div className="font-bungee text-3xl text-ink">{(finalTime / 1000).toFixed(2)}s</div>
+                {marathonFinalMs != null ? (
+                  <div className="mb-6 max-w-md mx-auto">
+                    <div className="scribble-border bg-paper p-4 -rotate-1 inline-block">
+                      <div className="font-marker text-lg text-[hsl(var(--accent))] tracking-widest">SPEEDRUN TIME</div>
+                      <div className="font-bungee text-5xl text-ink tabular-nums">{fmtMarathon(marathonFinalMs)}</div>
+                    </div>
                   </div>
-                  <div className="scribble-border bg-paper p-3">
-                    <div className="font-scribble text-lg text-ink/70">SCORE</div>
-                    <div className="font-bungee text-3xl text-[hsl(var(--accent))]">{finalScore}</div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4 mb-6 max-w-md mx-auto">
+                    <div className="scribble-border bg-paper p-3">
+                      <div className="font-scribble text-lg text-ink/70">TIME</div>
+                      <div className="font-bungee text-3xl text-ink">{(finalTime / 1000).toFixed(2)}s</div>
+                    </div>
+                    <div className="scribble-border bg-paper p-3">
+                      <div className="font-scribble text-lg text-ink/70">SCORE</div>
+                      <div className="font-bungee text-3xl text-[hsl(var(--accent))]">{finalScore}</div>
+                    </div>
                   </div>
-                </div>
+                )}
                 <div className="flex gap-3 justify-center flex-wrap">
                   <button onClick={retry} className="scribble-border bg-paper text-ink font-marker text-2xl px-6 py-3 hover:-rotate-2 transition-transform">
                     RUN IT BACK
