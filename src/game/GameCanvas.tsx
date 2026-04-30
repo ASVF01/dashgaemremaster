@@ -2370,6 +2370,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
 
     // invboi-star pickup (E-key spawn): big rainbow star floating in world.
+    // Includes a brief spawn flash + horizontal streak trail from the player.
     if (r.invboiPickup) {
       const pkS = r.invboiPickup;
       if (pkS.x >= camX - 60 && pkS.x <= camX + w + 60) {
@@ -2377,14 +2378,74 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         const hue = (pkS.t * 180) % 360;
         const img = getRainStar(12, hue);
         const half = img.width / 2;
+
+        // ---- spawn animation (first 0.35s) ----
+        const SPAWN_DUR = 0.35;
+        const sp = Math.min(1, pkS.spawnT / SPAWN_DUR); // 0 → 1
+        const spawning = pkS.spawnT < SPAWN_DUR;
+        if (spawning) {
+          // Streak trail: a soft, fading horizontal line from the player edge
+          // to the star, with sparkle dots along it.
+          const fromX = pkS.spawnFromX;
+          const trailAlpha = (1 - sp) * 0.85;
+          ctx.save();
+          ctx.globalCompositeOperation = "lighter";
+          // gradient streak
+          const grad = ctx.createLinearGradient(fromX, drawY, pkS.x, drawY);
+          grad.addColorStop(0, `rgba(255,255,255,0)`);
+          grad.addColorStop(0.55, `rgba(255,240,160,${trailAlpha})`);
+          grad.addColorStop(1, `rgba(255,255,255,${trailAlpha})`);
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = 6 * (1 - sp * 0.5);
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(fromX, drawY);
+          ctx.lineTo(pkS.x, drawY);
+          ctx.stroke();
+          // sparkle dots along the trail
+          const dots = 6;
+          for (let i = 1; i < dots; i++) {
+            const f = i / dots;
+            const dx = fromX + (pkS.x - fromX) * f;
+            const jitter = (Math.random() - 0.5) * 8 * (1 - sp);
+            ctx.fillStyle = `rgba(255,255,200,${trailAlpha * (1 - f * 0.4)})`;
+            ctx.beginPath();
+            ctx.arc(dx, drawY + jitter, 2 + Math.random() * 1.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+
         ctx.save();
         ctx.imageSmoothingEnabled = false;
-        // soft pulsing glow
+        // Spawn flash: bright additive halo that scales out + fades.
+        if (spawning) {
+          ctx.save();
+          ctx.globalCompositeOperation = "lighter";
+          const flashAlpha = (1 - sp) * 0.9;
+          const flashScale = 1.2 + (1 - sp) * 2.4; // 3.6 → 1.2
+          ctx.globalAlpha = flashAlpha;
+          ctx.drawImage(
+            img,
+            pkS.x - half * flashScale,
+            drawY - half * flashScale,
+            img.width * flashScale,
+            img.height * flashScale
+          );
+          ctx.restore();
+        }
+        // Pop-in scale on the main star: 0.2 → 1 over the spawn window.
+        const popScale = spawning ? 0.2 + sp * 0.8 : 1;
+        // soft pulsing glow (steady)
         const pulse = 0.6 + 0.4 * Math.sin(pkS.t * 5);
         ctx.globalAlpha = 0.35 * pulse;
-        ctx.drawImage(img, pkS.x - half * 1.6, drawY - half * 1.6, img.width * 1.6, img.height * 1.6);
+        ctx.drawImage(img,
+          pkS.x - half * 1.6 * popScale, drawY - half * 1.6 * popScale,
+          img.width * 1.6 * popScale, img.height * 1.6 * popScale);
         ctx.globalAlpha = 1;
-        ctx.drawImage(img, pkS.x - half, drawY - half);
+        ctx.drawImage(img,
+          pkS.x - half * popScale, drawY - half * popScale,
+          img.width * popScale, img.height * popScale);
         ctx.restore();
       }
     }
