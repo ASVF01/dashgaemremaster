@@ -1752,6 +1752,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
         setCelestialMode(true, { replaceDefaults: !inJrb });
         setThunderMode(inJrb);
         burst(r, p.x + p.w / 2, p.y + p.h / 2, inJrb ? "#22e2ff" : "#ffd11a", 24, 380);
+        // Fire the parent callback (used by meet-invboi to pop the intro overlay).
+        if (levelIdRef.current === "meet-invboi") onInvboiPickupRef.current?.();
       }
     }
 
