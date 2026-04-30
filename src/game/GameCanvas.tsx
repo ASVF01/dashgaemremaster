@@ -2113,6 +2113,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
     ctx.restore();
 
+    // boss screen-space layer (sprite + afterimages + hp pip) — draws on top of world.
+    if (r.boss) drawBossScreen(ctx, r, r.boss, w);
+
     // (rainbow star rain is rendered earlier as a background layer)
 
     // SOM SOM cinematic overlays: white-out (5..6s) then cyan impact flash (6..6.45s)
