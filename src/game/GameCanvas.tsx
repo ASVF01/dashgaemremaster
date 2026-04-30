@@ -2837,10 +2837,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     ctx.globalAlpha = alpha;
     ctx.drawImage(img, sx - dw / 2, sy - drawH / 2, dw, drawH);
     if (hurt) {
-      // Red flash overlay (strobes) for clear damage feedback.
-      const strobe = (Math.floor(performance.now() / 70) % 2) === 0 ? 0.55 : 0.3;
+      // Solid red flash that strobes between bright red and deep red — fully
+      // opaque so white pixels never wash to pink/grey under the overlay.
+      const bright = (Math.floor(performance.now() / 70) % 2) === 0;
       ctx.globalCompositeOperation = "source-atop";
-      ctx.fillStyle = `rgba(245,35,76,${strobe * alpha})`;
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = bright ? "rgb(255,40,72)" : "rgb(190,20,48)";
       ctx.fillRect(sx - dw / 2, sy - drawH / 2, dw, drawH);
     } else if (white) {
       ctx.globalCompositeOperation = "source-atop";
