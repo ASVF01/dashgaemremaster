@@ -2145,8 +2145,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         r.rainStars.push({
           x,
           y: -10 - Math.random() * 80,
-          // much faster fall; tail still slower for "drizzle" feel
-          vy: (inRainBurst ? 260 : 70) + Math.random() * (inRainBurst ? 220 : 60),
+          // SUPER fast fall — burst stars rip down the screen, tail still
+          // a bit slower so the drizzle reads as calmer.
+          vy: (inRainBurst ? 900 : 220) + Math.random() * (inRainBurst ? 500 : 140),
           size: 4 + Math.random() * 4,
           phase: Math.random() * Math.PI * 2,
           hue: Math.random() * 360,
