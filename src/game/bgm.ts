@@ -292,6 +292,22 @@ export function playMenuBgm() {
   playSrc(bgmMenu);
 }
 
+// Like playMenuBgm but ramps the master gain from 0 → target over `fadeMs`.
+// Used for the intro card so the music swells in as the card fades out.
+export function playMenuBgmFadeIn(fadeMs = 800) {
+  loadBuffer(bgmMenu).catch(() => { /* ignore */ });
+  playSrc(bgmMenu);
+  const c = ac();
+  if (!c || !masterGain) return;
+  const now = c.currentTime;
+  const target = muted ? 0 : volume * endDuck;
+  try {
+    masterGain.gain.cancelScheduledValues(now);
+    masterGain.gain.setValueAtTime(0.0001, now);
+    masterGain.gain.linearRampToValueAtTime(target, now + fadeMs / 1000);
+  } catch { /* noop */ }
+}
+
 // Play the Starman cheat track (replaces whatever is playing with a crossfade).
 // Returns a promise resolving to the ctx-time when the track actually began
 // playing (or null if audio is unavailable). Callers can use this to sync
