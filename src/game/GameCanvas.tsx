@@ -2152,6 +2152,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       const stars = r.rainStars;
       let write = 0;
       ctx.imageSmoothingEnabled = false;
+      // Match the SOM SOM 6s impact ramp — alpha eases in over RAIN_FADE.
+      const visAlpha = fadeIn;
+      const prevAlpha = ctx.globalAlpha;
+      if (visAlpha < 1) ctx.globalAlpha = prevAlpha * visAlpha;
       for (let i = 0; i < stars.length; i++) {
         const s = stars[i];
         s.y += s.vy * dtFrame;
@@ -2163,6 +2167,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         stars[write++] = s;
       }
       stars.length = write;
+      ctx.globalAlpha = prevAlpha;
     }
 
     // shake (scaled by user setting)
