@@ -2380,38 +2380,46 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     return false;
   }
 
-  function drawBossWorldFx(ctx: CanvasRenderingContext2D, r: GameRefs, boss: Boss) {
-    const bossWX = r.cameraX + boss.screenX;
-    const bossWY = boss.screenY;
-    // Red telegraph — spins (re-aimed in update) and starts THICK then thins out
-    // over its 0.5s life, matching the reference gif.
+  function drawBossWorldFx(ctx: CanvasRenderingContext2D, r: GameRefs, _boss: Boss) {
+    const boss = _boss;
+    // Lines are PLAYER-CENTERED — origin = player center, extend len/2 each side
+    // along the locked random angle. Detached from the knight entirely.
+    const p = r.player;
+    const pcx = p.x + p.w / 2;
+    const pcy = p.y + p.h / 2;
+
+    // Red telegraph — starts THICK then thins out over its 0.5s life.
     for (const wn of boss.warnings) {
-      const k = Math.min(1, wn.t / wn.dur); // 0 → 1
-      // Thick at spawn (~6px), thins down to ~1.2px as it locks on.
+      const k = Math.min(1, wn.t / wn.dur);
       const thickness = Math.max(1.2, 6 * (1 - k * 0.85));
-      const alpha = 0.55 + 0.4 * (1 - k); // a touch brighter at start
-      const x2 = bossWX + Math.cos(wn.angle) * wn.len;
-      const y2 = bossWY + Math.sin(wn.angle) * wn.len;
+      const alpha = 0.55 + 0.4 * (1 - k);
+      const half = wn.len / 2;
+      const cx = Math.cos(wn.angle), cy = Math.sin(wn.angle);
+      const x1 = pcx - cx * half, y1 = pcy - cy * half;
+      const x2 = pcx + cx * half, y2 = pcy + cy * half;
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.strokeStyle = "#ff1f3a";
       ctx.lineWidth = thickness;
       ctx.lineCap = "butt";
       ctx.beginPath();
-      ctx.moveTo(bossWX, bossWY);
+      ctx.moveTo(x1, y1);
       ctx.lineTo(x2, y2);
       ctx.stroke();
       ctx.restore();
     }
-    // White slash — slightly thicker (~5px), thins out over 0.2s with brief glow.
+    // White slash — black outline + white core, thins over 0.2s with brief glow.
     for (const sl of boss.slashes) {
       const k = Math.min(1, sl.t / sl.dur);
       const thickness = Math.max(0.4, 5 * (1 - k));
       const alpha = 1 - k * 0.5;
-      const x2 = bossWX + Math.cos(sl.angle) * sl.len;
-      const y2 = bossWY + Math.sin(sl.angle) * sl.len;
+      const half = sl.len / 2;
+      const cx = Math.cos(sl.angle), cy = Math.sin(sl.angle);
+      const x1 = pcx - cx * half, y1 = pcy - cy * half;
+      const x2 = pcx + cx * half, y2 = pcy + cy * half;
       ctx.save();
       ctx.lineCap = "butt";
+      // glow at the snap
       const glow = Math.max(0, 1 - k * 3);
       if (glow > 0) {
         ctx.globalAlpha = 0.45 * glow;
@@ -2420,16 +2428,23 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         ctx.shadowColor = "#ffffff";
         ctx.shadowBlur = 14 * glow;
         ctx.beginPath();
-        ctx.moveTo(bossWX, bossWY);
+        ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
         ctx.stroke();
         ctx.shadowBlur = 0;
       }
+      // BLACK outline first (thicker), then white core on top
       ctx.globalAlpha = alpha;
+      ctx.strokeStyle = "#000000";
+      ctx.lineWidth = thickness + 3;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
       ctx.strokeStyle = "#ffffff";
       ctx.lineWidth = thickness;
       ctx.beginPath();
-      ctx.moveTo(bossWX, bossWY);
+      ctx.moveTo(x1, y1);
       ctx.lineTo(x2, y2);
       ctx.stroke();
       ctx.restore();
