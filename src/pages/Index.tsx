@@ -177,6 +177,7 @@ const Index = () => {
   const startLevel = (id: LevelId) => {
     setLevelId(id);
     setResetKey((k) => k + 1);
+    setInvboiIntroOpen(false);
     setScreen("loading");
     // Decode the track buffer first (or skip if already cached). When ready,
     // hand off to the playing screen — the BGM effect there will play it.
@@ -189,6 +190,7 @@ const Index = () => {
   };
   const retry = () => {
     setResetKey((k) => k + 1);
+    setInvboiIntroOpen(false);
     setScreen("loading");
     preloadBgmFor(levelId).then(() => {
       setTimeout(() => {
@@ -196,7 +198,8 @@ const Index = () => {
       }, 250);
     });
   };
-  const backToMenu = () => setScreen("menu");
+  const backToMenu = () => { setInvboiIntroOpen(false); setScreen("menu"); };
+  const handleInvboiPickup = useCallback(() => setInvboiIntroOpen(true), []);
 
   // Award the "just run bro" badge and head back to the main menu.
   const finishCutscene = useCallback(() => {
