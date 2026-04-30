@@ -1505,10 +1505,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
               burst(r, hx, ly, "#fff34a", 18, 320);
               sfx.bossHurt();
               if (boss.hp <= 0) {
-                boss.defeated = true;
-                boss.defeatT = 0;
-                r.shake = Math.max(r.shake, 1.0);
-                burst(r, bx + bw / 2, by + bh / 2, "#ffffff", 60, 520);
+                triggerBossDefeat(r, bx + bw / 2, by + bh / 2);
                 sfx.bossDefeat();
                 pl.laserActive = false;
                 sfx.laserStop();
