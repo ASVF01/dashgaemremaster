@@ -102,6 +102,8 @@ export function getSprite(state: SpriteState, frame = 0): HTMLImageElement | nul
     state === "skid"  ? ["skid", "run", "idle"] :
     state === "hurt"  ? ["hurt", "idle"] :
     state === "jump"  ? ["jump", "idle"] :
+    state === "beam"  ? ["beam", "idle"] :
+    state === "beamJump" ? ["beamJump", "beam", "jump", "idle"] :
     state === "dash"  ? ["dash", "run", "idle"] :
     state === "run"   ? ["run", "idle"] :
                         ["idle"];
