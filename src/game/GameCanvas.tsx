@@ -483,6 +483,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
             else playStarmanBgm();
             sfx.shineStart();
             setCelestialMode(true, { replaceDefaults: !inJrb });
+            setThunderMode(inJrb);
             burst(r, r.player.x + r.player.w / 2, r.player.y + r.player.h / 2, inJrb ? "#22e2ff" : "#ffd11a", 24, 380);
           }
           cheatBuf = "";
