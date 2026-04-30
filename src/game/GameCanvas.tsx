@@ -1770,7 +1770,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       // the win sfx/fanfare so the video starts immediately and clean.
       if (levelId !== "just-run-bro") {
         sfx.win();
-        // Keep BGM playing through the win overlay — no duck/lowpass.
+        // Duck + lowpass the BGM under the WIN overlay (still audible).
+        bgmLevelEnd();
       } else {
         stopBgm();
       }
@@ -2928,7 +2929,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         r.finishTime = performance.now() - r.startedAt;
         r.score += 5000;
         sfx.win();
-        // Keep boss-victory BGM going — overlay handles the rest.
+        // Duck + lowpass under the boss-victory WIN overlay.
+        bgmLevelEnd();
         onFinish(r.finishTime, r.score);
       }
       return;
