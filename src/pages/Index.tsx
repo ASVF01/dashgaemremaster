@@ -256,6 +256,10 @@ const Index = () => {
             <CutscenePlayer src={cutsceneJustRunBro} onDone={finishCutscene} />
           )}
 
+          {screen === "death-cutscene" && (
+            <CutscenePlayer src={cutsceneBossDeath} onDone={finishDeathCutscene} unskippable />
+          )}
+
           {screen === "dead" && (
             <Overlay>
               <div className="text-center px-6">
