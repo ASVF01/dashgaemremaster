@@ -589,6 +589,9 @@ function stopRain() {
 
 // ---------- looping slide sound (filtered noise + low rumble) ----------
 let slide: { src: AudioBufferSourceNode; out: GainNode; lp: BiquadFilterNode; rumble: OscillatorNode; rumbleGain: GainNode } | null = null;
+// Tracks whether the player is currently sliding, independent of whether the
+// regular slide noise loop is running (it's suppressed during invboi-replace).
+let slideActive = false;
 let slideTargetVol = 0.06;
 
 function startSlideLoop() {
