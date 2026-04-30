@@ -2230,8 +2230,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     const drawW = KNIGHT_DRAW_H * (knightImg.naturalWidth && knightImg.naturalHeight
       ? knightImg.naturalWidth / knightImg.naturalHeight : 1);
     const cameraBaseX = screenW - margin - drawW / 2;
-    const baseY = margin + KNIGHT_DRAW_H / 2;
-    const hover = Math.sin(boss.hoverPhase) * 12;
+    // Keep the knight inside the arena vicinity (between ceiling block ~y=84
+    // and ground top ~y=640). Hover up high; when staggered, drop into the
+    // middle of the arena but still above the lower platform so the player
+    // can dash-strike him from below or beside.
+    const baseY = 240;
+    const hover = Math.sin(boss.hoverPhase) * 14;
 
     const wantLow = boss.worn > 0 && !boss.defeated;
     if (wantLow) {
@@ -2245,8 +2249,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
 
     const targetScreenX = wantLow ? boss.wornWorldX - r.cameraX : cameraBaseX;
-    // Floating up-and-down (extra bob while staggered low).
-    const wornTargetY = 360 + Math.sin(boss.hoverPhase * 1.4) * 12;
+    // Floating up-and-down (extra bob while staggered low). Vulnerable Y sits
+    // around 470 — well above the ground (top y=640) so the dash hitbox lines
+    // up with the player's reach.
+    const wornTargetY = 470 + Math.sin(boss.hoverPhase * 1.4) * 16;
     const baseTargetY = baseY + hover;
     const targetY = wantLow ? wornTargetY : baseTargetY;
 
@@ -2273,7 +2279,28 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     boss.hoverPhase += dt * 2.2;
     if (boss.hitFlash > 0) boss.hitFlash = Math.max(0, boss.hitFlash - dt * 4);
     if (boss.shakeT > 0) boss.shakeT = Math.max(0, boss.shakeT - dt);
-    bossScreenAnchor(r, boss, screenW);
+    const { drawW: bDrawW } = bossScreenAnchor(r, boss, screenW);
+
+    // ----- BOSS RULE: player can't run past the knight -----
+    // The knight's world X is camera + screenX. Block the player from passing
+    // a soft barrier just left of him; if they push into it, convert their
+    // forward momentum into a small vertical bob so they "ride" up and down
+    // along the wall instead of running through.
+    if (!boss.defeated) {
+      const p = r.player;
+      const bossWorldX = r.cameraX + boss.screenX;
+      const wallX = bossWorldX - bDrawW * 0.45;
+      if (p.x + p.w > wallX) {
+        p.x = wallX - p.w;
+        if (p.vx > 0) {
+          // Convert forward speed into upward lift so the player bobs up,
+          // then gravity brings them back down — produces a vertical motion
+          // along the invisible wall.
+          p.vy = Math.min(p.vy, -Math.max(180, p.vx * 0.45));
+          p.vx = 0;
+        }
+      }
+    }
 
     // afterimages — screen-space, drift right, ignore world camera.
     boss.afterTimer -= dt;
@@ -2353,7 +2380,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           if (p.parrying > 0) {
             sl.hit = true;
             parrySuccess(r, pcx, pcy);
-          } else if (p.invuln <= 0 && p.alive) {
+          } else if (p.alive) {
+            // BOSS RULE: no i-frames in this fight. Player must parry to block.
             sl.hit = true;
             damage(r, pcx, pcy);
           }
