@@ -328,6 +328,8 @@ export const sfx = {
   },
   shineStart() { startShine(); },
   shineStop() { stopShine(); },
+  laserStart() { startLaser(); },
+  laserStop() { stopLaser(); },
   rainStart() { startRain(); },
   rainStop() { stopRain(); },
   slideStart() { startSlideLoop(); },
