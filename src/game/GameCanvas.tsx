@@ -2515,6 +2515,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     boss.hoverPhase += dt * 2.2;
     if (boss.hitFlash > 0) boss.hitFlash = Math.max(0, boss.hitFlash - dt * 4);
     if (boss.shakeT > 0) boss.shakeT = Math.max(0, boss.shakeT - dt);
+    // tick + cull boss explosion VFX
+    for (const ex of r.bossExplosions) ex.t += dt;
+    r.bossExplosions = r.bossExplosions.filter((e) => e.t < e.dur);
     bossScreenAnchor(r, boss, screenW);
 
     // Shake-in-fear when invboi (starman) is active — knight visibly trembles.
