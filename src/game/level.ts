@@ -539,3 +539,242 @@ function buildRoaringKnight(): Level {
   };
 }
 
+
+// ---------- AFTERMATH 1: ASHEN MARGINS ----------
+// Post-boss "act 2" opener. Faster baseline than scribble-1, more verticality,
+// shooters mixed with grunts. Built to feel like a harder remix of level 1.
+function buildAftermath1(): Level {
+  const W = 7600;
+  const H = 720;
+  const groundY = H - 80;
+
+  const platforms: Platform[] = [
+    { x: 0,    y: groundY, w: 1100, h: 80, kind: "ground" },
+    { x: 1240, y: groundY, w: 800,  h: 80, kind: "ground" },
+    { x: 2160, y: groundY, w: 700,  h: 80, kind: "ground" },
+    { x: 2980, y: groundY, w: 1000, h: 80, kind: "ground" },
+    { x: 4100, y: groundY, w: 900,  h: 80, kind: "ground" },
+    { x: 5120, y: groundY, w: 800,  h: 80, kind: "ground" },
+    { x: 6040, y: groundY, w: 1560, h: 80, kind: "ground" },
+
+    // route platforms (mid)
+    { x: 700,  y: groundY - 150, w: 200, h: 22, kind: "block" },
+    { x: 1000, y: groundY - 260, w: 180, h: 22, kind: "block" },
+    { x: 1500, y: groundY - 220, w: 200, h: 22, kind: "block" },
+    { x: 1820, y: groundY - 320, w: 180, h: 22, kind: "block" },
+    { x: 2400, y: groundY - 240, w: 200, h: 22, kind: "block" },
+    { x: 2700, y: groundY - 340, w: 180, h: 22, kind: "block" },
+    { x: 3200, y: groundY - 200, w: 220, h: 22, kind: "block" },
+    { x: 3550, y: groundY - 320, w: 200, h: 22, kind: "block" },
+    { x: 3900, y: groundY - 240, w: 180, h: 22, kind: "block" },
+    { x: 4350, y: groundY - 280, w: 200, h: 22, kind: "block" },
+    { x: 4700, y: groundY - 380, w: 180, h: 22, kind: "block" },
+    { x: 5250, y: groundY - 240, w: 200, h: 22, kind: "block" },
+    { x: 5600, y: groundY - 340, w: 180, h: 22, kind: "block" },
+    { x: 6200, y: groundY - 220, w: 220, h: 22, kind: "block" },
+    { x: 6550, y: groundY - 340, w: 200, h: 22, kind: "block" },
+    { x: 6900, y: groundY - 240, w: 180, h: 22, kind: "block" },
+
+    // a couple of slide tunnels
+    { x: 1300, y: groundY - 90, w: 260, h: 28, kind: "block" },
+    { x: 4100, y: groundY - 90, w: 320, h: 28, kind: "block" },
+  ];
+
+  const hazards: Hazard[] = [
+    { x: 1100, y: groundY - 18, w: 140, h: 18 },
+    { x: 2040, y: groundY - 18, w: 120, h: 18 },
+    { x: 2860, y: groundY - 18, w: 120, h: 18 },
+    { x: 3980, y: groundY - 18, w: 120, h: 18 },
+    { x: 5000, y: groundY - 18, w: 120, h: 18 },
+    { x: 5920, y: groundY - 18, w: 120, h: 18 },
+  ];
+
+  const enemies: Enemy[] = [
+    { x: 600,  y: groundY - 50, w: 32, h: 50, vx: -90, alive: true, kind: "grunt" },
+    { x: 1020, y: groundY - 260 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 1.0 },
+    { x: 1600, y: groundY - 50, w: 32, h: 50, vx: 100, alive: true, kind: "grunt" },
+    { x: 1840, y: groundY - 320 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 0.9 },
+    { x: 2500, y: groundY - 50, w: 32, h: 50, vx: -110, alive: true, kind: "grunt" },
+    { x: 2720, y: groundY - 340 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 0.8 },
+    { x: 3300, y: groundY - 50, w: 32, h: 50, vx: 110, alive: true, kind: "grunt" },
+    { x: 3570, y: groundY - 320 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 0.9 },
+    { x: 4380, y: groundY - 50, w: 32, h: 50, vx: -100, alive: true, kind: "grunt" },
+    { x: 4720, y: groundY - 380 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 0.7 },
+    { x: 5300, y: groundY - 50, w: 32, h: 50, vx: 120, alive: true, kind: "grunt" },
+    { x: 5620, y: groundY - 340 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 0.8 },
+    { x: 6300, y: groundY - 50, w: 32, h: 50, vx: -110, alive: true, kind: "grunt" },
+    { x: 6920, y: groundY - 240 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 1.0 },
+  ];
+
+  const pickups: Pickup[] = [];
+  for (let i = 0; i < 22; i++) {
+    pickups.push({ x: 350 + i * 320 + Math.random() * 60, y: groundY - 150 - Math.random() * 240, collected: false });
+  }
+
+  return {
+    width: W, height: H,
+    spawn: { x: 80, y: groundY - 80 },
+    goal: { x: W - 120, y: groundY - 120, w: 50, h: 120 },
+    platforms, hazards, enemies, pickups,
+  };
+}
+
+// ---------- AFTERMATH 2: TORN PAGES ----------
+// Lots of pits + sky shooters. Punishes sloppy jumps; rewards parry rhythm.
+function buildAftermath2(): Level {
+  const W = 8200;
+  const H = 720;
+  const groundY = H - 80;
+
+  // chunky islands separated by pits
+  const islands: Array<[number, number]> = [
+    [0, 900], [1080, 600], [1820, 540], [2520, 700], [3360, 560],
+    [4060, 760], [4980, 580], [5720, 720], [6600, 600], [7320, 880],
+  ];
+
+  const platforms: Platform[] = islands.map(([x, w]) => ({
+    x, y: groundY, w, h: 80, kind: "ground" as const,
+  }));
+
+  // shooter perches above each gap
+  for (let i = 0; i < islands.length - 1; i++) {
+    const [x, w] = islands[i];
+    const gapMid = x + w + 50;
+    platforms.push({ x: gapMid, y: groundY - 280, w: 120, h: 22, kind: "block" });
+  }
+
+  // route hops between islands
+  for (let i = 0; i < islands.length - 1; i++) {
+    const [x, w] = islands[i];
+    platforms.push({ x: x + w - 30, y: groundY - 160, w: 100, h: 22, kind: "block" });
+    platforms.push({ x: x + w + 110, y: groundY - 220, w: 100, h: 22, kind: "block" });
+  }
+
+  // a few high floats for chains
+  for (let i = 0; i < 6; i++) {
+    platforms.push({ x: 700 + i * 1200, y: groundY - 360, w: 160, h: 22, kind: "block" });
+  }
+
+  const hazards: Hazard[] = [];
+  for (let i = 0; i < islands.length - 1; i++) {
+    const [x, w] = islands[i];
+    const next = islands[i + 1];
+    const gapStart = x + w;
+    const gapEnd = next[0];
+    hazards.push({ x: gapStart + 8, y: groundY - 18, w: gapEnd - gapStart - 16, h: 18 });
+  }
+
+  const enemies: Enemy[] = [];
+  for (let i = 0; i < islands.length - 1; i++) {
+    const [x, w] = islands[i];
+    const gapMid = x + w + 50;
+    enemies.push({
+      x: gapMid + 40, y: groundY - 280 - 50, w: 32, h: 50, vx: 0,
+      alive: true, kind: "shooter", shootTimer: 0.7 + (i % 3) * 0.2,
+    });
+  }
+  // grunts on the fatter islands
+  for (let i = 0; i < islands.length; i++) {
+    const [x, w] = islands[i];
+    if (w >= 700) {
+      enemies.push({ x: x + w / 2, y: groundY - 50, w: 32, h: 50, vx: i % 2 ? 110 : -110, alive: true, kind: "grunt" });
+    }
+  }
+
+  const pickups: Pickup[] = [];
+  for (let i = 0; i < 26; i++) {
+    pickups.push({ x: 300 + i * 300 + Math.random() * 60, y: groundY - 180 - Math.random() * 220, collected: false });
+  }
+
+  return {
+    width: W, height: H,
+    spawn: { x: 80, y: groundY - 80 },
+    goal: { x: W - 120, y: groundY - 120, w: 50, h: 120 },
+    platforms, hazards, enemies, pickups,
+  };
+}
+
+// ---------- AFTERMATH 3: FINAL DRAFT ----------
+// The graduation level: long, dense, mixes slide tunnels + sky route + pits.
+function buildAftermath3(): Level {
+  const W = 9600;
+  const H = 720;
+  const groundY = H - 80;
+
+  const platforms: Platform[] = [
+    // mostly continuous floor with a few pits
+    { x: 0,    y: groundY, w: 2000, h: 80, kind: "ground" },
+    { x: 2140, y: groundY, w: 1600, h: 80, kind: "ground" },
+    { x: 3880, y: groundY, w: 1700, h: 80, kind: "ground" },
+    { x: 5720, y: groundY, w: 1600, h: 80, kind: "ground" },
+    { x: 7460, y: groundY, w: 2140, h: 80, kind: "ground" },
+
+    // slide tunnels
+    { x: 600,  y: groundY - 80, w: 460, h: 28, kind: "block" },
+    { x: 1500, y: groundY - 80, w: 420, h: 28, kind: "block" },
+    { x: 2400, y: groundY - 80, w: 460, h: 28, kind: "block" },
+    { x: 4200, y: groundY - 80, w: 480, h: 28, kind: "block" },
+    { x: 5000, y: groundY - 80, w: 420, h: 28, kind: "block" },
+    { x: 6000, y: groundY - 80, w: 460, h: 28, kind: "block" },
+    { x: 7700, y: groundY - 80, w: 480, h: 28, kind: "block" },
+    { x: 8600, y: groundY - 80, w: 460, h: 28, kind: "block" },
+
+    // skybridge — full route across the top
+    { x: 1200, y: groundY - 280, w: 700, h: 22, kind: "block" },
+    { x: 2100, y: groundY - 360, w: 700, h: 22, kind: "block" },
+    { x: 3000, y: groundY - 320, w: 700, h: 22, kind: "block" },
+    { x: 4000, y: groundY - 380, w: 700, h: 22, kind: "block" },
+    { x: 5000, y: groundY - 340, w: 700, h: 22, kind: "block" },
+    { x: 6000, y: groundY - 380, w: 700, h: 22, kind: "block" },
+    { x: 7000, y: groundY - 320, w: 700, h: 22, kind: "block" },
+    { x: 8000, y: groundY - 360, w: 700, h: 22, kind: "block" },
+
+    // mid hops
+    { x: 800,  y: groundY - 200, w: 160, h: 22, kind: "block" },
+    { x: 2700, y: groundY - 200, w: 160, h: 22, kind: "block" },
+    { x: 4500, y: groundY - 220, w: 160, h: 22, kind: "block" },
+    { x: 6300, y: groundY - 220, w: 160, h: 22, kind: "block" },
+    { x: 8400, y: groundY - 240, w: 160, h: 22, kind: "block" },
+  ];
+
+  const hazards: Hazard[] = [
+    { x: 2000, y: groundY - 18, w: 140, h: 18 },
+    { x: 3740, y: groundY - 18, w: 140, h: 18 },
+    { x: 5580, y: groundY - 18, w: 140, h: 18 },
+    { x: 7320, y: groundY - 18, w: 140, h: 18 },
+  ];
+
+  const enemies: Enemy[] = [
+    // ground patrols
+    { x: 1300, y: groundY - 50, w: 32, h: 50, vx: -130, alive: true, kind: "grunt" },
+    { x: 2400, y: groundY - 50, w: 32, h: 50, vx: 130, alive: true, kind: "grunt" },
+    { x: 3300, y: groundY - 50, w: 32, h: 50, vx: -140, alive: true, kind: "grunt" },
+    { x: 4400, y: groundY - 50, w: 32, h: 50, vx: 140, alive: true, kind: "grunt" },
+    { x: 5400, y: groundY - 50, w: 32, h: 50, vx: -140, alive: true, kind: "grunt" },
+    { x: 6500, y: groundY - 50, w: 32, h: 50, vx: 150, alive: true, kind: "grunt" },
+    { x: 7700, y: groundY - 50, w: 32, h: 50, vx: -150, alive: true, kind: "grunt" },
+    { x: 8800, y: groundY - 50, w: 32, h: 50, vx: 160, alive: true, kind: "grunt" },
+
+    // sky shooters along the bridge
+    { x: 1500, y: groundY - 280 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 0.7 },
+    { x: 2400, y: groundY - 360 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 0.6 },
+    { x: 3300, y: groundY - 320 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 0.7 },
+    { x: 4300, y: groundY - 380 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 0.6 },
+    { x: 5300, y: groundY - 340 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 0.6 },
+    { x: 6300, y: groundY - 380 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 0.6 },
+    { x: 7300, y: groundY - 320 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 0.7 },
+    { x: 8300, y: groundY - 360 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 0.7 },
+  ];
+
+  const pickups: Pickup[] = [];
+  for (let i = 0; i < 32; i++) {
+    pickups.push({ x: 280 + i * 290 + Math.random() * 60, y: groundY - 160 - Math.random() * 260, collected: false });
+  }
+
+  return {
+    width: W, height: H,
+    spawn: { x: 80, y: groundY - 80 },
+    goal: { x: W - 120, y: groundY - 120, w: 50, h: 120 },
+    platforms, hazards, enemies, pickups,
+  };
+}
