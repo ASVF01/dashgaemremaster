@@ -2171,45 +2171,55 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   }
 
   // ----- BOSS: Roaring Knight -----
-  function bossScreenAnchor(boss: Boss, screenW: number) {
+  // Anchor returns world-space draw size and updates `boss.screenX/Y` (screen-space).
+  // Normally camera-locked (top-right). When staggered (`worn > 0`), the boss
+  // un-sticks: we pin a world X at stagger time and convert it back to screen X
+  // so the camera can scroll past him.
+  function bossScreenAnchor(r: GameRefs, boss: Boss, screenW: number) {
     const margin = 40;
     const drawW = KNIGHT_DRAW_H * (knightImg.naturalWidth && knightImg.naturalHeight
       ? knightImg.naturalWidth / knightImg.naturalHeight : 1);
-    const baseX = screenW - margin - drawW / 2;
+    const cameraBaseX = screenW - margin - drawW / 2;
     const baseY = margin + KNIGHT_DRAW_H / 2;
     const hover = Math.sin(boss.hoverPhase) * 12;
-    // When staggered ("worn"), drop way down so the player can actually dash into him.
-    // Smoothly ease toward a low Y while vulnerable, then return up.
-    const wornTarget = 360; // low enough for ground-level reach
-    const baseTarget = baseY + hover;
+
     const wantLow = boss.worn > 0 && !boss.defeated;
-    const targetY = wantLow ? wornTarget + Math.sin(boss.hoverPhase) * 4 : baseTarget;
+    if (wantLow) {
+      // Pin world X at the moment of stagger so he no longer follows the camera.
+      if (!boss.wornAnchored) {
+        boss.wornWorldX = r.cameraX + (boss.screenX || cameraBaseX);
+        boss.wornAnchored = true;
+      }
+    } else {
+      boss.wornAnchored = false;
+    }
+
+    const targetScreenX = wantLow ? boss.wornWorldX - r.cameraX : cameraBaseX;
+    // Floating up-and-down (extra bob while staggered low).
+    const wornTargetY = 360 + Math.sin(boss.hoverPhase * 1.4) * 12;
+    const baseTargetY = baseY + hover;
+    const targetY = wantLow ? wornTargetY : baseTargetY;
+
     if (boss.screenY === 0) boss.screenY = targetY;
+    if (boss.screenX === 0) boss.screenX = targetScreenX;
     boss.screenY += (targetY - boss.screenY) * 0.12;
-    boss.screenX = baseX;
+    boss.screenX = wantLow ? boss.screenX + (targetScreenX - boss.screenX) * 0.18 : targetScreenX;
     return { drawW, drawH: KNIGHT_DRAW_H };
   }
 
-  function spawnBossSlash(r: GameRefs, boss: Boss) {
-    // Long thin beam-slash that originates from the boss and passes through
-    // the player's position, extending well past on the far side — matches
-    // the Deltarune reference (knight slashes a line across the screen).
+  function spawnBossWarning(r: GameRefs, boss: Boss) {
+    // Spinning red telegraph that re-aims toward the player while spinning,
+    // then locks in and fires a white slash. Length is fixed (long beam).
     const p = r.player;
     const bossWorldX = r.cameraX + boss.screenX;
     const bossWorldY = boss.screenY;
-    const px = p.x + p.w / 2 + (Math.random() - 0.5) * 30;
-    const py = p.y + p.h / 2 + (Math.random() - 0.5) * 24;
-    const dx = px - bossWorldX;
-    const dy = py - bossWorldY;
-    const len = Math.hypot(dx, dy) || 1;
-    const nx = dx / len, ny = dy / len;
-    const reach = 1800;
+    const dx = p.x + p.w / 2 - bossWorldX;
+    const dy = p.y + p.h / 2 - bossWorldY;
+    const angle = Math.atan2(dy, dx);
     boss.warnings.push({
-      x1: bossWorldX,
-      y1: bossWorldY,
-      x2: bossWorldX + nx * reach,
-      y2: bossWorldY + ny * reach,
       t: 0, dur: 0.5, fired: false,
+      angle,
+      len: 1800,
     });
   }
 
