@@ -2181,10 +2181,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       const stars = r.rainStars;
       let write = 0;
       ctx.imageSmoothingEnabled = false;
-      // Match the SOM SOM 6s impact ramp — alpha eases in over RAIN_FADE.
-      const visAlpha = fadeIn;
+      // Cap brightness a touch so the eternal downpour reads softer —
+      // stars never fully fade out, just sit a little dimmer.
+      const STAR_BRIGHTNESS = 0.78;
+      const visAlpha = fadeIn * STAR_BRIGHTNESS;
       const prevAlpha = ctx.globalAlpha;
-      if (visAlpha < 1) ctx.globalAlpha = prevAlpha * visAlpha;
+      ctx.globalAlpha = prevAlpha * visAlpha;
       for (let i = 0; i < stars.length; i++) {
         const s = stars[i];
         s.y += s.vy * dtFrame;
