@@ -162,13 +162,12 @@ const Index = () => {
     else stopBgm(0.35);
   }, [screen, levelId, introPhase]);
 
-  // Silence ALL sfx while on the main menu (or during the intro card).
-  // Re-enable as soon as we leave the menu.
+  // Silence sfx ONLY during the intro card. Menu has its own click sfx.
   useEffect(() => {
-    const onMenu = screen === "menu" || introPhase !== "done";
-    setSfxMuted(onMenu);
+    const introUp = introPhase !== "done";
+    setSfxMuted(introUp);
     return () => { setSfxMuted(false); };
-  }, [screen, introPhase]);
+  }, [introPhase]);
 
   const startLevel = (id: LevelId) => {
     setLevelId(id);

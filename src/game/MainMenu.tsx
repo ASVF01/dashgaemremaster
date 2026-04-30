@@ -19,6 +19,19 @@ interface Props {
 export default function MainMenu({ onPlay }: Props) {
   const [tab, setTab] = useState<MenuTab>("play");
 
+  const handlePlay = (id: LevelId) => {
+    unlockAudio();
+    sfx.menuConfirm();
+    onPlay(id);
+  };
+
+  const switchTab = (next: MenuTab) => {
+    if (next === tab) return;
+    unlockAudio();
+    sfx.menuTab();
+    setTab(next);
+  };
+
   return (
     <div className="absolute inset-0 flex items-stretch justify-center bg-paper/95 backdrop-blur-[2px] overflow-auto">
       <div className="w-full max-w-5xl mx-auto px-6 py-8 flex flex-col">
@@ -36,21 +49,21 @@ export default function MainMenu({ onPlay }: Props) {
 
         {/* Tabs */}
         <nav className="flex flex-wrap gap-2 justify-center mb-6">
-          <TabBtn active={tab === "play"}     onClick={() => setTab("play")}>PLAY</TabBtn>
-          <TabBtn active={tab === "tutorial"} onClick={() => setTab("tutorial")}>HOW TO PLAY</TabBtn>
-          <TabBtn active={tab === "keybinds"} onClick={() => setTab("keybinds")}>KEYBINDS</TabBtn>
-          <TabBtn active={tab === "settings"} onClick={() => setTab("settings")}>SETTINGS</TabBtn>
-          <TabBtn active={tab === "extras"}   onClick={() => setTab("extras")}>EXTRAS</TabBtn>
-          <TabBtn active={tab === "credits"}  onClick={() => setTab("credits")}>CREDITS</TabBtn>
+          <TabBtn active={tab === "play"}     onClick={() => switchTab("play")}>PLAY</TabBtn>
+          <TabBtn active={tab === "tutorial"} onClick={() => switchTab("tutorial")}>HOW TO PLAY</TabBtn>
+          <TabBtn active={tab === "keybinds"} onClick={() => switchTab("keybinds")}>KEYBINDS</TabBtn>
+          <TabBtn active={tab === "settings"} onClick={() => switchTab("settings")}>SETTINGS</TabBtn>
+          <TabBtn active={tab === "extras"}   onClick={() => switchTab("extras")}>EXTRAS</TabBtn>
+          <TabBtn active={tab === "credits"}  onClick={() => switchTab("credits")}>CREDITS</TabBtn>
         </nav>
 
         {/* Body */}
         <div className="flex-1">
-          {tab === "play"     && <PlayTab onPlay={onPlay} />}
-          {tab === "tutorial" && <TutorialTab onStartTutorial={() => onPlay("tutorial")} />}
+          {tab === "play"     && <PlayTab onPlay={handlePlay} />}
+          {tab === "tutorial" && <TutorialTab onStartTutorial={() => handlePlay("tutorial")} />}
           {tab === "keybinds" && <KeybindsTab />}
           {tab === "settings" && <SettingsTab />}
-          {tab === "extras"   && <ExtrasTab onPlay={onPlay} />}
+          {tab === "extras"   && <ExtrasTab onPlay={handlePlay} />}
           {tab === "credits"  && <CreditsTab />}
         </div>
       </div>
@@ -62,6 +75,7 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
   return (
     <button
       onClick={onClick}
+      onMouseEnter={() => { if (!active) sfx.menuHover(); }}
       className={[
         "scribble-border font-marker text-2xl px-5 py-2 transition-transform hover:-rotate-2",
         active ? "bg-ink text-paper" : "bg-paper text-ink hover:bg-[hsl(var(--accent))/0.2]",
@@ -80,6 +94,7 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
         <button
           key={lvl.id}
           onClick={() => onPlay(lvl.id)}
+          onMouseEnter={() => sfx.menuHover()}
           className="scribble-border bg-paper p-4 text-left hover:-rotate-1 hover:bg-[hsl(var(--accent))/0.15] transition-transform group"
         >
           <div className="flex items-baseline justify-between mb-1">
@@ -198,7 +213,8 @@ function KeybindsTab() {
       <div className="flex items-center justify-between mb-4">
         <div className="font-marker text-3xl text-ink -rotate-1">REBIND KEYS</div>
         <button
-          onClick={() => setBinds(DEFAULT_BINDS)}
+          onClick={() => { sfx.menuBack(); setBinds(DEFAULT_BINDS); }}
+          onMouseEnter={() => sfx.menuHover()}
           className="scribble-border bg-paper px-3 py-1 font-marker text-lg text-ink hover:-rotate-2 transition-transform"
         >
           RESET DEFAULTS
@@ -223,7 +239,7 @@ function KeybindsTab() {
                 return (
                   <button
                     key={slot}
-                    onClick={() => setCapture(isCapturing ? null : { action: a.id, slot })}
+                    onClick={() => { sfx.menuClick(); setCapture(isCapturing ? null : { action: a.id, slot }); }}
                     className={[
                       "scribble-border font-marker text-lg px-3 py-1.5 min-w-[80px] transition-transform hover:-rotate-2",
                       isCapturing
@@ -262,7 +278,8 @@ function SettingsTab() {
       <div className="flex items-center justify-between mb-4">
         <div className="font-marker text-3xl text-ink -rotate-1">SETTINGS</div>
         <button
-          onClick={() => resetSettings()}
+          onClick={() => { sfx.menuBack(); resetSettings(); }}
+          onMouseEnter={() => sfx.menuHover()}
           className="scribble-border bg-paper px-3 py-1 font-marker text-lg text-ink hover:-rotate-2 transition-transform"
         >
           RESET DEFAULTS
@@ -324,7 +341,7 @@ function ToggleRow({ label, desc, value, onChange }: { label: string; desc: stri
       </div>
       <div className="col-span-12 sm:col-span-4 flex sm:justify-end">
         <button
-          onClick={() => onChange(!value)}
+          onClick={() => { sfx.menuClick(); onChange(!value); }}
           className={[
             "scribble-border font-marker text-lg px-4 py-1.5 transition-transform hover:-rotate-2",
             value ? "bg-ink text-paper" : "bg-paper text-ink",
