@@ -1914,9 +1914,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
     r.player.parrying = 0;
     r.player.parryCooldown = r.boss ? 0.25 : 2.5;
     sfx.parryHit();
-    // boost in facing dir
+    // Forward boost in facing dir, but DON'T touch vy — successful parry
+    // should preserve the player's existing momentum (no upward pop, no
+    // knockback). Players should fly through the parry without losing speed.
     r.player.vx += r.player.facing * PARRY_BOOST;
-    r.player.vy = -220;
     burst(r, x, y, "#fff34a", 22, 380);
     burst(r, x, y, "#22e2ff", 14, 320);
   }
