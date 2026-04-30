@@ -362,6 +362,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       somSomCloudX: null,
       somSomRain: null,
       heartbeatTimer: 0,
+      boss: levelId === "roaring-knight" ? makeBoss() : null,
     };
     // Any reset/level change cancels the starman shimmer too.
     sfx.shineStop(); sfx.rainStop(); sfx.slideStop();
