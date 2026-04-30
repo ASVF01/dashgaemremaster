@@ -51,6 +51,27 @@ function getSpookRedTint(): HTMLCanvasElement | null {
 
 // Roaring Knight boss sprite. Drawn in screen-space (top-right, hovers).
 const knightImg = new Image(); knightImg.src = roaringKnightUrl;
+const KNIGHT_DRAW_H = 180; // rendered height in screen pixels (sprite is square-ish)
+
+function makeBoss() {
+  return {
+    hp: 5,
+    maxHp: 5,
+    screenX: 0, screenY: 0,
+    hoverPhase: 0,
+    attackTimer: 2.0,         // grace period before first slash
+    attacksRemaining: 3,      // slashes per burst
+    worn: 0,                  // vulnerable window
+    hitFlash: 0,
+    shakeT: 0,
+    afterTimer: 0,
+    afterimages: [] as { sx: number; sy: number; life: number; maxLife: number; flipped: boolean }[],
+    warnings: [] as { x1: number; y1: number; x2: number; y2: number; t: number; dur: number; fired: boolean }[],
+    slashes: [] as { x1: number; y1: number; x2: number; y2: number; t: number; dur: number; hit: boolean }[],
+    defeated: false,
+    defeatT: 0,
+  };
+}
 
 // Darker cyan used by SOM SOM (invboi-in-just-run-bro). Single hue, lower lightness.
 const DARK_CYAN = "#0fb5cf";
