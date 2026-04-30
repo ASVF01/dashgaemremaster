@@ -17,7 +17,7 @@ type Screen = "menu" | "loading" | "playing" | "dead" | "win" | "cutscene";
 
 // Levels whose music should hard-restart on entry. Everything else shares
 // the "champion play" track and lets it keep looping across transitions.
-const RESTART_BGM_ON_ENTRY: ReadonlyArray<LevelId> = ["tutorial", "chase", "just-run-bro"];
+const RESTART_BGM_ON_ENTRY: ReadonlyArray<LevelId> = ["tutorial", "chase", "just-run-bro", "roaring-knight"];
 
 const Index = () => {
   const [screen, setScreen] = useState<Screen>("menu");
