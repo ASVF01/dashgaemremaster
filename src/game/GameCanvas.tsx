@@ -269,6 +269,9 @@ interface GameRefs {
   skidSfxTimer: number;
   isSkidding: boolean;
   rainStars: { x: number; y: number; vy: number; size: number; phase: number; hue: number }[];
+  // Floating "invboi star" pickup spawned by pressing E. Touching it turns
+  // the player into invboi (same as typing the cheat code).
+  invboiPickup: { x: number; y: number; t: number; bobPhase: number } | null;
   // SOM SOM lightning: spawned occasionally over the OLED-black backdrop.
   lightningCooldown: number;
   lightningBolts: { x: number; t: number; life: number; segs: { x: number; y: number }[]; flash: number }[];
@@ -432,6 +435,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       skidSfxTimer: 0,
       isSkidding: false,
       rainStars: [],
+      invboiPickup: null,
       lightningCooldown: 0,
       lightningBolts: [],
       somSomStorm: false,
@@ -466,29 +470,50 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   // keys
   useEffect(() => {
     let cheatBuf = "";
+    // Shared activation: turn the player into invboi. Used by both the
+    // "invboi" cheat code and by walking into the invboi-star pickup.
+    const activateInvboi = () => {
+      const r = refs.current;
+      if (!r || !r.player.alive || r.finished || r.player.starman) return;
+      r.player.starman = true;
+      r.player.starTimer = 0;
+      const inJrb = levelIdRef.current === "just-run-bro";
+      r.player.somSom = inJrb;
+      r.player.invuln = Math.max(r.player.invuln, 9999);
+      unlockAudio();
+      if (inJrb) playSomSomBgm();
+      else playStarmanBgm();
+      sfx.shineStart();
+      setCelestialMode(true, { replaceDefaults: !inJrb });
+      setThunderMode(inJrb);
+      burst(r, r.player.x + r.player.w / 2, r.player.y + r.player.h / 2, inJrb ? "#22e2ff" : "#ffd11a", 24, 380);
+    };
     const down = (e: KeyboardEvent) => {
       keysRef.current[e.code] = true;
       // cheat code: type "invboi" to enter starman mode
       if (e.key && e.key.length === 1 && /[a-zA-Z]/.test(e.key)) {
         cheatBuf = (cheatBuf + e.key.toLowerCase()).slice(-12);
-        if (cheatBuf.endsWith("invboi") && refs.current) {
-          const r = refs.current;
-          if (r.player.alive && !r.finished) {
-            r.player.starman = true;
-            r.player.starTimer = 0;
-            const inJrb = levelIdRef.current === "just-run-bro";
-            r.player.somSom = inJrb;
-            // generous i-frames so they actually feel invincible
-            r.player.invuln = Math.max(r.player.invuln, 9999);
-            unlockAudio();
-            if (inJrb) playSomSomBgm();
-            else playStarmanBgm();
-            sfx.shineStart();
-            setCelestialMode(true, { replaceDefaults: !inJrb });
-            setThunderMode(inJrb);
-            burst(r, r.player.x + r.player.w / 2, r.player.y + r.player.h / 2, inJrb ? "#22e2ff" : "#ffd11a", 24, 380);
-          }
+        if (cheatBuf.endsWith("invboi")) {
+          activateInvboi();
           cheatBuf = "";
+        }
+      }
+      // Press E to spawn an invboi-star pickup in front of the player.
+      // Touching it activates invboi mode (same as the cheat code).
+      if (e.code === "KeyE" && refs.current) {
+        const r = refs.current;
+        if (r.player.alive && !r.finished && !r.player.starman && !r.invboiPickup) {
+          const p = r.player;
+          // Spawn ~80px in front of the player at chest height.
+          const ahead = 80 * p.facing;
+          r.invboiPickup = {
+            x: p.x + p.w / 2 + ahead,
+            y: p.y + p.h * 0.4,
+            t: 0,
+            bobPhase: Math.random() * Math.PI * 2,
+          };
+          unlockAudio();
+          sfx.pickup?.();
         }
       }
       if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) {
@@ -736,9 +761,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         angle: Math.random() * Math.PI,
       });
     }
-  }
-
-
+    }
   function spawnSlideDustBurst(r: GameRefs, p: Player) {
     const reduced = getSettings().reducedFx;
     const baseY = p.y + p.h;
@@ -1640,6 +1663,31 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       }
     }
 
+    // invboi-star pickup (spawned by pressing E). Bobs in place; touching
+    // the player turns them into invboi (same as the cheat code).
+    if (r.invboiPickup) {
+      const pkS = r.invboiPickup;
+      pkS.t += dt;
+      const drawY = pkS.y + Math.sin(pkS.bobPhase + pkS.t * 3.2) * 6;
+      const HALF = 18;
+      if (rectOverlap(p.x, p.y, p.w, p.h, pkS.x - HALF, drawY - HALF, HALF * 2, HALF * 2)
+          && p.alive && !r.finished && !p.starman) {
+        r.invboiPickup = null;
+        p.starman = true;
+        p.starTimer = 0;
+        const inJrb = levelIdRef.current === "just-run-bro";
+        p.somSom = inJrb;
+        p.invuln = Math.max(p.invuln, 9999);
+        unlockAudio();
+        if (inJrb) playSomSomBgm();
+        else playStarmanBgm();
+        sfx.shineStart();
+        setCelestialMode(true, { replaceDefaults: !inJrb });
+        setThunderMode(inJrb);
+        burst(r, p.x + p.w / 2, p.y + p.h / 2, inJrb ? "#22e2ff" : "#ffd11a", 24, 380);
+      }
+    }
+
     // particles
     for (const pa of r.particles) {
       pa.life -= dt;
@@ -2108,9 +2156,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         ctx.stroke();
         ctx.restore();
       }
-  }
-
-
+    }
     // starman: rainbow stars rain down (BACKGROUND layer, behind level assets)
     // (suppressed for SOM SOM variant — no rain, no rainbow)
     //
@@ -2307,6 +2353,26 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       ctx.lineTo(pk.x, pk.y + bob + 3);
       ctx.stroke();
       ctx.restore();
+    }
+
+    // invboi-star pickup (E-key spawn): big rainbow star floating in world.
+    if (r.invboiPickup) {
+      const pkS = r.invboiPickup;
+      if (pkS.x >= camX - 60 && pkS.x <= camX + w + 60) {
+        const drawY = pkS.y + Math.sin(pkS.bobPhase + pkS.t * 3.2) * 6;
+        const hue = (pkS.t * 180) % 360;
+        const img = getRainStar(12, hue);
+        const half = img.width / 2;
+        ctx.save();
+        ctx.imageSmoothingEnabled = false;
+        // soft pulsing glow
+        const pulse = 0.6 + 0.4 * Math.sin(pkS.t * 5);
+        ctx.globalAlpha = 0.35 * pulse;
+        ctx.drawImage(img, pkS.x - half * 1.6, drawY - half * 1.6, img.width * 1.6, img.height * 1.6);
+        ctx.globalAlpha = 1;
+        ctx.drawImage(img, pkS.x - half, drawY - half);
+        ctx.restore();
+      }
     }
 
     // chaser red trail (drawn behind enemies) — sized to match the spook sprite
