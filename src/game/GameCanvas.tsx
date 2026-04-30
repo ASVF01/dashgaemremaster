@@ -2119,8 +2119,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     const RAIN_BURST_END = RAIN_START + 2.0; // heavy burst window
     const inRainBurst = starmanFx && starElapsed >= RAIN_START && starElapsed < RAIN_BURST_END;
     const inRainTail  = starmanFx && starElapsed >= RAIN_BURST_END;
-    const burstMaxStars = Math.min(220, Math.max(140, Math.floor((w * h) / 5500)));
-    const tailMaxStars  = Math.min(64,  Math.max(28,  Math.floor((w * h) / 17000)));
+    const burstMaxStars = Math.min(520, Math.max(320, Math.floor((w * h) / 2400)));
+    const tailMaxStars  = Math.min(140, Math.max(70,  Math.floor((w * h) / 8000)));
     const maxRainStars = inRainBurst ? burstMaxStars : tailMaxStars;
     // Smooth fade-in matching the SOM SOM 6s impact ramp (0.45s).
     const RAIN_FADE = 0.45;
@@ -2128,17 +2128,25 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       ? Math.min(1, (starElapsed - RAIN_START) / RAIN_FADE)
       : (inRainTail ? 1 : 0);
     if ((inRainBurst || inRainTail) && r.rainStars.length < maxRainStars) {
+      // Heavy, gap-free downpour during the burst; light drizzle after.
       const burstRate = inRainBurst
-        ? fadeIn * 4.5            // ramps 0 → 4.5 stars/frame over 0.45s
-        : 0.35;                   // gentle drizzle after the burst
-      // spawn possibly multiple per frame for the heavy downpour
+        ? fadeIn * 14   // ramps 0 → ~14 stars/frame over 0.45s
+        : 0.6;          // gentle drizzle after the burst
+      // Stratified column spawning to avoid horizontal empty gaps:
+      // split the screen into N columns and pick a column per spawn so
+      // coverage stays even instead of clumping by pure random chance.
+      const COL_W = 36; // px per column → tighter = denser coverage
+      const cols = Math.max(8, Math.floor(w / COL_W));
       let toSpawn = burstRate;
       while (toSpawn > 0 && r.rainStars.length < maxRainStars) {
         if (toSpawn < 1 && Math.random() >= toSpawn) break;
+        const col = Math.floor(Math.random() * cols);
+        const x = (col + Math.random()) * (w / cols);
         r.rainStars.push({
-          x: Math.random() * w,
-          y: -10 - Math.random() * 60,
-          vy: (inRainBurst ? 90 : 32) + Math.random() * (inRainBurst ? 110 : 34),
+          x,
+          y: -10 - Math.random() * 80,
+          // much faster fall; tail still slower for "drizzle" feel
+          vy: (inRainBurst ? 260 : 70) + Math.random() * (inRainBurst ? 220 : 60),
           size: 4 + Math.random() * 4,
           phase: Math.random() * Math.PI * 2,
           hue: Math.random() * 360,
