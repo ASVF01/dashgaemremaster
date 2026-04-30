@@ -118,7 +118,48 @@ function buildJustRunBro(): Level {
   };
 }
 
-// ---------- CHASE: long hallway pursued by a wall ----------
+// ---------- MEET INVBOI: introduces the invboi-star pickup ----------
+// Tiny flat level. Star is pre-placed in front of the player with a sign.
+// On grab, GameCanvas fires onInvboiPickup so the parent can show the
+// instructions overlay.
+function buildMeetInvboi(): Level {
+  const W = 4800;
+  const H = 720;
+  const groundY = H - 80;
+  const platforms: Platform[] = [
+    { x: 0, y: groundY, w: W, h: 80, kind: "ground" },
+    // a couple of decorative blocks to play with after grabbing the star
+    { x: 1400, y: groundY - 140, w: 160, h: 22, kind: "block" },
+    { x: 1700, y: groundY - 220, w: 160, h: 22, kind: "block" },
+    { x: 2000, y: groundY - 160, w: 160, h: 22, kind: "block" },
+    { x: 2600, y: groundY - 200, w: 200, h: 22, kind: "block" },
+    { x: 3100, y: groundY - 280, w: 200, h: 22, kind: "block" },
+    { x: 3600, y: groundY - 180, w: 200, h: 22, kind: "block" },
+  ];
+  // A few light enemies AFTER the star so invboi feels powerful.
+  const enemies: Enemy[] = [
+    { x: 1900, y: groundY - 50, w: 32, h: 50, vx: -70, alive: true, kind: "grunt" },
+    { x: 2400, y: groundY - 50, w: 32, h: 50, vx: 80, alive: true, kind: "grunt" },
+    { x: 3100, y: groundY - 280 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 1.2 },
+    { x: 3700, y: groundY - 50, w: 32, h: 50, vx: -90, alive: true, kind: "grunt" },
+  ];
+  // Star location — right in front of the player spawn.
+  const starX = 320;
+  const starY = groundY - 80;
+  return {
+    width: W, height: H,
+    spawn: { x: 80, y: groundY - 80 },
+    goal: { x: W - 160, y: groundY - 120, w: 50, h: 120 },
+    platforms,
+    hazards: [],
+    enemies,
+    pickups: [],
+    signs: [
+      { x: starX, y: groundY - 170, text: "Hey you! grab this!" },
+    ],
+    invboiStart: { x: starX, y: starY, facing: 1 },
+  };
+}
 // A long, mostly flat hallway. A "chaser" enemy spawns just behind the
 // player's start and pursues forever. Touching it = damage. Parrying it
 // blasts it back and stuns it briefly so you can recover ground.
