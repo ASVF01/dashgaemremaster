@@ -2365,9 +2365,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
             sl.hit = true;
             parrySuccess(r, pcx, pcy);
           } else if (p.alive) {
-            // BOSS RULE: no i-frames in this fight. Player must parry to block.
-            sl.hit = true;
-            damage(r, pcx, pcy);
+            // BOSS RULE: no i-frames in this fight — player must parry to block.
+            // Exception: invboi (starman) keeps its i-frames so the cheat still
+            // makes you invincible.
+            if (p.starman && p.invuln > 0) {
+              sl.hit = true;
+            } else {
+              sl.hit = true;
+              damage(r, pcx, pcy);
+            }
           }
         }
       }
