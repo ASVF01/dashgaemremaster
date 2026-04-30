@@ -1681,6 +1681,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     if (r.invboiPickup) {
       const pkS = r.invboiPickup;
       pkS.t += dt;
+      pkS.spawnT += dt;
       const drawY = pkS.y + Math.sin(pkS.bobPhase + pkS.t * 3.2) * 6;
       const HALF = 18;
       if (rectOverlap(p.x, p.y, p.w, p.h, pkS.x - HALF, drawY - HALF, HALF * 2, HALF * 2)
