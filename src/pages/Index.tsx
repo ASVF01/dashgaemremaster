@@ -354,7 +354,7 @@ const Index = () => {
       {/* One-time intro card on app start. Fades in, holds 9s, fades out. */}
       {introPhase !== "done" && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-ink pointer-events-none transition-opacity duration-[800ms] ease-out"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black pointer-events-none transition-opacity duration-[800ms] ease-out"
           style={{ opacity: introPhase === "in" ? 0 : introPhase === "out" ? 0 : 1 }}
           aria-hidden="true"
         >
