@@ -255,7 +255,7 @@ const Index = () => {
       // Kick the starman track now so it's already playing when the level
       // appears. Skip the BGM "loading duck" since we want it at full vol.
       preloadBgmFor(firstId).then(() => {
-        playStarmanBgm();
+        playMarathonBgm();
         setTimeout(() => {
           setScreen((s) => (s === "loading" ? "playing" : s));
         }, 250);
@@ -286,7 +286,7 @@ const Index = () => {
       setLevelId(firstId);
       setScreen("loading");
       preloadBgmFor(firstId).then(() => {
-        playStarmanBgm();
+        playMarathonBgm();
         setTimeout(() => {
           setScreen((s) => (s === "loading" ? "playing" : s));
         }, 250);
