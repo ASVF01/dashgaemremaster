@@ -88,6 +88,10 @@ function makeBoss() {
     slashes: [] as { angle: number; len: number; t: number; dur: number; hit: boolean }[],
     defeated: false,
     defeatT: 0,
+    retreatX: 0,
+    retreatY: 0,
+    retreatVx: 0,
+    retreatVy: 0,
   };
 }
 
@@ -243,6 +247,8 @@ interface GameRefs {
   cameraX: number;
   shake: number;
   freezeFrames: number;
+  freezeTime: number; // hard hitstop in seconds (skips update entirely)
+  bossExplosions: { x: number; y: number; t: number; dur: number }[];
   time: number;
   combo: number;
   comboTimer: number;
@@ -300,6 +306,10 @@ interface Boss {
   slashes: { angle: number; len: number; t: number; dur: number; hit: boolean }[];
   defeated: boolean;
   defeatT: number;
+  retreatX: number; // accumulated retreat offset (screen-space, +x = away to the right)
+  retreatY: number; // accumulated retreat offset (negative = up)
+  retreatVx: number;
+  retreatVy: number;
 }
 
 interface Props {
@@ -398,6 +408,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       cameraX: 0,
       shake: 0,
       freezeFrames: 0,
+      freezeTime: 0,
+      bossExplosions: [],
       time: 0,
       combo: 0,
       comboTimer: 0,
@@ -583,7 +595,13 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       const dt = Math.min(0.033, (t - last) / 1000);
       last = t;
       if (!paused && !r.finished && r.player.alive) {
-        update(r, dt, keysRef.current);
+        if (r.freezeTime > 0) {
+          r.freezeTime = Math.max(0, r.freezeTime - dt);
+          // Still tick boss explosion VFX during freeze for snappy visual.
+          for (const ex of r.bossExplosions) ex.t += dt;
+        } else {
+          update(r, dt, keysRef.current);
+        }
       }
       if (paused && t - lastPausedRender < 250) return;
       if (paused) lastPausedRender = t;
@@ -674,7 +692,41 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
   }
 
-  // Chunky kick-up of dust + grit on slide-start.
+  // Big celebratory boss-explosion: layered ring + colorful debris + freeze.
+  // cx/cy are world coords for the particle bursts; the ring VFX is drawn
+  // at the boss's live screen position so it tracks him as he retreats.
+  function triggerBossDefeat(r: GameRefs, cx: number, cy: number) {
+    const boss = r.boss;
+    if (!boss) return;
+    boss.defeated = true;
+    boss.defeatT = 0;
+    boss.retreatX = 0;
+    boss.retreatY = 0;
+    boss.retreatVx = 220;
+    boss.retreatVy = -160;
+    r.freezeTime = Math.max(r.freezeTime, 0.5);
+    r.shake = Math.max(r.shake, 1.2);
+    r.bossExplosions.push({ x: 0, y: 0, t: 0, dur: 1.2 }); // x/y unused; ring tracks boss
+    burst(r, cx, cy, "#ffffff", 50, 540);
+    burst(r, cx, cy, "#fff34a", 40, 460);
+    burst(r, cx, cy, "#ff7a1a", 36, 420);
+    burst(r, cx, cy, "#f5234c", 30, 380);
+    for (let i = 0; i < 18; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const s = 200 + Math.random() * 360;
+      spawnParticle(r, {
+        x: cx, y: cy,
+        vx: Math.cos(a) * s, vy: Math.sin(a) * s - 120,
+        color: i % 2 ? "#ffffff" : "#fff34a",
+        size: 5 + Math.random() * 4,
+        life: 0.7 + Math.random() * 0.5,
+        kind: "shard",
+        angle: Math.random() * Math.PI,
+      });
+    }
+  }
+
+
   function spawnSlideDustBurst(r: GameRefs, p: Player) {
     const reduced = getSettings().reducedFx;
     const baseY = p.y + p.h;
@@ -1397,6 +1449,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         sfx.laserStop();
       }
       if (pl.laserActive) {
+        // Continuous screen shake while the beam is active.
+        r.shake = Math.max(r.shake, 0.22);
         // Track facing changes from movement input.
         if (pl.vx > 30) pl.laserDir = 1;
         else if (pl.vx < -30) pl.laserDir = -1;
@@ -1451,10 +1505,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
               burst(r, hx, ly, "#fff34a", 18, 320);
               sfx.bossHurt();
               if (boss.hp <= 0) {
-                boss.defeated = true;
-                boss.defeatT = 0;
-                r.shake = Math.max(r.shake, 1.0);
-                burst(r, bx + bw / 2, by + bh / 2, "#ffffff", 60, 520);
+                triggerBossDefeat(r, bx + bw / 2, by + bh / 2);
                 sfx.bossDefeat();
                 pl.laserActive = false;
                 sfx.laserStop();
@@ -2231,6 +2282,62 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       ctx.fillStyle = "rgba(255, 220, 80, 0.55)";
       ctx.beginPath(); ctx.arc(x0, y0, 28, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
+
+      // === RAINBOW DUST out the OPPOSITE end of the beam (back of player) ===
+      // Spawn a few particles per frame, drifting away from the firing dir.
+      const dustCount = 3;
+      for (let i = 0; i < dustCount; i++) {
+        const hue = (r.time * 240 + i * 40 + Math.random() * 30) % 360;
+        const back = -dir;
+        const spd = 220 + Math.random() * 260;
+        const spread = (Math.random() - 0.5) * 220;
+        spawnParticle(r, {
+          x: x0 - dir * 6,
+          y: y0,
+          vx: back * spd,
+          vy: spread,
+          color: `hsl(${hue}, 100%, 60%)`,
+          size: 2 + Math.random() * 3,
+          life: 0.35 + Math.random() * 0.35,
+          kind: "spark",
+        });
+      }
+
+      // === SPINNING BALLS along the beam, vertical orbit, advancing toward target ===
+      // Balls are computed per-frame from r.time so they "travel" along the beam.
+      ctx.save();
+      const beamLen = Math.abs(x1 - x0);
+      const ballCount = 6;
+      const orbitRadius = 18; // vertical orbit radius
+      const travelSpeed = 900; // px/sec along the beam
+      const spinSpeed = 14;    // rad/sec
+      for (let i = 0; i < ballCount; i++) {
+        // Each ball has its own offset so they're spaced along the beam.
+        const spacing = beamLen / ballCount;
+        // Position along the beam, looping forward over time.
+        const along = ((r.time * travelSpeed + i * spacing) % beamLen);
+        const bx = x0 + dir * along;
+        // Orbit phase — rotate around the beam axis (vertical plane = up/down).
+        const phase = r.time * spinSpeed + i * 1.05;
+        const by = y0 + Math.sin(phase) * orbitRadius;
+        // Depth scale: balls "behind" (sin < 0) appear smaller/dimmer.
+        const depth = (Math.cos(phase) + 1) / 2; // 0..1 (1 = front)
+        const radius = 5 + depth * 6;
+        const hue = (r.time * 260 + i * 60) % 360;
+        // outer glow
+        ctx.globalAlpha = 0.35 + 0.5 * depth;
+        ctx.fillStyle = `hsl(${hue}, 100%, 65%)`;
+        ctx.beginPath(); ctx.arc(bx, by, radius * 1.8, 0, Math.PI * 2); ctx.fill();
+        // core
+        ctx.globalAlpha = 0.7 + 0.3 * depth;
+        ctx.fillStyle = `hsl(${hue}, 100%, 80%)`;
+        ctx.beginPath(); ctx.arc(bx, by, radius, 0, Math.PI * 2); ctx.fill();
+        // bright center dot
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath(); ctx.arc(bx, by, Math.max(1.5, radius * 0.45), 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
     }
 
     // boss world-space FX (warnings + slashes)
@@ -2466,6 +2573,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     boss.hoverPhase += dt * 2.2;
     if (boss.hitFlash > 0) boss.hitFlash = Math.max(0, boss.hitFlash - dt * 4);
     if (boss.shakeT > 0) boss.shakeT = Math.max(0, boss.shakeT - dt);
+    // tick + cull boss explosion VFX
+    for (const ex of r.bossExplosions) ex.t += dt;
+    r.bossExplosions = r.bossExplosions.filter((e) => e.t < e.dur);
     bossScreenAnchor(r, boss, screenW);
 
     // Shake-in-fear when invboi (starman) is active — knight visibly trembles.
@@ -2492,7 +2602,27 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
     if (boss.defeated) {
       boss.defeatT += dt;
-      if (boss.defeatT > 1.6 && !r.finished) {
+      // Animated retreat: knight rockets up and to the right, accelerating.
+      boss.retreatVx += 220 * dt; // accelerate horizontally
+      boss.retreatVy -= 80 * dt;  // accelerate upward
+      boss.retreatX += boss.retreatVx * dt;
+      boss.retreatY += boss.retreatVy * dt;
+      // emit small smoke/spark trail behind him during retreat
+      if (Math.random() < 0.6) {
+        const sx = boss.screenX + boss.retreatX + r.cameraX; // approx world for particles
+        const sy = boss.screenY + boss.retreatY;
+        spawnParticle(r, {
+          x: sx - r.cameraX, // particles drawn in screen space won't match — keep small
+          y: sy,
+          vx: -boss.retreatVx * 0.4 + (Math.random() - 0.5) * 60,
+          vy: -boss.retreatVy * 0.4 + (Math.random() - 0.5) * 60,
+          color: Math.random() < 0.5 ? "#fff34a" : "#ffffff",
+          size: 3 + Math.random() * 3,
+          life: 0.4 + Math.random() * 0.3,
+          kind: "spark",
+        });
+      }
+      if (boss.defeatT > 3.2 && !r.finished) {
         r.finished = true;
         r.finishTime = performance.now() - r.startedAt;
         r.score += 5000;
@@ -2590,10 +2720,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         p.vy = -260;
         p.invuln = Math.max(p.invuln, 0.4);
         if (boss.hp <= 0) {
-          boss.defeated = true;
-          boss.defeatT = 0;
-          r.shake = Math.max(r.shake, 1.0);
-          burst(r, bx + bw / 2, by + bh / 2, "#ffffff", 60, 520);
+          triggerBossDefeat(r, bx + bw / 2, by + bh / 2);
           sfx.bossDefeat();
         }
       }
@@ -2718,35 +2845,88 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
     const sx = boss.screenX + wx;
     const sy = boss.screenY + wy;
-    if (boss.defeated) {
-      // fade out + tilt as he falls
-      const k = Math.min(1, boss.defeatT / 1.6);
+    // Boss-defeat explosion rings: drawn at the boss's spawn point (anchored
+    // to where he was when he died — sx/sy at defeat moment). We use the
+    // current sx/sy approximately, since the boss only just started moving.
+    for (const ex of r.bossExplosions) {
+      const k = ex.t / ex.dur;
+      const inv = Math.max(0, 1 - k);
+      const baseX = sx;
+      const baseY = sy;
       ctx.save();
-      ctx.translate(sx, sy + k * 80);
-      ctx.rotate(k * 0.6);
-      ctx.globalAlpha = 1 - k;
+      // bright flash core
+      const flashA = Math.max(0, 1 - k * 3);
+      if (flashA > 0) {
+        ctx.globalAlpha = flashA;
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath(); ctx.arc(baseX, baseY, 40 + k * 80, 0, Math.PI * 2); ctx.fill();
+      }
+      // expanding rings (multi-color)
+      ctx.globalAlpha = inv;
+      const ringColors = ["#ffffff", "#fff34a", "#ff7a1a", "#f5234c"];
+      for (let i = 0; i < ringColors.length; i++) {
+        const rad = 30 + k * (220 + i * 40);
+        ctx.strokeStyle = ringColors[i];
+        ctx.lineWidth = 6 * inv;
+        ctx.shadowColor = ringColors[i];
+        ctx.shadowBlur = 16 * inv;
+        ctx.beginPath();
+        ctx.arc(baseX, baseY, rad, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.shadowBlur = 0;
+      // radial spokes
+      ctx.strokeStyle = "#fff34a";
+      ctx.lineWidth = 3 * inv;
+      const spokes = 16;
+      for (let i = 0; i < spokes; i++) {
+        const ang = (i / spokes) * Math.PI * 2 + k * 2;
+        const r0 = 40 + k * 60;
+        const r1 = 80 + k * 220;
+        ctx.beginPath();
+        ctx.moveTo(baseX + Math.cos(ang) * r0, baseY + Math.sin(ang) * r0);
+        ctx.lineTo(baseX + Math.cos(ang) * r1, baseY + Math.sin(ang) * r1);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+    if (boss.defeated) {
+      // Retreat animation: knight rockets up-and-right with a wobble + tilt.
+      const t = boss.defeatT;
+      const wob = Math.sin(t * 22) * 6 * Math.max(0, 1 - t / 3.2);
+      const tilt = -0.35 + Math.sin(t * 14) * 0.25; // shaking/tilting in fear
+      const rx = sx + boss.retreatX;
+      const ry = sy + boss.retreatY + wob;
+      // fade only at the very end so retreat stays readable
+      const fade = t < 2.6 ? 1 : Math.max(0, 1 - (t - 2.6) / 0.6);
+      ctx.save();
+      ctx.translate(rx, ry);
+      ctx.rotate(tilt);
+      ctx.globalAlpha = fade;
       drawBossSpriteAt(ctx, 0, 0, drawW, drawH, 1, false, false);
       ctx.restore();
     } else {
       drawBossSpriteAt(ctx, sx, sy, drawW, drawH, 1, boss.hitFlash > 0.05, vuln);
     }
-    // HP pips
-    const pipY = sy + drawH / 2 + 14;
-    const pipW = 18, pipGap = 6;
-    const totalW = boss.maxHp * pipW + (boss.maxHp - 1) * pipGap;
-    let px = sx - totalW / 2;
-    for (let i = 0; i < boss.maxHp; i++) {
-      ctx.save();
-      ctx.fillStyle = i < boss.hp ? "#f5234c" : "rgba(0,0,0,0.2)";
-      ctx.strokeStyle = INK;
-      ctx.lineWidth = 1.5;
-      ctx.fillRect(px, pipY, pipW, 8);
-      ctx.strokeRect(px, pipY, pipW, 8);
-      ctx.restore();
-      px += pipW + pipGap;
+    // HP pips (hide during defeat retreat)
+    if (!boss.defeated) {
+      const pipY = sy + drawH / 2 + 14;
+      const pipW = 18, pipGap = 6;
+      const totalW = boss.maxHp * pipW + (boss.maxHp - 1) * pipGap;
+      let px = sx - totalW / 2;
+      for (let i = 0; i < boss.maxHp; i++) {
+        ctx.save();
+        ctx.fillStyle = i < boss.hp ? "#f5234c" : "rgba(0,0,0,0.2)";
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = 1.5;
+        ctx.fillRect(px, pipY, pipW, 8);
+        ctx.strokeRect(px, pipY, pipW, 8);
+        ctx.restore();
+        px += pipW + pipGap;
+      }
     }
     // "VULNERABLE!" hint when worn-out
-    if (boss.worn > 0) {
+    if (boss.worn > 0 && !boss.defeated) {
       ctx.save();
       ctx.font = "bold 14px monospace";
       ctx.fillStyle = "#fff34a";
@@ -2754,8 +2934,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       ctx.lineWidth = 3;
       ctx.textAlign = "center";
       const txt = "DASH!";
-      ctx.strokeText(txt, sx, pipY + 28);
-      ctx.fillText(txt, sx, pipY + 28);
+      const ty = sy + drawH / 2 + 50;
+      ctx.strokeText(txt, sx, ty);
+      ctx.fillText(txt, sx, ty);
       ctx.restore();
     }
   }
