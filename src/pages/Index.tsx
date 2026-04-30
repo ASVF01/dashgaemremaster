@@ -144,7 +144,11 @@ const Index = () => {
     setScreen("menu");
   }, []);
 
-  const currentLevel = LEVELS.find((l) => l.id === levelId);
+  // Boss death cutscene → restore sfx and head back to the main menu.
+  const finishDeathCutscene = useCallback(() => {
+    setSfxMuted(false);
+    setScreen("menu");
+  }, []);
   // next non-hidden level after the current one (used for "NEXT LEVEL" button)
   const visibleLevels = LEVELS.filter((l) => !l.hidden);
   const currentIdx = visibleLevels.findIndex((l) => l.id === levelId);
