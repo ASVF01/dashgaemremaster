@@ -341,7 +341,7 @@ function ToggleRow({ label, desc, value, onChange }: { label: string; desc: stri
       </div>
       <div className="col-span-12 sm:col-span-4 flex sm:justify-end">
         <button
-          onClick={() => onChange(!value)}
+          onClick={() => { sfx.menuClick(); onChange(!value); }}
           className={[
             "scribble-border font-marker text-lg px-4 py-1.5 transition-transform hover:-rotate-2",
             value ? "bg-ink text-paper" : "bg-paper text-ink",
