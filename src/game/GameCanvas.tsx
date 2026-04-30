@@ -1622,19 +1622,41 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
     // smooth fade-in of the black backdrop
     const bgT = starmanFx ? Math.min(1, (starElapsed - 3.20) / 0.6) : 0;
-    // paper bg (or black during starman fx, or OLED black post-impact for som som)
-    if (postImpact) {
+    const isBossLevel = levelIdRef.current === "roaring-knight";
+    // paper bg (or black during starman fx, or OLED black post-impact for som som,
+    // or the boss-level cyan-flame backdrop)
+    if (isBossLevel) {
+      // Solid black under the bg image, then draw the image stretched/cover.
       ctx.fillStyle = "#000";
-    } else if (bgT >= 1) {
-      ctx.fillStyle = "#000";
-    } else if (bgT > 0) {
-      ctx.fillStyle = "#f0ead6";
       ctx.fillRect(0, 0, w, h);
-      ctx.fillStyle = `rgba(0,0,0,${bgT})`;
+      if (bossBgImg.complete && bossBgImg.naturalWidth) {
+        ctx.save();
+        ctx.imageSmoothingEnabled = false;
+        // cover-fit: scale image to fill the screen while preserving aspect
+        const ir = bossBgImg.naturalWidth / bossBgImg.naturalHeight;
+        const sr = w / h;
+        let dw = w, dh = h;
+        if (ir > sr) { dh = h; dw = h * ir; } else { dw = w; dh = w / ir; }
+        const dx = (w - dw) / 2;
+        const dy = (h - dh) / 2;
+        ctx.globalAlpha = 0.95;
+        ctx.drawImage(bossBgImg, dx, dy, dw, dh);
+        ctx.restore();
+      }
     } else {
-      ctx.fillStyle = "#f0ead6";
+      if (postImpact) {
+        ctx.fillStyle = "#000";
+      } else if (bgT >= 1) {
+        ctx.fillStyle = "#000";
+      } else if (bgT > 0) {
+        ctx.fillStyle = "#f0ead6";
+        ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = `rgba(0,0,0,${bgT})`;
+      } else {
+        ctx.fillStyle = "#f0ead6";
+      }
+      ctx.fillRect(0, 0, w, h);
     }
-    ctx.fillRect(0, 0, w, h);
 
     // SOM SOM: small persistent shake after the impact (light, ongoing)
     if (postImpact) {
