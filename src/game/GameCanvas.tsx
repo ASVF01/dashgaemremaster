@@ -62,12 +62,18 @@ function makeBoss() {
     attackTimer: 2.0,         // grace period before first slash
     attacksRemaining: 3,      // slashes per burst
     worn: 0,                  // vulnerable window
+    wornWorldX: 0,            // pinned world X while staggered (un-sticks from camera)
+    wornAnchored: false,
     hitFlash: 0,
     shakeT: 0,
     afterTimer: 0,
-    afterimages: [] as { sx: number; sy: number; life: number; maxLife: number; flipped: boolean }[],
-    warnings: [] as { x1: number; y1: number; x2: number; y2: number; t: number; dur: number; fired: boolean }[],
-    slashes: [] as { x1: number; y1: number; x2: number; y2: number; t: number; dur: number; hit: boolean }[],
+    // afterimages drift right in screen-space and ignore world camera
+    afterimages: [] as { sx: number; sy: number; vx: number; life: number; maxLife: number; flipped: boolean }[],
+    // warnings: spinning red lines that re-aim toward player while spinning,
+    // then lock in their final angle and fire a white slash.
+    warnings: [] as { t: number; dur: number; fired: boolean; angle: number; len: number }[],
+    // slashes: re-aimed every frame from boss origin toward player while alive
+    slashes: [] as { angle: number; len: number; t: number; dur: number; hit: boolean }[],
     defeated: false,
     defeatT: 0,
   };
@@ -259,14 +265,17 @@ interface Boss {
   attackTimer: number; // counts down to next attack burst
   attacksRemaining: number; // attacks left in current burst before "worn out"
   worn: number; // seconds remaining of "worn out" / vulnerable window
+  wornWorldX: number; // pinned world X while staggered (un-sticks from camera)
+  wornAnchored: boolean;
   hitFlash: number; // 0..1 white flash overlay on the sprite
   shakeT: number; // residual shake time (own little wiggle on hit)
-  // afterimages (screen-space, ignore camera)
+  // afterimages (screen-space, ignore camera) — drift right via vx
   afterTimer: number;
-  afterimages: { sx: number; sy: number; life: number; maxLife: number; flipped: boolean }[];
-  // active slashes (world-space) and incoming warning lines
-  warnings: { x1: number; y1: number; x2: number; y2: number; t: number; dur: number; fired: boolean }[];
-  slashes: { x1: number; y1: number; x2: number; y2: number; t: number; dur: number; hit: boolean }[];
+  afterimages: { sx: number; sy: number; vx: number; life: number; maxLife: number; flipped: boolean }[];
+  // warnings: spinning red lines that re-aim while spinning, then fire a slash
+  warnings: { t: number; dur: number; fired: boolean; angle: number; len: number }[];
+  // slashes: re-aimed every frame from boss origin toward player
+  slashes: { angle: number; len: number; t: number; dur: number; hit: boolean }[];
   defeated: boolean;
   defeatT: number;
 }
@@ -1988,7 +1997,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
 
     // boss world-space FX (warnings + slashes)
-    if (r.boss) drawBossWorldFx(ctx, r.boss);
+    if (r.boss) drawBossWorldFx(ctx, r, r.boss);
     drawGoal(ctx, r.level.goal.x, r.level.goal.y, r.level.goal.w, r.level.goal.h, r.time);
 
     // afterimages — draw before player so player sits on top
@@ -2162,45 +2171,55 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   }
 
   // ----- BOSS: Roaring Knight -----
-  function bossScreenAnchor(boss: Boss, screenW: number) {
+  // Anchor returns world-space draw size and updates `boss.screenX/Y` (screen-space).
+  // Normally camera-locked (top-right). When staggered (`worn > 0`), the boss
+  // un-sticks: we pin a world X at stagger time and convert it back to screen X
+  // so the camera can scroll past him.
+  function bossScreenAnchor(r: GameRefs, boss: Boss, screenW: number) {
     const margin = 40;
     const drawW = KNIGHT_DRAW_H * (knightImg.naturalWidth && knightImg.naturalHeight
       ? knightImg.naturalWidth / knightImg.naturalHeight : 1);
-    const baseX = screenW - margin - drawW / 2;
+    const cameraBaseX = screenW - margin - drawW / 2;
     const baseY = margin + KNIGHT_DRAW_H / 2;
     const hover = Math.sin(boss.hoverPhase) * 12;
-    // When staggered ("worn"), drop way down so the player can actually dash into him.
-    // Smoothly ease toward a low Y while vulnerable, then return up.
-    const wornTarget = 360; // low enough for ground-level reach
-    const baseTarget = baseY + hover;
+
     const wantLow = boss.worn > 0 && !boss.defeated;
-    const targetY = wantLow ? wornTarget + Math.sin(boss.hoverPhase) * 4 : baseTarget;
+    if (wantLow) {
+      // Pin world X at the moment of stagger so he no longer follows the camera.
+      if (!boss.wornAnchored) {
+        boss.wornWorldX = r.cameraX + (boss.screenX || cameraBaseX);
+        boss.wornAnchored = true;
+      }
+    } else {
+      boss.wornAnchored = false;
+    }
+
+    const targetScreenX = wantLow ? boss.wornWorldX - r.cameraX : cameraBaseX;
+    // Floating up-and-down (extra bob while staggered low).
+    const wornTargetY = 360 + Math.sin(boss.hoverPhase * 1.4) * 12;
+    const baseTargetY = baseY + hover;
+    const targetY = wantLow ? wornTargetY : baseTargetY;
+
     if (boss.screenY === 0) boss.screenY = targetY;
+    if (boss.screenX === 0) boss.screenX = targetScreenX;
     boss.screenY += (targetY - boss.screenY) * 0.12;
-    boss.screenX = baseX;
+    boss.screenX = wantLow ? boss.screenX + (targetScreenX - boss.screenX) * 0.18 : targetScreenX;
     return { drawW, drawH: KNIGHT_DRAW_H };
   }
 
-  function spawnBossSlash(r: GameRefs, boss: Boss) {
-    // Long thin beam-slash that originates from the boss and passes through
-    // the player's position, extending well past on the far side — matches
-    // the Deltarune reference (knight slashes a line across the screen).
+  function spawnBossWarning(r: GameRefs, boss: Boss) {
+    // Spinning red telegraph that re-aims toward the player while spinning,
+    // then locks in and fires a white slash. Length is fixed (long beam).
     const p = r.player;
     const bossWorldX = r.cameraX + boss.screenX;
     const bossWorldY = boss.screenY;
-    const px = p.x + p.w / 2 + (Math.random() - 0.5) * 30;
-    const py = p.y + p.h / 2 + (Math.random() - 0.5) * 24;
-    const dx = px - bossWorldX;
-    const dy = py - bossWorldY;
-    const len = Math.hypot(dx, dy) || 1;
-    const nx = dx / len, ny = dy / len;
-    const reach = 1800;
+    const dx = p.x + p.w / 2 - bossWorldX;
+    const dy = p.y + p.h / 2 - bossWorldY;
+    const angle = Math.atan2(dy, dx);
     boss.warnings.push({
-      x1: bossWorldX,
-      y1: bossWorldY,
-      x2: bossWorldX + nx * reach,
-      y2: bossWorldY + ny * reach,
       t: 0, dur: 0.5, fired: false,
+      angle,
+      len: 1800,
     });
   }
 
@@ -2209,16 +2228,23 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     boss.hoverPhase += dt * 2.2;
     if (boss.hitFlash > 0) boss.hitFlash = Math.max(0, boss.hitFlash - dt * 4);
     if (boss.shakeT > 0) boss.shakeT = Math.max(0, boss.shakeT - dt);
-    bossScreenAnchor(boss, screenW);
+    bossScreenAnchor(r, boss, screenW);
 
-    // afterimages — screen-space, every ~30ms, life 0.2s
+    // afterimages — screen-space, drift right, ignore world camera.
     boss.afterTimer -= dt;
     if (boss.afterTimer <= 0 && !boss.defeated) {
       boss.afterTimer = 0.03;
-      boss.afterimages.push({ sx: boss.screenX, sy: boss.screenY, life: 0.2, maxLife: 0.2, flipped: false });
+      boss.afterimages.push({
+        sx: boss.screenX, sy: boss.screenY,
+        vx: 90, // px/sec drift to the right (screen-space)
+        life: 0.2, maxLife: 0.2, flipped: false,
+      });
       if (boss.afterimages.length > 12) boss.afterimages.splice(0, boss.afterimages.length - 12);
     }
-    for (const ai of boss.afterimages) ai.life -= dt;
+    for (const ai of boss.afterimages) {
+      ai.life -= dt;
+      ai.sx += ai.vx * dt;
+    }
     boss.afterimages = boss.afterimages.filter((a) => a.life > 0);
 
     if (boss.defeated) {
@@ -2238,46 +2264,64 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     if (boss.worn > 0) {
       boss.worn -= dt;
       if (boss.worn <= 0) {
-        // back to attacking
         boss.attacksRemaining = 3;
         boss.attackTimer = 1.0;
       }
     } else {
       boss.attackTimer -= dt;
       if (boss.attackTimer <= 0 && boss.attacksRemaining > 0) {
-        spawnBossSlash(r, boss);
+        spawnBossWarning(r, boss);
         boss.attacksRemaining -= 1;
         boss.attackTimer = 0.85;
         if (boss.attacksRemaining <= 0) {
-          // burst done — vulnerable window
           boss.worn = 2.6;
         }
       }
     }
 
-    // Update warnings → spawn slashes
+    // Update warnings: spin + re-aim toward player while spinning, then fire slash.
+    const p = r.player;
+    const pcx = p.x + p.w / 2;
+    const pcy = p.y + p.h / 2;
     for (const wn of boss.warnings) {
       wn.t += dt;
+      // continuously steer the angle toward the player so the red line "tracks" them
+      const bossWX = r.cameraX + boss.screenX;
+      const bossWY = boss.screenY;
+      const targetAngle = Math.atan2(pcy - bossWY, pcx - bossWX);
+      // shortest-arc lerp
+      let diff = ((targetAngle - wn.angle + Math.PI) % (Math.PI * 2)) - Math.PI;
+      if (diff < -Math.PI) diff += Math.PI * 2;
+      wn.angle += diff * Math.min(1, dt * 9);
       if (!wn.fired && wn.t >= wn.dur) {
         wn.fired = true;
-        boss.slashes.push({ x1: wn.x1, y1: wn.y1, x2: wn.x2, y2: wn.y2, t: 0, dur: 0.2, hit: false });
+        boss.slashes.push({ angle: wn.angle, len: wn.len, t: 0, dur: 0.2, hit: false });
         sfx.slashShing();
       }
     }
     boss.warnings = boss.warnings.filter((w) => !w.fired);
 
-    // Update slashes — collide with player unless parrying / iframes
+    // Update slashes — re-aim to follow the player every frame ("stay on the player").
     for (const sl of boss.slashes) {
       sl.t += dt;
+      const bossWX = r.cameraX + boss.screenX;
+      const bossWY = boss.screenY;
+      const targetAngle = Math.atan2(pcy - bossWY, pcx - bossWX);
+      let diff = ((targetAngle - sl.angle + Math.PI) % (Math.PI * 2)) - Math.PI;
+      if (diff < -Math.PI) diff += Math.PI * 2;
+      // tighter tracking on active slash so it sticks on player
+      sl.angle += diff * Math.min(1, dt * 14);
       if (!sl.hit) {
-        const p = r.player;
-        if (segRectOverlap(sl.x1, sl.y1, sl.x2, sl.y2, p.x, p.y, p.w, p.h)) {
+        const x1 = bossWX, y1 = bossWY;
+        const x2 = bossWX + Math.cos(sl.angle) * sl.len;
+        const y2 = bossWY + Math.sin(sl.angle) * sl.len;
+        if (segRectOverlap(x1, y1, x2, y2, p.x, p.y, p.w, p.h)) {
           if (p.parrying > 0) {
             sl.hit = true;
-            parrySuccess(r, (sl.x1 + sl.x2) / 2, (sl.y1 + sl.y2) / 2);
+            parrySuccess(r, (x1 + x2) / 2, (y1 + y2) / 2);
           } else if (p.invuln <= 0 && p.alive) {
             sl.hit = true;
-            damage(r, (sl.x1 + sl.x2) / 2, (sl.y1 + sl.y2) / 2);
+            damage(r, (x1 + x2) / 2, (y1 + y2) / 2);
           }
         }
       }
@@ -2286,9 +2330,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
     // Player dash hit on boss — only when worn-out (vulnerable)
     if (boss.worn > 0 && r.player.dashTime > 0 && r.player.alive) {
-      const p = r.player;
-      const { drawW, drawH } = bossScreenAnchor(boss, screenW);
-      // boss hitbox in world space (anchored to camera)
+      const { drawW, drawH } = bossScreenAnchor(r, boss, screenW);
       const bx = r.cameraX + boss.screenX - drawW * 0.35;
       const by = boss.screenY - drawH * 0.4;
       const bw = drawW * 0.7;
@@ -2297,7 +2339,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         boss.hp -= 1;
         boss.hitFlash = 1;
         boss.shakeT = 0.35;
-        boss.worn = 0; // reset: he goes back to attacking
+        boss.worn = 0;
         boss.attacksRemaining = 3;
         boss.attackTimer = 1.6;
         r.shake = Math.max(r.shake, 0.5);
@@ -2305,7 +2347,6 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         r.score += 500;
         burst(r, bx + bw / 2, by + bh / 2, "#fff34a", 22, 360);
         sfx.bossHurt();
-        // bounce player back so they can't multi-hit on one dash
         p.vx = -p.facing * 380;
         p.vy = -260;
         p.invuln = Math.max(p.invuln, 0.4);
@@ -2331,49 +2372,57 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     return false;
   }
 
-  function drawBossWorldFx(ctx: CanvasRenderingContext2D, boss: Boss) {
-    // Thin red warning line — clean, no glow, steady alpha (matches reference).
+  function drawBossWorldFx(ctx: CanvasRenderingContext2D, r: GameRefs, boss: Boss) {
+    const bossWX = r.cameraX + boss.screenX;
+    const bossWY = boss.screenY;
+    // Red telegraph — spins (re-aimed in update) and starts THICK then thins out
+    // over its 0.5s life, matching the reference gif.
     for (const wn of boss.warnings) {
+      const k = Math.min(1, wn.t / wn.dur); // 0 → 1
+      // Thick at spawn (~6px), thins down to ~1.2px as it locks on.
+      const thickness = Math.max(1.2, 6 * (1 - k * 0.85));
+      const alpha = 0.55 + 0.4 * (1 - k); // a touch brighter at start
+      const x2 = bossWX + Math.cos(wn.angle) * wn.len;
+      const y2 = bossWY + Math.sin(wn.angle) * wn.len;
       ctx.save();
-      ctx.globalAlpha = 0.9;
+      ctx.globalAlpha = alpha;
       ctx.strokeStyle = "#ff1f3a";
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = thickness;
       ctx.lineCap = "butt";
       ctx.beginPath();
-      ctx.moveTo(wn.x1, wn.y1);
-      ctx.lineTo(wn.x2, wn.y2);
+      ctx.moveTo(bossWX, bossWY);
+      ctx.lineTo(x2, y2);
       ctx.stroke();
       ctx.restore();
     }
-    // White slash — starts thin (~3px) and rapidly thins to a hair, with a
-    // brief glow on the snap. Same path as the warning.
+    // White slash — slightly thicker (~5px), thins out over 0.2s with brief glow.
     for (const sl of boss.slashes) {
-      const k = Math.min(1, sl.t / sl.dur); // 0 → 1
-      const thickness = Math.max(0.3, 3 * (1 - k));
+      const k = Math.min(1, sl.t / sl.dur);
+      const thickness = Math.max(0.4, 5 * (1 - k));
       const alpha = 1 - k * 0.5;
+      const x2 = bossWX + Math.cos(sl.angle) * sl.len;
+      const y2 = bossWY + Math.sin(sl.angle) * sl.len;
       ctx.save();
       ctx.lineCap = "butt";
-      // soft outer glow only at the start
       const glow = Math.max(0, 1 - k * 3);
       if (glow > 0) {
         ctx.globalAlpha = 0.45 * glow;
         ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = thickness + 4 * glow;
+        ctx.lineWidth = thickness + 5 * glow;
         ctx.shadowColor = "#ffffff";
-        ctx.shadowBlur = 12 * glow;
+        ctx.shadowBlur = 14 * glow;
         ctx.beginPath();
-        ctx.moveTo(sl.x1, sl.y1);
-        ctx.lineTo(sl.x2, sl.y2);
+        ctx.moveTo(bossWX, bossWY);
+        ctx.lineTo(x2, y2);
         ctx.stroke();
         ctx.shadowBlur = 0;
       }
-      // crisp white core that thins out
       ctx.globalAlpha = alpha;
       ctx.strokeStyle = "#ffffff";
       ctx.lineWidth = thickness;
       ctx.beginPath();
-      ctx.moveTo(sl.x1, sl.y1);
-      ctx.lineTo(sl.x2, sl.y2);
+      ctx.moveTo(bossWX, bossWY);
+      ctx.lineTo(x2, y2);
       ctx.stroke();
       ctx.restore();
     }
@@ -2396,7 +2445,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   }
 
   function drawBossScreen(ctx: CanvasRenderingContext2D, r: GameRefs, boss: Boss, screenW: number) {
-    const { drawW, drawH } = bossScreenAnchor(boss, screenW);
+    const { drawW, drawH } = bossScreenAnchor(r, boss, screenW);
     // afterimages (screen-space, ignore world camera)
     for (const ai of boss.afterimages) {
       const t = ai.life / ai.maxLife; // 1 → 0
