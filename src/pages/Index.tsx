@@ -180,6 +180,13 @@ const Index = () => {
   // re-enter "playing" so we know to leave the BGM alone on a death-retry.
   const cameFromDeathRef = useRef(false);
   useEffect(() => {
+    // MARATHON: Index owns the starman BGM and keeps it playing across
+    // every sub-level. Skip ALL per-level BGM management while it's active
+    // so the rain cinematic / lowpass / track-switch never re-fires.
+    // (We still allow menu music to take over once the user backs out.)
+    if (marathonStep != null && (screen === "playing" || screen === "loading" || screen === "dead")) {
+      return;
+    }
     // Hold off menu BGM while the intro card is on screen — the intro's
     // fade-out triggers playMenuBgmFadeIn so the music swells in with it.
     if (screen === "menu" && introPhase !== "done" && introPhase !== "out") return;
@@ -208,7 +215,7 @@ const Index = () => {
     else if (screen === "dead") { cameFromDeathRef.current = true; return; }
     else if (screen === "win") return;
     else stopBgm(0.35);
-  }, [screen, levelId, introPhase]);
+  }, [screen, levelId, introPhase, marathonStep]);
 
   // Silence sfx ONLY during the intro card. Menu has its own click sfx.
   useEffect(() => {
