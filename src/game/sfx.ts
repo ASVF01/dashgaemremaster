@@ -466,6 +466,14 @@ export const sfx = {
     celestialShimmer({ base: 2000, count: 2, intensity: 1.0, spread: 0.04 });
     thunderBoom({ intensity: 1.0, rumbleDur: 0.7 });
   },
+  spawnWhoosh() {
+    // quick airy "swoosh" with a sparkly upward chime — for the invboi-star spawn
+    noise(0.18, 0.22, 800, 6500);
+    noise(0.10, 0.14, 2400, 9500, 0.02);
+    tone({ freq: 320, to: 1400, dur: 0.18, type: "triangle", vol: 0.18, attack: 0.005, release: 0.10 });
+    tone({ freq: 1200, to: 2200, dur: 0.16, type: "sine", vol: 0.14, attack: 0.005, release: 0.10, delay: 0.04 });
+    tone({ freq: 1800, to: 3000, dur: 0.14, type: "sine", vol: 0.10, attack: 0.005, release: 0.10, delay: 0.08 });
+  },
   meow() {
     // cute lil kitten "mrow" — two pitched sweeps, second a bit higher
     tone({ freq: 520, to: 780, dur: 0.14, type: "triangle", vol: 0.22, attack: 0.02, release: 0.06 });
