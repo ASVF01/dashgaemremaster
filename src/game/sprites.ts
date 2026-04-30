@@ -16,8 +16,10 @@ import runFast4 from "@/assets/sprites/run_fast_4.png";
 import superDash1 from "@/assets/sprites/super_dash_1.png";
 import superDash2 from "@/assets/sprites/super_dash_2.png";
 import superDash3 from "@/assets/sprites/super_dash_3.png";
+import beamAtkUrl from "@/assets/sprites/beam_atk.png";
+import beamAtkJumpUrl from "@/assets/sprites/beam_atk_jump.png";
 
-export type SpriteState = "idle" | "run" | "runFast" | "jump" | "fall" | "slide" | "dive" | "dash" | "skid" | "superDash" | "hurt";
+export type SpriteState = "idle" | "run" | "runFast" | "jump" | "fall" | "slide" | "dive" | "dash" | "skid" | "superDash" | "hurt" | "beam" | "beamJump";
 
 const URLS: Partial<Record<SpriteState, string>> = {
   idle: standUrl,
@@ -29,6 +31,8 @@ const URLS: Partial<Record<SpriteState, string>> = {
   dash: dashUrl,
   skid: skidUrl,
   hurt: hurtUrl,
+  beam: beamAtkUrl,
+  beamJump: beamAtkJumpUrl,
 };
 
 // Animation cycles — array of frame URLs, played in order.
@@ -98,6 +102,8 @@ export function getSprite(state: SpriteState, frame = 0): HTMLImageElement | nul
     state === "skid"  ? ["skid", "run", "idle"] :
     state === "hurt"  ? ["hurt", "idle"] :
     state === "jump"  ? ["jump", "idle"] :
+    state === "beam"  ? ["beam", "idle"] :
+    state === "beamJump" ? ["beamJump", "beam", "jump", "idle"] :
     state === "dash"  ? ["dash", "run", "idle"] :
     state === "run"   ? ["run", "idle"] :
                         ["idle"];

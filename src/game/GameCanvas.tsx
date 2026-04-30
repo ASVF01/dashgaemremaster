@@ -207,6 +207,9 @@ interface Player {
   starman: boolean; // "invboi" cheat — rainbow + star sparkles + custom BGM
   somSom: boolean; // invboi while in just-run-bro — cyan variant
   starTimer: number; // timer for emitting star particles
+  beamTime: number; // remaining seconds the beam pose is held
+  beamCooldown: number; // small fire-rate cap on beams
+  beamGrounded: boolean; // whether the beam was fired from ground (pose select)
 }
 
 interface Afterimage {
@@ -263,6 +266,8 @@ interface GameRefs {
   heartbeatTimer: number;
   // Roaring Knight boss state (only present in the boss level).
   boss: Boss | null;
+  // Player beams (invboi vs boss only).
+  beams: { x: number; y: number; vx: number; vy: number; life: number; maxLife: number; hit: boolean }[];
 }
 
 // Boss is rendered in screen-space (top-right). World-space slashes attack the player.
@@ -370,6 +375,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         starman: false,
         somSom: false,
         starTimer: 0,
+        beamTime: 0,
+        beamCooldown: 0,
+        beamGrounded: true,
       },
       projectiles: [],
       particles: [],
@@ -405,6 +413,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       somSomRain: null,
       heartbeatTimer: 0,
       boss: levelId === "roaring-knight" ? makeBoss() : null,
+      beams: [],
     };
     // Any reset/level change cancels the starman shimmer too.
     sfx.shineStop(); sfx.rainStop(); sfx.slideStop();
@@ -477,6 +486,13 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         unlockAudio();
         const r = refs.current;
         const p = r.player;
+        // INVBOI vs BOSS: replace dash with a beam shot.
+        if (p.starman && r.boss && !r.boss.defeated && p.alive) {
+          if (p.beamCooldown <= 0 && !e.repeat) {
+            fireBeam(r, p);
+          }
+          return;
+        }
         // SUPER DASH (just-run-bro only): hold dash for increasing speed.
         // No cooldown, no normal dash sfx — just a single whoosh on press.
         if (levelIdRef.current === "just-run-bro") {
@@ -830,6 +846,28 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     sfx.mach();
   }
 
+  function fireBeam(r: GameRefs, p: Player) {
+    const speed = 1600;
+    const cx = p.x + p.w / 2;
+    const cy = p.y + p.h * 0.4;
+    const vx = p.facing * speed;
+    r.beams.push({
+      x: cx + p.facing * 18,
+      y: cy,
+      vx,
+      vy: 0,
+      life: 0,
+      maxLife: 0.6,
+      hit: false,
+    });
+    p.beamTime = 0.18;
+    p.beamGrounded = p.onGround;
+    p.beamCooldown = 0.22;
+    burst(r, cx + p.facing * 22, cy, "#ffe34a", 6, 220);
+    sfx.dash();
+    r.shake = Math.max(r.shake, 0.18);
+  }
+
   function update(r: GameRefs, dt: number, keys: Keys) {
     r.time += dt;
     const p = r.player;
@@ -949,6 +987,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // dash visual / i-frame window timer (velocity is no longer locked)
     if (p.dashTime > 0) p.dashTime -= dt;
     if (p.dashCooldown > 0) p.dashCooldown -= dt;
+    if (p.beamTime > 0) p.beamTime -= dt;
+    if (p.beamCooldown > 0) p.beamCooldown -= dt;
 
     // SUPER DASH (just-run-bro): hold dash to ramp up speed in facing dir.
     if (p.superDashing && p.alive) {
@@ -1326,6 +1366,47 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
     // boss
     if (r.boss) updateBoss(r, dt, size.w);
+
+    // beams (invboi vs boss)
+    if (r.beams.length) {
+      for (const beam of r.beams) {
+        if (beam.hit) continue;
+        beam.x += beam.vx * dt;
+        beam.y += beam.vy * dt;
+        beam.life += dt;
+        // hit boss
+        if (r.boss && !r.boss.defeated) {
+          const boss = r.boss;
+          const { drawW, drawH } = bossScreenAnchor(r, boss, size.w);
+          const bx = r.cameraX + boss.screenX - drawW * 0.35;
+          const by = boss.screenY - drawH * 0.4;
+          const bw = drawW * 0.7;
+          const bh = drawH * 0.8;
+          if (beam.x >= bx && beam.x <= bx + bw && beam.y >= by && beam.y <= by + bh) {
+            beam.hit = true;
+            boss.hp -= 1;
+            boss.hitFlash = 1;
+            boss.shakeT = 0.35;
+            boss.worn = 0;
+            boss.attacksRemaining = 3;
+            boss.attackTimer = 1.6;
+            r.shake = Math.max(r.shake, 0.5);
+            r.freezeFrames = Math.max(r.freezeFrames, 4);
+            r.score += 500;
+            burst(r, beam.x, beam.y, "#fff34a", 22, 360);
+            sfx.bossHurt();
+            if (boss.hp <= 0) {
+              boss.defeated = true;
+              boss.defeatT = 0;
+              r.shake = Math.max(r.shake, 1.0);
+              burst(r, bx + bw / 2, by + bh / 2, "#ffffff", 60, 520);
+              sfx.bossDefeat();
+            }
+          }
+        }
+      }
+      r.beams = r.beams.filter((b) => !b.hit && b.life < b.maxLife);
+    }
 
     // projectiles
     for (const pr of r.projectiles) {
@@ -1862,7 +1943,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         ctx.stroke();
         ctx.restore();
       }
-    }
+  }
 
 
     // starman: rainbow stars rain down (BACKGROUND layer, behind level assets)
@@ -2049,6 +2130,37 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       sketchCircle(ctx, pr.x, pr.y, pr.r, col, INK, 2, 0.8);
       // tail
       jaggedBolt(ctx, pr.x, pr.y, pr.x - pr.vx * 0.04, pr.y - pr.vy * 0.04, col, 2, 4, 4);
+    }
+
+    // player beams (invboi vs boss)
+    if (r.beams.length) {
+      ctx.save();
+      for (const beam of r.beams) {
+        const fade = 1 - beam.life / beam.maxLife;
+        const dir = Math.sign(beam.vx) || 1;
+        const tailLen = 90;
+        ctx.lineCap = "round";
+        // outer glow
+        ctx.strokeStyle = `rgba(255, 220, 60, ${0.35 * fade})`;
+        ctx.lineWidth = 14;
+        ctx.beginPath();
+        ctx.moveTo(beam.x - dir * tailLen, beam.y);
+        ctx.lineTo(beam.x + dir * 18, beam.y);
+        ctx.stroke();
+        // bright core
+        ctx.strokeStyle = `rgba(255, 255, 255, ${0.95 * fade})`;
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(beam.x - dir * tailLen, beam.y);
+        ctx.lineTo(beam.x + dir * 24, beam.y);
+        ctx.stroke();
+        // hot tip
+        ctx.fillStyle = `rgba(255, 240, 120, ${fade})`;
+        ctx.beginPath();
+        ctx.arc(beam.x + dir * 8, beam.y, 6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
     }
 
     // boss world-space FX (warnings + slashes)
@@ -2780,6 +2892,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     const machNow = machTier(speedNow);
     const state: SpriteState =
       p.hurtTimer > 0 ? "hurt" :
+      p.beamTime > 0 ? (p.beamGrounded && p.onGround ? "beam" : "beamJump") :
       p.dashTime > 0 ? "dash" :
       p.diving ? "dive" :
       p.sliding ? "slide" :
