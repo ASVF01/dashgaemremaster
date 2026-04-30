@@ -239,7 +239,7 @@ function KeybindsTab() {
                 return (
                   <button
                     key={slot}
-                    onClick={() => setCapture(isCapturing ? null : { action: a.id, slot })}
+                    onClick={() => { sfx.menuClick(); setCapture(isCapturing ? null : { action: a.id, slot }); }}
                     className={[
                       "scribble-border font-marker text-lg px-3 py-1.5 min-w-[80px] transition-transform hover:-rotate-2",
                       isCapturing
