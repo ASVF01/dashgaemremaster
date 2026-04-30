@@ -1,5 +1,14 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
+  <head>
+    <script>
+      // Apply dark mode before first paint. Default ON unless user opted out.
+      try {
+        var stored = localStorage.getItem("dark_mode");
+        var d = stored == null ? true : stored === "1";
+        document.documentElement.classList.toggle("dark", d);
+      } catch (e) {}
+    </script>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
