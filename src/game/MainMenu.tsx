@@ -388,6 +388,7 @@ const SFX_LIST: { id: string; label: string; play: () => void }[] = [
   { id: "parryStart", label: "PARRY START", play: () => sfx.parryStart() },
   { id: "parryHit",   label: "PARRY HIT",   play: () => sfx.parryHit() },
   { id: "hit",        label: "PLAYER HIT",  play: () => sfx.hit() },
+  { id: "fatalHit",   label: "FATAL HIT",   play: () => sfx.fatalHit() },
   { id: "enemyKill",  label: "ENEMY KILL",  play: () => sfx.enemyKill() },
   { id: "shoot",      label: "SHOOT",       play: () => sfx.shoot() },
   { id: "pickup",     label: "PICKUP",      play: () => sfx.pickup() },
@@ -395,12 +396,17 @@ const SFX_LIST: { id: string; label: string; play: () => void }[] = [
   { id: "die",        label: "DIE",         play: () => sfx.die() },
   { id: "meow",       label: "MEOW",        play: () => sfx.meow() },
   { id: "thunder",    label: "THUNDER",     play: () => sfx.thunder() },
+  { id: "heartbeat",  label: "HEARTBEAT",   play: () => sfx.heartbeat() },
+  { id: "slashShing", label: "SLASH SHING", play: () => sfx.slashShing() },
+  { id: "bossHurt",   label: "BOSS HURT",   play: () => sfx.bossHurt() },
+  { id: "bossDefeat", label: "BOSS DEFEAT", play: () => sfx.bossDefeat() },
 ];
 
 const SFX_LOOPS: { id: string; label: string; start: () => void; stop: () => void }[] = [
-  { id: "shine", label: "SHINE (starman)",  start: () => sfx.shineStart(), stop: () => sfx.shineStop() },
-  { id: "rain",  label: "RAIN",             start: () => sfx.rainStart(),  stop: () => sfx.rainStop()  },
-  { id: "slideLoop", label: "SLIDE LOOP",   start: () => sfx.slideStart(), stop: () => sfx.slideStop() },
+  { id: "shine",     label: "SHINE (starman)", start: () => sfx.shineStart(), stop: () => sfx.shineStop() },
+  { id: "laser",     label: "LASER BEAM",      start: () => sfx.laserStart(), stop: () => sfx.laserStop() },
+  { id: "rain",      label: "RAIN",            start: () => sfx.rainStart(),  stop: () => sfx.rainStop()  },
+  { id: "slideLoop", label: "SLIDE LOOP",      start: () => sfx.slideStart(), stop: () => sfx.slideStop() },
 ];
 
 function ExtrasTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
