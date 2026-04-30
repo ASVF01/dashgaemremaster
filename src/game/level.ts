@@ -35,7 +35,7 @@ export const LEVELS: LevelMeta[] = [
   { id: "chase",      name: "THE CHASE",  subtitle: "don't look back. parry to push it off.", difficulty: 4, par: 45 },
   { id: "speed-test", name: "??? SPEED TEST ???", subtitle: "the hallway never ends. or does it.", difficulty: 4, par: 30, hidden: true },
   { id: "just-run-bro", name: "JUST RUN BRO..", subtitle: "no obstacles. no enemies. just vibes.", difficulty: 1, par: 9999 },
-  { id: "meet-invboi", name: "MEET INVBOI", subtitle: "say hi to a new friend :)", difficulty: 1, par: 60 },
+  { id: "meet-invboi", name: "CELESTIAL ENCOUNTER", subtitle: "say hi to a new friend :)", difficulty: 1, par: 60 },
   { id: "roaring-knight", name: "THE ROARING KNIGHT", subtitle: "dodge. parry. dash to strike.", difficulty: 4, par: 120 },
   { id: "aftermath-1", name: "ASHEN MARGINS",  subtitle: "after the knight, the ink keeps bleeding.", difficulty: 4, par: 60 },
   { id: "aftermath-2", name: "TORN PAGES",     subtitle: "shooters in the gaps. mind the rips.",     difficulty: 4, par: 65 },
