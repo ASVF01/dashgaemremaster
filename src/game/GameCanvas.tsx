@@ -704,7 +704,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     boss.retreatY = 0;
     boss.retreatVx = 220;
     boss.retreatVy = -160;
-    r.freezeTime = Math.max(r.freezeTime, 0.5);
+    r.freezeTime = Math.max(r.freezeTime, 1.5);
     r.shake = Math.max(r.shake, 1.2);
     r.bossExplosions.push({ x: 0, y: 0, t: 0, dur: 1.2 }); // x/y unused; ring tracks boss
     burst(r, cx, cy, "#ffffff", 50, 540);
