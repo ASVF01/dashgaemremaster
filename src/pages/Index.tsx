@@ -162,6 +162,14 @@ const Index = () => {
     else stopBgm(0.35);
   }, [screen, levelId, introPhase]);
 
+  // Silence ALL sfx while on the main menu (or during the intro card).
+  // Re-enable as soon as we leave the menu.
+  useEffect(() => {
+    const onMenu = screen === "menu" || introPhase !== "done";
+    setSfxMuted(onMenu);
+    return () => { setSfxMuted(false); };
+  }, [screen, introPhase]);
+
   const startLevel = (id: LevelId) => {
     setLevelId(id);
     setResetKey((k) => k + 1);
