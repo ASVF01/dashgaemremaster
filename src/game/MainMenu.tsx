@@ -90,38 +90,104 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
 function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {LEVELS.filter((l) => !l.hidden).map((lvl) => (
-        <button
-          key={lvl.id}
-          onClick={() => onPlay(lvl.id)}
-          onMouseEnter={() => sfx.menuHover()}
-          className="scribble-border bg-paper p-4 text-left hover:-rotate-1 hover:bg-[hsl(var(--accent))/0.15] transition-transform group"
-        >
-          <div className="flex items-baseline justify-between mb-1">
-            <span className="font-marker text-3xl text-ink">{lvl.name}</span>
-            <span className="font-bungee text-base text-ink/60">PAR {lvl.par}s</span>
-          </div>
-          <div className="font-scribble text-xl text-ink/80">{lvl.subtitle}</div>
-          <div className="mt-2 flex items-center gap-2">
-            <span className="font-scribble text-base text-ink/60">difficulty</span>
-            {Array.from({ length: 4 }).map((_, i) => (
-              <span
-                key={i}
+      {LEVELS.filter((l) => !l.hidden).map((lvl) => {
+        const isMarathon = lvl.id === "celestial-marathon";
+        return (
+          <button
+            key={lvl.id}
+            onClick={() => onPlay(lvl.id)}
+            onMouseEnter={() => sfx.menuHover()}
+            className={[
+              "scribble-border p-4 text-left hover:-rotate-1 transition-transform group relative overflow-hidden",
+              isMarathon
+                ? "bg-paper marathon-rainbow"
+                : "bg-paper hover:bg-[hsl(var(--accent))/0.15]",
+            ].join(" ")}
+          >
+            {isMarathon && <MarathonStars />}
+            <div className="relative z-10">
+              <div className="flex items-baseline justify-between mb-1">
+                <span
+                  className={[
+                    "font-marker text-3xl",
+                    isMarathon ? "rainbow-text animate-jitter" : "text-ink",
+                  ].join(" ")}
+                >
+                  {lvl.name}
+                </span>
+                <span className={isMarathon ? "font-bungee text-base text-ink" : "font-bungee text-base text-ink/60"}>
+                  PAR {lvl.par}s
+                </span>
+              </div>
+              <div className={isMarathon ? "font-scribble text-xl text-ink" : "font-scribble text-xl text-ink/80"}>
+                {lvl.subtitle}
+              </div>
+              <div className="mt-2 flex items-center gap-2">
+                <span className={isMarathon ? "font-scribble text-base text-ink" : "font-scribble text-base text-ink/60"}>
+                  difficulty
+                </span>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <span
+                    key={i}
+                    className={[
+                      "inline-block w-3 h-3 scribble-border",
+                      i < lvl.difficulty ? "bg-[hsl(var(--accent))]" : "bg-paper",
+                    ].join(" ")}
+                  />
+                ))}
+              </div>
+              <div
                 className={[
-                  "inline-block w-3 h-3 scribble-border",
-                  i < lvl.difficulty ? "bg-[hsl(var(--accent))]" : "bg-paper",
+                  "mt-3 font-marker text-xl opacity-0 group-hover:opacity-100 transition-opacity",
+                  isMarathon ? "rainbow-text" : "text-[hsl(var(--accent))]",
                 ].join(" ")}
-              />
-            ))}
-          </div>
-          <div className="mt-3 font-marker text-xl text-[hsl(var(--accent))] opacity-0 group-hover:opacity-100 transition-opacity">
-            ▶ GO!!
-          </div>
-        </button>
+              >
+                ▶ GO!!
+              </div>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// Sprinkles 8 sparkly stars at random spots on the CELESTIAL MARATHON
+// button. Positions/scales/delays randomize once per mount so each menu
+// open is a slightly different constellation.
+function MarathonStars() {
+  const stars = useRef(
+    Array.from({ length: 9 }).map(() => ({
+      top: `${Math.random() * 80 + 5}%`,
+      left: `${Math.random() * 90 + 3}%`,
+      size: 10 + Math.random() * 14,
+      delay: Math.random() * 1.6,
+      dur: 1.2 + Math.random() * 1.4,
+      rot: Math.random() * 360,
+    })),
+  ).current;
+  return (
+    <div className="pointer-events-none absolute inset-0 z-0">
+      {stars.map((s, i) => (
+        <span
+          key={i}
+          className="absolute marathon-star-twinkle"
+          style={{
+            top: s.top,
+            left: s.left,
+            fontSize: s.size,
+            animationDelay: `${s.delay}s`,
+            animationDuration: `${s.dur}s`,
+            transform: `rotate(${s.rot}deg)`,
+          }}
+        >
+          ✦
+        </span>
       ))}
     </div>
   );
 }
+
 
 // ---------------- TUTORIAL TAB ----------------
 function TutorialTab({ onStartTutorial }: { onStartTutorial: () => void }) {

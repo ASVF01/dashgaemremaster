@@ -123,6 +123,34 @@
     color: transparent;
     animation: rainbow-slide 6s linear infinite;
   }
+
+  /* CELESTIAL MARATHON menu button — animated rainbow background. */
+  .marathon-rainbow {
+    background-image: linear-gradient(
+      90deg,
+      #ff004c, #ff8a00, #ffe600, #14ff5a, #00d2ff, #6a4cff, #ff4cd2, #ff004c
+    );
+    background-size: 300% 100%;
+    animation: rainbow-slide 4s linear infinite;
+  }
+
+  /* Sparkly stars sprinkled on the marathon button. */
+  @keyframes marathon-twinkle {
+    0%, 100% { opacity: 0; transform: scale(0.6) rotate(0deg); filter: drop-shadow(0 0 0 #fff); }
+    50%      { opacity: 1; transform: scale(1.15) rotate(20deg); filter: drop-shadow(0 0 6px #fff); }
+  }
+  .marathon-star-twinkle {
+    color: #fffbe0;
+    text-shadow:
+      0 0 4px #fff,
+      0 0 10px #ffe600,
+      0 0 16px #ff8a00;
+    animation-name: marathon-twinkle;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+    line-height: 1;
+    will-change: transform, opacity;
+  }
 }
 
 @layer base {

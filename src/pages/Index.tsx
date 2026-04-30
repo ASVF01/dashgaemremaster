@@ -7,7 +7,7 @@ import FpsOverlay from "@/game/FpsOverlay";
 import MainMenu from "@/game/MainMenu";
 import { LEVELS, type LevelId } from "@/game/level";
 import { useKeybinds, keyLabel, type ActionId } from "@/game/keybinds";
-import { playMenuBgm, playMenuBgmFadeIn, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor, isSameTrackAs, setBgmVolume, bgmLevelEnd, playStarmanBgm } from "@/game/bgm";
+import { playMenuBgm, playMenuBgmFadeIn, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor, isSameTrackAs, setBgmVolume, bgmLevelEnd, playMarathonBgm } from "@/game/bgm";
 import cutsceneJustRunBro from "@/assets/video/mcdonalds_sprite_2.mp4";
 import cutsceneBossDeath from "@/assets/video/boss_death_cutscene.mp4";
 import introCardImg from "@/assets/intro_card.png";
@@ -55,6 +55,10 @@ const Index = () => {
   const chaseIntroSeenKeyRef = useRef<string | null>(null);
   // Marathon: index into MARATHON_SEQUENCE, or null if not running.
   const [marathonStep, setMarathonStep] = useState<number | null>(null);
+  // Marathon speedrun timer (ms). Accumulates real-time across all sub-levels.
+  const [marathonMs, setMarathonMs] = useState(0);
+  const marathonStartRef = useRef<number | null>(null);
+  const [marathonFinalMs, setMarathonFinalMs] = useState<number | null>(null);
   const [binds] = useKeybinds();
   const [muted, setMuted] = useState(false);
   const [hasJrbBadge, setHasJrbBadge] = useState(false);
@@ -153,7 +157,11 @@ const Index = () => {
         // the starman BGM keeps playing uninterrupted.
         return;
       }
-      // All sub-levels cleared → finish the marathon.
+      // All sub-levels cleared → finish the marathon. Freeze the timer.
+      const finalMs = marathonStartRef.current != null ? performance.now() - marathonStartRef.current : marathonMs;
+      setMarathonFinalMs(finalMs);
+      setMarathonMs(finalMs);
+      marathonStartRef.current = null;
       setMarathonStep(null);
       setScreen("win");
       return;
@@ -229,6 +237,21 @@ const Index = () => {
     return () => { setSfxMuted(false); };
   }, [introPhase]);
 
+  // CELESTIAL MARATHON speedrun timer: tick the display every frame while
+  // the run is active. The actual elapsed time is always derived from
+  // marathonStartRef so a missed frame can't drift the clock.
+  useEffect(() => {
+    if (marathonStep == null) return;
+    let raf = 0;
+    const tick = () => {
+      const start = marathonStartRef.current;
+      if (start != null) setMarathonMs(performance.now() - start);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [marathonStep]);
+
   // Open the chase tutorial popup whenever we enter the chase level on the
   // playing screen (once per resetKey so retries re-show it).
   useEffect(() => {
@@ -252,17 +275,24 @@ const Index = () => {
       setResetKey((k) => k + 1);
       setInvboiIntroOpen(false); setChaseIntroOpen(false);
       setScreen("loading");
+      // Reset + start the speedrun timer when the first level appears.
+      setMarathonMs(0);
+      setMarathonFinalMs(null);
+      marathonStartRef.current = null;
       // Kick the starman track now so it's already playing when the level
       // appears. Skip the BGM "loading duck" since we want it at full vol.
       preloadBgmFor(firstId).then(() => {
-        playStarmanBgm();
+        playMarathonBgm();
         setTimeout(() => {
           setScreen((s) => (s === "loading" ? "playing" : s));
+          marathonStartRef.current = performance.now();
         }, 250);
       });
       return;
     }
     setMarathonStep(null);
+    marathonStartRef.current = null;
+    setMarathonFinalMs(null);
     setLevelId(id);
     setResetKey((k) => k + 1);
     setInvboiIntroOpen(false); setChaseIntroOpen(false);
@@ -285,10 +315,14 @@ const Index = () => {
       setMarathonStep(0);
       setLevelId(firstId);
       setScreen("loading");
+      setMarathonMs(0);
+      setMarathonFinalMs(null);
+      marathonStartRef.current = null;
       preloadBgmFor(firstId).then(() => {
-        playStarmanBgm();
+        playMarathonBgm();
         setTimeout(() => {
           setScreen((s) => (s === "loading" ? "playing" : s));
+          marathonStartRef.current = performance.now();
         }, 250);
       });
       return;
@@ -300,7 +334,14 @@ const Index = () => {
       }, 250);
     });
   };
-  const backToMenu = () => { setInvboiIntroOpen(false); setChaseIntroOpen(false); setMarathonStep(null); setScreen("menu"); };
+  const backToMenu = () => {
+    setInvboiIntroOpen(false); setChaseIntroOpen(false);
+    setMarathonStep(null);
+    marathonStartRef.current = null;
+    setMarathonFinalMs(null);
+    setMarathonMs(0);
+    setScreen("menu");
+  };
   const handleInvboiPickup = useCallback(() => setInvboiIntroOpen(true), []);
 
   // Award the "just run bro" badge and head back to the main menu.
@@ -410,6 +451,21 @@ const Index = () => {
             levelId={levelId}
           />
           {screen === "playing" && !invboiIntroOpen && !chaseIntroOpen && <Hud hud={hud} />}
+          {screen === "playing" && marathonStep != null && !invboiIntroOpen && !chaseIntroOpen && (
+            <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-20">
+              <div className="scribble-border bg-paper px-4 py-1.5 -rotate-1 flex items-center gap-3">
+                <span className="font-marker text-sm tracking-widest text-[hsl(var(--accent))]">
+                  ✦ MARATHON ✦
+                </span>
+                <span className="font-bungee text-2xl text-ink tabular-nums leading-none">
+                  {fmtMarathon(marathonMs)}
+                </span>
+                <span className="font-marker text-xs text-ink/60">
+                  {Math.min(marathonStep + 1, MARATHON_SEQUENCE.length)}/{MARATHON_SEQUENCE.length}
+                </span>
+              </div>
+            </div>
+          )}
           <FpsOverlay />
 
           {screen === "playing" && invboiIntroOpen && (
@@ -511,18 +567,27 @@ const Index = () => {
               <div className="text-center px-6">
                 <div className="font-marker text-6xl md:text-7xl text-ink mb-2 -rotate-2 inline-block">YOU DID IT</div>
                 <div className="font-marker text-3xl text-[hsl(var(--mach-3))] mb-4 animate-jitter inline-block">
-                  {currentLevel?.name} cleared
+                  {marathonFinalMs != null ? "CELESTIAL MARATHON cleared" : `${currentLevel?.name} cleared`}
                 </div>
-                <div className="grid grid-cols-2 gap-4 mb-6 max-w-md mx-auto">
-                  <div className="scribble-border bg-paper p-3">
-                    <div className="font-scribble text-lg text-ink/70">TIME</div>
-                    <div className="font-bungee text-3xl text-ink">{(finalTime / 1000).toFixed(2)}s</div>
+                {marathonFinalMs != null ? (
+                  <div className="mb-6 max-w-md mx-auto">
+                    <div className="scribble-border bg-paper p-4 -rotate-1 inline-block">
+                      <div className="font-marker text-lg text-[hsl(var(--accent))] tracking-widest">SPEEDRUN TIME</div>
+                      <div className="font-bungee text-5xl text-ink tabular-nums">{fmtMarathon(marathonFinalMs)}</div>
+                    </div>
                   </div>
-                  <div className="scribble-border bg-paper p-3">
-                    <div className="font-scribble text-lg text-ink/70">SCORE</div>
-                    <div className="font-bungee text-3xl text-[hsl(var(--accent))]">{finalScore}</div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4 mb-6 max-w-md mx-auto">
+                    <div className="scribble-border bg-paper p-3">
+                      <div className="font-scribble text-lg text-ink/70">TIME</div>
+                      <div className="font-bungee text-3xl text-ink">{(finalTime / 1000).toFixed(2)}s</div>
+                    </div>
+                    <div className="scribble-border bg-paper p-3">
+                      <div className="font-scribble text-lg text-ink/70">SCORE</div>
+                      <div className="font-bungee text-3xl text-[hsl(var(--accent))]">{finalScore}</div>
+                    </div>
                   </div>
-                </div>
+                )}
                 <div className="flex gap-3 justify-center flex-wrap">
                   <button onClick={retry} className="scribble-border bg-paper text-ink font-marker text-2xl px-6 py-3 hover:-rotate-2 transition-transform">
                     RUN IT BACK
@@ -589,6 +654,18 @@ function KeyChip({ action, label, binds }: { action: ActionId; label: string; bi
       <span className="text-ink/70">{label}</span>
     </div>
   );
+}
+
+// Format marathon ms as m:ss.cs (e.g. 4:23.71). Used by the in-run timer
+// chip and the marathon victory screen.
+function fmtMarathon(ms: number): string {
+  if (!isFinite(ms) || ms < 0) ms = 0;
+  const totalCs = Math.floor(ms / 10);
+  const cs = totalCs % 100;
+  const totalSec = Math.floor(totalCs / 100);
+  const sec = totalSec % 60;
+  const min = Math.floor(totalSec / 60);
+  return `${min}:${sec.toString().padStart(2, "0")}.${cs.toString().padStart(2, "0")}`;
 }
 
 function Overlay({ children }: { children: React.ReactNode }) {
