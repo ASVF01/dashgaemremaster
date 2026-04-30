@@ -107,6 +107,9 @@ const Index = () => {
   // re-enter "playing" so we know to leave the BGM alone on a death-retry.
   const cameFromDeathRef = useRef(false);
   useEffect(() => {
+    // Hold off menu BGM while the intro card is on screen — the intro's
+    // fade-out triggers playMenuBgmFadeIn so the music swells in with it.
+    if (screen === "menu" && introPhase !== "done" && introPhase !== "out") return;
     if (screen === "menu") playMenuBgm();
     else if (screen === "loading") {
       // handled by startLevel's preload+play sequence below
