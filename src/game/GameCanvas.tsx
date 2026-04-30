@@ -2260,26 +2260,32 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       const pulse = 1 + Math.sin(r.time * 30) * 0.04;
       ctx.save();
       ctx.lineCap = "butt";
+      // Rainbow hue cycling over time — base hue shared by all layers so the
+      // beam reads as one cohesive color that shifts smoothly.
+      const beamHue = (r.time * 220) % 360;
+      const hueHalo = beamHue;
+      const hueGlow = (beamHue + 30) % 360;
+      const hueBody = (beamHue + 60) % 360;
       // huge outer halo
-      ctx.strokeStyle = "rgba(255, 200, 60, 0.22)";
+      ctx.strokeStyle = `hsla(${hueHalo}, 100%, 55%, 0.25)`;
       ctx.lineWidth = 70 * pulse;
       ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y0); ctx.stroke();
       // outer glow
-      ctx.strokeStyle = "rgba(255, 220, 80, 0.55)";
+      ctx.strokeStyle = `hsla(${hueGlow}, 100%, 60%, 0.6)`;
       ctx.lineWidth = 42 * pulse;
       ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y0); ctx.stroke();
-      // mid yellow body
-      ctx.strokeStyle = "rgba(255, 240, 120, 0.9)";
+      // mid colored body
+      ctx.strokeStyle = `hsla(${hueBody}, 100%, 70%, 0.92)`;
       ctx.lineWidth = 22 * pulse;
       ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y0); ctx.stroke();
-      // bright white core
+      // bright white core (stays white so it always reads as "laser")
       ctx.strokeStyle = "rgba(255, 255, 255, 1)";
       ctx.lineWidth = 8 * pulse;
       ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y0); ctx.stroke();
       // muzzle burst at player
       ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
       ctx.beginPath(); ctx.arc(x0, y0, 16, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "rgba(255, 220, 80, 0.55)";
+      ctx.fillStyle = `hsla(${hueGlow}, 100%, 60%, 0.6)`;
       ctx.beginPath(); ctx.arc(x0, y0, 28, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
 
