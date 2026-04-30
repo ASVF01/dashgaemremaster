@@ -7,7 +7,7 @@ import FpsOverlay from "@/game/FpsOverlay";
 import MainMenu from "@/game/MainMenu";
 import { LEVELS, type LevelId } from "@/game/level";
 import { useKeybinds, keyLabel, type ActionId } from "@/game/keybinds";
-import { playMenuBgm, playMenuBgmFadeIn, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor, isSameTrackAs, setBgmVolume, bgmLevelEnd } from "@/game/bgm";
+import { playMenuBgm, playMenuBgmFadeIn, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor, isSameTrackAs, setBgmVolume, bgmLevelEnd, playStarmanBgm } from "@/game/bgm";
 import cutsceneJustRunBro from "@/assets/video/mcdonalds_sprite_2.mp4";
 import cutsceneBossDeath from "@/assets/video/boss_death_cutscene.mp4";
 import introCardImg from "@/assets/intro_card.png";
@@ -22,6 +22,22 @@ type Screen = "menu" | "loading" | "playing" | "dead" | "win" | "cutscene" | "de
 // the "champion play" track and lets it keep looping across transitions.
 const RESTART_BGM_ON_ENTRY: ReadonlyArray<LevelId> = ["tutorial", "chase", "just-run-bro", "roaring-knight"];
 
+// CELESTIAL MARATHON: every gameplay level chained back-to-back. Player
+// stays as invboi the whole time and the starman BGM keeps playing across
+// transitions (no rain re-cinematic).
+const MARATHON_SEQUENCE: ReadonlyArray<LevelId> = [
+  "tutorial",
+  "scribble-1",
+  "scribble-2",
+  "scribble-3",
+  "chase",
+  "just-run-bro",
+  "roaring-knight",
+  "aftermath-1",
+  "aftermath-2",
+  "aftermath-3",
+];
+
 const Index = () => {
   const [screen, setScreen] = useState<Screen>("menu");
   const [levelId, setLevelId] = useState<LevelId>("tutorial");
@@ -32,6 +48,8 @@ const Index = () => {
   const [finalTime, setFinalTime] = useState(0);
   const [finalScore, setFinalScore] = useState(0);
   const [invboiIntroOpen, setInvboiIntroOpen] = useState(false);
+  // Marathon: index into MARATHON_SEQUENCE, or null if not running.
+  const [marathonStep, setMarathonStep] = useState<number | null>(null);
   const [binds] = useKeybinds();
   const [muted, setMuted] = useState(false);
   const [hasJrbBadge, setHasJrbBadge] = useState(false);
@@ -116,11 +134,36 @@ const Index = () => {
   const handleHud = useCallback((h: HudState) => setHud(h), []);
   const handleFinish = useCallback((t: number, s: number) => {
     setFinalTime(t); setFinalScore(s);
-    setScreen((prev) => prev); // no-op for type
+    // MARATHON: advance to the next sub-level instead of going to win, unless
+    // we just cleared the last one. Skip the just-run-bro cutscene too —
+    // marathon doesn't break the flow for it.
+    if (marathonStep != null) {
+      const nextStep = marathonStep + 1;
+      if (nextStep < MARATHON_SEQUENCE.length) {
+        const nextId = MARATHON_SEQUENCE[nextStep];
+        setMarathonStep(nextStep);
+        setLevelId(nextId);
+        setResetKey((k) => k + 1);
+        // Stay on "playing" so the GameCanvas remounts state cleanly while
+        // the starman BGM keeps playing uninterrupted.
+        return;
+      }
+      // All sub-levels cleared → finish the marathon.
+      setMarathonStep(null);
+      setScreen("win");
+      return;
+    }
     // play cutscene after just-run-bro, else go straight to win
     setScreen(levelId === "just-run-bro" ? "cutscene" : "win");
-  }, [levelId]);
+  }, [levelId, marathonStep]);
   const handleDeath = useCallback(() => {
+    // Marathon: invboi can't die, but the boss death-cutscene path still
+    // runs if somehow triggered. Bail back to menu cleanly.
+    if (marathonStep != null) {
+      setMarathonStep(null);
+      setScreen("dead");
+      return;
+    }
     if (levelId === "roaring-knight") {
       // boss death → unskippable cutscene, then kick to menu
       stopBgm(0.2);
@@ -129,7 +172,7 @@ const Index = () => {
     } else {
       setScreen("dead");
     }
-  }, [levelId]);
+  }, [levelId, marathonStep]);
 
   // One owner for BGM. The "loading" screen handles the actual track switch
   // before "playing" begins, so we leave that case alone here.
@@ -137,6 +180,13 @@ const Index = () => {
   // re-enter "playing" so we know to leave the BGM alone on a death-retry.
   const cameFromDeathRef = useRef(false);
   useEffect(() => {
+    // MARATHON: Index owns the starman BGM and keeps it playing across
+    // every sub-level. Skip ALL per-level BGM management while it's active
+    // so the rain cinematic / lowpass / track-switch never re-fires.
+    // (We still allow menu music to take over once the user backs out.)
+    if (marathonStep != null && (screen === "playing" || screen === "loading" || screen === "dead")) {
+      return;
+    }
     // Hold off menu BGM while the intro card is on screen — the intro's
     // fade-out triggers playMenuBgmFadeIn so the music swells in with it.
     if (screen === "menu" && introPhase !== "done" && introPhase !== "out") return;
@@ -165,7 +215,7 @@ const Index = () => {
     else if (screen === "dead") { cameFromDeathRef.current = true; return; }
     else if (screen === "win") return;
     else stopBgm(0.35);
-  }, [screen, levelId, introPhase]);
+  }, [screen, levelId, introPhase, marathonStep]);
 
   // Silence sfx ONLY during the intro card. Menu has its own click sfx.
   useEffect(() => {
@@ -175,6 +225,27 @@ const Index = () => {
   }, [introPhase]);
 
   const startLevel = (id: LevelId) => {
+    // CELESTIAL MARATHON: hijack into the chained sequence. Start the
+    // starman BGM exactly once on entry; subsequent sub-level transitions
+    // leave it playing.
+    if (id === "celestial-marathon") {
+      const firstId = MARATHON_SEQUENCE[0];
+      setMarathonStep(0);
+      setLevelId(firstId);
+      setResetKey((k) => k + 1);
+      setInvboiIntroOpen(false);
+      setScreen("loading");
+      // Kick the starman track now so it's already playing when the level
+      // appears. Skip the BGM "loading duck" since we want it at full vol.
+      preloadBgmFor(firstId).then(() => {
+        playStarmanBgm();
+        setTimeout(() => {
+          setScreen((s) => (s === "loading" ? "playing" : s));
+        }, 250);
+      });
+      return;
+    }
+    setMarathonStep(null);
     setLevelId(id);
     setResetKey((k) => k + 1);
     setInvboiIntroOpen(false);
@@ -191,6 +262,20 @@ const Index = () => {
   const retry = () => {
     setResetKey((k) => k + 1);
     setInvboiIntroOpen(false);
+    // Marathon retry from death: restart from the first sub-level.
+    if (marathonStep != null) {
+      const firstId = MARATHON_SEQUENCE[0];
+      setMarathonStep(0);
+      setLevelId(firstId);
+      setScreen("loading");
+      preloadBgmFor(firstId).then(() => {
+        playStarmanBgm();
+        setTimeout(() => {
+          setScreen((s) => (s === "loading" ? "playing" : s));
+        }, 250);
+      });
+      return;
+    }
     setScreen("loading");
     preloadBgmFor(levelId).then(() => {
       setTimeout(() => {
@@ -198,7 +283,7 @@ const Index = () => {
       }, 250);
     });
   };
-  const backToMenu = () => { setInvboiIntroOpen(false); setScreen("menu"); };
+  const backToMenu = () => { setInvboiIntroOpen(false); setMarathonStep(null); setScreen("menu"); };
   const handleInvboiPickup = useCallback(() => setInvboiIntroOpen(true), []);
 
   // Award the "just run bro" badge and head back to the main menu.
@@ -302,7 +387,8 @@ const Index = () => {
             onDeath={handleDeath}
             onInvboiPickup={handleInvboiPickup}
             paused={screen !== "playing" || invboiIntroOpen}
-            keepAudio={screen === "dead" || screen === "win" || invboiIntroOpen}
+            keepAudio={screen === "dead" || screen === "win" || invboiIntroOpen || marathonStep != null}
+            startAsInvboi={marathonStep != null}
             resetKey={resetKey}
             levelId={levelId}
           />

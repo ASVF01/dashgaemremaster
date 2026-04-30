@@ -335,6 +335,8 @@ interface Props {
   paused: boolean;
   /** When true, do not pause the BGM even if the game is paused (e.g. win/death overlays). */
   keepAudio?: boolean;
+  /** Marathon mode: start the player already as invboi without restarting BGM/cinematic. */
+  startAsInvboi?: boolean;
   resetKey: number;
   levelId?: LevelId;
 }
@@ -354,7 +356,7 @@ export interface HudState {
   somSom?: boolean;
 }
 
-export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, paused, keepAudio = false, resetKey, levelId = "scribble-1" }: Props) {
+export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, paused, keepAudio = false, startAsInvboi = false, resetKey, levelId = "scribble-1" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const refs = useRef<GameRefs | null>(null);
   const keysRef = useRef<Keys>({});
@@ -472,9 +474,23 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
     }
     // Any reset/level change cancels the starman shimmer too.
     sfx.shineStop(); sfx.rainStop(); sfx.slideStop(); sfx.laserStop();
-    setCelestialMode(false);
-    setThunderMode(false);
-  }, [resetKey, levelId]);
+    if (startAsInvboi) {
+      // Marathon mode: stay invboi across level transitions. Don't reset
+      // celestial mode and don't restart BGM — Index keeps the starman
+      // track playing across sub-levels so the rain/cinematic doesn't replay.
+      const pl = refs.current.player;
+      pl.starman = true;
+      pl.somSom = false;
+      pl.invuln = 9999;
+      pl.starTimer = 0;
+      setCelestialMode(true, { replaceDefaults: true });
+      setThunderMode(false);
+      sfx.shineStart();
+    } else {
+      setCelestialMode(false);
+      setThunderMode(false);
+    }
+  }, [resetKey, levelId, startAsInvboi]);
 
   // BGM: stop on unmount only. The parent (Index) decides which track to
   // play based on the current screen (menu vs playing) so we don't race

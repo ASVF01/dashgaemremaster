@@ -16,7 +16,7 @@ export type Level = {
   invboiStart?: { x: number; y: number; facing: 1 | -1 };
 };
 
-export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "chase" | "speed-test" | "just-run-bro" | "meet-invboi" | "roaring-knight" | "aftermath-1" | "aftermath-2" | "aftermath-3";
+export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "chase" | "speed-test" | "just-run-bro" | "meet-invboi" | "roaring-knight" | "aftermath-1" | "aftermath-2" | "aftermath-3" | "celestial-marathon";
 
 export type LevelMeta = {
   id: LevelId;
@@ -40,6 +40,7 @@ export const LEVELS: LevelMeta[] = [
   { id: "aftermath-1", name: "ASHEN MARGINS",  subtitle: "after the knight, the ink keeps bleeding.", difficulty: 4, par: 60 },
   { id: "aftermath-2", name: "TORN PAGES",     subtitle: "shooters in the gaps. mind the rips.",     difficulty: 4, par: 65 },
   { id: "aftermath-3", name: "FINAL DRAFT",    subtitle: "everything you've learned. one run.",      difficulty: 4, par: 75 },
+  { id: "celestial-marathon", name: "CELESTIAL MARATHON", subtitle: "every level. one breath. invboi forever.", difficulty: 4, par: 9999 },
 ];
 
 export function buildLevel(id: LevelId = "scribble-1"): Level {
@@ -57,6 +58,9 @@ export function buildLevel(id: LevelId = "scribble-1"): Level {
     case "aftermath-1": lv = buildAftermath1(); break;
     case "aftermath-2": lv = buildAftermath2(); break;
     case "aftermath-3": lv = buildAftermath3(); break;
+    // Marathon is a meta-level handled by Index (chains all levels back-to-back).
+    // If it ever loads as a real level, fall back to tutorial.
+    case "celestial-marathon": lv = buildTutorial(); break;
   }
   // Fill any pit directly below a hazard with a ground platform so spikes
   // sit on solid floor instead of marking a bottomless gap.
