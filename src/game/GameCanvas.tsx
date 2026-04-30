@@ -470,29 +470,50 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   // keys
   useEffect(() => {
     let cheatBuf = "";
+    // Shared activation: turn the player into invboi. Used by both the
+    // "invboi" cheat code and by walking into the invboi-star pickup.
+    const activateInvboi = () => {
+      const r = refs.current;
+      if (!r || !r.player.alive || r.finished || r.player.starman) return;
+      r.player.starman = true;
+      r.player.starTimer = 0;
+      const inJrb = levelIdRef.current === "just-run-bro";
+      r.player.somSom = inJrb;
+      r.player.invuln = Math.max(r.player.invuln, 9999);
+      unlockAudio();
+      if (inJrb) playSomSomBgm();
+      else playStarmanBgm();
+      sfx.shineStart();
+      setCelestialMode(true, { replaceDefaults: !inJrb });
+      setThunderMode(inJrb);
+      burst(r, r.player.x + r.player.w / 2, r.player.y + r.player.h / 2, inJrb ? "#22e2ff" : "#ffd11a", 24, 380);
+    };
     const down = (e: KeyboardEvent) => {
       keysRef.current[e.code] = true;
       // cheat code: type "invboi" to enter starman mode
       if (e.key && e.key.length === 1 && /[a-zA-Z]/.test(e.key)) {
         cheatBuf = (cheatBuf + e.key.toLowerCase()).slice(-12);
-        if (cheatBuf.endsWith("invboi") && refs.current) {
-          const r = refs.current;
-          if (r.player.alive && !r.finished) {
-            r.player.starman = true;
-            r.player.starTimer = 0;
-            const inJrb = levelIdRef.current === "just-run-bro";
-            r.player.somSom = inJrb;
-            // generous i-frames so they actually feel invincible
-            r.player.invuln = Math.max(r.player.invuln, 9999);
-            unlockAudio();
-            if (inJrb) playSomSomBgm();
-            else playStarmanBgm();
-            sfx.shineStart();
-            setCelestialMode(true, { replaceDefaults: !inJrb });
-            setThunderMode(inJrb);
-            burst(r, r.player.x + r.player.w / 2, r.player.y + r.player.h / 2, inJrb ? "#22e2ff" : "#ffd11a", 24, 380);
-          }
+        if (cheatBuf.endsWith("invboi")) {
+          activateInvboi();
           cheatBuf = "";
+        }
+      }
+      // Press E to spawn an invboi-star pickup in front of the player.
+      // Touching it activates invboi mode (same as the cheat code).
+      if (e.code === "KeyE" && refs.current) {
+        const r = refs.current;
+        if (r.player.alive && !r.finished && !r.player.starman && !r.invboiPickup) {
+          const p = r.player;
+          // Spawn ~80px in front of the player at chest height.
+          const ahead = 80 * p.facing;
+          r.invboiPickup = {
+            x: p.x + p.w / 2 + ahead,
+            y: p.y + p.h * 0.4,
+            t: 0,
+            bobPhase: Math.random() * Math.PI * 2,
+          };
+          unlockAudio();
+          sfx.pickup?.();
         }
       }
       if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) {
