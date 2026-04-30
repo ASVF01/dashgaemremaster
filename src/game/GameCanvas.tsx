@@ -1367,6 +1367,47 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // boss
     if (r.boss) updateBoss(r, dt, size.w);
 
+    // beams (invboi vs boss)
+    if (r.beams.length) {
+      for (const beam of r.beams) {
+        if (beam.hit) continue;
+        beam.x += beam.vx * dt;
+        beam.y += beam.vy * dt;
+        beam.life += dt;
+        // hit boss
+        if (r.boss && !r.boss.defeated) {
+          const boss = r.boss;
+          const { drawW, drawH } = bossScreenAnchor(r, boss, size.w);
+          const bx = r.cameraX + boss.screenX - drawW * 0.35;
+          const by = boss.screenY - drawH * 0.4;
+          const bw = drawW * 0.7;
+          const bh = drawH * 0.8;
+          if (beam.x >= bx && beam.x <= bx + bw && beam.y >= by && beam.y <= by + bh) {
+            beam.hit = true;
+            boss.hp -= 1;
+            boss.hitFlash = 1;
+            boss.shakeT = 0.35;
+            boss.worn = 0;
+            boss.attacksRemaining = 3;
+            boss.attackTimer = 1.6;
+            r.shake = Math.max(r.shake, 0.5);
+            r.freezeFrames = Math.max(r.freezeFrames, 4);
+            r.score += 500;
+            burst(r, beam.x, beam.y, "#fff34a", 22, 360);
+            sfx.bossHurt();
+            if (boss.hp <= 0) {
+              boss.defeated = true;
+              boss.defeatT = 0;
+              r.shake = Math.max(r.shake, 1.0);
+              burst(r, bx + bw / 2, by + bh / 2, "#ffffff", 60, 520);
+              sfx.bossDefeat();
+            }
+          }
+        }
+      }
+      r.beams = r.beams.filter((b) => !b.hit && b.life < b.maxLife);
+    }
+
     // projectiles
     for (const pr of r.projectiles) {
       if (!pr.alive) continue;
