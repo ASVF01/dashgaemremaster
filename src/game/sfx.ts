@@ -178,6 +178,34 @@ export function setCelestialMode(on: boolean, opts: { replaceDefaults?: boolean 
 export function isCelestialMode() { return celestialMode; }
 function shimmerReplaces() { return celestialMode && celestialReplace; }
 
+// ---------- THUNDER MODE (som-som — invboi on just-run-bro) ----------
+// Layered low-end booms + crackles on movement sfx so every action feels
+// like a thunderclap rolling across a stormy plain.
+let thunderMode = false;
+export function setThunderMode(on: boolean) { thunderMode = on; }
+export function isThunderMode() { return thunderMode; }
+
+function thunderBoom(opts: { intensity?: number; crack?: boolean; rumbleDur?: number } = {}) {
+  if (!thunderMode) return;
+  const intensity = opts.intensity ?? 1;
+  // 1) sharp lightning crack — bright noise transient
+  if (opts.crack !== false) {
+    noise(0.04, 0.55 * intensity, 3500, 13000);
+  }
+  // 2) deep sub boom — fat low sine drop
+  tone({ freq: 90 + Math.random() * 30, to: 28, dur: 0.35, type: "sine",
+         vol: 0.55 * intensity, attack: 0.002, release: 0.22 });
+  // 3) body weight — sawtooth descent for mass
+  tone({ freq: 220, to: 55, dur: 0.22, type: "sawtooth",
+         vol: 0.32 * intensity, attack: 0.003, release: 0.15, delay: 0.01 });
+  // 4) rolling rumble — long low filtered noise tail
+  const rdur = opts.rumbleDur ?? 0.7;
+  noise(rdur, 0.28 * intensity, 40, 420, 0.04);
+  // 5) distant secondary boom for the "rolling thunder" feel
+  tone({ freq: 60, to: 35, dur: rdur * 0.8, type: "triangle",
+         vol: 0.22 * intensity, attack: 0.04, release: 0.3, delay: 0.08 });
+}
+
 // Pick a frequency from a pleasant pentatonic scale around the given base.
 const PENTATONIC_RATIOS = [1, 9 / 8, 5 / 4, 3 / 2, 5 / 3, 2, 9 / 4, 5 / 2, 3];
 function pentaPick(base: number, idx?: number) {
