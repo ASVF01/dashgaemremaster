@@ -9,11 +9,12 @@ import { LEVELS, type LevelId } from "@/game/level";
 import { useKeybinds, keyLabel, type ActionId } from "@/game/keybinds";
 import { playMenuBgm, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor, isSameTrackAs, setBgmVolume } from "@/game/bgm";
 import cutsceneJustRunBro from "@/assets/video/mcdonalds_sprite_2.mp4";
-import { sfx, unlockAudio, setSfxVolume } from "@/game/sfx";
+import cutsceneBossDeath from "@/assets/video/boss_death_cutscene.mp4";
+import { sfx, unlockAudio, setSfxVolume, silenceAllSfx, setMuted as setSfxMuted } from "@/game/sfx";
 import { getSettings } from "@/game/settings";
 
 
-type Screen = "menu" | "loading" | "playing" | "dead" | "win" | "cutscene";
+type Screen = "menu" | "loading" | "playing" | "dead" | "win" | "cutscene" | "death-cutscene";
 
 // Levels whose music should hard-restart on entry. Everything else shares
 // the "champion play" track and lets it keep looping across transitions.
@@ -72,7 +73,16 @@ const Index = () => {
     // play cutscene after just-run-bro, else go straight to win
     setScreen(levelId === "just-run-bro" ? "cutscene" : "win");
   }, [levelId]);
-  const handleDeath = useCallback(() => setScreen("dead"), []);
+  const handleDeath = useCallback(() => {
+    if (levelId === "roaring-knight") {
+      // boss death → unskippable cutscene, then kick to menu
+      stopBgm(0.2);
+      silenceAllSfx();
+      setScreen("death-cutscene");
+    } else {
+      setScreen("dead");
+    }
+  }, [levelId]);
 
   // One owner for BGM. The "loading" screen handles the actual track switch
   // before "playing" begins, so we leave that case alone here.
@@ -97,6 +107,7 @@ const Index = () => {
       playBgmFor(levelId, restart);
     }
     else if (screen === "cutscene") stopBgm(0.35);
+    else if (screen === "death-cutscene") stopBgm(0.1);
     else if (screen === "dead") { cameFromDeathRef.current = true; return; }
     else if (screen === "win") return;
     else stopBgm(0.35);
@@ -130,6 +141,12 @@ const Index = () => {
   const finishCutscene = useCallback(() => {
     setHasJrbBadge(true);
     try { localStorage.setItem("badge_jrb", "1"); } catch { /* noop */ }
+    setScreen("menu");
+  }, []);
+
+  // Boss death cutscene → restore sfx and head back to the main menu.
+  const finishDeathCutscene = useCallback(() => {
+    setSfxMuted(false);
     setScreen("menu");
   }, []);
 
@@ -237,6 +254,10 @@ const Index = () => {
 
           {screen === "cutscene" && (
             <CutscenePlayer src={cutsceneJustRunBro} onDone={finishCutscene} />
+          )}
+
+          {screen === "death-cutscene" && (
+            <CutscenePlayer src={cutsceneBossDeath} onDone={finishDeathCutscene} unskippable />
           )}
 
           {screen === "dead" && (
@@ -355,7 +376,7 @@ function LoadingScreen({ levelName }: { levelName: string }) {
   );
 }
 
-function CutscenePlayer({ src, onDone }: { src: string; onDone: () => void }) {
+function CutscenePlayer({ src, onDone, unskippable = false }: { src: string; onDone: () => void; unskippable?: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [loading, setLoading] = useState(true);
   const [dots, setDots] = useState("");
@@ -412,12 +433,14 @@ function CutscenePlayer({ src, onDone }: { src: string; onDone: () => void }) {
           </div>
         </div>
       )}
-      <button
-        onClick={onDone}
-        className="absolute bottom-6 right-6 scribble-border bg-paper text-ink font-marker text-xl px-5 py-2 hover:-rotate-2 transition-transform"
-      >
-        SKIP ▶
-      </button>
+      {!unskippable && (
+        <button
+          onClick={onDone}
+          className="absolute bottom-6 right-6 scribble-border bg-paper text-ink font-marker text-xl px-5 py-2 hover:-rotate-2 transition-transform"
+        >
+          SKIP ▶
+        </button>
+      )}
     </div>
   );
 }
