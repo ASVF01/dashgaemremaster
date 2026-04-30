@@ -18,6 +18,7 @@ import { getSettings } from "@/game/settings";
 import { getSprite, type SpriteState } from "@/game/sprites";
 import spookUrl from "@/assets/sprites/spook.png";
 import spookHurtUrl from "@/assets/sprites/spook_hurt.png";
+import roaringKnightUrl from "@/assets/roaring_knight.webp";
 
 type Keys = Record<string, boolean>;
 
