@@ -332,7 +332,14 @@ const Index = () => {
       }, 250);
     });
   };
-  const backToMenu = () => { setInvboiIntroOpen(false); setChaseIntroOpen(false); setMarathonStep(null); setScreen("menu"); };
+  const backToMenu = () => {
+    setInvboiIntroOpen(false); setChaseIntroOpen(false);
+    setMarathonStep(null);
+    marathonStartRef.current = null;
+    setMarathonFinalMs(null);
+    setMarathonMs(0);
+    setScreen("menu");
+  };
   const handleInvboiPickup = useCallback(() => setInvboiIntroOpen(true), []);
 
   // Award the "just run bro" badge and head back to the main menu.
