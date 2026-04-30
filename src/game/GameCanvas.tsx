@@ -587,7 +587,13 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       const dt = Math.min(0.033, (t - last) / 1000);
       last = t;
       if (!paused && !r.finished && r.player.alive) {
-        update(r, dt, keysRef.current);
+        if (r.freezeTime > 0) {
+          r.freezeTime = Math.max(0, r.freezeTime - dt);
+          // Still tick boss explosion VFX during freeze for snappy visual.
+          for (const ex of r.bossExplosions) ex.t += dt;
+        } else {
+          update(r, dt, keysRef.current);
+        }
       }
       if (paused && t - lastPausedRender < 250) return;
       if (paused) lastPausedRender = t;
