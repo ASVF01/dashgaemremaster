@@ -693,27 +693,24 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   }
 
   // Big celebratory boss-explosion: layered ring + colorful debris + freeze.
+  // cx/cy are world coords for the particle bursts; the ring VFX is drawn
+  // at the boss's live screen position so it tracks him as he retreats.
   function triggerBossDefeat(r: GameRefs, cx: number, cy: number) {
     const boss = r.boss;
     if (!boss) return;
     boss.defeated = true;
     boss.defeatT = 0;
-    // init retreat motion: drift up and to the right (away).
     boss.retreatX = 0;
     boss.retreatY = 0;
     boss.retreatVx = 220;
     boss.retreatVy = -160;
-    // hitstop
     r.freezeTime = Math.max(r.freezeTime, 0.5);
     r.shake = Math.max(r.shake, 1.2);
-    // expanding shockwave rings
-    r.bossExplosions.push({ x: cx, y: cy, t: 0, dur: 1.2 });
-    // huge debris bursts in multiple colors
+    r.bossExplosions.push({ x: 0, y: 0, t: 0, dur: 1.2 }); // x/y unused; ring tracks boss
     burst(r, cx, cy, "#ffffff", 50, 540);
     burst(r, cx, cy, "#fff34a", 40, 460);
     burst(r, cx, cy, "#ff7a1a", 36, 420);
     burst(r, cx, cy, "#f5234c", 30, 380);
-    // a few large shards
     for (let i = 0; i < 18; i++) {
       const a = Math.random() * Math.PI * 2;
       const s = 200 + Math.random() * 360;
@@ -728,6 +725,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       });
     }
   }
+
 
   function spawnSlideDustBurst(r: GameRefs, p: Player) {
     const reduced = getSettings().reducedFx;
