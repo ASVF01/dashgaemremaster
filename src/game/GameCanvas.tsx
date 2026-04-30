@@ -1907,7 +1907,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
     r.score += 250 * Math.max(1, r.combo);
     r.shake = 0.7;
     r.glitch = 0.7;
-    r.freezeFrames = 4;
+    // No freeze-frames here — they cause a perceptible "stop then go" hitch
+    // mid-parry. Keep the action smooth so the player flies right through.
     // 2.5s i-frames per successful parry. Also park the parry on cooldown
     // for the same duration so the active window can't re-fire mid-iframes.
     r.player.invuln = Math.max(r.player.invuln, 2.5);
