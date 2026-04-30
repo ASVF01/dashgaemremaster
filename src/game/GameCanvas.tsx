@@ -2145,8 +2145,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         r.rainStars.push({
           x,
           y: -10 - Math.random() * 80,
-          // much faster fall; tail still slower for "drizzle" feel
-          vy: (inRainBurst ? 260 : 70) + Math.random() * (inRainBurst ? 220 : 60),
+          // SUPER fast fall — burst stars rip down the screen, tail still
+          // a bit slower so the drizzle reads as calmer.
+          vy: (inRainBurst ? 900 : 220) + Math.random() * (inRainBurst ? 500 : 140),
           size: 4 + Math.random() * 4,
           phase: Math.random() * Math.PI * 2,
           hue: Math.random() * 360,
@@ -2560,6 +2561,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     if (r.boss) drawBossScreen(ctx, r, r.boss, w);
 
     // (rainbow star rain is rendered earlier as a background layer)
+
+    // INVBOI: white fade-in flash when the rainbow-star downpour begins
+    // at t=RAIN_START. Triangle envelope over 0.5s.
+    if (r.player.starman && !isSomSom && starElapsed >= RAIN_START && starElapsed < RAIN_START + 0.5) {
+      const f = (starElapsed - RAIN_START) / 0.5; // 0 → 1
+      const alpha = f < 0.5 ? f * 2 : (1 - f) * 2;
+      ctx.save();
+      ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+      ctx.fillRect(0, 0, w, h);
+      ctx.restore();
+    }
 
     // SOM SOM cinematic overlays: white-out (5..6s) then cyan impact flash (6..6.45s)
     if (whiteOut > 0) {
