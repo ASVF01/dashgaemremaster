@@ -161,6 +161,64 @@ export function setSfxVolume(v: number) {
   if (master && !muted) master.gain.value = baseVol;
 }
 
+// ---------- CELESTIAL MODE (invboi / rainboi) ----------
+// When on, movement-style sfx layer a sparkly bell-tone shimmer on top so
+// every step / slide / dash sounds like the player is interacting with
+// shining magical surfaces. Toggled by GameCanvas based on starman/somSom.
+let celestialMode = false;
+export function setCelestialMode(on: boolean) {
+  celestialMode = on;
+  if (on) startSlideShimmer(); else stopSlideShimmer();
+}
+export function isCelestialMode() { return celestialMode; }
+
+// Pick a frequency from a pleasant pentatonic scale around the given base.
+const PENTATONIC_RATIOS = [1, 9 / 8, 5 / 4, 3 / 2, 5 / 3, 2, 9 / 4, 5 / 2, 3];
+function pentaPick(base: number, idx?: number) {
+  const i = idx == null ? Math.floor(Math.random() * PENTATONIC_RATIOS.length) : idx;
+  return base * PENTATONIC_RATIOS[Math.abs(i) % PENTATONIC_RATIOS.length];
+}
+
+// Layered "twinkle on shiny stuff" — a couple of short bright bells +
+// a tiny airy hiss. Cheap, stacks freely, sits on top of any sfx.
+// `intensity` 0..1 scales the volume; `count` 1..3 layered notes.
+function celestialShimmer(opts: { base?: number; intensity?: number; count?: number; spread?: number; lo?: boolean } = {}) {
+  if (!celestialMode) return;
+  const base = opts.base ?? 1600;
+  const intensity = opts.intensity ?? 1;
+  const count = opts.count ?? 2;
+  const spread = opts.spread ?? 0.04;
+  for (let i = 0; i < count; i++) {
+    const f = pentaPick(base);
+    const vol = (0.10 + 0.05 * Math.random()) * intensity;
+    tone({
+      freq: f, to: f * (1.5 + Math.random() * 0.5),
+      dur: 0.22 + Math.random() * 0.18,
+      type: "triangle",
+      vol,
+      attack: 0.003,
+      release: 0.18,
+      delay: i * spread + Math.random() * 0.01,
+    });
+    // soft sine "halo" beneath the bell for body
+    tone({
+      freq: f * 0.5, to: f * 0.5,
+      dur: 0.18,
+      type: "sine",
+      vol: vol * 0.5,
+      attack: 0.005,
+      release: 0.12,
+      delay: i * spread,
+    });
+  }
+  // tiny sparkle hiss in the very high band
+  noise(0.10 * intensity, 0.06 * intensity, 5500, 14000);
+  if (opts.lo) {
+    // optional sub bell for big impacts (super dash, mach)
+    tone({ freq: base * 0.25, dur: 0.4, type: "sine", vol: 0.18 * intensity, attack: 0.01, release: 0.25 });
+  }
+}
+
 type ToneOpts = {
   freq: number;
   to?: number;
@@ -218,33 +276,41 @@ export const sfx = {
     noise(0.22, 0.26, 110, 1300);                                  // long breathy puff
     noise(0.10, 0.14, 50, 520, 0.02);                              // low body
     tone({ freq: 95, to: 60, dur: 0.30, type: "sine", vol: 0.18, release: 0.18 });
+    celestialShimmer({ base: 1400, count: 3, intensity: 1.0, spread: 0.05 });
   },
   land() {
     // "bsh" — voiced "b" thump + airy "sh" hiss tail
     tone({ freq: 130, to: 70, dur: 0.05, type: "sine", vol: 0.42, attack: 0.002, release: 0.03 }); // "b" body thump
     noise(0.018, 0.28, 120, 900);                                 // "b" burst
     noise(0.11, 0.26, 3500, 8500, 0.018);                         // "sh" hiss tail
+    celestialShimmer({ base: 1100, count: 3, intensity: 1.1, spread: 0.03, lo: true });
   },
   slide() {
     // "thhh" — sustained airy noise around speech band
     noise(0.35, 0.16, 900, 5500);
+    celestialShimmer({ base: 1800, count: 2, intensity: 0.9, spread: 0.06 });
   },
   slideEnd() {
     // short whoosh-puff — descending filtered noise + a soft low blip
     noise(0.16, 0.14, 600, 3800);
     noise(0.1, 0.08, 200, 1500, 0.02);
     tone({ freq: 280, to: 140, dur: 0.12, type: "triangle", vol: 0.1, attack: 0.005, release: 0.08 });
+    celestialShimmer({ base: 1500, count: 2, intensity: 0.9 });
   },
   step() {
     // Original soft papery footstep — short filtered noise burst
     noise(0.05, 0.18, 280, 2600);
+    // tiny twinkle — like landing on a star
+    celestialShimmer({ base: 1900, count: 1, intensity: 0.7 });
   },
   run() {
     // Slightly punchier papery footstep
     noise(0.06, 0.22, 280, 2800);
+    celestialShimmer({ base: 1900, count: 1, intensity: 0.8 });
   },
   skid() {
     noise(0.18, 0.14, 500, 4500);
+    celestialShimmer({ base: 1700, count: 2, intensity: 0.9, spread: 0.05 });
   },
   parryStart() {
     tone({ freq: 1200, to: 1800, dur: 0.06, type: "triangle", vol: 0.18 });
@@ -253,6 +319,7 @@ export const sfx = {
   parryHit() {
     // 8-bit "ny" sample for successful parries.
     playPixelSample(nySampleUrl, { vol: 0.55, bits: 8, rateDiv: 4, lp: 8000 });
+    celestialShimmer({ base: 2200, count: 3, intensity: 1.2, spread: 0.04, lo: true });
   },
   hit() {
     // long, soft fade-out on the voice sample
@@ -287,10 +354,12 @@ export const sfx = {
   enemyKill() {
     tone({ freq: 600, to: 200, dur: 0.12, type: "square", vol: 0.28 });
     noise(0.1, 0.2, 400, 4000);
+    celestialShimmer({ base: 2000, count: 2, intensity: 1.0 });
   },
   pickup() {
     tone({ freq: 880, dur: 0.06, type: "triangle", vol: 0.25 });
     tone({ freq: 1320, dur: 0.08, type: "triangle", vol: 0.2, delay: 0.05 });
+    celestialShimmer({ base: 2400, count: 2, intensity: 0.9 });
   },
   shoot() {
     tone({ freq: 700, to: 250, dur: 0.08, type: "sawtooth", vol: 0.18 });
@@ -305,6 +374,7 @@ export const sfx = {
   mach() {
     tone({ freq: 200, to: 1200, dur: 0.18, type: "square", vol: 0.22 });
     noise(0.2, 0.18, 600, 6000, 0.02);
+    celestialShimmer({ base: 1800, count: 3, intensity: 1.1, spread: 0.04, lo: true });
   },
   superDash() {
     // BIG impact: layered sub-boom, sharp crack transient, body sweep, and
@@ -321,10 +391,12 @@ export const sfx = {
     tone({ freq: 80, to: 50, dur: 0.28, type: "sine", vol: 0.28, attack: 0.01, release: 0.18, delay: 0.05 });
     // 6) metallic tick to add edge
     tone({ freq: 1800, to: 600, dur: 0.06, type: "square", vol: 0.18, release: 0.04 });
+    celestialShimmer({ base: 1600, count: 3, intensity: 1.3, spread: 0.05, lo: true });
   },
   dash() {
     // sped-up swing/swipe sample, used for the normal dash
     playSample(swingSwipeUrl, { vol: 0.7, rate: 1.7 });
+    celestialShimmer({ base: 2000, count: 2, intensity: 1.0, spread: 0.04 });
   },
   meow() {
     // cute lil kitten "mrow" — two pitched sweeps, second a bit higher
@@ -650,3 +722,29 @@ function stopLaser() {
   try { l.noiseSrc.stop(stopAt); } catch { /* noop */ }
 }
 
+
+// ---------- celestial slide shimmer (looping) ----------
+// Layered on top of the regular slide loop while celestial mode is active —
+// scheduled twinkly bell ticks so sliding sounds like skating over starlight.
+let slideShimmer: { timer: number } | null = null;
+
+function startSlideShimmer() {
+  if (slideShimmer) return;
+  const tick = () => {
+    if (!slideShimmer) return;
+    if (celestialMode && slide) {
+      // tiny bell sparkle per tick
+      celestialShimmer({ base: 2400, count: 1, intensity: 0.55 });
+    }
+    // randomized cadence — irregular twinkles feel more "magical"
+    const next = 90 + Math.random() * 130;
+    slideShimmer.timer = window.setTimeout(tick, next);
+  };
+  slideShimmer = { timer: window.setTimeout(tick, 60) };
+}
+
+function stopSlideShimmer() {
+  if (!slideShimmer) return;
+  clearTimeout(slideShimmer.timer);
+  slideShimmer = null;
+}
