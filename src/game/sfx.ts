@@ -431,8 +431,8 @@ export const sfx = {
   laserStop() { stopLaser(); },
   rainStart() { startRain(); },
   rainStop() { stopRain(); },
-  slideStart() { if (!shimmerReplaces()) startSlideLoop(); },
-  slideStop() { stopSlideLoop(); },
+  slideStart() { slideActive = true; if (!shimmerReplaces()) startSlideLoop(); },
+  slideStop() { slideActive = false; stopSlideLoop(); },
   slideIntensity(v: number) { setSlideIntensity(v); },
   thunder() {
     // bright crack, then deep rumble
