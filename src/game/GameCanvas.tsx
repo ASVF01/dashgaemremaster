@@ -265,14 +265,17 @@ interface Boss {
   attackTimer: number; // counts down to next attack burst
   attacksRemaining: number; // attacks left in current burst before "worn out"
   worn: number; // seconds remaining of "worn out" / vulnerable window
+  wornWorldX: number; // pinned world X while staggered (un-sticks from camera)
+  wornAnchored: boolean;
   hitFlash: number; // 0..1 white flash overlay on the sprite
   shakeT: number; // residual shake time (own little wiggle on hit)
-  // afterimages (screen-space, ignore camera)
+  // afterimages (screen-space, ignore camera) — drift right via vx
   afterTimer: number;
-  afterimages: { sx: number; sy: number; life: number; maxLife: number; flipped: boolean }[];
-  // active slashes (world-space) and incoming warning lines
-  warnings: { x1: number; y1: number; x2: number; y2: number; t: number; dur: number; fired: boolean }[];
-  slashes: { x1: number; y1: number; x2: number; y2: number; t: number; dur: number; hit: boolean }[];
+  afterimages: { sx: number; sy: number; vx: number; life: number; maxLife: number; flipped: boolean }[];
+  // warnings: spinning red lines that re-aim while spinning, then fire a slash
+  warnings: { t: number; dur: number; fired: boolean; angle: number; len: number }[];
+  // slashes: re-aimed every frame from boss origin toward player
+  slashes: { angle: number; len: number; t: number; dur: number; hit: boolean }[];
   defeated: boolean;
   defeatT: number;
 }
