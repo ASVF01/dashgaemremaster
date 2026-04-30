@@ -435,6 +435,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       skidSfxTimer: 0,
       isSkidding: false,
       rainStars: [],
+      invboiPickup: null,
       lightningCooldown: 0,
       lightningBolts: [],
       somSomStorm: false,
