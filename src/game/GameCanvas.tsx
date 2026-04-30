@@ -426,7 +426,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       beams: [],
     };
     // Any reset/level change cancels the starman shimmer too.
-    sfx.shineStop(); sfx.rainStop(); sfx.slideStop();
+    sfx.shineStop(); sfx.rainStop(); sfx.slideStop(); sfx.laserStop();
   }, [resetKey, levelId]);
 
   // BGM: stop on unmount only. The parent (Index) decides which track to
@@ -434,7 +434,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   // with the menu music here. Restart on retry is also driven by the
   // parent via screen/levelId/resetKey transitions.
   useEffect(() => {
-    return () => { stopBgm(); sfx.shineStop(); sfx.rainStop(); sfx.slideStop(); };
+    return () => { stopBgm(); sfx.shineStop(); sfx.rainStop(); sfx.slideStop(); sfx.laserStop(); };
   }, []);
 
   // BGM: pause/resume with the game's pause state — but keep playing when
