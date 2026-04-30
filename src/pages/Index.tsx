@@ -229,6 +229,18 @@ const Index = () => {
     return () => { setSfxMuted(false); };
   }, [introPhase]);
 
+  // Open the chase tutorial popup whenever we enter the chase level on the
+  // playing screen (once per resetKey so retries re-show it).
+  useEffect(() => {
+    if (screen === "playing" && levelId === "chase") {
+      const key = `${resetKey}`;
+      if (chaseIntroSeenKeyRef.current !== key) {
+        chaseIntroSeenKeyRef.current = key;
+        setChaseIntroOpen(true);
+      }
+    }
+  }, [screen, levelId, resetKey]);
+
   const startLevel = (id: LevelId) => {
     // CELESTIAL MARATHON: hijack into the chained sequence. Start the
     // starman BGM exactly once on entry; subsequent sub-level transitions
