@@ -1388,45 +1388,87 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // boss
     if (r.boss) updateBoss(r, dt, size.w);
 
-    // beams (invboi vs boss)
-    if (r.beams.length) {
-      for (const beam of r.beams) {
-        if (beam.hit) continue;
-        beam.x += beam.vx * dt;
-        beam.y += beam.vy * dt;
-        beam.life += dt;
-        // hit boss
+    // HELD LASER (invboi vs boss only)
+    {
+      const pl = r.player;
+      // Auto-cancel if boss gone/defeated, player dead, or out of float budget mid-air.
+      if (pl.laserActive && (!r.boss || r.boss.defeated || !pl.alive)) {
+        pl.laserActive = false;
+        sfx.laserStop();
+      }
+      if (pl.laserActive) {
+        // Track facing changes from movement input.
+        if (pl.vx > 30) pl.laserDir = 1;
+        else if (pl.vx < -30) pl.laserDir = -1;
+        else pl.laserDir = pl.facing;
+
+        // Float: drain budget, near-zero gravity, allow hovering up via jump.
+        if (pl.laserFloatBudget > 0) {
+          pl.laserFloatBudget = Math.max(0, pl.laserFloatBudget - dt);
+          // Cancel most of gravity that was added this frame and apply gentle hover.
+          pl.vy -= GRAVITY * dt; // negate gravity
+          pl.vy += 80 * dt;      // very soft drift
+          // Hover-rise while jump held
+          const bnd = getLiveBinds();
+          const jumpHeldNow = isPressed(keysRef.current, "jump", bnd);
+          if (jumpHeldNow) pl.vy = Math.max(pl.vy - 1200 * dt, -360);
+          // Soft vertical clamp so floating feels stable
+          if (pl.vy > 220) pl.vy = 220;
+          if (pl.vy < -360) pl.vy = -360;
+        } else {
+          // Out of float — laser stays on but gravity returns; if you land, fine.
+        }
+
+        // Beam damage tick to boss (raycast horizontally from player center).
         if (r.boss && !r.boss.defeated) {
-          const boss = r.boss;
-          const { drawW, drawH } = bossScreenAnchor(r, boss, size.w);
-          const bx = r.cameraX + boss.screenX - drawW * 0.35;
-          const by = boss.screenY - drawH * 0.4;
-          const bw = drawW * 0.7;
-          const bh = drawH * 0.8;
-          if (beam.x >= bx && beam.x <= bx + bw && beam.y >= by && beam.y <= by + bh) {
-            beam.hit = true;
-            boss.hp -= 1;
-            boss.hitFlash = 1;
-            boss.shakeT = 0.35;
-            boss.worn = 0;
-            boss.attacksRemaining = 3;
-            boss.attackTimer = 1.6;
-            r.shake = Math.max(r.shake, 0.5);
-            r.freezeFrames = Math.max(r.freezeFrames, 4);
-            r.score += 500;
-            burst(r, beam.x, beam.y, "#fff34a", 22, 360);
-            sfx.bossHurt();
-            if (boss.hp <= 0) {
-              boss.defeated = true;
-              boss.defeatT = 0;
-              r.shake = Math.max(r.shake, 1.0);
-              burst(r, bx + bw / 2, by + bh / 2, "#ffffff", 60, 520);
-              sfx.bossDefeat();
+          pl.laserDamageTick -= dt;
+          if (pl.laserDamageTick <= 0) {
+            const boss = r.boss;
+            const { drawW, drawH } = bossScreenAnchor(r, boss, size.w);
+            const bx = r.cameraX + boss.screenX - drawW * 0.35;
+            const by = boss.screenY - drawH * 0.4;
+            const bw = drawW * 0.7;
+            const bh = drawH * 0.8;
+            const ly = pl.y + pl.h * 0.4;
+            const lx0 = pl.x + pl.w / 2;
+            const dir = pl.laserDir;
+            // horizontal ray check: ly within boss vertical span and boss is in firing direction
+            const hits = ly >= by && ly <= by + bh &&
+              ((dir > 0 && bx + bw >= lx0) || (dir < 0 && bx <= lx0));
+            if (hits) {
+              boss.hp -= 1;
+              boss.hitFlash = 1;
+              boss.shakeT = 0.3;
+              boss.worn = 0;
+              boss.attacksRemaining = 3;
+              boss.attackTimer = 1.4;
+              r.shake = Math.max(r.shake, 0.45);
+              r.freezeFrames = Math.max(r.freezeFrames, 3);
+              r.score += 250;
+              const hx = dir > 0 ? bx : bx + bw;
+              burst(r, hx, ly, "#fff34a", 18, 320);
+              sfx.bossHurt();
+              if (boss.hp <= 0) {
+                boss.defeated = true;
+                boss.defeatT = 0;
+                r.shake = Math.max(r.shake, 1.0);
+                burst(r, bx + bw / 2, by + bh / 2, "#ffffff", 60, 520);
+                sfx.bossDefeat();
+                pl.laserActive = false;
+                sfx.laserStop();
+              }
             }
+            pl.laserDamageTick = 0.18;
           }
         }
+        // Keep pose hint alive
+        pl.beamTime = Math.max(pl.beamTime, 0.1);
+        pl.beamGrounded = pl.onGround;
+      } else {
+        // Regen float budget while not firing (slowly when airborne, fast when grounded).
+        const regen = pl.onGround ? 6 : 1.5;
+        pl.laserFloatBudget = Math.min(10, pl.laserFloatBudget + regen * dt);
       }
-      r.beams = r.beams.filter((b) => !b.hit && b.life < b.maxLife);
     }
 
     // projectiles
