@@ -524,7 +524,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           };
           unlockAudio();
           // whoosh: short pitched sweep + airy noise burst
-          sfx.spawnWhoosh?.();
+          sfx.spawnWhoosh();
           // little burst at the spawn point
           burst(r, p.x + p.w / 2 + ahead, p.y + p.h * 0.4, "#fff5a3", 12, 240);
         }
