@@ -2122,12 +2122,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     const burstMaxStars = Math.min(220, Math.max(140, Math.floor((w * h) / 5500)));
     const tailMaxStars  = Math.min(64,  Math.max(28,  Math.floor((w * h) / 17000)));
     const maxRainStars = inRainBurst ? burstMaxStars : tailMaxStars;
+    // Smooth fade-in matching the SOM SOM 6s impact ramp (0.45s).
+    const RAIN_FADE = 0.45;
+    const fadeIn = inRainBurst
+      ? Math.min(1, (starElapsed - RAIN_START) / RAIN_FADE)
+      : (inRainTail ? 1 : 0);
     if ((inRainBurst || inRainTail) && r.rainStars.length < maxRainStars) {
-      // Burst: ramp in fast, hold, then fall off as we hit the tail.
-      const burstT = inRainBurst ? (starElapsed - RAIN_START) / 2.0 : 1; // 0→1
       const burstRate = inRainBurst
-        ? (burstT < 0.15 ? burstT / 0.15 : 1) * 4.5  // up to ~4.5 stars/frame
-        : 0.35;                                       // gentle drizzle after
+        ? fadeIn * 4.5            // ramps 0 → 4.5 stars/frame over 0.45s
+        : 0.35;                   // gentle drizzle after the burst
       // spawn possibly multiple per frame for the heavy downpour
       let toSpawn = burstRate;
       while (toSpawn > 0 && r.rainStars.length < maxRainStars) {
@@ -2149,6 +2152,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       const stars = r.rainStars;
       let write = 0;
       ctx.imageSmoothingEnabled = false;
+      // Match the SOM SOM 6s impact ramp — alpha eases in over RAIN_FADE.
+      const visAlpha = fadeIn;
+      const prevAlpha = ctx.globalAlpha;
+      if (visAlpha < 1) ctx.globalAlpha = prevAlpha * visAlpha;
       for (let i = 0; i < stars.length; i++) {
         const s = stars[i];
         s.y += s.vy * dtFrame;
@@ -2160,6 +2167,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         stars[write++] = s;
       }
       stars.length = write;
+      ctx.globalAlpha = prevAlpha;
     }
 
     // shake (scaled by user setting)
