@@ -2787,6 +2787,51 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
     const sx = boss.screenX + wx;
     const sy = boss.screenY + wy;
+    // Boss-defeat explosion rings: drawn at the boss's spawn point (anchored
+    // to where he was when he died — sx/sy at defeat moment). We use the
+    // current sx/sy approximately, since the boss only just started moving.
+    for (const ex of r.bossExplosions) {
+      const k = ex.t / ex.dur;
+      const inv = Math.max(0, 1 - k);
+      const baseX = sx;
+      const baseY = sy;
+      ctx.save();
+      // bright flash core
+      const flashA = Math.max(0, 1 - k * 3);
+      if (flashA > 0) {
+        ctx.globalAlpha = flashA;
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath(); ctx.arc(baseX, baseY, 40 + k * 80, 0, Math.PI * 2); ctx.fill();
+      }
+      // expanding rings (multi-color)
+      ctx.globalAlpha = inv;
+      const ringColors = ["#ffffff", "#fff34a", "#ff7a1a", "#f5234c"];
+      for (let i = 0; i < ringColors.length; i++) {
+        const rad = 30 + k * (220 + i * 40);
+        ctx.strokeStyle = ringColors[i];
+        ctx.lineWidth = 6 * inv;
+        ctx.shadowColor = ringColors[i];
+        ctx.shadowBlur = 16 * inv;
+        ctx.beginPath();
+        ctx.arc(baseX, baseY, rad, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.shadowBlur = 0;
+      // radial spokes
+      ctx.strokeStyle = "#fff34a";
+      ctx.lineWidth = 3 * inv;
+      const spokes = 16;
+      for (let i = 0; i < spokes; i++) {
+        const ang = (i / spokes) * Math.PI * 2 + k * 2;
+        const r0 = 40 + k * 60;
+        const r1 = 80 + k * 220;
+        ctx.beginPath();
+        ctx.moveTo(baseX + Math.cos(ang) * r0, baseY + Math.sin(ang) * r0);
+        ctx.lineTo(baseX + Math.cos(ang) * r1, baseY + Math.sin(ang) * r1);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
     if (boss.defeated) {
       // Retreat animation: knight rockets up-and-right with a wobble + tilt.
       const t = boss.defeatT;
