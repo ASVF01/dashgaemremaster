@@ -437,6 +437,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       somSomStorm: false,
       somSomStormFlash: -1,
       somSomCloudX: null,
+      somSomSlowCloudX: 0,
       somSomRain: null,
       heartbeatTimer: 0,
       boss: levelId === "roaring-knight" ? makeBoss() : null,
