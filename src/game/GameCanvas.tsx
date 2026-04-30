@@ -2823,8 +2823,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
   }
 
-  function drawBossSpriteAt(ctx: CanvasRenderingContext2D, sx: number, sy: number, drawW: number, drawH: number, alpha: number, white: boolean, vulnerable = false) {
-    const img = vulnerable && knightVulnImg.complete && knightVulnImg.naturalWidth ? knightVulnImg : knightImg;
+  function drawBossSpriteAt(ctx: CanvasRenderingContext2D, sx: number, sy: number, drawW: number, drawH: number, alpha: number, white: boolean, vulnerable = false, hurt = false) {
+    const hurtReady = knightHurtImg.complete && knightHurtImg.naturalWidth;
+    const img = hurt && hurtReady
+      ? knightHurtImg
+      : (vulnerable && knightVulnImg.complete && knightVulnImg.naturalWidth ? knightVulnImg : knightImg);
     if (!img.complete || !img.naturalWidth) return;
     // Recompute drawW to keep aspect ratio of whichever sprite we're using.
     const ar = img.naturalWidth / img.naturalHeight;
@@ -2833,7 +2836,13 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     ctx.imageSmoothingEnabled = false;
     ctx.globalAlpha = alpha;
     ctx.drawImage(img, sx - dw / 2, sy - drawH / 2, dw, drawH);
-    if (white) {
+    if (hurt) {
+      // Red flash overlay (strobes) for clear damage feedback.
+      const strobe = (Math.floor(performance.now() / 70) % 2) === 0 ? 0.55 : 0.3;
+      ctx.globalCompositeOperation = "source-atop";
+      ctx.fillStyle = `rgba(245,35,76,${strobe * alpha})`;
+      ctx.fillRect(sx - dw / 2, sy - drawH / 2, dw, drawH);
+    } else if (white) {
       ctx.globalCompositeOperation = "source-atop";
       ctx.fillStyle = `rgba(255,255,255,${alpha})`;
       ctx.fillRect(sx - dw / 2, sy - drawH / 2, dw, drawH);
