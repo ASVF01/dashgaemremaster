@@ -7,7 +7,7 @@ import FpsOverlay from "@/game/FpsOverlay";
 import MainMenu from "@/game/MainMenu";
 import { LEVELS, type LevelId } from "@/game/level";
 import { useKeybinds, keyLabel, type ActionId } from "@/game/keybinds";
-import { playMenuBgm, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor, isSameTrackAs, setBgmVolume } from "@/game/bgm";
+import { playMenuBgm, playMenuBgmFadeIn, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor, isSameTrackAs, setBgmVolume } from "@/game/bgm";
 import cutsceneJustRunBro from "@/assets/video/mcdonalds_sprite_2.mp4";
 import cutsceneBossDeath from "@/assets/video/boss_death_cutscene.mp4";
 import introCardImg from "@/assets/intro_card.png";
@@ -43,7 +43,11 @@ const Index = () => {
     const FADE = 800; // ms
     const HOLD = 9000; // ms fully visible
     const t1 = window.setTimeout(() => setIntroPhase("hold"), 30); // trigger fade-in next frame
-    const t2 = window.setTimeout(() => setIntroPhase("out"), 30 + FADE + HOLD);
+    const t2 = window.setTimeout(() => {
+      setIntroPhase("out");
+      // Music swells in as the card fades out.
+      playMenuBgmFadeIn(FADE);
+    }, 30 + FADE + HOLD);
     const t3 = window.setTimeout(() => setIntroPhase("done"), 30 + FADE + HOLD + FADE);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
@@ -103,6 +107,9 @@ const Index = () => {
   // re-enter "playing" so we know to leave the BGM alone on a death-retry.
   const cameFromDeathRef = useRef(false);
   useEffect(() => {
+    // Hold off menu BGM while the intro card is on screen — the intro's
+    // fade-out triggers playMenuBgmFadeIn so the music swells in with it.
+    if (screen === "menu" && introPhase !== "done" && introPhase !== "out") return;
     if (screen === "menu") playMenuBgm();
     else if (screen === "loading") {
       // handled by startLevel's preload+play sequence below
@@ -124,7 +131,7 @@ const Index = () => {
     else if (screen === "dead") { cameFromDeathRef.current = true; return; }
     else if (screen === "win") return;
     else stopBgm(0.35);
-  }, [screen, levelId]);
+  }, [screen, levelId, introPhase]);
 
   const startLevel = (id: LevelId) => {
     setLevelId(id);
