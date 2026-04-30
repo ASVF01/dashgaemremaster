@@ -88,6 +88,10 @@ function makeBoss() {
     slashes: [] as { angle: number; len: number; t: number; dur: number; hit: boolean }[],
     defeated: false,
     defeatT: 0,
+    retreatX: 0,
+    retreatY: 0,
+    retreatVx: 0,
+    retreatVy: 0,
   };
 }
 
