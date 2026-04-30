@@ -2477,18 +2477,20 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
   }
 
-  function drawBossSpriteAt(ctx: CanvasRenderingContext2D, sx: number, sy: number, drawW: number, drawH: number, alpha: number, white: boolean) {
-    if (!knightImg.complete || !knightImg.naturalWidth) return;
+  function drawBossSpriteAt(ctx: CanvasRenderingContext2D, sx: number, sy: number, drawW: number, drawH: number, alpha: number, white: boolean, vulnerable = false) {
+    const img = vulnerable && knightVulnImg.complete && knightVulnImg.naturalWidth ? knightVulnImg : knightImg;
+    if (!img.complete || !img.naturalWidth) return;
+    // Recompute drawW to keep aspect ratio of whichever sprite we're using.
+    const ar = img.naturalWidth / img.naturalHeight;
+    const dw = drawH * ar;
     ctx.save();
     ctx.imageSmoothingEnabled = false;
     ctx.globalAlpha = alpha;
-    ctx.drawImage(knightImg, sx - drawW / 2, sy - drawH / 2, drawW, drawH);
+    ctx.drawImage(img, sx - dw / 2, sy - drawH / 2, dw, drawH);
     if (white) {
-      // white flash overlay using source-atop on a temp canvas would be ideal,
-      // but a cheap approach: redraw with a white-tinted multiply via composite.
       ctx.globalCompositeOperation = "source-atop";
       ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-      ctx.fillRect(sx - drawW / 2, sy - drawH / 2, drawW, drawH);
+      ctx.fillRect(sx - dw / 2, sy - drawH / 2, dw, drawH);
     }
     ctx.restore();
   }
