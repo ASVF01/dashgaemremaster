@@ -722,3 +722,29 @@ function stopLaser() {
   try { l.noiseSrc.stop(stopAt); } catch { /* noop */ }
 }
 
+
+// ---------- celestial slide shimmer (looping) ----------
+// Layered on top of the regular slide loop while celestial mode is active —
+// scheduled twinkly bell ticks so sliding sounds like skating over starlight.
+let slideShimmer: { timer: number } | null = null;
+
+function startSlideShimmer() {
+  if (slideShimmer) return;
+  const tick = () => {
+    if (!slideShimmer) return;
+    if (celestialMode && slide) {
+      // tiny bell sparkle per tick
+      celestialShimmer({ base: 2400, count: 1, intensity: 0.55 });
+    }
+    // randomized cadence — irregular twinkles feel more "magical"
+    const next = 90 + Math.random() * 130;
+    slideShimmer.timer = window.setTimeout(tick, next);
+  };
+  slideShimmer = { timer: window.setTimeout(tick, 60) };
+}
+
+function stopSlideShimmer() {
+  if (!slideShimmer) return;
+  clearTimeout(slideShimmer.timer);
+  slideShimmer = null;
+}
