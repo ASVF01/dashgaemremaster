@@ -143,7 +143,7 @@ function ac(): AudioContext | null {
   return ctx;
 }
 
-export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); loadSample(wwHitUrl); loadSample(auraUrl); loadSample(swingSwipeUrl); }
+export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); loadSample(wwHitUrl); loadSample(auraUrl); loadSample(swingSwipeUrl); loadSample(laserBeamUrl); }
 let baseVol = 0.35;
 export function setMuted(v: boolean) {
   muted = v;
