@@ -756,7 +756,7 @@ function startSlideShimmer() {
   if (slideShimmer) return;
   const tick = () => {
     if (!slideShimmer) return;
-    if (celestialMode && slide) {
+    if (celestialMode && slideActive) {
       // tiny bell sparkle per tick
       celestialShimmer({ base: 2400, count: 1, intensity: 0.55 });
     }
