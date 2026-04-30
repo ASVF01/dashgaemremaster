@@ -638,6 +638,18 @@ function KeyChip({ action, label, binds }: { action: ActionId; label: string; bi
   );
 }
 
+// Format marathon ms as m:ss.cs (e.g. 4:23.71). Used by the in-run timer
+// chip and the marathon victory screen.
+function fmtMarathon(ms: number): string {
+  if (!isFinite(ms) || ms < 0) ms = 0;
+  const totalCs = Math.floor(ms / 10);
+  const cs = totalCs % 100;
+  const totalSec = Math.floor(totalCs / 100);
+  const sec = totalSec % 60;
+  const min = Math.floor(totalSec / 60);
+  return `${min}:${sec.toString().padStart(2, "0")}.${cs.toString().padStart(2, "0")}`;
+}
+
 function Overlay({ children }: { children: React.ReactNode }) {
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-paper/85 backdrop-blur-[2px]">
