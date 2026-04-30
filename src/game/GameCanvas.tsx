@@ -19,6 +19,7 @@ import { getSprite, type SpriteState } from "@/game/sprites";
 import spookUrl from "@/assets/sprites/spook.png";
 import spookHurtUrl from "@/assets/sprites/spook_hurt.png";
 import roaringKnightUrl from "@/assets/roaring_knight.webp";
+import roaringKnightVulnUrl from "@/assets/roaring_knight_vulnerable.png";
 import bossBgUrl from "@/assets/boss_bg.gif";
 import bossBgSheetUrl from "@/assets/boss_bg_sheet.webp";
 
@@ -53,6 +54,7 @@ function getSpookRedTint(): HTMLCanvasElement | null {
 
 // Roaring Knight boss sprite. Drawn in screen-space (top-right, hovers).
 const knightImg = new Image(); knightImg.src = roaringKnightUrl;
+const knightVulnImg = new Image(); knightVulnImg.src = roaringKnightVulnUrl;
 const bossBgImg = new Image(); bossBgImg.src = bossBgUrl;
 // Animated boss bg: 31 frames, 6 cols × 6 rows, each 320×180.
 const bossBgSheet = new Image(); bossBgSheet.src = bossBgSheetUrl;
@@ -2475,28 +2477,31 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
   }
 
-  function drawBossSpriteAt(ctx: CanvasRenderingContext2D, sx: number, sy: number, drawW: number, drawH: number, alpha: number, white: boolean) {
-    if (!knightImg.complete || !knightImg.naturalWidth) return;
+  function drawBossSpriteAt(ctx: CanvasRenderingContext2D, sx: number, sy: number, drawW: number, drawH: number, alpha: number, white: boolean, vulnerable = false) {
+    const img = vulnerable && knightVulnImg.complete && knightVulnImg.naturalWidth ? knightVulnImg : knightImg;
+    if (!img.complete || !img.naturalWidth) return;
+    // Recompute drawW to keep aspect ratio of whichever sprite we're using.
+    const ar = img.naturalWidth / img.naturalHeight;
+    const dw = drawH * ar;
     ctx.save();
     ctx.imageSmoothingEnabled = false;
     ctx.globalAlpha = alpha;
-    ctx.drawImage(knightImg, sx - drawW / 2, sy - drawH / 2, drawW, drawH);
+    ctx.drawImage(img, sx - dw / 2, sy - drawH / 2, dw, drawH);
     if (white) {
-      // white flash overlay using source-atop on a temp canvas would be ideal,
-      // but a cheap approach: redraw with a white-tinted multiply via composite.
       ctx.globalCompositeOperation = "source-atop";
       ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-      ctx.fillRect(sx - drawW / 2, sy - drawH / 2, drawW, drawH);
+      ctx.fillRect(sx - dw / 2, sy - drawH / 2, dw, drawH);
     }
     ctx.restore();
   }
 
   function drawBossScreen(ctx: CanvasRenderingContext2D, r: GameRefs, boss: Boss, screenW: number) {
     const { drawW, drawH } = bossScreenAnchor(r, boss, screenW);
+    const vuln = boss.worn > 0 && !boss.defeated;
     // afterimages (screen-space, ignore world camera)
     for (const ai of boss.afterimages) {
       const t = ai.life / ai.maxLife; // 1 → 0
-      drawBossSpriteAt(ctx, ai.sx, ai.sy, drawW, drawH, 0.35 * t, false);
+      drawBossSpriteAt(ctx, ai.sx, ai.sy, drawW, drawH, 0.35 * t, false, vuln);
     }
     // little wiggle on hit
     let wx = 0, wy = 0;
@@ -2514,10 +2519,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       ctx.translate(sx, sy + k * 80);
       ctx.rotate(k * 0.6);
       ctx.globalAlpha = 1 - k;
-      drawBossSpriteAt(ctx, 0, 0, drawW, drawH, 1, false);
+      drawBossSpriteAt(ctx, 0, 0, drawW, drawH, 1, false, false);
       ctx.restore();
     } else {
-      drawBossSpriteAt(ctx, sx, sy, drawW, drawH, 1, boss.hitFlash > 0.05);
+      drawBossSpriteAt(ctx, sx, sy, drawW, drawH, 1, boss.hitFlash > 0.05, vuln);
     }
     // HP pips
     const pipY = sy + drawH / 2 + 14;
