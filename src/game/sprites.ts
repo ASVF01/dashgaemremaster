@@ -77,6 +77,30 @@ function loadCycle(state: SpriteState) {
 (Object.keys(URLS) as SpriteState[]).forEach(load);
 (Object.keys(CYCLES) as SpriteState[]).forEach(loadCycle);
 
+// Public gallery: every sprite (and animated cycle frame) with a label.
+// Used by the SPRITE GALLERY in the main menu.
+export type GallerySprite = { id: string; label: string; url: string };
+export const SPRITE_GALLERY: GallerySprite[] = [
+  { id: "idle",       label: "IDLE",         url: standUrl },
+  { id: "run",        label: "RUN",          url: walkUrl },
+  { id: "runFast-1",  label: "RUN FAST 1",   url: runFast1 },
+  { id: "runFast-2",  label: "RUN FAST 2",   url: runFast2 },
+  { id: "runFast-3",  label: "RUN FAST 3",   url: runFast3 },
+  { id: "runFast-4",  label: "RUN FAST 4",   url: runFast4 },
+  { id: "jump",       label: "JUMP",         url: jumpUrl },
+  { id: "fall",       label: "FALL",         url: fallUrl },
+  { id: "slide",      label: "SLIDE",        url: slideUrl },
+  { id: "dive",       label: "DIVE",         url: diveUrl },
+  { id: "dash",       label: "DASH",         url: dashUrl },
+  { id: "skid",       label: "SKID",         url: skidUrl },
+  { id: "superDash-1",label: "SUPER DASH 1", url: superDash1 },
+  { id: "superDash-2",label: "SUPER DASH 2", url: superDash2 },
+  { id: "superDash-3",label: "SUPER DASH 3", url: superDash3 },
+  { id: "hurt",       label: "HURT",         url: hurtUrl },
+  { id: "beam",       label: "BEAM ATK",     url: beamAtkUrl },
+  { id: "beamJump",   label: "BEAM JUMP",    url: beamAtkJumpUrl },
+];
+
 // Returns the best available sprite for the requested state, with sensible
 // fallbacks (fall → jump → idle, dive → slide → idle, etc.).
 // `frame` is an arbitrary integer used to pick a frame for animated cycles.
