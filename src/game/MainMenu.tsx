@@ -7,6 +7,7 @@ import {
 import { useSettings, type Settings } from "@/game/settings";
 import { sfx, setSfxVolume, unlockAudio } from "@/game/sfx";
 import { setBgmVolume } from "@/game/bgm";
+import BgmPlayer from "@/game/BgmPlayer";
 
 export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" | "credits";
 
@@ -446,6 +447,9 @@ function ExtrasTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
           </div>
         )}
       </div>
+
+      {/* BGM PLAYER */}
+      <BgmPlayer />
 
       {/* SFX GALLERY */}
       <div className="scribble-border bg-paper p-5">
