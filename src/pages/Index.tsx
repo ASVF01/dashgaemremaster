@@ -7,7 +7,7 @@ import FpsOverlay from "@/game/FpsOverlay";
 import MainMenu from "@/game/MainMenu";
 import { LEVELS, type LevelId } from "@/game/level";
 import { useKeybinds, keyLabel, type ActionId } from "@/game/keybinds";
-import { playMenuBgm, playMenuBgmFadeIn, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor, isSameTrackAs, setBgmVolume } from "@/game/bgm";
+import { playMenuBgm, playMenuBgmFadeIn, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor, isSameTrackAs, setBgmVolume, bgmLevelEnd } from "@/game/bgm";
 import cutsceneJustRunBro from "@/assets/video/mcdonalds_sprite_2.mp4";
 import cutsceneBossDeath from "@/assets/video/boss_death_cutscene.mp4";
 import introCardImg from "@/assets/intro_card.png";
@@ -141,7 +141,11 @@ const Index = () => {
     if (screen === "menu" && introPhase !== "done" && introPhase !== "out") return;
     if (screen === "menu") playMenuBgm();
     else if (screen === "loading") {
-      // handled by startLevel's preload+play sequence below
+      // Duck + lowpass any currently-playing music while LOADING shows.
+      // The transition to "playing" calls playBgmFor → resetLevelEndFx,
+      // so volume/lowpass auto-restore once the level starts.
+      bgmLevelEnd();
+      // Track switch itself is handled by startLevel's preload+play below.
       return;
     }
     else if (screen === "playing") {
