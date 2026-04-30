@@ -1449,6 +1449,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         sfx.laserStop();
       }
       if (pl.laserActive) {
+        // Continuous screen shake while the beam is active.
+        r.shake = Math.max(r.shake, 0.22);
         // Track facing changes from movement input.
         if (pl.vx > 30) pl.laserDir = 1;
         else if (pl.vx < -30) pl.laserDir = -1;
