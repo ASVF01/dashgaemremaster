@@ -7,7 +7,7 @@ import FpsOverlay from "@/game/FpsOverlay";
 import MainMenu from "@/game/MainMenu";
 import { LEVELS, type LevelId } from "@/game/level";
 import { useKeybinds, keyLabel, type ActionId } from "@/game/keybinds";
-import { playMenuBgm, playMenuBgmFadeIn, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor, isSameTrackAs, setBgmVolume, bgmLevelEnd, playMarathonBgm } from "@/game/bgm";
+import { playMenuBgm, playMenuBgmFadeIn, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor, isSameTrackAs, setBgmVolume, bgmLevelEnd, playMarathonBgm, resetBgmLevelEndFx } from "@/game/bgm";
 import cutsceneJustRunBro from "@/assets/video/mcdonalds_sprite_2.mp4";
 import cutsceneBossDeath from "@/assets/video/boss_death_cutscene.mp4";
 import introCardImg from "@/assets/intro_card.png";
@@ -153,6 +153,10 @@ const Index = () => {
         setMarathonStep(nextStep);
         setLevelId(nextId);
         setResetKey((k) => k + 1);
+        // GameCanvas calls bgmLevelEnd() on every level finish, which ducks
+        // the volume and engages the lowpass. In marathon we keep the same
+        // track playing across sub-levels, so undo that FX immediately.
+        resetBgmLevelEndFx();
         // Stay on "playing" so the GameCanvas remounts state cleanly while
         // the starman BGM keeps playing uninterrupted.
         return;
