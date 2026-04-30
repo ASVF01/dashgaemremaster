@@ -20,6 +20,7 @@ import spookUrl from "@/assets/sprites/spook.png";
 import spookHurtUrl from "@/assets/sprites/spook_hurt.png";
 import roaringKnightUrl from "@/assets/roaring_knight.webp";
 import bossBgUrl from "@/assets/boss_bg.gif";
+import bossBgSheetUrl from "@/assets/boss_bg_sheet.webp";
 
 type Keys = Record<string, boolean>;
 
@@ -53,6 +54,13 @@ function getSpookRedTint(): HTMLCanvasElement | null {
 // Roaring Knight boss sprite. Drawn in screen-space (top-right, hovers).
 const knightImg = new Image(); knightImg.src = roaringKnightUrl;
 const bossBgImg = new Image(); bossBgImg.src = bossBgUrl;
+// Animated boss bg: 31 frames, 6 cols × 6 rows, each 320×180.
+const bossBgSheet = new Image(); bossBgSheet.src = bossBgSheetUrl;
+const BOSS_BG_FRAMES = 31;
+const BOSS_BG_COLS = 6;
+const BOSS_BG_FW = 320;
+const BOSS_BG_FH = 180;
+const BOSS_BG_FPS = 18;
 const KNIGHT_DRAW_H = 180; // rendered height in screen pixels (sprite is square-ish)
 
 function makeBoss() {
