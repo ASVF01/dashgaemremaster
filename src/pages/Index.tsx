@@ -433,12 +433,14 @@ function CutscenePlayer({ src, onDone, unskippable = false }: { src: string; onD
           </div>
         </div>
       )}
-      <button
-        onClick={onDone}
-        className="absolute bottom-6 right-6 scribble-border bg-paper text-ink font-marker text-xl px-5 py-2 hover:-rotate-2 transition-transform"
-      >
-        SKIP ▶
-      </button>
+      {!unskippable && (
+        <button
+          onClick={onDone}
+          className="absolute bottom-6 right-6 scribble-border bg-paper text-ink font-marker text-xl px-5 py-2 hover:-rotate-2 transition-transform"
+        >
+          SKIP ▶
+        </button>
+      )}
     </div>
   );
 }
