@@ -496,10 +496,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         unlockAudio();
         const r = refs.current;
         const p = r.player;
-        // INVBOI vs BOSS: replace dash with a beam shot.
+        // INVBOI vs BOSS: replace dash with a HELD LASER attack.
         if (p.starman && r.boss && !r.boss.defeated && p.alive) {
-          if (p.beamCooldown <= 0 && !e.repeat) {
-            fireBeam(r, p);
+          if (!p.laserActive && !e.repeat) {
+            p.laserActive = true;
+            p.laserDir = p.facing;
+            p.laserDamageTick = 0;
+            p.beamTime = 0.2; // pose hint
+            p.beamGrounded = p.onGround;
+            unlockAudio();
+            sfx.laserStart();
+            r.shake = Math.max(r.shake, 0.25);
           }
           return;
         }
