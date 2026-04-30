@@ -131,7 +131,7 @@ const Index = () => {
     else if (screen === "dead") { cameFromDeathRef.current = true; return; }
     else if (screen === "win") return;
     else stopBgm(0.35);
-  }, [screen, levelId]);
+  }, [screen, levelId, introPhase]);
 
   const startLevel = (id: LevelId) => {
     setLevelId(id);
