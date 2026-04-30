@@ -486,6 +486,13 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         unlockAudio();
         const r = refs.current;
         const p = r.player;
+        // INVBOI vs BOSS: replace dash with a beam shot.
+        if (p.starman && r.boss && !r.boss.defeated && p.alive) {
+          if (p.beamCooldown <= 0 && !e.repeat) {
+            fireBeam(r, p);
+          }
+          return;
+        }
         // SUPER DASH (just-run-bro only): hold dash for increasing speed.
         // No cooldown, no normal dash sfx — just a single whoosh on press.
         if (levelIdRef.current === "just-run-bro") {
