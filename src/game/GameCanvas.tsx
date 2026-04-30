@@ -2374,6 +2374,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         ctx.restore();
       }
     }
+
+    // chaser red trail (drawn behind enemies) — sized to match the spook sprite
     if (r.chaserTrail.length) {
       const tint = getSpookRedTint();
       const ratio = (spookImg.complete && spookImg.naturalWidth > 0)
