@@ -1298,6 +1298,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       }
     }
 
+    // boss
+    if (r.boss) updateBoss(r, dt, size.w);
+
     // projectiles
     for (const pr of r.projectiles) {
       if (!pr.alive) continue;
