@@ -207,6 +207,9 @@ interface Player {
   starman: boolean; // "invboi" cheat — rainbow + star sparkles + custom BGM
   somSom: boolean; // invboi while in just-run-bro — cyan variant
   starTimer: number; // timer for emitting star particles
+  beamTime: number; // remaining seconds the beam pose is held
+  beamCooldown: number; // small fire-rate cap on beams
+  beamGrounded: boolean; // whether the beam was fired from ground (pose select)
 }
 
 interface Afterimage {
@@ -263,6 +266,8 @@ interface GameRefs {
   heartbeatTimer: number;
   // Roaring Knight boss state (only present in the boss level).
   boss: Boss | null;
+  // Player beams (invboi vs boss only).
+  beams: { x: number; y: number; vx: number; vy: number; life: number; maxLife: number; hit: boolean }[];
 }
 
 // Boss is rendered in screen-space (top-right). World-space slashes attack the player.
@@ -370,6 +375,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         starman: false,
         somSom: false,
         starTimer: 0,
+        beamTime: 0,
+        beamCooldown: 0,
+        beamGrounded: true,
       },
       projectiles: [],
       particles: [],
@@ -405,6 +413,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       somSomRain: null,
       heartbeatTimer: 0,
       boss: levelId === "roaring-knight" ? makeBoss() : null,
+      beams: [],
     };
     // Any reset/level change cancels the starman shimmer too.
     sfx.shineStop(); sfx.rainStop(); sfx.slideStop();
