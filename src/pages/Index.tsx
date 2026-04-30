@@ -453,7 +453,7 @@ const Index = () => {
                   <li>✦ <b>JUMP</b> or <b>DASH</b> over spikes — never tank a hit, you'll lose ground</li>
                   <li>✦ <b>SUPER DASH</b> (hold SHIFT at high speed) to pull WAY ahead</li>
                   <li>✦ if it gets close, <b>PARRY</b> with J — knocks it back & stuns it briefly</li>
-                  <li>✦ touching the chaser hurts. parry > tank. <b>always.</b></li>
+                  <li>✦ touching the chaser hurts. parry beats tanking. <b>always.</b></li>
                 </ul>
                 <button
                   onClick={() => setChaseIntroOpen(false)}
