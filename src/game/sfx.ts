@@ -472,7 +472,35 @@ export const sfx = {
     tone({ freq: 760, to: 460, dur: 0.18, type: "triangle", vol: 0.2, attack: 0.02, release: 0.08, delay: 0.13 });
     tone({ freq: 260, to: 320, dur: 0.18, type: "sine", vol: 0.08, delay: 0.0 });
   },
-  shineStart() { startShine(); },
+  // --- Menu UI sounds: small, snappy, pen-on-paper feel ---
+  menuHover() {
+    tone({ freq: 880, to: 1180, dur: 0.05, type: "triangle", vol: 0.07, attack: 0.002, release: 0.04 });
+    noise(0.025, 0.04, 2400, 8000);
+  },
+  menuClick() {
+    // crisp "tk" — short noise tick + tiny pitched ping
+    noise(0.018, 0.18, 1800, 7000);
+    tone({ freq: 1200, to: 700, dur: 0.07, type: "triangle", vol: 0.16, attack: 0.001, release: 0.05 });
+    tone({ freq: 320, to: 220, dur: 0.05, type: "sine", vol: 0.10, attack: 0.002, release: 0.04 });
+  },
+  menuTab() {
+    // slightly chunkier two-step "thunk" for switching tabs
+    tone({ freq: 520, to: 360, dur: 0.06, type: "square", vol: 0.13, attack: 0.001, release: 0.05 });
+    tone({ freq: 720, to: 480, dur: 0.07, type: "triangle", vol: 0.12, attack: 0.001, release: 0.05, delay: 0.03 });
+    noise(0.03, 0.10, 800, 4500);
+  },
+  menuConfirm() {
+    // upbeat little "ba-ding!" for PLAY / confirm actions
+    tone({ freq: 520, dur: 0.10, type: "triangle", vol: 0.22, attack: 0.005, release: 0.08 });
+    tone({ freq: 780, dur: 0.14, type: "triangle", vol: 0.22, attack: 0.005, release: 0.10, delay: 0.07 });
+    tone({ freq: 1040, dur: 0.20, type: "sine",     vol: 0.18, attack: 0.005, release: 0.16, delay: 0.14 });
+    noise(0.04, 0.12, 2000, 8000);
+  },
+  menuBack() {
+    // descending tiny "blip" for back / cancel
+    tone({ freq: 700, to: 380, dur: 0.10, type: "triangle", vol: 0.16, attack: 0.002, release: 0.08 });
+    noise(0.02, 0.08, 1200, 5000);
+  },
   shineStop() { stopShine(); },
   laserStart() { startLaser(); },
   laserStop() { stopLaser(); },
