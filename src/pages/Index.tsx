@@ -10,6 +10,7 @@ import { useKeybinds, keyLabel, type ActionId } from "@/game/keybinds";
 import { playMenuBgm, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor, isSameTrackAs, setBgmVolume } from "@/game/bgm";
 import cutsceneJustRunBro from "@/assets/video/mcdonalds_sprite_2.mp4";
 import cutsceneBossDeath from "@/assets/video/boss_death_cutscene.mp4";
+import introCardImg from "@/assets/intro_card.png";
 import { sfx, unlockAudio, setSfxVolume, silenceAllSfx, setMuted as setSfxMuted } from "@/game/sfx";
 import { getSettings } from "@/game/settings";
 
@@ -34,6 +35,18 @@ const Index = () => {
   const [hasJrbBadge, setHasJrbBadge] = useState(false);
   const [badgeFace, setBadgeFace] = useState<":3" | "X3">(":3");
   const [dark, setDark] = useState(false);
+
+  // Intro card shown once on app start: fade in → hold 9s → fade out.
+  // Phases: "in" (opacity 0→1), "hold" (opacity 1), "out" (1→0), "done".
+  const [introPhase, setIntroPhase] = useState<"in" | "hold" | "out" | "done">("in");
+  useEffect(() => {
+    const FADE = 800; // ms
+    const HOLD = 9000; // ms fully visible
+    const t1 = window.setTimeout(() => setIntroPhase("hold"), 30); // trigger fade-in next frame
+    const t2 = window.setTimeout(() => setIntroPhase("out"), 30 + FADE + HOLD);
+    const t3 = window.setTimeout(() => setIntroPhase("done"), 30 + FADE + HOLD + FADE);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, []);
 
   // Load persisted prefs once.
   useEffect(() => {
@@ -330,6 +343,22 @@ const Index = () => {
           (best on desktop with a keyboard!)
         </p>
       </section>
+
+      {/* One-time intro card on app start. Fades in, holds 9s, fades out. */}
+      {introPhase !== "done" && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-ink pointer-events-none transition-opacity duration-[800ms] ease-out"
+          style={{ opacity: introPhase === "in" ? 0 : introPhase === "out" ? 0 : 1 }}
+          aria-hidden="true"
+        >
+          <img
+            src={introCardImg}
+            alt=""
+            className="max-w-[92vw] max-h-[88vh] object-contain select-none"
+            draggable={false}
+          />
+        </div>
+      )}
     </main>
   );
 };
