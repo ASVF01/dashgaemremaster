@@ -431,7 +431,7 @@ export const sfx = {
   laserStop() { stopLaser(); },
   rainStart() { startRain(); },
   rainStop() { stopRain(); },
-  slideStart() { startSlideLoop(); },
+  slideStart() { if (!shimmerReplaces()) startSlideLoop(); },
   slideStop() { stopSlideLoop(); },
   slideIntensity(v: number) { setSlideIntensity(v); },
   thunder() {
