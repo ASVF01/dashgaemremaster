@@ -2837,12 +2837,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     ctx.globalAlpha = alpha;
     ctx.drawImage(img, sx - dw / 2, sy - drawH / 2, dw, drawH);
     if (hurt) {
-      // Solid red flash that strobes between bright red and deep red — fully
-      // opaque so white pixels never wash to pink/grey under the overlay.
       const bright = (Math.floor(performance.now() / 70) % 2) === 0;
+      ctx.globalCompositeOperation = "source-over";
+      ctx.globalAlpha = bright ? 0.5 * alpha : 0.28 * alpha;
+      ctx.strokeStyle = bright ? "rgb(255,32,64)" : "rgb(190,20,48)";
+      ctx.lineWidth = Math.max(3, drawH * 0.035);
+      ctx.strokeRect(sx - dw / 2, sy - drawH / 2, dw, drawH);
       ctx.globalCompositeOperation = "source-atop";
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = bright ? "rgb(255,40,72)" : "rgb(190,20,48)";
+      ctx.globalAlpha = bright ? 0.22 * alpha : 0.1 * alpha;
+      ctx.fillStyle = "rgb(255,32,64)";
       ctx.fillRect(sx - dw / 2, sy - drawH / 2, dw, drawH);
     } else if (white) {
       ctx.globalCompositeOperation = "source-atop";
