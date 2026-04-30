@@ -302,6 +302,10 @@ interface Boss {
   slashes: { angle: number; len: number; t: number; dur: number; hit: boolean }[];
   defeated: boolean;
   defeatT: number;
+  retreatX: number; // accumulated retreat offset (screen-space, +x = away to the right)
+  retreatY: number; // accumulated retreat offset (negative = up)
+  retreatVx: number;
+  retreatVy: number;
 }
 
 interface Props {
