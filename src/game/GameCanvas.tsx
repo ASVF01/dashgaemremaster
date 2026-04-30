@@ -444,6 +444,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // Any reset/level change cancels the starman shimmer too.
     sfx.shineStop(); sfx.rainStop(); sfx.slideStop(); sfx.laserStop();
     setCelestialMode(false);
+    setThunderMode(false);
   }, [resetKey, levelId]);
 
   // BGM: stop on unmount only. The parent (Index) decides which track to
