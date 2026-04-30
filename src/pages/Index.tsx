@@ -107,6 +107,7 @@ const Index = () => {
       playBgmFor(levelId, restart);
     }
     else if (screen === "cutscene") stopBgm(0.35);
+    else if (screen === "death-cutscene") stopBgm(0.1);
     else if (screen === "dead") { cameFromDeathRef.current = true; return; }
     else if (screen === "win") return;
     else stopBgm(0.35);
