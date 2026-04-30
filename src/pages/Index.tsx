@@ -153,6 +153,10 @@ const Index = () => {
         setMarathonStep(nextStep);
         setLevelId(nextId);
         setResetKey((k) => k + 1);
+        // GameCanvas calls bgmLevelEnd() on every level finish, which ducks
+        // the volume and engages the lowpass. In marathon we keep the same
+        // track playing across sub-levels, so undo that FX immediately.
+        resetBgmLevelEndFx();
         // Stay on "playing" so the GameCanvas remounts state cleanly while
         // the starman BGM keeps playing uninterrupted.
         return;
