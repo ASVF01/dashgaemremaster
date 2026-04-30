@@ -222,6 +222,32 @@ interface GameRefs {
   somSomCloudX: number | null;
   somSomRain: Float32Array | null; // packed [x, y, speed, len] * N
   heartbeatTimer: number;
+  // Roaring Knight boss state (only present in the boss level).
+  boss: Boss | null;
+}
+
+// Boss is rendered in screen-space (top-right). World-space slashes attack the player.
+interface Boss {
+  hp: number;
+  maxHp: number;
+  // Screen-space anchor (camera-locked). Drawn at this position.
+  screenX: number;
+  screenY: number;
+  hoverPhase: number;
+  // attack cycle
+  attackTimer: number; // counts down to next attack burst
+  attacksRemaining: number; // attacks left in current burst before "worn out"
+  worn: number; // seconds remaining of "worn out" / vulnerable window
+  hitFlash: number; // 0..1 white flash overlay on the sprite
+  shakeT: number; // residual shake time (own little wiggle on hit)
+  // afterimages (screen-space, ignore camera)
+  afterTimer: number;
+  afterimages: { sx: number; sy: number; life: number; maxLife: number; flipped: boolean }[];
+  // active slashes (world-space) and incoming warning lines
+  warnings: { x1: number; y1: number; x2: number; y2: number; t: number; dur: number; fired: boolean }[];
+  slashes: { x1: number; y1: number; x2: number; y2: number; t: number; dur: number; hit: boolean }[];
+  defeated: boolean;
+  defeatT: number;
 }
 
 interface Props {
