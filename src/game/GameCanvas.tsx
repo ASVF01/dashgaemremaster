@@ -3377,22 +3377,21 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     const p = r.player;
     const cx = p.x + p.w / 2;
     const cy = p.y + p.h / 2;
-    // Random-ish anchor points scattered across the stick figure's body
-    // (head, torso, arms, legs). Coordinates are normalized offsets from
+    // Random-ish anchor points scattered across the stick figure's upper body
+    // (head, torso, shoulders, arms). Coordinates are normalized offsets from
     // player center: x in [-0.5..0.5] * p.w, y in [-0.5..0.5] * p.h.
     const SLOTS: Array<[number, number]> = [
-      [ 0.00, -0.42], // head top
-      [-0.12, -0.30], // head side
-      [ 0.10, -0.18], // neck
-      [-0.20, -0.05], // shoulder L
-      [ 0.22, -0.02], // shoulder R
-      [-0.05,  0.05], // chest
-      [ 0.08,  0.18], // belly
-      [-0.28,  0.20], // hand L
-      [ 0.30,  0.12], // hand R
-      [-0.15,  0.35], // thigh L
-      [ 0.18,  0.32], // thigh R
-      [-0.10,  0.46], // foot L
+      [ 0.00, -0.40], // head top
+      [-0.14, -0.32], // head L
+      [ 0.14, -0.30], // head R
+      [-0.02, -0.22], // face
+      [-0.22, -0.10], // shoulder L
+      [ 0.22, -0.08], // shoulder R
+      [-0.05, -0.02], // chest
+      [ 0.10,  0.06], // upper torso R
+      [-0.28,  0.08], // arm L
+      [ 0.28,  0.10], // arm R
+      [-0.08,  0.16], // mid torso
     ];
     const LIFE = 0.4;
     const CYCLE = 0.9;
