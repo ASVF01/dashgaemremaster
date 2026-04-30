@@ -243,6 +243,8 @@ interface GameRefs {
   cameraX: number;
   shake: number;
   freezeFrames: number;
+  freezeTime: number; // hard hitstop in seconds (skips update entirely)
+  bossExplosions: { x: number; y: number; t: number; dur: number }[];
   time: number;
   combo: number;
   comboTimer: number;
