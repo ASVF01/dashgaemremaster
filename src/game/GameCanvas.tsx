@@ -459,7 +459,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         const r = refs.current;
         if (r.player.parryCooldown <= 0 && r.player.parrying <= 0) {
           r.player.parrying = PARRY_WINDOW;
-          r.player.parryCooldown = PARRY_COOLDOWN + PARRY_WINDOW;
+          // Boss fights: shorter cooldown so the player can keep up with the
+          // knight's quick attacks, but still long enough that you can't just
+          // mash the button — must be a deliberate retry after the active
+          // window closes.
+          const cd = r.boss ? PARRY_WINDOW + 0.18 : PARRY_COOLDOWN + PARRY_WINDOW;
+          r.player.parryCooldown = cd;
           // i-frames for the entire parry active window so you can't get hit while parrying
           if (r.player.invuln < PARRY_WINDOW) r.player.invuln = PARRY_WINDOW;
           sfx.parryStart();
@@ -1535,7 +1540,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // for the same duration so the active window can't re-fire mid-iframes.
     r.player.invuln = Math.max(r.player.invuln, 2.5);
     r.player.parrying = 0;
-    r.player.parryCooldown = 2.5;
+    r.player.parryCooldown = r.boss ? 0.25 : 2.5;
     sfx.parryHit();
     // boost in facing dir
     r.player.vx += r.player.facing * PARRY_BOOST;
