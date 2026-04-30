@@ -41,6 +41,109 @@ export default function BgmPlayer() {
   // Remember whether we muted the game BGM so we can restore it on stop.
   const mutedGameRef = useRef(false);
 
+  // ---- Audio visualizer (AnalyserNode -> canvas) ----
+  const vizCanvasRef = useRef<HTMLCanvasElement>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const beatPulseRef = useRef(0);
+  const lastBassRef = useRef(0);
+
+  // Lazily build the audio graph on the first play (needs a user gesture).
+  const ensureAnalyser = () => {
+    const a = audioRef.current;
+    if (!a || sourceRef.current) return;
+    try {
+      const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (!Ctx) return;
+      const ac = new Ctx();
+      const src = ac.createMediaElementSource(a);
+      const an = ac.createAnalyser();
+      an.fftSize = 256;
+      an.smoothingTimeConstant = 0.78;
+      src.connect(an);
+      an.connect(ac.destination);
+      audioCtxRef.current = ac;
+      analyserRef.current = an;
+      sourceRef.current = src;
+    } catch { /* element already wired or blocked */ }
+  };
+
+  // Draw loop: bars + reactive beat ring.
+  useEffect(() => {
+    const draw = () => {
+      const an = analyserRef.current;
+      const cvs = vizCanvasRef.current;
+      if (an && cvs) {
+        const ctx = cvs.getContext("2d");
+        if (ctx) {
+          // Hi-DPI sizing on the fly.
+          const dpr = window.devicePixelRatio || 1;
+          const cssW = cvs.clientWidth;
+          const cssH = cvs.clientHeight;
+          if (cvs.width !== cssW * dpr || cvs.height !== cssH * dpr) {
+            cvs.width = cssW * dpr;
+            cvs.height = cssH * dpr;
+          }
+          const W = cvs.width, H = cvs.height;
+          const data = new Uint8Array(an.frequencyBinCount);
+          an.getByteFrequencyData(data);
+
+          // Beat detection: simple bass-energy delta on lowest ~6 bins.
+          let bass = 0;
+          for (let i = 0; i < 6; i++) bass += data[i];
+          bass /= 6 * 255;
+          const delta = Math.max(0, bass - lastBassRef.current);
+          lastBassRef.current = bass * 0.86 + lastBassRef.current * 0.14;
+          if (delta > 0.07) beatPulseRef.current = Math.min(1, beatPulseRef.current + delta * 2.2);
+          beatPulseRef.current *= 0.92;
+
+          // Background — paper-tinted with a subtle pulse.
+          ctx.clearRect(0, 0, W, H);
+          const pulse = beatPulseRef.current;
+          ctx.fillStyle = `rgba(20,20,20,${0.04 + pulse * 0.18})`;
+          ctx.fillRect(0, 0, W, H);
+
+          // Bars
+          const bars = 48;
+          const step = Math.floor(data.length / bars);
+          const bw = W / bars;
+          for (let i = 0; i < bars; i++) {
+            let v = 0;
+            for (let k = 0; k < step; k++) v += data[i * step + k];
+            v = v / step / 255; // 0..1
+            const bh = Math.pow(v, 1.2) * H * 0.92;
+            const x = i * bw;
+            const y = H - bh;
+            // Color: ink with accent tint scaling on energy + beat.
+            const intensity = Math.min(1, v + pulse * 0.5);
+            const r = Math.round(20 + intensity * 235);
+            const g = Math.round(20 + intensity * 60);
+            const b = Math.round(20 + (1 - intensity) * 60);
+            ctx.fillStyle = `rgb(${r},${g},${b})`;
+            ctx.fillRect(x + 1, y, Math.max(1, bw - 2), bh);
+          }
+
+          // Beat ring overlay
+          if (pulse > 0.05) {
+            ctx.save();
+            ctx.globalAlpha = pulse * 0.6;
+            ctx.strokeStyle = `rgb(255,${Math.round(60 + pulse * 120)},80)`;
+            ctx.lineWidth = 2 + pulse * 6;
+            ctx.beginPath();
+            ctx.arc(W / 2, H / 2, Math.min(W, H) * (0.18 + pulse * 0.18), 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
+      }
+      rafRef.current = requestAnimationFrame(draw);
+    };
+    rafRef.current = requestAnimationFrame(draw);
+    return () => { if (rafRef.current != null) cancelAnimationFrame(rafRef.current); };
+  }, []);
+
   // Restore game BGM on unmount.
   useEffect(() => {
     return () => {
@@ -50,6 +153,7 @@ export default function BgmPlayer() {
         setBgmMuted(false);
         mutedGameRef.current = false;
       }
+      try { audioCtxRef.current?.close(); } catch { /* noop */ }
     };
   }, []);
 
@@ -75,6 +179,8 @@ export default function BgmPlayer() {
       setBgmMuted(true);
       mutedGameRef.current = true;
     }
+    ensureAnalyser();
+    try { await audioCtxRef.current?.resume(); } catch { /* noop */ }
     try { await a.play(); setPlaying(true); } catch { /* user gesture needed */ }
   };
 
@@ -135,6 +241,20 @@ export default function BgmPlayer() {
         <div className="font-scribble text-lg text-ink/70 tabular-nums">
           {fmt(time)} / {fmt(dur)}
         </div>
+      </div>
+
+      {/* Visualizer */}
+      <div className="scribble-border bg-paper p-1 mb-3 relative overflow-hidden">
+        <canvas
+          ref={vizCanvasRef}
+          className="block w-full h-24 sm:h-28"
+          aria-hidden="true"
+        />
+        {!playing && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none font-marker text-xl text-ink/40">
+            ♪ press play ♪
+          </div>
+        )}
       </div>
 
       {/* Seek bar */}
