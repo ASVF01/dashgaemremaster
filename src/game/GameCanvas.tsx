@@ -2231,15 +2231,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     return { drawW, drawH: KNIGHT_DRAW_H };
   }
 
-  function spawnBossWarning(r: GameRefs, boss: Boss) {
-    // Spinning red telegraph that re-aims toward the player while spinning,
-    // then locks in and fires a white slash. Length is fixed (long beam).
-    const p = r.player;
-    const bossWorldX = r.cameraX + boss.screenX;
-    const bossWorldY = boss.screenY;
-    const dx = p.x + p.w / 2 - bossWorldX;
-    const dy = p.y + p.h / 2 - bossWorldY;
-    const angle = Math.atan2(dy, dx);
+  function spawnBossWarning(_r: GameRefs, boss: Boss) {
+    // Player-centered telegraph at a RANDOM angle. The line is detached from
+    // the knight and follows the player at this fixed angle for its lifetime.
+    const angle = Math.random() * Math.PI * 2;
     boss.warnings.push({
       t: 0, dur: 0.5, fired: false,
       angle,
