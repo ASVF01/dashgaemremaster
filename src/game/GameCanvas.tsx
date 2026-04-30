@@ -2417,6 +2417,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           boss.defeatT = 0;
           r.shake = Math.max(r.shake, 1.0);
           burst(r, bx + bw / 2, by + bh / 2, "#ffffff", 60, 520);
+          sfx.bossDefeat();
         }
       }
     }

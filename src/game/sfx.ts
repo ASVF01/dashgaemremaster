@@ -5,6 +5,8 @@ import wwHitUrl from "@/assets/audio/ww.ogg";
 import notBadUrl from "@/assets/audio/not_bad.ogg";
 import auraUrl from "@/assets/audio/aura.mp3";
 import swingSwipeUrl from "@/assets/audio/swing_swipe.ogg";
+import sfxCompleteUrl from "@/assets/audio/sfx_complete.ogg";
+import sfxYesUrl from "@/assets/audio/sfx_yes.ogg";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -354,6 +356,14 @@ export const sfx = {
     tone({ freq: 320, to: 90, dur: 0.18, type: "sawtooth", vol: 0.42, attack: 0.002, release: 0.1 });
     noise(0.06, 0.36, 600, 5500);
     tone({ freq: 1500, to: 700, dur: 0.1, type: "triangle", vol: 0.18, release: 0.06 });
+  },
+  bossDefeat() {
+    // Fire both victory stings simultaneously when a boss is beaten.
+    playSample(sfxCompleteUrl, { vol: 0.9 });
+    playSample(sfxYesUrl, { vol: 0.9 });
+    // Pre-warm decode cache for next time.
+    loadSample(sfxCompleteUrl);
+    loadSample(sfxYesUrl);
   },
 };
 
