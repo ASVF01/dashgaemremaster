@@ -62,12 +62,18 @@ function makeBoss() {
     attackTimer: 2.0,         // grace period before first slash
     attacksRemaining: 3,      // slashes per burst
     worn: 0,                  // vulnerable window
+    wornWorldX: 0,            // pinned world X while staggered (un-sticks from camera)
+    wornAnchored: false,
     hitFlash: 0,
     shakeT: 0,
     afterTimer: 0,
-    afterimages: [] as { sx: number; sy: number; life: number; maxLife: number; flipped: boolean }[],
-    warnings: [] as { x1: number; y1: number; x2: number; y2: number; t: number; dur: number; fired: boolean }[],
-    slashes: [] as { x1: number; y1: number; x2: number; y2: number; t: number; dur: number; hit: boolean }[],
+    // afterimages drift right in screen-space and ignore world camera
+    afterimages: [] as { sx: number; sy: number; vx: number; life: number; maxLife: number; flipped: boolean }[],
+    // warnings: spinning red lines that re-aim toward player while spinning,
+    // then lock in their final angle and fire a white slash.
+    warnings: [] as { t: number; dur: number; fired: boolean; angle: number; len: number }[],
+    // slashes: re-aimed every frame from boss origin toward player while alive
+    slashes: [] as { angle: number; len: number; t: number; dur: number; hit: boolean }[],
     defeated: false,
     defeatT: 0,
   };
