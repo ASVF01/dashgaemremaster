@@ -24,6 +24,10 @@ const TRACKS: Partial<Record<LevelId, string>> = {
   chase: bgmChampionDuel2,
   "just-run-bro": bgmJustRunBro,
   "roaring-knight": bgmBlackKnife,
+  // Post-boss act: reuse the same track as scribble 1-3.
+  "aftermath-1": bgmChampionPlay,
+  "aftermath-2": bgmChampionPlay,
+  "aftermath-3": bgmChampionPlay,
 };
 
 // Crossfade length in seconds for the seamless LOOP point inside one track.
