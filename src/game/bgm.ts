@@ -8,6 +8,7 @@ import bgmChampionPlay from "@/assets/audio/bgm_champion_play.mp3";
 import bgmChampionDuel2 from "@/assets/audio/bgm_champion_duel2.mp3";
 import bgmTutorial from "@/assets/audio/bgm_tutorial.mp3";
 import bgmStarman from "@/assets/audio/bgm_starman.mp3";
+import bgmMarathonStarman from "@/assets/audio/bgm_marathon_starman.mp3";
 import bgmSomSom from "@/assets/audio/a_lil_som_som.mp3";
 import bgmMap1 from "@/assets/audio/bgm_map1.mp3";
 import bgmBlackKnife from "@/assets/audio/black_knife.mp3";
@@ -335,12 +336,48 @@ export function playStarmanBgm() {
 }
 
 // Seconds elapsed since the Starman track started playing, or null if it
-// isn't currently playing.
+// isn't currently playing. Also returns elapsed for the marathon variant
+// so the starman cinematic timing keeps working in CELESTIAL MARATHON.
 export function getStarmanElapsed(): number | null {
   const c = ac();
-  if (!c || !playing || playing.src !== bgmStarman || playing.stopped) return null;
-  if (starmanStartCtxTime == null) return null;
-  return c.currentTime - starmanStartCtxTime;
+  if (!c || !playing || playing.stopped) return null;
+  if (playing.src === bgmStarman) {
+    if (starmanStartCtxTime == null) return null;
+    return c.currentTime - starmanStartCtxTime;
+  }
+  if (playing.src === bgmMarathonStarman) {
+    if (marathonStartCtxTime == null) return null;
+    return c.currentTime - marathonStartCtxTime;
+  }
+  return null;
+}
+
+// Marathon-only starman track (CELESTIAL MARATHON). Uses a different mp3
+// so the marathon has its own iconic theme distinct from invboi pickups.
+let marathonStartCtxTime: number | null = null;
+export function playMarathonBgm() {
+  ac();
+  loadBuffer(bgmMarathonStarman).catch(() => { /* ignore */ });
+  marathonStartCtxTime = null;
+  playSrc(bgmMarathonStarman, true);
+  const c = ac();
+  if (c) {
+    const start = performance.now();
+    const tick = () => {
+      if (playing && playing.src === bgmMarathonStarman && !playing.stopped) {
+        marathonStartCtxTime = playing.startedAt;
+        return;
+      }
+      if (performance.now() - start > 4000) return;
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+}
+// True if the marathon BGM is what's currently playing. Used by GameCanvas
+// to avoid restarting BGM when invboi is "re-applied" mid-marathon.
+export function isMarathonBgmPlaying(): boolean {
+  return !!playing && !playing.stopped && playing.src === bgmMarathonStarman;
 }
 
 // "A lil som som" — invboi cheat track variant played only on just-run-bro.
