@@ -20,6 +20,7 @@ import spookUrl from "@/assets/sprites/spook.png";
 import spookHurtUrl from "@/assets/sprites/spook_hurt.png";
 import roaringKnightUrl from "@/assets/roaring_knight.png";
 import roaringKnightVulnUrl from "@/assets/roaring_knight_vulnerable.png";
+import roaringKnightHurtUrl from "@/assets/sprites/boss_knight_hurt.png";
 import bossBgUrl from "@/assets/boss_bg.gif";
 import bossBgSheetUrl from "@/assets/boss_bg_sheet.webp";
 
@@ -55,6 +56,7 @@ function getSpookRedTint(): HTMLCanvasElement | null {
 // Roaring Knight boss sprite. Drawn in screen-space (top-right, hovers).
 const knightImg = new Image(); knightImg.src = roaringKnightUrl;
 const knightVulnImg = new Image(); knightVulnImg.src = roaringKnightVulnUrl;
+const knightHurtImg = new Image(); knightHurtImg.src = roaringKnightHurtUrl;
 const bossBgImg = new Image(); bossBgImg.src = bossBgUrl;
 // Animated boss bg: 31 frames, 6 cols × 6 rows, each 320×180.
 const bossBgSheet = new Image(); bossBgSheet.src = bossBgSheetUrl;
@@ -77,6 +79,7 @@ function makeBoss() {
     wornWorldX: 0,            // pinned world X while staggered (un-sticks from camera)
     wornAnchored: false,
     hitFlash: 0,
+    hurtT: 0,
     shakeT: 0,
     afterTimer: 0,
     // afterimages drift right in screen-space and ignore world camera
@@ -296,6 +299,7 @@ interface Boss {
   wornWorldX: number; // pinned world X while staggered (un-sticks from camera)
   wornAnchored: boolean;
   hitFlash: number; // 0..1 white flash overlay on the sprite
+  hurtT: number; // seconds remaining showing the "hurt" sprite + red flash on damage
   shakeT: number; // residual shake time (own little wiggle on hit)
   // afterimages (screen-space, ignore camera) — drift right via vx
   afterTimer: number;
@@ -1494,6 +1498,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
             if (hits) {
               boss.hp -= 1;
               boss.hitFlash = 1;
+              boss.hurtT = 1.2;
               boss.shakeT = 0.3;
               boss.worn = 0;
               boss.attacksRemaining = 3;
@@ -2578,6 +2583,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     const boss = r.boss!;
     boss.hoverPhase += dt * 2.2;
     if (boss.hitFlash > 0) boss.hitFlash = Math.max(0, boss.hitFlash - dt * 4);
+    if (boss.hurtT > 0) boss.hurtT = Math.max(0, boss.hurtT - dt);
     if (boss.shakeT > 0) boss.shakeT = Math.max(0, boss.shakeT - dt);
     // tick + cull boss explosion VFX
     for (const ex of r.bossExplosions) ex.t += dt;
@@ -2713,6 +2719,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       if (rectOverlap(p.x, p.y, p.w, p.h, bx, by, bw, bh)) {
         boss.hp -= 1;
         boss.hitFlash = 1;
+        boss.hurtT = 1.2;
         boss.shakeT = 0.35;
         boss.worn = 0;
         boss.attacksRemaining = 3;
@@ -2816,8 +2823,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
   }
 
-  function drawBossSpriteAt(ctx: CanvasRenderingContext2D, sx: number, sy: number, drawW: number, drawH: number, alpha: number, white: boolean, vulnerable = false) {
-    const img = vulnerable && knightVulnImg.complete && knightVulnImg.naturalWidth ? knightVulnImg : knightImg;
+  function drawBossSpriteAt(ctx: CanvasRenderingContext2D, sx: number, sy: number, drawW: number, drawH: number, alpha: number, white: boolean, vulnerable = false, hurt = false) {
+    const hurtReady = knightHurtImg.complete && knightHurtImg.naturalWidth;
+    const img = hurt && hurtReady
+      ? knightHurtImg
+      : (vulnerable && knightVulnImg.complete && knightVulnImg.naturalWidth ? knightVulnImg : knightImg);
     if (!img.complete || !img.naturalWidth) return;
     // Recompute drawW to keep aspect ratio of whichever sprite we're using.
     const ar = img.naturalWidth / img.naturalHeight;
@@ -2826,7 +2836,13 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     ctx.imageSmoothingEnabled = false;
     ctx.globalAlpha = alpha;
     ctx.drawImage(img, sx - dw / 2, sy - drawH / 2, dw, drawH);
-    if (white) {
+    if (hurt) {
+      // Red flash overlay (strobes) for clear damage feedback.
+      const strobe = (Math.floor(performance.now() / 70) % 2) === 0 ? 0.55 : 0.3;
+      ctx.globalCompositeOperation = "source-atop";
+      ctx.fillStyle = `rgba(245,35,76,${strobe * alpha})`;
+      ctx.fillRect(sx - dw / 2, sy - drawH / 2, dw, drawH);
+    } else if (white) {
       ctx.globalCompositeOperation = "source-atop";
       ctx.fillStyle = `rgba(255,255,255,${alpha})`;
       ctx.fillRect(sx - dw / 2, sy - drawH / 2, dw, drawH);
@@ -2912,7 +2928,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       drawBossSpriteAt(ctx, 0, 0, drawW, drawH, 1, false, false);
       ctx.restore();
     } else {
-      drawBossSpriteAt(ctx, sx, sy, drawW, drawH, 1, boss.hitFlash > 0.05, vuln);
+      drawBossSpriteAt(ctx, sx, sy, drawW, drawH, 1, boss.hitFlash > 0.05 && boss.hurtT <= 0, vuln, boss.hurtT > 0);
     }
     // HP pips (hide during defeat retreat)
     if (!boss.defeated) {
