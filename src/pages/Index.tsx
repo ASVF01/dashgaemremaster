@@ -55,6 +55,10 @@ const Index = () => {
   const chaseIntroSeenKeyRef = useRef<string | null>(null);
   // Marathon: index into MARATHON_SEQUENCE, or null if not running.
   const [marathonStep, setMarathonStep] = useState<number | null>(null);
+  // Marathon speedrun timer (ms). Accumulates real-time across all sub-levels.
+  const [marathonMs, setMarathonMs] = useState(0);
+  const marathonStartRef = useRef<number | null>(null);
+  const [marathonFinalMs, setMarathonFinalMs] = useState<number | null>(null);
   const [binds] = useKeybinds();
   const [muted, setMuted] = useState(false);
   const [hasJrbBadge, setHasJrbBadge] = useState(false);
