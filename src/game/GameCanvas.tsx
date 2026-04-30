@@ -2228,16 +2228,23 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     boss.hoverPhase += dt * 2.2;
     if (boss.hitFlash > 0) boss.hitFlash = Math.max(0, boss.hitFlash - dt * 4);
     if (boss.shakeT > 0) boss.shakeT = Math.max(0, boss.shakeT - dt);
-    bossScreenAnchor(boss, screenW);
+    bossScreenAnchor(r, boss, screenW);
 
-    // afterimages — screen-space, every ~30ms, life 0.2s
+    // afterimages — screen-space, drift right, ignore world camera.
     boss.afterTimer -= dt;
     if (boss.afterTimer <= 0 && !boss.defeated) {
       boss.afterTimer = 0.03;
-      boss.afterimages.push({ sx: boss.screenX, sy: boss.screenY, life: 0.2, maxLife: 0.2, flipped: false });
+      boss.afterimages.push({
+        sx: boss.screenX, sy: boss.screenY,
+        vx: 90, // px/sec drift to the right (screen-space)
+        life: 0.2, maxLife: 0.2, flipped: false,
+      });
       if (boss.afterimages.length > 12) boss.afterimages.splice(0, boss.afterimages.length - 12);
     }
-    for (const ai of boss.afterimages) ai.life -= dt;
+    for (const ai of boss.afterimages) {
+      ai.life -= dt;
+      ai.sx += ai.vx * dt;
+    }
     boss.afterimages = boss.afterimages.filter((a) => a.life > 0);
 
     if (boss.defeated) {
@@ -2257,46 +2264,64 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     if (boss.worn > 0) {
       boss.worn -= dt;
       if (boss.worn <= 0) {
-        // back to attacking
         boss.attacksRemaining = 3;
         boss.attackTimer = 1.0;
       }
     } else {
       boss.attackTimer -= dt;
       if (boss.attackTimer <= 0 && boss.attacksRemaining > 0) {
-        spawnBossSlash(r, boss);
+        spawnBossWarning(r, boss);
         boss.attacksRemaining -= 1;
         boss.attackTimer = 0.85;
         if (boss.attacksRemaining <= 0) {
-          // burst done — vulnerable window
           boss.worn = 2.6;
         }
       }
     }
 
-    // Update warnings → spawn slashes
+    // Update warnings: spin + re-aim toward player while spinning, then fire slash.
+    const p = r.player;
+    const pcx = p.x + p.w / 2;
+    const pcy = p.y + p.h / 2;
     for (const wn of boss.warnings) {
       wn.t += dt;
+      // continuously steer the angle toward the player so the red line "tracks" them
+      const bossWX = r.cameraX + boss.screenX;
+      const bossWY = boss.screenY;
+      const targetAngle = Math.atan2(pcy - bossWY, pcx - bossWX);
+      // shortest-arc lerp
+      let diff = ((targetAngle - wn.angle + Math.PI) % (Math.PI * 2)) - Math.PI;
+      if (diff < -Math.PI) diff += Math.PI * 2;
+      wn.angle += diff * Math.min(1, dt * 9);
       if (!wn.fired && wn.t >= wn.dur) {
         wn.fired = true;
-        boss.slashes.push({ x1: wn.x1, y1: wn.y1, x2: wn.x2, y2: wn.y2, t: 0, dur: 0.2, hit: false });
+        boss.slashes.push({ angle: wn.angle, len: wn.len, t: 0, dur: 0.2, hit: false });
         sfx.slashShing();
       }
     }
     boss.warnings = boss.warnings.filter((w) => !w.fired);
 
-    // Update slashes — collide with player unless parrying / iframes
+    // Update slashes — re-aim to follow the player every frame ("stay on the player").
     for (const sl of boss.slashes) {
       sl.t += dt;
+      const bossWX = r.cameraX + boss.screenX;
+      const bossWY = boss.screenY;
+      const targetAngle = Math.atan2(pcy - bossWY, pcx - bossWX);
+      let diff = ((targetAngle - sl.angle + Math.PI) % (Math.PI * 2)) - Math.PI;
+      if (diff < -Math.PI) diff += Math.PI * 2;
+      // tighter tracking on active slash so it sticks on player
+      sl.angle += diff * Math.min(1, dt * 14);
       if (!sl.hit) {
-        const p = r.player;
-        if (segRectOverlap(sl.x1, sl.y1, sl.x2, sl.y2, p.x, p.y, p.w, p.h)) {
+        const x1 = bossWX, y1 = bossWY;
+        const x2 = bossWX + Math.cos(sl.angle) * sl.len;
+        const y2 = bossWY + Math.sin(sl.angle) * sl.len;
+        if (segRectOverlap(x1, y1, x2, y2, p.x, p.y, p.w, p.h)) {
           if (p.parrying > 0) {
             sl.hit = true;
-            parrySuccess(r, (sl.x1 + sl.x2) / 2, (sl.y1 + sl.y2) / 2);
+            parrySuccess(r, (x1 + x2) / 2, (y1 + y2) / 2);
           } else if (p.invuln <= 0 && p.alive) {
             sl.hit = true;
-            damage(r, (sl.x1 + sl.x2) / 2, (sl.y1 + sl.y2) / 2);
+            damage(r, (x1 + x2) / 2, (y1 + y2) / 2);
           }
         }
       }
@@ -2305,9 +2330,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
     // Player dash hit on boss — only when worn-out (vulnerable)
     if (boss.worn > 0 && r.player.dashTime > 0 && r.player.alive) {
-      const p = r.player;
-      const { drawW, drawH } = bossScreenAnchor(boss, screenW);
-      // boss hitbox in world space (anchored to camera)
+      const { drawW, drawH } = bossScreenAnchor(r, boss, screenW);
       const bx = r.cameraX + boss.screenX - drawW * 0.35;
       const by = boss.screenY - drawH * 0.4;
       const bw = drawW * 0.7;
@@ -2316,7 +2339,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         boss.hp -= 1;
         boss.hitFlash = 1;
         boss.shakeT = 0.35;
-        boss.worn = 0; // reset: he goes back to attacking
+        boss.worn = 0;
         boss.attacksRemaining = 3;
         boss.attackTimer = 1.6;
         r.shake = Math.max(r.shake, 0.5);
@@ -2324,7 +2347,6 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         r.score += 500;
         burst(r, bx + bw / 2, by + bh / 2, "#fff34a", 22, 360);
         sfx.bossHurt();
-        // bounce player back so they can't multi-hit on one dash
         p.vx = -p.facing * 380;
         p.vy = -260;
         p.invuln = Math.max(p.invuln, 0.4);
