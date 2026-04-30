@@ -225,6 +225,27 @@ const Index = () => {
   }, [introPhase]);
 
   const startLevel = (id: LevelId) => {
+    // CELESTIAL MARATHON: hijack into the chained sequence. Start the
+    // starman BGM exactly once on entry; subsequent sub-level transitions
+    // leave it playing.
+    if (id === "celestial-marathon") {
+      const firstId = MARATHON_SEQUENCE[0];
+      setMarathonStep(0);
+      setLevelId(firstId);
+      setResetKey((k) => k + 1);
+      setInvboiIntroOpen(false);
+      setScreen("loading");
+      // Kick the starman track now so it's already playing when the level
+      // appears. Skip the BGM "loading duck" since we want it at full vol.
+      preloadBgmFor(firstId).then(() => {
+        playStarmanBgm();
+        setTimeout(() => {
+          setScreen((s) => (s === "loading" ? "playing" : s));
+        }, 250);
+      });
+      return;
+    }
+    setMarathonStep(null);
     setLevelId(id);
     setResetKey((k) => k + 1);
     setInvboiIntroOpen(false);
@@ -241,6 +262,20 @@ const Index = () => {
   const retry = () => {
     setResetKey((k) => k + 1);
     setInvboiIntroOpen(false);
+    // Marathon retry from death: restart from the first sub-level.
+    if (marathonStep != null) {
+      const firstId = MARATHON_SEQUENCE[0];
+      setMarathonStep(0);
+      setLevelId(firstId);
+      setScreen("loading");
+      preloadBgmFor(firstId).then(() => {
+        playStarmanBgm();
+        setTimeout(() => {
+          setScreen((s) => (s === "loading" ? "playing" : s));
+        }, 250);
+      });
+      return;
+    }
     setScreen("loading");
     preloadBgmFor(levelId).then(() => {
       setTimeout(() => {
@@ -248,7 +283,7 @@ const Index = () => {
       }, 250);
     });
   };
-  const backToMenu = () => { setInvboiIntroOpen(false); setScreen("menu"); };
+  const backToMenu = () => { setInvboiIntroOpen(false); setMarathonStep(null); setScreen("menu"); };
   const handleInvboiPickup = useCallback(() => setInvboiIntroOpen(true), []);
 
   // Award the "just run bro" badge and head back to the main menu.
