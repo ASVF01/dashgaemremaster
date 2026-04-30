@@ -260,12 +260,17 @@ const Index = () => {
       setResetKey((k) => k + 1);
       setInvboiIntroOpen(false); setChaseIntroOpen(false);
       setScreen("loading");
+      // Reset + start the speedrun timer when the first level appears.
+      setMarathonMs(0);
+      setMarathonFinalMs(null);
+      marathonStartRef.current = null;
       // Kick the starman track now so it's already playing when the level
       // appears. Skip the BGM "loading duck" since we want it at full vol.
       preloadBgmFor(firstId).then(() => {
         playMarathonBgm();
         setTimeout(() => {
           setScreen((s) => (s === "loading" ? "playing" : s));
+          marathonStartRef.current = performance.now();
         }, 250);
       });
       return;
@@ -293,10 +298,14 @@ const Index = () => {
       setMarathonStep(0);
       setLevelId(firstId);
       setScreen("loading");
+      setMarathonMs(0);
+      setMarathonFinalMs(null);
+      marathonStartRef.current = null;
       preloadBgmFor(firstId).then(() => {
         playMarathonBgm();
         setTimeout(() => {
           setScreen((s) => (s === "loading" ? "playing" : s));
+          marathonStartRef.current = performance.now();
         }, 250);
       });
       return;
