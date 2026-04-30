@@ -466,6 +466,12 @@ const Index = () => {
           )}
 
 
+          {screen === "menu" && introPhase === "done" && (
+            <Overlay>
+              <MainMenu onPlay={startLevel} />
+            </Overlay>
+          )}
+
           {screen === "loading" && (
             <Overlay>
               <LoadingScreen levelName={currentLevel?.name ?? "level"} />
