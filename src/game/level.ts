@@ -509,3 +509,30 @@ function buildLevel3(): Level {
     platforms, hazards, enemies, pickups,
   };
 }
+
+// ---------- BOSS: THE ROARING KNIGHT ----------
+// Single-room arena. The boss isn't a regular enemy — the GameCanvas
+// handles it via its own `boss` runtime state. We just provide an arena
+// for the player to maneuver in.
+function buildRoaringKnight(): Level {
+  const W = 1600;
+  const H = 720;
+  const groundY = H - 80;
+  const platforms: Platform[] = [
+    { x: 0, y: groundY, w: W, h: 80, kind: "ground" },
+    // ceiling slab to keep the player in-arena
+    { x: 0, y: 60, w: W, h: 24, kind: "block" },
+    // a couple of floating platforms for vertical play
+    { x: 220, y: groundY - 180, w: 200, h: 20, kind: "block" },
+    { x: W - 420, y: groundY - 180, w: 200, h: 20, kind: "block" },
+    { x: W / 2 - 110, y: groundY - 280, w: 220, h: 20, kind: "block" },
+  ];
+  // Goal placed off-screen — the boss must be defeated to win (handled in GameCanvas).
+  return {
+    width: W, height: H,
+    spawn: { x: 120, y: groundY - 80 },
+    goal: { x: -9999, y: -9999, w: 1, h: 1 },
+    platforms, hazards: [], enemies: [], pickups: [],
+  };
+}
+
