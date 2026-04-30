@@ -208,8 +208,13 @@ interface Player {
   somSom: boolean; // invboi while in just-run-bro — cyan variant
   starTimer: number; // timer for emitting star particles
   beamTime: number; // remaining seconds the beam pose is held
-  beamCooldown: number; // small fire-rate cap on beams
+  beamCooldown: number; // small fire-rate cap on beams (legacy, kept for compat)
   beamGrounded: boolean; // whether the beam was fired from ground (pose select)
+  laserActive: boolean; // held-laser attack (invboi vs boss only)
+  laserFloatBudget: number; // seconds of float remaining (max 10)
+  laserDir: 1 | -1; // direction the laser is pointed
+  laserDamageTick: number; // accumulator for periodic boss damage
+  laserWasHeld: boolean; // edge-detect for re-arming float per press
 }
 
 interface Afterimage {
@@ -378,6 +383,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         beamTime: 0,
         beamCooldown: 0,
         beamGrounded: true,
+        laserActive: false,
+        laserFloatBudget: 10,
+        laserDir: 1,
+        laserDamageTick: 0,
+        laserWasHeld: false,
       },
       projectiles: [],
       particles: [],
@@ -416,7 +426,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       beams: [],
     };
     // Any reset/level change cancels the starman shimmer too.
-    sfx.shineStop(); sfx.rainStop(); sfx.slideStop();
+    sfx.shineStop(); sfx.rainStop(); sfx.slideStop(); sfx.laserStop();
   }, [resetKey, levelId]);
 
   // BGM: stop on unmount only. The parent (Index) decides which track to
@@ -424,7 +434,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   // with the menu music here. Restart on retry is also driven by the
   // parent via screen/levelId/resetKey transitions.
   useEffect(() => {
-    return () => { stopBgm(); sfx.shineStop(); sfx.rainStop(); sfx.slideStop(); };
+    return () => { stopBgm(); sfx.shineStop(); sfx.rainStop(); sfx.slideStop(); sfx.laserStop(); };
   }, []);
 
   // BGM: pause/resume with the game's pause state — but keep playing when
@@ -486,10 +496,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         unlockAudio();
         const r = refs.current;
         const p = r.player;
-        // INVBOI vs BOSS: replace dash with a beam shot.
+        // INVBOI vs BOSS: replace dash with a HELD LASER attack.
         if (p.starman && r.boss && !r.boss.defeated && p.alive) {
-          if (p.beamCooldown <= 0 && !e.repeat) {
-            fireBeam(r, p);
+          if (!p.laserActive && !e.repeat) {
+            p.laserActive = true;
+            p.laserDir = p.facing;
+            p.laserDamageTick = 0;
+            p.beamTime = 0.2; // pose hint
+            p.beamGrounded = p.onGround;
+            unlockAudio();
+            sfx.laserStart();
+            r.shake = Math.max(r.shake, 0.25);
           }
           return;
         }
@@ -536,6 +553,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         if (p.superDashing) {
           p.superDashing = false;
           p.superDashTime = 0;
+        }
+        if (p.laserActive) {
+          p.laserActive = false;
+          sfx.laserStop();
         }
       }
     };
@@ -1367,45 +1388,87 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // boss
     if (r.boss) updateBoss(r, dt, size.w);
 
-    // beams (invboi vs boss)
-    if (r.beams.length) {
-      for (const beam of r.beams) {
-        if (beam.hit) continue;
-        beam.x += beam.vx * dt;
-        beam.y += beam.vy * dt;
-        beam.life += dt;
-        // hit boss
+    // HELD LASER (invboi vs boss only)
+    {
+      const pl = r.player;
+      // Auto-cancel if boss gone/defeated, player dead, or out of float budget mid-air.
+      if (pl.laserActive && (!r.boss || r.boss.defeated || !pl.alive)) {
+        pl.laserActive = false;
+        sfx.laserStop();
+      }
+      if (pl.laserActive) {
+        // Track facing changes from movement input.
+        if (pl.vx > 30) pl.laserDir = 1;
+        else if (pl.vx < -30) pl.laserDir = -1;
+        else pl.laserDir = pl.facing;
+
+        // Float: drain budget, near-zero gravity, allow hovering up via jump.
+        if (pl.laserFloatBudget > 0) {
+          pl.laserFloatBudget = Math.max(0, pl.laserFloatBudget - dt);
+          // Cancel most of gravity that was added this frame and apply gentle hover.
+          pl.vy -= GRAVITY * dt; // negate gravity
+          pl.vy += 80 * dt;      // very soft drift
+          // Hover-rise while jump held
+          const bnd = getLiveBinds();
+          const jumpHeldNow = isPressed(keysRef.current, "jump", bnd);
+          if (jumpHeldNow) pl.vy = Math.max(pl.vy - 1200 * dt, -360);
+          // Soft vertical clamp so floating feels stable
+          if (pl.vy > 220) pl.vy = 220;
+          if (pl.vy < -360) pl.vy = -360;
+        } else {
+          // Out of float — laser stays on but gravity returns; if you land, fine.
+        }
+
+        // Beam damage tick to boss (raycast horizontally from player center).
         if (r.boss && !r.boss.defeated) {
-          const boss = r.boss;
-          const { drawW, drawH } = bossScreenAnchor(r, boss, size.w);
-          const bx = r.cameraX + boss.screenX - drawW * 0.35;
-          const by = boss.screenY - drawH * 0.4;
-          const bw = drawW * 0.7;
-          const bh = drawH * 0.8;
-          if (beam.x >= bx && beam.x <= bx + bw && beam.y >= by && beam.y <= by + bh) {
-            beam.hit = true;
-            boss.hp -= 1;
-            boss.hitFlash = 1;
-            boss.shakeT = 0.35;
-            boss.worn = 0;
-            boss.attacksRemaining = 3;
-            boss.attackTimer = 1.6;
-            r.shake = Math.max(r.shake, 0.5);
-            r.freezeFrames = Math.max(r.freezeFrames, 4);
-            r.score += 500;
-            burst(r, beam.x, beam.y, "#fff34a", 22, 360);
-            sfx.bossHurt();
-            if (boss.hp <= 0) {
-              boss.defeated = true;
-              boss.defeatT = 0;
-              r.shake = Math.max(r.shake, 1.0);
-              burst(r, bx + bw / 2, by + bh / 2, "#ffffff", 60, 520);
-              sfx.bossDefeat();
+          pl.laserDamageTick -= dt;
+          if (pl.laserDamageTick <= 0) {
+            const boss = r.boss;
+            const { drawW, drawH } = bossScreenAnchor(r, boss, size.w);
+            const bx = r.cameraX + boss.screenX - drawW * 0.35;
+            const by = boss.screenY - drawH * 0.4;
+            const bw = drawW * 0.7;
+            const bh = drawH * 0.8;
+            const ly = pl.y + pl.h * 0.4;
+            const lx0 = pl.x + pl.w / 2;
+            const dir = pl.laserDir;
+            // horizontal ray check: ly within boss vertical span and boss is in firing direction
+            const hits = ly >= by && ly <= by + bh &&
+              ((dir > 0 && bx + bw >= lx0) || (dir < 0 && bx <= lx0));
+            if (hits) {
+              boss.hp -= 1;
+              boss.hitFlash = 1;
+              boss.shakeT = 0.3;
+              boss.worn = 0;
+              boss.attacksRemaining = 3;
+              boss.attackTimer = 1.4;
+              r.shake = Math.max(r.shake, 0.45);
+              r.freezeFrames = Math.max(r.freezeFrames, 3);
+              r.score += 250;
+              const hx = dir > 0 ? bx : bx + bw;
+              burst(r, hx, ly, "#fff34a", 18, 320);
+              sfx.bossHurt();
+              if (boss.hp <= 0) {
+                boss.defeated = true;
+                boss.defeatT = 0;
+                r.shake = Math.max(r.shake, 1.0);
+                burst(r, bx + bw / 2, by + bh / 2, "#ffffff", 60, 520);
+                sfx.bossDefeat();
+                pl.laserActive = false;
+                sfx.laserStop();
+              }
             }
+            pl.laserDamageTick = 0.18;
           }
         }
+        // Keep pose hint alive
+        pl.beamTime = Math.max(pl.beamTime, 0.1);
+        pl.beamGrounded = pl.onGround;
+      } else {
+        // Regen float budget while not firing (slowly when airborne, fast when grounded).
+        const regen = pl.onGround ? 6 : 1.5;
+        pl.laserFloatBudget = Math.min(10, pl.laserFloatBudget + regen * dt);
       }
-      r.beams = r.beams.filter((b) => !b.hit && b.life < b.maxLife);
     }
 
     // projectiles
@@ -2132,34 +2195,39 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       jaggedBolt(ctx, pr.x, pr.y, pr.x - pr.vx * 0.04, pr.y - pr.vy * 0.04, col, 2, 4, 4);
     }
 
-    // player beams (invboi vs boss)
-    if (r.beams.length) {
+    // HELD LASER (invboi vs boss): big static beam from player to screen edge
+    if (r.player.laserActive && r.boss && !r.boss.defeated) {
+      const pl = r.player;
+      const dir = pl.laserDir;
+      const x0 = pl.x + pl.w / 2 + dir * 8;
+      const y0 = pl.y + pl.h * 0.4;
+      // End point: across the screen in firing direction (in world coords).
+      const x1 = dir > 0 ? r.cameraX + size.w + 200 : r.cameraX - 200;
+      // subtle thickness pulse but mostly static
+      const pulse = 1 + Math.sin(r.time * 30) * 0.04;
       ctx.save();
-      for (const beam of r.beams) {
-        const fade = 1 - beam.life / beam.maxLife;
-        const dir = Math.sign(beam.vx) || 1;
-        const tailLen = 90;
-        ctx.lineCap = "round";
-        // outer glow
-        ctx.strokeStyle = `rgba(255, 220, 60, ${0.35 * fade})`;
-        ctx.lineWidth = 14;
-        ctx.beginPath();
-        ctx.moveTo(beam.x - dir * tailLen, beam.y);
-        ctx.lineTo(beam.x + dir * 18, beam.y);
-        ctx.stroke();
-        // bright core
-        ctx.strokeStyle = `rgba(255, 255, 255, ${0.95 * fade})`;
-        ctx.lineWidth = 5;
-        ctx.beginPath();
-        ctx.moveTo(beam.x - dir * tailLen, beam.y);
-        ctx.lineTo(beam.x + dir * 24, beam.y);
-        ctx.stroke();
-        // hot tip
-        ctx.fillStyle = `rgba(255, 240, 120, ${fade})`;
-        ctx.beginPath();
-        ctx.arc(beam.x + dir * 8, beam.y, 6, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      ctx.lineCap = "butt";
+      // huge outer halo
+      ctx.strokeStyle = "rgba(255, 200, 60, 0.22)";
+      ctx.lineWidth = 70 * pulse;
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y0); ctx.stroke();
+      // outer glow
+      ctx.strokeStyle = "rgba(255, 220, 80, 0.55)";
+      ctx.lineWidth = 42 * pulse;
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y0); ctx.stroke();
+      // mid yellow body
+      ctx.strokeStyle = "rgba(255, 240, 120, 0.9)";
+      ctx.lineWidth = 22 * pulse;
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y0); ctx.stroke();
+      // bright white core
+      ctx.strokeStyle = "rgba(255, 255, 255, 1)";
+      ctx.lineWidth = 8 * pulse;
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y0); ctx.stroke();
+      // muzzle burst at player
+      ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+      ctx.beginPath(); ctx.arc(x0, y0, 16, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "rgba(255, 220, 80, 0.55)";
+      ctx.beginPath(); ctx.arc(x0, y0, 28, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
     }
 

@@ -7,6 +7,7 @@ import auraUrl from "@/assets/audio/aura.mp3";
 import swingSwipeUrl from "@/assets/audio/swing_swipe.ogg";
 import sfxCompleteUrl from "@/assets/audio/sfx_complete.ogg";
 import sfxYesUrl from "@/assets/audio/sfx_yes.ogg";
+import laserBeamUrl from "@/assets/audio/weapon_beam3_3.mp3";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -142,7 +143,7 @@ function ac(): AudioContext | null {
   return ctx;
 }
 
-export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); loadSample(wwHitUrl); loadSample(auraUrl); loadSample(swingSwipeUrl); }
+export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); loadSample(wwHitUrl); loadSample(auraUrl); loadSample(swingSwipeUrl); loadSample(laserBeamUrl); }
 let baseVol = 0.35;
 export function setMuted(v: boolean) {
   muted = v;
@@ -327,6 +328,8 @@ export const sfx = {
   },
   shineStart() { startShine(); },
   shineStop() { stopShine(); },
+  laserStart() { startLaser(); },
+  laserStop() { stopLaser(); },
   rainStart() { startRain(); },
   rainStop() { stopRain(); },
   slideStart() { startSlideLoop(); },
@@ -546,4 +549,36 @@ function stopSlideLoop() {
   } catch { /* noop */ }
   try { s.src.stop(t + 0.22); } catch { /* noop */ }
   try { s.rumble.stop(t + 0.22); } catch { /* noop */ }
+}
+
+// ---------- looping LASER (held beam attack — uses uploaded mp3 sample) ----------
+let laser: { src: AudioBufferSourceNode; out: GainNode } | null = null;
+
+function startLaser() {
+  const c = ac(); if (!c || !master) return;
+  if (laser) return;
+  const buf = sampleCache.get(laserBeamUrl);
+  if (!buf) { loadSample(laserBeamUrl); return; }
+  const t0 = c.currentTime;
+  const src = c.createBufferSource();
+  src.buffer = buf;
+  src.loop = true;
+  const out = c.createGain();
+  out.gain.setValueAtTime(0.0001, t0);
+  out.gain.exponentialRampToValueAtTime(0.85, t0 + 0.04);
+  src.connect(out).connect(master);
+  src.start(t0);
+  laser = { src, out };
+}
+
+function stopLaser() {
+  const c = ac(); if (!c || !laser) return;
+  const t = c.currentTime;
+  const l = laser; laser = null;
+  try {
+    l.out.gain.cancelScheduledValues(t);
+    l.out.gain.setValueAtTime(l.out.gain.value, t);
+    l.out.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+  } catch { /* noop */ }
+  try { l.src.stop(t + 0.1); } catch { /* noop */ }
 }
