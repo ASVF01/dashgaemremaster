@@ -2718,6 +2718,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       if (rectOverlap(p.x, p.y, p.w, p.h, bx, by, bw, bh)) {
         boss.hp -= 1;
         boss.hitFlash = 1;
+        boss.hurtT = 1.2;
         boss.shakeT = 0.35;
         boss.worn = 0;
         boss.attacksRemaining = 3;
