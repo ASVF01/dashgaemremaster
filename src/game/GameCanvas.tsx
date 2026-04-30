@@ -3377,39 +3377,48 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     const p = r.player;
     const cx = p.x + p.w / 2;
     const cy = p.y + p.h / 2;
-    // Random-ish anchor points scattered across the stick figure's upper body
-    // (head, torso, shoulders, arms). Coordinates are normalized offsets from
-    // player center: x in [-0.5..0.5] * p.w, y in [-0.5..0.5] * p.h.
-    const SLOTS: Array<[number, number]> = [
-      [ 0.00, -0.40], // head top
-      [-0.14, -0.32], // head L
-      [ 0.14, -0.30], // head R
-      [-0.02, -0.22], // face
-      [-0.22, -0.10], // shoulder L
-      [ 0.22, -0.08], // shoulder R
-      [-0.05, -0.02], // chest
-      [ 0.10,  0.06], // upper torso R
-      [-0.28,  0.08], // arm L
-      [ 0.28,  0.10], // arm R
-      [-0.08,  0.16], // mid torso
+    // Pseudo-random body regions across the WHOLE stick figure
+    // (head, torso, arms, legs, hands, feet). Each region is a rectangle
+    // expressed as normalized offsets from the player center: x/y in
+    // roughly [-0.5..0.5] times p.w / p.h. Shimmers pick one at random
+    // each cycle and place themselves anywhere inside that rect.
+    const REGIONS: Array<[number, number, number, number]> = [
+      // [cx, cy, halfW, halfH] (normalized to player size)
+      [ 0.00, -0.34, 0.16, 0.10], // head
+      [ 0.00, -0.10, 0.20, 0.10], // shoulders/upper torso
+      [ 0.00,  0.05, 0.18, 0.10], // mid torso
+      [-0.28, -0.02, 0.08, 0.12], // arm L
+      [ 0.28, -0.02, 0.08, 0.12], // arm R
+      [-0.34,  0.16, 0.06, 0.06], // hand L
+      [ 0.34,  0.16, 0.06, 0.06], // hand R
+      [-0.12,  0.22, 0.08, 0.12], // thigh L
+      [ 0.12,  0.22, 0.08, 0.12], // thigh R
+      [-0.14,  0.42, 0.06, 0.06], // foot L
+      [ 0.14,  0.42, 0.06, 0.06], // foot R
     ];
+    const SHIMMER_COUNT = 10;
     const LIFE = 0.4;
-    const CYCLE = 0.9;
-    for (let i = 0; i < SLOTS.length; i++) {
-      const phase = i / SLOTS.length;
-      const offset = phase * CYCLE + (Math.sin(i * 12.9898) * 0.5 + 0.5) * 0.15;
+    const CYCLE = 1.0;
+    for (let i = 0; i < SHIMMER_COUNT; i++) {
+      const phase = i / SHIMMER_COUNT;
+      const offset = phase * CYCLE + (Math.sin(i * 12.9898) * 0.5 + 0.5) * 0.18;
       const local = ((r.time - offset) % CYCLE + CYCLE) % CYCLE;
       if (local > LIFE) continue;
       const lifeT = local / LIFE;
       const a = Math.sin(lifeT * Math.PI);
-      // Tiny per-cycle jitter so the same slot doesn't land on the exact pixel.
+      // Stable per-cycle randomness: pick a body region + position within it.
       const cycleIdx = Math.floor((r.time - offset) / CYCLE);
-      const seed = i * 73 + cycleIdx * 131;
-      const jx = ((Math.sin(seed) * 0.5 + 0.5) - 0.5) * p.w * 0.12;
-      const jy = ((Math.sin(seed * 1.7) * 0.5 + 0.5) - 0.5) * p.h * 0.12;
-      const sx = cx + SLOTS[i][0] * p.w + jx;
-      const sy = cy + SLOTS[i][1] * p.h + jy;
-      const scale = 0.5 + a * 0.9;
+      const seed = i * 73.13 + cycleIdx * 131.77;
+      const rand = (s: number) => {
+        const v = Math.sin(s) * 43758.5453;
+        return v - Math.floor(v);
+      };
+      const reg = REGIONS[Math.floor(rand(seed) * REGIONS.length)];
+      const rx = (rand(seed * 1.7) * 2 - 1) * reg[2];
+      const ry = (rand(seed * 2.3) * 2 - 1) * reg[3];
+      const sx = cx + (reg[0] + rx) * p.w;
+      const sy = cy + (reg[1] + ry) * p.h;
+      const scale = 0.32 + a * 0.45;
       // Slight per-frame ink jitter for sketchy feel.
       const ijx = (Math.random() - 0.5) * 1.4;
       const ijy = (Math.random() - 0.5) * 1.4;
