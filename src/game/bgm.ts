@@ -493,3 +493,27 @@ function resetLevelEndFx() {
   }
 }
 
+// Public: smoothly undo the level-end duck/lowpass without touching the
+// currently-playing track. Used by CELESTIAL MARATHON sub-level transitions
+// so the music doesn't stay muffled after each sub-level finishes.
+export function resetBgmLevelEndFx(rampSec = 0.25) {
+  endDuck = 1;
+  const c = ac();
+  if (!c) {
+    if (masterGain) masterGain.gain.value = muted ? 0 : volume;
+    if (lowpass) lowpass.frequency.value = LP_OPEN;
+    return;
+  }
+  const now = c.currentTime;
+  if (masterGain) {
+    masterGain.gain.cancelScheduledValues(now);
+    masterGain.gain.setValueAtTime(masterGain.gain.value, now);
+    masterGain.gain.linearRampToValueAtTime(muted ? 0 : volume, now + rampSec);
+  }
+  if (lowpass) {
+    lowpass.frequency.cancelScheduledValues(now);
+    lowpass.frequency.setValueAtTime(lowpass.frequency.value, now);
+    lowpass.frequency.linearRampToValueAtTime(LP_OPEN, now + rampSec);
+  }
+}
+
