@@ -2114,20 +2114,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // starman: rainbow stars rain down (BACKGROUND layer, behind level assets)
     // (suppressed for SOM SOM variant — no rain, no rainbow)
     //
-    // Continuous density curve d(t) ∈ [0,1] over the whole rain lifetime —
-    // no binary burst/tail switch, so spawn rate, fall speed, and capacity
-    // all interpolate smoothly with no momentary empty gaps.
+    // Continuous density curve d(t) ∈ [0,1] — smoothstep ease-in then HOLDS
+    // at full strength forever (never tapers). Capacity is kept modest so
+    // the screen stays readable.
     //
-    //   t < RAIN_START                 → d = 0   (no rain yet)
-    //   RAIN_START .. +RAMP_UP         → 0 → 1   (smoothstep ease-in)
-    //   +RAMP_UP   .. +PLATEAU_END     → 1       (full downpour, gap-free)
-    //   +PLATEAU_END .. +RAMP_DOWN_END → 1 → DRIZZLE (smoothstep ease-out)
-    //   after that                     → DRIZZLE (steady gentle rain)
+    //   t < RAIN_START          → d = 0   (no rain yet)
+    //   RAIN_START .. +RAMP_UP  → 0 → 1   (smoothstep ease-in)
+    //   after that              → 1       (steady eternal downpour)
     const RAIN_START = 6.15;
     const RAMP_UP = 0.5;          // matches the white flash duration
-    const PLATEAU_END = 2.0;      // 1.5s of full-strength downpour
-    const RAMP_DOWN_END = 3.2;    // 1.2s ease-out into drizzle
-    const DRIZZLE = 0.12;         // floor density once everything settles
     const smoothstep = (a: number, b: number, x: number) => {
       const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
       return t * t * (3 - 2 * t);
@@ -2135,16 +2130,13 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     let density = 0;
     if (starmanFx && starElapsed >= RAIN_START) {
       const e = starElapsed - RAIN_START;
-      if (e < RAMP_UP) density = smoothstep(0, RAMP_UP, e);
-      else if (e < PLATEAU_END) density = 1;
-      else if (e < RAMP_DOWN_END)
-        density = 1 - (1 - DRIZZLE) * smoothstep(PLATEAU_END, RAMP_DOWN_END, e);
-      else density = DRIZZLE;
+      density = e < RAMP_UP ? smoothstep(0, RAMP_UP, e) : 1;
     }
 
     // Capacity & spawn rate both scale off the same curve — no jumps.
-    const maxStarsHi = Math.min(520, Math.max(320, Math.floor((w * h) / 2400)));
-    const maxStarsLo = Math.min(140, Math.max(70,  Math.floor((w * h) / 8000)));
+    // Lower peak cap so the eternal downpour never floods the screen.
+    const maxStarsHi = Math.min(180, Math.max(110, Math.floor((w * h) / 7200)));
+    const maxStarsLo = Math.min(60,  Math.max(30,  Math.floor((w * h) / 18000)));
     const maxRainStars = Math.round(maxStarsLo + (maxStarsHi - maxStarsLo) * density);
     // Visual alpha follows the same curve so existing in-flight stars also
     // fade in/out smoothly (no abrupt pop).
