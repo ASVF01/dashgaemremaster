@@ -250,23 +250,13 @@ function buildChase(): Level {
     pickups.push({ x, y: groundY - 50 - ((x / 220) % 3) * 24, collected: false });
   }
 
-  const signs = [
-    { x: 120,  y: groundY - 110, text: "RUN!! the wall behind you NEVER stops →" },
-    { x: 700,  y: groundY - 110, text: "build SPEED — hold dash (SHIFT) to outrun it" },
-    { x: 1400, y: groundY - 130, text: "low ceilings ahead → hold ↓ / S to SLIDE through" },
-    { x: 2400, y: groundY - 110, text: "if it gets close, press J to PARRY — blasts it back!" },
-    { x: 3600, y: groundY - 110, text: "parry stuns it for a sec, use the breather to sprint" },
-    { x: 5200, y: groundY - 110, text: "don't stop to fight. just keep running bro." },
-    { x: 7800, y: groundY - 110, text: "spike ahead → jump or dash over it, NEVER slow down" },
-    { x: 12000, y: groundY - 110, text: "you're doing great — flag's still a ways off →" },
-    { x: 18000, y: groundY - 110, text: "almost out!! sprint to the FLAG →" },
-  ];
-
+  // No in-world signs — chase tutorial is shown as an on-screen overlay
+  // (handled by Index.tsx, like the celestial-encounter invboi intro).
   return {
     width: W, height: H,
     spawn: { x: 80, y: groundY - 80 },
     goal: { x: W - 160, y: groundY - 120, w: 50, h: 120 },
-    platforms, hazards, enemies, pickups, signs,
+    platforms, hazards, enemies, pickups,
   };
 }
 

@@ -48,6 +48,11 @@ const Index = () => {
   const [finalTime, setFinalTime] = useState(0);
   const [finalScore, setFinalScore] = useState(0);
   const [invboiIntroOpen, setInvboiIntroOpen] = useState(false);
+  // CHASE: on-screen tutorial popup, shown each time the player enters the
+  // chase level (standalone OR as a marathon sub-level). Tracked per-entry
+  // so it shows again on retry / after backing out and replaying.
+  const [chaseIntroOpen, setChaseIntroOpen] = useState(false);
+  const chaseIntroSeenKeyRef = useRef<string | null>(null);
   // Marathon: index into MARATHON_SEQUENCE, or null if not running.
   const [marathonStep, setMarathonStep] = useState<number | null>(null);
   const [binds] = useKeybinds();
@@ -224,6 +229,18 @@ const Index = () => {
     return () => { setSfxMuted(false); };
   }, [introPhase]);
 
+  // Open the chase tutorial popup whenever we enter the chase level on the
+  // playing screen (once per resetKey so retries re-show it).
+  useEffect(() => {
+    if (screen === "playing" && levelId === "chase") {
+      const key = `${resetKey}`;
+      if (chaseIntroSeenKeyRef.current !== key) {
+        chaseIntroSeenKeyRef.current = key;
+        setChaseIntroOpen(true);
+      }
+    }
+  }, [screen, levelId, resetKey]);
+
   const startLevel = (id: LevelId) => {
     // CELESTIAL MARATHON: hijack into the chained sequence. Start the
     // starman BGM exactly once on entry; subsequent sub-level transitions
@@ -233,7 +250,7 @@ const Index = () => {
       setMarathonStep(0);
       setLevelId(firstId);
       setResetKey((k) => k + 1);
-      setInvboiIntroOpen(false);
+      setInvboiIntroOpen(false); setChaseIntroOpen(false);
       setScreen("loading");
       // Kick the starman track now so it's already playing when the level
       // appears. Skip the BGM "loading duck" since we want it at full vol.
@@ -248,7 +265,7 @@ const Index = () => {
     setMarathonStep(null);
     setLevelId(id);
     setResetKey((k) => k + 1);
-    setInvboiIntroOpen(false);
+    setInvboiIntroOpen(false); setChaseIntroOpen(false);
     setScreen("loading");
     // Decode the track buffer first (or skip if already cached). When ready,
     // hand off to the playing screen — the BGM effect there will play it.
@@ -261,7 +278,7 @@ const Index = () => {
   };
   const retry = () => {
     setResetKey((k) => k + 1);
-    setInvboiIntroOpen(false);
+    setInvboiIntroOpen(false); setChaseIntroOpen(false);
     // Marathon retry from death: restart from the first sub-level.
     if (marathonStep != null) {
       const firstId = MARATHON_SEQUENCE[0];
@@ -283,7 +300,7 @@ const Index = () => {
       }, 250);
     });
   };
-  const backToMenu = () => { setInvboiIntroOpen(false); setMarathonStep(null); setScreen("menu"); };
+  const backToMenu = () => { setInvboiIntroOpen(false); setChaseIntroOpen(false); setMarathonStep(null); setScreen("menu"); };
   const handleInvboiPickup = useCallback(() => setInvboiIntroOpen(true), []);
 
   // Award the "just run bro" badge and head back to the main menu.
@@ -386,13 +403,13 @@ const Index = () => {
             onFinish={handleFinish}
             onDeath={handleDeath}
             onInvboiPickup={handleInvboiPickup}
-            paused={screen !== "playing" || invboiIntroOpen}
-            keepAudio={screen === "dead" || screen === "win" || invboiIntroOpen || marathonStep != null}
+            paused={screen !== "playing" || invboiIntroOpen || chaseIntroOpen}
+            keepAudio={screen === "dead" || screen === "win" || invboiIntroOpen || chaseIntroOpen || marathonStep != null}
             startAsInvboi={marathonStep != null}
             resetKey={resetKey}
             levelId={levelId}
           />
-          {screen === "playing" && !invboiIntroOpen && <Hud hud={hud} />}
+          {screen === "playing" && !invboiIntroOpen && !chaseIntroOpen && <Hud hud={hud} />}
           <FpsOverlay />
 
           {screen === "playing" && invboiIntroOpen && (
@@ -421,7 +438,33 @@ const Index = () => {
             </Overlay>
           )}
 
-          {screen === "menu" && <MainMenu onPlay={startLevel} />}
+          {screen === "playing" && chaseIntroOpen && (
+            <Overlay>
+              <div className="text-center px-6 max-w-2xl">
+                <div className="font-marker text-5xl md:text-6xl text-[hsl(var(--accent))] mb-3 -rotate-2 inline-block animate-jitter">
+                  THE CHASE!
+                </div>
+                <p className="font-scribble text-2xl md:text-3xl text-ink mb-4">
+                  something's hunting you down the hallway. <b>don't stop running.</b>
+                </p>
+                <ul className="font-scribble text-lg md:text-xl text-ink/90 mb-6 space-y-2 text-left inline-block">
+                  <li>✦ <b>RUN</b> right with → / D — never slow down</li>
+                  <li>✦ <b>SLIDE</b> with ↓ / S to fit under low ceilings (keeps your speed!)</li>
+                  <li>✦ <b>JUMP</b> or <b>DASH</b> over spikes — never tank a hit, you'll lose ground</li>
+                  <li>✦ <b>SUPER DASH</b> (hold SHIFT at high speed) to pull WAY ahead</li>
+                  <li>✦ if it gets close, <b>PARRY</b> with J — knocks it back & stuns it briefly</li>
+                  <li>✦ touching the chaser hurts. parry beats tanking. <b>always.</b></li>
+                </ul>
+                <button
+                  onClick={() => setChaseIntroOpen(false)}
+                  className="scribble-border bg-[hsl(var(--accent))] text-accent-foreground font-marker text-3xl px-8 py-4 hover:rotate-2 transition-transform animate-jitter"
+                >
+                  RUN!! →
+                </button>
+              </div>
+            </Overlay>
+          )}
+
 
           {screen === "loading" && (
             <Overlay>
