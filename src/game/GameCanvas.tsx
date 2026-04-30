@@ -2169,8 +2169,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     const baseX = screenW - margin - drawW / 2;
     const baseY = margin + KNIGHT_DRAW_H / 2;
     const hover = Math.sin(boss.hoverPhase) * 12;
+    // When staggered ("worn"), drop way down so the player can actually dash into him.
+    // Smoothly ease toward a low Y while vulnerable, then return up.
+    const wornTarget = 360; // low enough for ground-level reach
+    const baseTarget = baseY + hover;
+    const wantLow = boss.worn > 0 && !boss.defeated;
+    const targetY = wantLow ? wornTarget + Math.sin(boss.hoverPhase) * 4 : baseTarget;
+    if (boss.screenY === 0) boss.screenY = targetY;
+    boss.screenY += (targetY - boss.screenY) * 0.12;
     boss.screenX = baseX;
-    boss.screenY = baseY + hover;
     return { drawW, drawH: KNIGHT_DRAW_H };
   }
 
