@@ -2543,7 +2543,27 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
     if (boss.defeated) {
       boss.defeatT += dt;
-      if (boss.defeatT > 1.6 && !r.finished) {
+      // Animated retreat: knight rockets up and to the right, accelerating.
+      boss.retreatVx += 220 * dt; // accelerate horizontally
+      boss.retreatVy -= 80 * dt;  // accelerate upward
+      boss.retreatX += boss.retreatVx * dt;
+      boss.retreatY += boss.retreatVy * dt;
+      // emit small smoke/spark trail behind him during retreat
+      if (Math.random() < 0.6) {
+        const sx = boss.screenX + boss.retreatX + r.cameraX; // approx world for particles
+        const sy = boss.screenY + boss.retreatY;
+        spawnParticle(r, {
+          x: sx - r.cameraX, // particles drawn in screen space won't match — keep small
+          y: sy,
+          vx: -boss.retreatVx * 0.4 + (Math.random() - 0.5) * 60,
+          vy: -boss.retreatVy * 0.4 + (Math.random() - 0.5) * 60,
+          color: Math.random() < 0.5 ? "#fff34a" : "#ffffff",
+          size: 3 + Math.random() * 3,
+          life: 0.4 + Math.random() * 0.3,
+          kind: "spark",
+        });
+      }
+      if (boss.defeatT > 3.2 && !r.finished) {
         r.finished = true;
         r.finishTime = performance.now() - r.startedAt;
         r.score += 5000;
