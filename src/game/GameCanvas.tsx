@@ -1890,19 +1890,19 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     drawScenery(ctx, camX, w, r.level.height);
 
     // platforms
+    const bossPlatforms = levelIdRef.current === "roaring-knight";
     for (const pl of r.level.platforms) {
       if (pl.x + pl.w < camX - 40 || pl.x > camX + w + 40) continue;
       const isGround = pl.kind === "ground";
-      // Clip the visible slice so absurdly long platforms (e.g. the
-      // endless ground in "just run bro") don't draw thousands of
-      // off-screen sketch segments + hatching marks every frame.
       const visX = Math.max(pl.x, camX - 40);
       const visR = Math.min(pl.x + pl.w, camX + w + 40);
       const visW = visR - visX;
-      sketchRect(ctx, visX, pl.y, visW, pl.h, isGround ? "#e5dfc2" : "#f7f1dc", INK, isGround ? 3 : 2.6, isGround ? 1.6 : 1.2);
+      const fill = bossPlatforms ? "#000000" : (isGround ? "#e5dfc2" : "#f7f1dc");
+      const stroke = bossPlatforms ? "#ffffff" : INK;
+      sketchRect(ctx, visX, pl.y, visW, pl.h, fill, stroke, isGround ? 3 : 2.6, isGround ? 1.6 : 1.2);
       // hatching — only over the visible slice
       ctx.save();
-      ctx.strokeStyle = "rgba(20,20,20,0.35)";
+      ctx.strokeStyle = bossPlatforms ? "rgba(255,255,255,0.45)" : "rgba(20,20,20,0.35)";
       ctx.lineWidth = 1;
       const hStart = Math.max(pl.x + 6, visX);
       const hEnd = Math.min(pl.x + pl.w - 4, visR);
