@@ -2113,41 +2113,69 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
     // starman: rainbow stars rain down (BACKGROUND layer, behind level assets)
     // (suppressed for SOM SOM variant — no rain, no rainbow)
-    // Starts as a heavy 2-second downpour at t=6.15s (synced with the BGM hit),
-    // then tapers off into a gentle drizzle. Nothing rains before then.
+    //
+    // Continuous density curve d(t) ∈ [0,1] over the whole rain lifetime —
+    // no binary burst/tail switch, so spawn rate, fall speed, and capacity
+    // all interpolate smoothly with no momentary empty gaps.
+    //
+    //   t < RAIN_START                 → d = 0   (no rain yet)
+    //   RAIN_START .. +RAMP_UP         → 0 → 1   (smoothstep ease-in)
+    //   +RAMP_UP   .. +PLATEAU_END     → 1       (full downpour, gap-free)
+    //   +PLATEAU_END .. +RAMP_DOWN_END → 1 → DRIZZLE (smoothstep ease-out)
+    //   after that                     → DRIZZLE (steady gentle rain)
     const RAIN_START = 6.15;
-    const RAIN_BURST_END = RAIN_START + 2.0; // heavy burst window
-    const inRainBurst = starmanFx && starElapsed >= RAIN_START && starElapsed < RAIN_BURST_END;
-    const inRainTail  = starmanFx && starElapsed >= RAIN_BURST_END;
-    const burstMaxStars = Math.min(520, Math.max(320, Math.floor((w * h) / 2400)));
-    const tailMaxStars  = Math.min(140, Math.max(70,  Math.floor((w * h) / 8000)));
-    const maxRainStars = inRainBurst ? burstMaxStars : tailMaxStars;
-    // Smooth fade-in matching the SOM SOM 6s impact ramp (0.45s).
-    const RAIN_FADE = 0.45;
-    const fadeIn = inRainBurst
-      ? Math.min(1, (starElapsed - RAIN_START) / RAIN_FADE)
-      : (inRainTail ? 1 : 0);
-    if ((inRainBurst || inRainTail) && r.rainStars.length < maxRainStars) {
-      // Heavy, gap-free downpour during the burst; light drizzle after.
-      const burstRate = inRainBurst
-        ? fadeIn * 14   // ramps 0 → ~14 stars/frame over 0.45s
-        : 0.6;          // gentle drizzle after the burst
-      // Stratified column spawning to avoid horizontal empty gaps:
-      // split the screen into N columns and pick a column per spawn so
-      // coverage stays even instead of clumping by pure random chance.
-      const COL_W = 36; // px per column → tighter = denser coverage
+    const RAMP_UP = 0.5;          // matches the white flash duration
+    const PLATEAU_END = 2.0;      // 1.5s of full-strength downpour
+    const RAMP_DOWN_END = 3.2;    // 1.2s ease-out into drizzle
+    const DRIZZLE = 0.12;         // floor density once everything settles
+    const smoothstep = (a: number, b: number, x: number) => {
+      const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
+      return t * t * (3 - 2 * t);
+    };
+    let density = 0;
+    if (starmanFx && starElapsed >= RAIN_START) {
+      const e = starElapsed - RAIN_START;
+      if (e < RAMP_UP) density = smoothstep(0, RAMP_UP, e);
+      else if (e < PLATEAU_END) density = 1;
+      else if (e < RAMP_DOWN_END)
+        density = 1 - (1 - DRIZZLE) * smoothstep(PLATEAU_END, RAMP_DOWN_END, e);
+      else density = DRIZZLE;
+    }
+
+    // Capacity & spawn rate both scale off the same curve — no jumps.
+    const maxStarsHi = Math.min(520, Math.max(320, Math.floor((w * h) / 2400)));
+    const maxStarsLo = Math.min(140, Math.max(70,  Math.floor((w * h) / 8000)));
+    const maxRainStars = Math.round(maxStarsLo + (maxStarsHi - maxStarsLo) * density);
+    // Visual alpha follows the same curve so existing in-flight stars also
+    // fade in/out smoothly (no abrupt pop).
+    const fadeIn = density;
+
+    if (density > 0 && r.rainStars.length < maxRainStars) {
+      // Stratified column spawning, but DETERMINISTIC per frame: rotate
+      // through every column at least once before repeating, so no column
+      // is ever starved within a frame. Guarantees gap-free coverage.
+      const COL_W = 36;
       const cols = Math.max(8, Math.floor(w / COL_W));
-      let toSpawn = burstRate;
+      const colStep = w / cols;
+      // Spawn rate also interpolates continuously across the curve.
+      const spawnRate = 0.6 + density * 13.4; // 0.6 (drizzle) → 14 (peak)
+      let toSpawn = spawnRate;
+      // Random column offset per frame avoids a visible vertical "march".
+      const colOffset = Math.floor(Math.random() * cols);
+      let colIdx = 0;
       while (toSpawn > 0 && r.rainStars.length < maxRainStars) {
         if (toSpawn < 1 && Math.random() >= toSpawn) break;
-        const col = Math.floor(Math.random() * cols);
-        const x = (col + Math.random()) * (w / cols);
+        const col = (colOffset + colIdx) % cols;
+        colIdx++;
+        const x = (col + Math.random()) * colStep;
+        // Fall speed also interpolates with density — drizzle is calmer,
+        // peak is SUPER fast, with no instant velocity jump at the seam.
+        const vyBase = 220 + density * 680;     // 220 → 900
+        const vyJit  = 140 + density * 360;     // 140 → 500
         r.rainStars.push({
           x,
           y: -10 - Math.random() * 80,
-          // SUPER fast fall — burst stars rip down the screen, tail still
-          // a bit slower so the drizzle reads as calmer.
-          vy: (inRainBurst ? 900 : 220) + Math.random() * (inRainBurst ? 500 : 140),
+          vy: vyBase + Math.random() * vyJit,
           size: 4 + Math.random() * 4,
           phase: Math.random() * Math.PI * 2,
           hue: Math.random() * 360,
