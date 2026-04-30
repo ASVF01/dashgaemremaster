@@ -2355,7 +2355,25 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       ctx.restore();
     }
 
-    // chaser red trail (drawn behind enemies) — sized to match the spook sprite
+    // invboi-star pickup (E-key spawn): big rainbow star floating in world.
+    if (r.invboiPickup) {
+      const pkS = r.invboiPickup;
+      if (pkS.x >= camX - 60 && pkS.x <= camX + w + 60) {
+        const drawY = pkS.y + Math.sin(pkS.bobPhase + pkS.t * 3.2) * 6;
+        const hue = (pkS.t * 180) % 360;
+        const img = getRainStar(12, hue);
+        const half = img.width / 2;
+        ctx.save();
+        ctx.imageSmoothingEnabled = false;
+        // soft pulsing glow
+        const pulse = 0.6 + 0.4 * Math.sin(pkS.t * 5);
+        ctx.globalAlpha = 0.35 * pulse;
+        ctx.drawImage(img, pkS.x - half * 1.6, drawY - half * 1.6, img.width * 1.6, img.height * 1.6);
+        ctx.globalAlpha = 1;
+        ctx.drawImage(img, pkS.x - half, drawY - half);
+        ctx.restore();
+      }
+    }
     if (r.chaserTrail.length) {
       const tint = getSpookRedTint();
       const ratio = (spookImg.complete && spookImg.naturalWidth > 0)
