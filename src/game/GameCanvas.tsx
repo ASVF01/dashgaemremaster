@@ -3450,8 +3450,6 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       ctx.globalAlpha = 0.55 + a * 0.45;
       ctx.fillStyle = "#ffd11a";
       ctx.fill();
-      ctx.strokeStyle = "#1a1a1a";
-      ctx.lineWidth = 1.4;
       ctx.lineJoin = "round";
       ctx.stroke();
       // Tiny inner highlight dot for that ink-on-paper sparkle pop.
