@@ -9,11 +9,12 @@ import { LEVELS, type LevelId } from "@/game/level";
 import { useKeybinds, keyLabel, type ActionId } from "@/game/keybinds";
 import { playMenuBgm, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor, isSameTrackAs, setBgmVolume } from "@/game/bgm";
 import cutsceneJustRunBro from "@/assets/video/mcdonalds_sprite_2.mp4";
-import { sfx, unlockAudio, setSfxVolume } from "@/game/sfx";
+import cutsceneBossDeath from "@/assets/video/boss_death_cutscene.mp4";
+import { sfx, unlockAudio, setSfxVolume, silenceAllSfx, setMuted as setSfxMuted } from "@/game/sfx";
 import { getSettings } from "@/game/settings";
 
 
-type Screen = "menu" | "loading" | "playing" | "dead" | "win" | "cutscene";
+type Screen = "menu" | "loading" | "playing" | "dead" | "win" | "cutscene" | "death-cutscene";
 
 // Levels whose music should hard-restart on entry. Everything else shares
 // the "champion play" track and lets it keep looping across transitions.
