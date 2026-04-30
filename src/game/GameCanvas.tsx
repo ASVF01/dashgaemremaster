@@ -1718,14 +1718,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
         // starman cheat: completely ignore hazards (no damage, no knockback)
         if (p.starman) continue;
         if (p.parrying > 0) {
-          // PARRY ANYTHING — bounce off the hazard
+          // PARRY ANYTHING — block the hazard without changing player momentum.
           const cx = h.x + h.w / 2;
           const cy = h.y + h.h / 2;
-          const dx = (p.x + p.w / 2) - cx;
-          const dy = (p.y + p.h / 2) - cy;
-          const len = Math.hypot(dx, dy) || 1;
-          p.vx = (dx / len) * (PARRY_BOOST + 200) + p.facing * 120;
-          p.vy = -480;
           parrySuccess(r, cx, cy);
         } else if (p.invuln <= 0) {
           // Knock player up and back AWAY from hazard so they don't fall
