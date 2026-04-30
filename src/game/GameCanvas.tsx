@@ -2641,10 +2641,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         p.vy = -260;
         p.invuln = Math.max(p.invuln, 0.4);
         if (boss.hp <= 0) {
-          boss.defeated = true;
-          boss.defeatT = 0;
-          r.shake = Math.max(r.shake, 1.0);
-          burst(r, bx + bw / 2, by + bh / 2, "#ffffff", 60, 520);
+          triggerBossDefeat(r, bx + bw / 2, by + bh / 2);
           sfx.bossDefeat();
         }
       }
