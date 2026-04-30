@@ -551,24 +551,80 @@ function stopSlideLoop() {
   try { s.rumble.stop(t + 0.22); } catch { /* noop */ }
 }
 
-// ---------- looping LASER (held beam attack — uses uploaded mp3 sample) ----------
-let laser: { src: AudioBufferSourceNode; out: GainNode } | null = null;
+// ---------- LASER (held beam attack) ----------
+// On press: play the uploaded mp3 ONCE as an intro sting.
+// While held: a continuous procedural humming loop runs underneath.
+type LaserNodes = {
+  out: GainNode;
+  carrier: OscillatorNode;
+  detune: OscillatorNode;
+  sub: OscillatorNode;
+  noiseSrc: AudioBufferSourceNode;
+  noiseGain: GainNode;
+  lfo: OscillatorNode;
+  lfoGain: GainNode;
+};
+let laser: LaserNodes | null = null;
 
 function startLaser() {
   const c = ac(); if (!c || !master) return;
   if (laser) return;
-  const buf = sampleCache.get(laserBeamUrl);
-  if (!buf) { loadSample(laserBeamUrl); return; }
+
+  // 1) ONE-SHOT intro sting from the uploaded mp3 (not looped).
+  playSample(laserBeamUrl, { vol: 0.85 });
+
+  // 2) Procedural humming loop underneath that sustains until stopLaser.
   const t0 = c.currentTime;
-  const src = c.createBufferSource();
-  src.buffer = buf;
-  src.loop = true;
   const out = c.createGain();
   out.gain.setValueAtTime(0.0001, t0);
-  out.gain.exponentialRampToValueAtTime(0.85, t0 + 0.04);
-  src.connect(out).connect(master);
-  src.start(t0);
-  laser = { src, out };
+  out.gain.exponentialRampToValueAtTime(0.32, t0 + 0.06);
+  out.connect(master);
+
+  // Main carrier (sawtooth) + slightly detuned for thickness.
+  const carrier = c.createOscillator();
+  carrier.type = "sawtooth";
+  carrier.frequency.value = 220;
+  const detune = c.createOscillator();
+  detune.type = "sawtooth";
+  detune.frequency.value = 224;
+  // Sub for body
+  const sub = c.createOscillator();
+  sub.type = "sine";
+  sub.frequency.value = 110;
+
+  // LFO for shimmer (slight pitch wobble on detune)
+  const lfo = c.createOscillator();
+  lfo.type = "sine";
+  lfo.frequency.value = 7.5;
+  const lfoGain = c.createGain();
+  lfoGain.gain.value = 4;
+  lfo.connect(lfoGain).connect(detune.frequency);
+
+  // High-pass filtered noise for "sizzle"
+  const len = Math.floor(c.sampleRate * 1);
+  const nbuf = c.createBuffer(1, len, c.sampleRate);
+  const nd = nbuf.getChannelData(0);
+  for (let i = 0; i < len; i++) nd[i] = Math.random() * 2 - 1;
+  const noiseSrc = c.createBufferSource();
+  noiseSrc.buffer = nbuf; noiseSrc.loop = true;
+  const nhp = c.createBiquadFilter(); nhp.type = "highpass"; nhp.frequency.value = 2200;
+  const noiseGain = c.createGain();
+  noiseGain.gain.value = 0.18;
+
+  // Mild lowpass on the carriers to keep it from being harsh.
+  const lp = c.createBiquadFilter();
+  lp.type = "lowpass";
+  lp.frequency.value = 3200;
+
+  carrier.connect(lp);
+  detune.connect(lp);
+  sub.connect(lp);
+  lp.connect(out);
+  noiseSrc.connect(nhp).connect(noiseGain).connect(out);
+
+  carrier.start(t0); detune.start(t0); sub.start(t0); lfo.start(t0); noiseSrc.start(t0);
+
+  laser = { out, carrier, detune, sub, noiseSrc, noiseGain, lfo, lfoGain };
 }
 
 function stopLaser() {
@@ -578,7 +634,13 @@ function stopLaser() {
   try {
     l.out.gain.cancelScheduledValues(t);
     l.out.gain.setValueAtTime(l.out.gain.value, t);
-    l.out.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+    l.out.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
   } catch { /* noop */ }
-  try { l.src.stop(t + 0.1); } catch { /* noop */ }
+  const stopAt = t + 0.15;
+  try { l.carrier.stop(stopAt); } catch { /* noop */ }
+  try { l.detune.stop(stopAt); } catch { /* noop */ }
+  try { l.sub.stop(stopAt); } catch { /* noop */ }
+  try { l.lfo.stop(stopAt); } catch { /* noop */ }
+  try { l.noiseSrc.stop(stopAt); } catch { /* noop */ }
 }
+
