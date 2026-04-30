@@ -2850,20 +2850,22 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     } else {
       drawBossSpriteAt(ctx, sx, sy, drawW, drawH, 1, boss.hitFlash > 0.05, vuln);
     }
-    // HP pips
-    const pipY = sy + drawH / 2 + 14;
-    const pipW = 18, pipGap = 6;
-    const totalW = boss.maxHp * pipW + (boss.maxHp - 1) * pipGap;
-    let px = sx - totalW / 2;
-    for (let i = 0; i < boss.maxHp; i++) {
-      ctx.save();
-      ctx.fillStyle = i < boss.hp ? "#f5234c" : "rgba(0,0,0,0.2)";
-      ctx.strokeStyle = INK;
-      ctx.lineWidth = 1.5;
-      ctx.fillRect(px, pipY, pipW, 8);
-      ctx.strokeRect(px, pipY, pipW, 8);
-      ctx.restore();
-      px += pipW + pipGap;
+    // HP pips (hide during defeat retreat)
+    if (!boss.defeated) {
+      const pipY = sy + drawH / 2 + 14;
+      const pipW = 18, pipGap = 6;
+      const totalW = boss.maxHp * pipW + (boss.maxHp - 1) * pipGap;
+      let px = sx - totalW / 2;
+      for (let i = 0; i < boss.maxHp; i++) {
+        ctx.save();
+        ctx.fillStyle = i < boss.hp ? "#f5234c" : "rgba(0,0,0,0.2)";
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = 1.5;
+        ctx.fillRect(px, pipY, pipW, 8);
+        ctx.strokeRect(px, pipY, pipW, 8);
+        ctx.restore();
+        px += pipW + pipGap;
+      }
     }
     // "VULNERABLE!" hint when worn-out
     if (boss.worn > 0) {
