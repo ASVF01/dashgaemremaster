@@ -550,3 +550,35 @@ function stopSlideLoop() {
   try { s.src.stop(t + 0.22); } catch { /* noop */ }
   try { s.rumble.stop(t + 0.22); } catch { /* noop */ }
 }
+
+// ---------- looping LASER (held beam attack — uses uploaded mp3 sample) ----------
+let laser: { src: AudioBufferSourceNode; out: GainNode } | null = null;
+
+function startLaser() {
+  const c = ac(); if (!c || !master) return;
+  if (laser) return;
+  const buf = sampleCache.get(laserBeamUrl);
+  if (!buf) { loadSample(laserBeamUrl); return; }
+  const t0 = c.currentTime;
+  const src = c.createBufferSource();
+  src.buffer = buf;
+  src.loop = true;
+  const out = c.createGain();
+  out.gain.setValueAtTime(0.0001, t0);
+  out.gain.exponentialRampToValueAtTime(0.85, t0 + 0.04);
+  src.connect(out).connect(master);
+  src.start(t0);
+  laser = { src, out };
+}
+
+function stopLaser() {
+  const c = ac(); if (!c || !laser) return;
+  const t = c.currentTime;
+  const l = laser; laser = null;
+  try {
+    l.out.gain.cancelScheduledValues(t);
+    l.out.gain.setValueAtTime(l.out.gain.value, t);
+    l.out.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+  } catch { /* noop */ }
+  try { l.src.stop(t + 0.1); } catch { /* noop */ }
+}
