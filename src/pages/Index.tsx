@@ -48,6 +48,8 @@ const Index = () => {
   const [finalTime, setFinalTime] = useState(0);
   const [finalScore, setFinalScore] = useState(0);
   const [invboiIntroOpen, setInvboiIntroOpen] = useState(false);
+  // Marathon: index into MARATHON_SEQUENCE, or null if not running.
+  const [marathonStep, setMarathonStep] = useState<number | null>(null);
   const [binds] = useKeybinds();
   const [muted, setMuted] = useState(false);
   const [hasJrbBadge, setHasJrbBadge] = useState(false);
