@@ -512,14 +512,21 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           const p = r.player;
           // Spawn ~80px in front of the player at chest height.
           const ahead = 80 * p.facing;
+          const fromX = p.x + p.w / 2 + 6 * p.facing; // streak origin: player edge
           r.invboiPickup = {
             x: p.x + p.w / 2 + ahead,
             y: p.y + p.h * 0.4,
             t: 0,
             bobPhase: Math.random() * Math.PI * 2,
+            spawnT: 0,
+            spawnFromX: fromX,
+            facing: p.facing,
           };
           unlockAudio();
-          sfx.pickup?.();
+          // whoosh: short pitched sweep + airy noise burst
+          sfx.spawnWhoosh?.();
+          // little burst at the spawn point
+          burst(r, p.x + p.w / 2 + ahead, p.y + p.h * 0.4, "#fff5a3", 12, 240);
         }
       }
       if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) {
