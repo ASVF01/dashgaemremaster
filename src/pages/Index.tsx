@@ -73,7 +73,16 @@ const Index = () => {
     // play cutscene after just-run-bro, else go straight to win
     setScreen(levelId === "just-run-bro" ? "cutscene" : "win");
   }, [levelId]);
-  const handleDeath = useCallback(() => setScreen("dead"), []);
+  const handleDeath = useCallback(() => {
+    if (levelId === "roaring-knight") {
+      // boss death → unskippable cutscene, then kick to menu
+      stopBgm(0.2);
+      silenceAllSfx();
+      setScreen("death-cutscene");
+    } else {
+      setScreen("dead");
+    }
+  }, [levelId]);
 
   // One owner for BGM. The "loading" screen handles the actual track switch
   // before "playing" begins, so we leave that case alone here.
