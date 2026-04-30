@@ -501,6 +501,7 @@ export const sfx = {
     tone({ freq: 700, to: 380, dur: 0.10, type: "triangle", vol: 0.16, attack: 0.002, release: 0.08 });
     noise(0.02, 0.08, 1200, 5000);
   },
+  shineStart() { startShine(); },
   shineStop() { stopShine(); },
   laserStart() { startLaser(); },
   laserStop() { stopLaser(); },
