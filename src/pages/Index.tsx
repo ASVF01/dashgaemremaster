@@ -376,7 +376,7 @@ function LoadingScreen({ levelName }: { levelName: string }) {
   );
 }
 
-function CutscenePlayer({ src, onDone }: { src: string; onDone: () => void }) {
+function CutscenePlayer({ src, onDone, unskippable = false }: { src: string; onDone: () => void; unskippable?: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [loading, setLoading] = useState(true);
   const [dots, setDots] = useState("");
