@@ -2583,6 +2583,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     const boss = r.boss!;
     boss.hoverPhase += dt * 2.2;
     if (boss.hitFlash > 0) boss.hitFlash = Math.max(0, boss.hitFlash - dt * 4);
+    if (boss.hurtT > 0) boss.hurtT = Math.max(0, boss.hurtT - dt);
     if (boss.shakeT > 0) boss.shakeT = Math.max(0, boss.shakeT - dt);
     // tick + cull boss explosion VFX
     for (const ex of r.bossExplosions) ex.t += dt;
