@@ -48,6 +48,11 @@ const Index = () => {
   const [finalTime, setFinalTime] = useState(0);
   const [finalScore, setFinalScore] = useState(0);
   const [invboiIntroOpen, setInvboiIntroOpen] = useState(false);
+  // CHASE: on-screen tutorial popup, shown each time the player enters the
+  // chase level (standalone OR as a marathon sub-level). Tracked per-entry
+  // so it shows again on retry / after backing out and replaying.
+  const [chaseIntroOpen, setChaseIntroOpen] = useState(false);
+  const chaseIntroSeenKeyRef = useRef<string | null>(null);
   // Marathon: index into MARATHON_SEQUENCE, or null if not running.
   const [marathonStep, setMarathonStep] = useState<number | null>(null);
   const [binds] = useKeybinds();
