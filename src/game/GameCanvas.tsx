@@ -330,6 +330,8 @@ interface Props {
   onHud: (hud: HudState) => void;
   onFinish: (timeMs: number, score: number) => void;
   onDeath: () => void;
+  /** Fired once when the player collects the pre-placed invboi star (meet-invboi level). */
+  onInvboiPickup?: () => void;
   paused: boolean;
   /** When true, do not pause the BGM even if the game is paused (e.g. win/death overlays). */
   keepAudio?: boolean;
@@ -352,7 +354,7 @@ export interface HudState {
   somSom?: boolean;
 }
 
-export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio = false, resetKey, levelId = "scribble-1" }: Props) {
+export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, paused, keepAudio = false, resetKey, levelId = "scribble-1" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const refs = useRef<GameRefs | null>(null);
   const keysRef = useRef<Keys>({});
