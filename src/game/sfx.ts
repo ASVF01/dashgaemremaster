@@ -359,8 +359,11 @@ export const sfx = {
   },
   bossDefeat() {
     // Fire both victory stings simultaneously when a boss is beaten.
-    playRawSample(sfxCompleteUrl, { vol: 0.9 });
-    playRawSample(sfxYesUrl, { vol: 0.9 });
+    playSample(sfxCompleteUrl, { vol: 0.9 });
+    playSample(sfxYesUrl, { vol: 0.9 });
+    // Pre-warm decode cache for next time.
+    loadSample(sfxCompleteUrl);
+    loadSample(sfxYesUrl);
   },
 };
 
