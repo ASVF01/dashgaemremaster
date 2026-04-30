@@ -625,7 +625,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           }
           return;
         }
-        if ((p.starman || (p.dashCooldown <= 0 && p.dashTime <= 0)) && p.alive) {
+        // Invboi: shorter cooldown + must finish most of the active dash
+        // before re-igniting (prevents single-frame spam, still feels fast).
+        const canDash = p.starman
+          ? (p.dashCooldown <= DASH_COOLDOWN * 0.55 && p.dashTime <= DASH_DURATION * 0.35)
+          : (p.dashCooldown <= 0 && p.dashTime <= 0);
+        if (canDash && p.alive) {
           const k = keysRef.current;
           const b = getLiveBinds();
           let dx = 0, dy = 0;
@@ -1032,8 +1037,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     // player in render() (blinking in place) instead of spawning particles.
     if (p.starman) {
       p.invuln = Math.max(p.invuln, 1);
-      // free dash + parry: zero out their cooldowns every frame
-      p.dashCooldown = 0;
+      // dash cools down faster (but not instant) so it's chainable, not spammy
+      if (p.dashCooldown > 0) p.dashCooldown = Math.max(0, p.dashCooldown - dt * 2.5);
       p.parryCooldown = 0;
     }
 
