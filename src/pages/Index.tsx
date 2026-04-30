@@ -300,13 +300,40 @@ const Index = () => {
             onHud={handleHud}
             onFinish={handleFinish}
             onDeath={handleDeath}
-            paused={screen !== "playing"}
-            keepAudio={screen === "dead" || screen === "win"}
+            onInvboiPickup={handleInvboiPickup}
+            paused={screen !== "playing" || invboiIntroOpen}
+            keepAudio={screen === "dead" || screen === "win" || invboiIntroOpen}
             resetKey={resetKey}
             levelId={levelId}
           />
-          {screen === "playing" && <Hud hud={hud} />}
+          {screen === "playing" && !invboiIntroOpen && <Hud hud={hud} />}
           <FpsOverlay />
+
+          {screen === "playing" && invboiIntroOpen && (
+            <Overlay>
+              <div className="text-center px-6 max-w-2xl">
+                <div className="font-marker text-5xl md:text-6xl text-[hsl(var(--accent))] mb-3 -rotate-2 inline-block animate-jitter">
+                  MEET INVBOI!
+                </div>
+                <p className="font-scribble text-2xl md:text-3xl text-ink mb-4">
+                  you grabbed the star — now you're <b>invboi</b>!!
+                </p>
+                <ul className="font-scribble text-lg md:text-xl text-ink/90 mb-6 space-y-2 text-left inline-block">
+                  <li>✦ <b>invincible</b> — nothing can hurt you</li>
+                  <li>✦ <b>obliterate</b> enemies just by touching them</li>
+                  <li>✦ <b>spammable dash</b> — chain it to fly across the level</li>
+                  <li>✦ <b>parry</b> has zero cooldown — go nuts</li>
+                  <li>✦ <b>rainbow trail</b> + sparkly stars (you look amazing)</li>
+                </ul>
+                <button
+                  onClick={() => setInvboiIntroOpen(false)}
+                  className="scribble-border bg-[hsl(var(--accent))] text-accent-foreground font-marker text-3xl px-8 py-4 hover:rotate-2 transition-transform animate-jitter"
+                >
+                  LET'S GOOO →
+                </button>
+              </div>
+            </Overlay>
+          )}
 
           {screen === "menu" && <MainMenu onPlay={startLevel} />}
 
