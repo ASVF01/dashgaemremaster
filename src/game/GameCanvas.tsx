@@ -1737,6 +1737,23 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       const pkS = r.invboiPickup;
       pkS.t += dt;
       pkS.spawnT += dt;
+      // In meet-invboi: once the player walks past the star, the star
+      // chases them down at absurd speed so they can't avoid the intro.
+      if (levelIdRef.current === "meet-invboi") {
+        const pcx = p.x + p.w / 2;
+        const pcy = p.y + p.h / 2;
+        const dx = pcx - pkS.x;
+        const dy = pcy - pkS.y;
+        const past = pcx > pkS.x + 40; // player walked beyond it
+        if (past) {
+          const dist = Math.hypot(dx, dy) || 1;
+          // Snap towards the player at very high speed (px/sec).
+          const SPEED = 2400;
+          const step = SPEED * dt;
+          if (dist <= step) { pkS.x = pcx; pkS.y = pcy; }
+          else { pkS.x += (dx / dist) * step; pkS.y += (dy / dist) * step; }
+        }
+      }
       const drawY = pkS.y + Math.sin(pkS.bobPhase + pkS.t * 3.2) * 6;
       const HALF = 18;
       if (rectOverlap(p.x, p.y, p.w, p.h, pkS.x - HALF, drawY - HALF, HALF * 2, HALF * 2)
