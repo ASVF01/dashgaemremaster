@@ -2175,16 +2175,24 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   }
 
   function spawnBossSlash(r: GameRefs, boss: Boss) {
-    // Telegraph a thin diagonal slash near the player.
+    // Long thin beam-slash that originates from the boss and passes through
+    // the player's position, extending well past on the far side — matches
+    // the Deltarune reference (knight slashes a line across the screen).
     const p = r.player;
-    const cx = p.x + p.w / 2 + (Math.random() - 0.5) * 80;
-    const cy = p.y + p.h / 2 + (Math.random() - 0.5) * 60;
-    const ang = (Math.random() - 0.5) * 1.2 + Math.PI / 4 * (Math.random() < 0.5 ? 1 : -1);
-    const len = 280 + Math.random() * 120;
-    const dx = Math.cos(ang) * len / 2;
-    const dy = Math.sin(ang) * len / 2;
+    const bossWorldX = r.cameraX + boss.screenX;
+    const bossWorldY = boss.screenY;
+    const px = p.x + p.w / 2 + (Math.random() - 0.5) * 30;
+    const py = p.y + p.h / 2 + (Math.random() - 0.5) * 24;
+    const dx = px - bossWorldX;
+    const dy = py - bossWorldY;
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = dx / len, ny = dy / len;
+    const reach = 1800;
     boss.warnings.push({
-      x1: cx - dx, y1: cy - dy, x2: cx + dx, y2: cy + dy,
+      x1: bossWorldX,
+      y1: bossWorldY,
+      x2: bossWorldX + nx * reach,
+      y2: bossWorldY + ny * reach,
       t: 0, dur: 0.5, fired: false,
     });
   }
@@ -2317,43 +2325,48 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
   }
 
   function drawBossWorldFx(ctx: CanvasRenderingContext2D, boss: Boss) {
-    // red warning lines
+    // Thin red warning line — clean, no glow, steady alpha (matches reference).
     for (const wn of boss.warnings) {
-      const k = Math.min(1, wn.t / wn.dur); // 0 → 1
-      const alpha = 0.3 + 0.5 * k + 0.2 * Math.sin(wn.t * 30);
       ctx.save();
-      ctx.globalAlpha = Math.min(1, alpha);
-      ctx.strokeStyle = "#f5234c";
-      ctx.lineWidth = 2 + 2 * k;
-      ctx.shadowColor = "#f5234c";
-      ctx.shadowBlur = 10;
+      ctx.globalAlpha = 0.9;
+      ctx.strokeStyle = "#ff1f3a";
+      ctx.lineWidth = 1.5;
+      ctx.lineCap = "butt";
       ctx.beginPath();
       ctx.moveTo(wn.x1, wn.y1);
       ctx.lineTo(wn.x2, wn.y2);
       ctx.stroke();
       ctx.restore();
     }
-    // white slashes — start thick, shrink/thin to nothing
+    // White slash — starts thin (~3px) and rapidly thins to a hair, with a
+    // brief glow on the snap. Same path as the warning.
     for (const sl of boss.slashes) {
       const k = Math.min(1, sl.t / sl.dur); // 0 → 1
-      const thickness = Math.max(0.5, 9 * (1 - k));
-      const alpha = 1 - k * 0.7;
+      const thickness = Math.max(0.3, 3 * (1 - k));
+      const alpha = 1 - k * 0.5;
       ctx.save();
+      ctx.lineCap = "butt";
+      // soft outer glow only at the start
+      const glow = Math.max(0, 1 - k * 3);
+      if (glow > 0) {
+        ctx.globalAlpha = 0.45 * glow;
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = thickness + 4 * glow;
+        ctx.shadowColor = "#ffffff";
+        ctx.shadowBlur = 12 * glow;
+        ctx.beginPath();
+        ctx.moveTo(sl.x1, sl.y1);
+        ctx.lineTo(sl.x2, sl.y2);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+      }
+      // crisp white core that thins out
       ctx.globalAlpha = alpha;
       ctx.strokeStyle = "#ffffff";
       ctx.lineWidth = thickness;
-      ctx.lineCap = "round";
-      ctx.shadowColor = "#ffffff";
-      ctx.shadowBlur = 16 * (1 - k);
       ctx.beginPath();
       ctx.moveTo(sl.x1, sl.y1);
       ctx.lineTo(sl.x2, sl.y2);
-      ctx.stroke();
-      // thin core
-      ctx.globalAlpha = alpha * 0.9;
-      ctx.strokeStyle = "rgba(255,255,255,0.95)";
-      ctx.lineWidth = Math.max(0.4, thickness * 0.4);
-      ctx.shadowBlur = 0;
       ctx.stroke();
       ctx.restore();
     }
