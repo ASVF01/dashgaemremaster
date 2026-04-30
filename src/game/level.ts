@@ -251,8 +251,15 @@ function buildChase(): Level {
   }
 
   const signs = [
-    { x: 120,  y: groundY - 110, text: "RUN. don't stop." },
-    { x: 700,  y: groundY - 110, text: "press J to PARRY when it's close →" },
+    { x: 120,  y: groundY - 110, text: "RUN!! the wall behind you NEVER stops →" },
+    { x: 700,  y: groundY - 110, text: "build SPEED — hold dash (SHIFT) to outrun it" },
+    { x: 1400, y: groundY - 130, text: "low ceilings ahead → hold ↓ / S to SLIDE through" },
+    { x: 2400, y: groundY - 110, text: "if it gets close, press J to PARRY — blasts it back!" },
+    { x: 3600, y: groundY - 110, text: "parry stuns it for a sec, use the breather to sprint" },
+    { x: 5200, y: groundY - 110, text: "don't stop to fight. just keep running bro." },
+    { x: 7800, y: groundY - 110, text: "spike ahead → jump or dash over it, NEVER slow down" },
+    { x: 12000, y: groundY - 110, text: "you're doing great — flag's still a ways off →" },
+    { x: 18000, y: groundY - 110, text: "almost out!! sprint to the FLAG →" },
   ];
 
   return {
