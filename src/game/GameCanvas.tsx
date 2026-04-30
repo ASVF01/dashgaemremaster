@@ -2497,10 +2497,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
 
   function drawBossScreen(ctx: CanvasRenderingContext2D, r: GameRefs, boss: Boss, screenW: number) {
     const { drawW, drawH } = bossScreenAnchor(r, boss, screenW);
+    const vuln = boss.worn > 0 && !boss.defeated;
     // afterimages (screen-space, ignore world camera)
     for (const ai of boss.afterimages) {
       const t = ai.life / ai.maxLife; // 1 → 0
-      drawBossSpriteAt(ctx, ai.sx, ai.sy, drawW, drawH, 0.35 * t, false);
+      drawBossSpriteAt(ctx, ai.sx, ai.sy, drawW, drawH, 0.35 * t, false, vuln);
     }
     // little wiggle on hit
     let wx = 0, wy = 0;
@@ -2518,10 +2519,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       ctx.translate(sx, sy + k * 80);
       ctx.rotate(k * 0.6);
       ctx.globalAlpha = 1 - k;
-      drawBossSpriteAt(ctx, 0, 0, drawW, drawH, 1, false);
+      drawBossSpriteAt(ctx, 0, 0, drawW, drawH, 1, false, false);
       ctx.restore();
     } else {
-      drawBossSpriteAt(ctx, sx, sy, drawW, drawH, 1, boss.hitFlash > 0.05);
+      drawBossSpriteAt(ctx, sx, sy, drawW, drawH, 1, boss.hitFlash > 0.05, vuln);
     }
     // HP pips
     const pipY = sy + drawH / 2 + 14;
