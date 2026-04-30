@@ -276,33 +276,41 @@ export const sfx = {
     noise(0.22, 0.26, 110, 1300);                                  // long breathy puff
     noise(0.10, 0.14, 50, 520, 0.02);                              // low body
     tone({ freq: 95, to: 60, dur: 0.30, type: "sine", vol: 0.18, release: 0.18 });
+    celestialShimmer({ base: 1400, count: 3, intensity: 1.0, spread: 0.05 });
   },
   land() {
     // "bsh" — voiced "b" thump + airy "sh" hiss tail
     tone({ freq: 130, to: 70, dur: 0.05, type: "sine", vol: 0.42, attack: 0.002, release: 0.03 }); // "b" body thump
     noise(0.018, 0.28, 120, 900);                                 // "b" burst
     noise(0.11, 0.26, 3500, 8500, 0.018);                         // "sh" hiss tail
+    celestialShimmer({ base: 1100, count: 3, intensity: 1.1, spread: 0.03, lo: true });
   },
   slide() {
     // "thhh" — sustained airy noise around speech band
     noise(0.35, 0.16, 900, 5500);
+    celestialShimmer({ base: 1800, count: 2, intensity: 0.9, spread: 0.06 });
   },
   slideEnd() {
     // short whoosh-puff — descending filtered noise + a soft low blip
     noise(0.16, 0.14, 600, 3800);
     noise(0.1, 0.08, 200, 1500, 0.02);
     tone({ freq: 280, to: 140, dur: 0.12, type: "triangle", vol: 0.1, attack: 0.005, release: 0.08 });
+    celestialShimmer({ base: 1500, count: 2, intensity: 0.9 });
   },
   step() {
     // Original soft papery footstep — short filtered noise burst
     noise(0.05, 0.18, 280, 2600);
+    // tiny twinkle — like landing on a star
+    celestialShimmer({ base: 1900, count: 1, intensity: 0.7 });
   },
   run() {
     // Slightly punchier papery footstep
     noise(0.06, 0.22, 280, 2800);
+    celestialShimmer({ base: 1900, count: 1, intensity: 0.8 });
   },
   skid() {
     noise(0.18, 0.14, 500, 4500);
+    celestialShimmer({ base: 1700, count: 2, intensity: 0.9, spread: 0.05 });
   },
   parryStart() {
     tone({ freq: 1200, to: 1800, dur: 0.06, type: "triangle", vol: 0.18 });
@@ -311,6 +319,7 @@ export const sfx = {
   parryHit() {
     // 8-bit "ny" sample for successful parries.
     playPixelSample(nySampleUrl, { vol: 0.55, bits: 8, rateDiv: 4, lp: 8000 });
+    celestialShimmer({ base: 2200, count: 3, intensity: 1.2, spread: 0.04, lo: true });
   },
   hit() {
     // long, soft fade-out on the voice sample
@@ -345,10 +354,12 @@ export const sfx = {
   enemyKill() {
     tone({ freq: 600, to: 200, dur: 0.12, type: "square", vol: 0.28 });
     noise(0.1, 0.2, 400, 4000);
+    celestialShimmer({ base: 2000, count: 2, intensity: 1.0 });
   },
   pickup() {
     tone({ freq: 880, dur: 0.06, type: "triangle", vol: 0.25 });
     tone({ freq: 1320, dur: 0.08, type: "triangle", vol: 0.2, delay: 0.05 });
+    celestialShimmer({ base: 2400, count: 2, intensity: 0.9 });
   },
   shoot() {
     tone({ freq: 700, to: 250, dur: 0.08, type: "sawtooth", vol: 0.18 });
@@ -363,6 +374,7 @@ export const sfx = {
   mach() {
     tone({ freq: 200, to: 1200, dur: 0.18, type: "square", vol: 0.22 });
     noise(0.2, 0.18, 600, 6000, 0.02);
+    celestialShimmer({ base: 1800, count: 3, intensity: 1.1, spread: 0.04, lo: true });
   },
   superDash() {
     // BIG impact: layered sub-boom, sharp crack transient, body sweep, and
@@ -379,10 +391,12 @@ export const sfx = {
     tone({ freq: 80, to: 50, dur: 0.28, type: "sine", vol: 0.28, attack: 0.01, release: 0.18, delay: 0.05 });
     // 6) metallic tick to add edge
     tone({ freq: 1800, to: 600, dur: 0.06, type: "square", vol: 0.18, release: 0.04 });
+    celestialShimmer({ base: 1600, count: 3, intensity: 1.3, spread: 0.05, lo: true });
   },
   dash() {
     // sped-up swing/swipe sample, used for the normal dash
     playSample(swingSwipeUrl, { vol: 0.7, rate: 1.7 });
+    celestialShimmer({ base: 2000, count: 2, intensity: 1.0, spread: 0.04 });
   },
   meow() {
     // cute lil kitten "mrow" — two pitched sweeps, second a bit higher
