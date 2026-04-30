@@ -1984,7 +1984,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       jaggedBolt(ctx, pr.x, pr.y, pr.x - pr.vx * 0.04, pr.y - pr.vy * 0.04, col, 2, 4, 4);
     }
 
-    // goal
+    // boss world-space FX (warnings + slashes)
+    if (r.boss) drawBossWorldFx(ctx, r.boss);
     drawGoal(ctx, r.level.goal.x, r.level.goal.y, r.level.goal.w, r.level.goal.h, r.time);
 
     // afterimages — draw before player so player sits on top
