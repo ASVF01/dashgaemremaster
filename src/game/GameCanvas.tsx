@@ -330,6 +330,8 @@ interface Props {
   onHud: (hud: HudState) => void;
   onFinish: (timeMs: number, score: number) => void;
   onDeath: () => void;
+  /** Fired once when the player collects the pre-placed invboi star (meet-invboi level). */
+  onInvboiPickup?: () => void;
   paused: boolean;
   /** When true, do not pause the BGM even if the game is paused (e.g. win/death overlays). */
   keepAudio?: boolean;
@@ -352,12 +354,14 @@ export interface HudState {
   somSom?: boolean;
 }
 
-export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio = false, resetKey, levelId = "scribble-1" }: Props) {
+export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, paused, keepAudio = false, resetKey, levelId = "scribble-1" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const refs = useRef<GameRefs | null>(null);
   const keysRef = useRef<Keys>({});
   const levelIdRef = useRef<LevelId>(levelId);
   levelIdRef.current = levelId;
+  const onInvboiPickupRef = useRef<(() => void) | undefined>(onInvboiPickup);
+  onInvboiPickupRef.current = onInvboiPickup;
   const [size, setSize] = useState({ w: 1200, h: 600 });
 
   // resize
@@ -453,6 +457,19 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       boss: levelId === "roaring-knight" ? makeBoss() : null,
       beams: [],
     };
+    // Pre-place the invboi star if this level configures one (e.g. meet-invboi).
+    if (level.invboiStart) {
+      refs.current.invboiPickup = {
+        x: level.invboiStart.x,
+        y: level.invboiStart.y,
+        t: 0,
+        bobPhase: 0,
+        // Skip the spawn streak — it's been here all along.
+        spawnT: 999,
+        spawnFromX: level.invboiStart.x,
+        facing: level.invboiStart.facing,
+      };
+    }
     // Any reset/level change cancels the starman shimmer too.
     sfx.shineStop(); sfx.rainStop(); sfx.slideStop(); sfx.laserStop();
     setCelestialMode(false);
@@ -1737,6 +1754,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
         setCelestialMode(true, { replaceDefaults: !inJrb });
         setThunderMode(inJrb);
         burst(r, p.x + p.w / 2, p.y + p.h / 2, inJrb ? "#22e2ff" : "#ffd11a", 24, 380);
+        // Fire the parent callback (used by meet-invboi to pop the intro overlay).
+        if (levelIdRef.current === "meet-invboi") onInvboiPickupRef.current?.();
       }
     }
 

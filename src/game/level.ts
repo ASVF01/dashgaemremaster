@@ -11,9 +11,12 @@ export type Level = {
   pickups: Pickup[];
   // tutorial-only signs
   signs?: { x: number; y: number; text: string }[];
+  // Pre-placed invboi-star pickup (normally spawned by pressing E).
+  // When set, the GameCanvas will spawn it at level init.
+  invboiStart?: { x: number; y: number; facing: 1 | -1 };
 };
 
-export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "chase" | "speed-test" | "just-run-bro" | "roaring-knight" | "aftermath-1" | "aftermath-2" | "aftermath-3";
+export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "chase" | "speed-test" | "just-run-bro" | "meet-invboi" | "roaring-knight" | "aftermath-1" | "aftermath-2" | "aftermath-3";
 
 export type LevelMeta = {
   id: LevelId;
@@ -32,6 +35,7 @@ export const LEVELS: LevelMeta[] = [
   { id: "chase",      name: "THE CHASE",  subtitle: "don't look back. parry to push it off.", difficulty: 4, par: 45 },
   { id: "speed-test", name: "??? SPEED TEST ???", subtitle: "the hallway never ends. or does it.", difficulty: 4, par: 30, hidden: true },
   { id: "just-run-bro", name: "JUST RUN BRO..", subtitle: "no obstacles. no enemies. just vibes.", difficulty: 1, par: 9999 },
+  { id: "meet-invboi", name: "MEET INVBOI", subtitle: "say hi to a new friend :)", difficulty: 1, par: 60 },
   { id: "roaring-knight", name: "THE ROARING KNIGHT", subtitle: "dodge. parry. dash to strike.", difficulty: 4, par: 120 },
   { id: "aftermath-1", name: "ASHEN MARGINS",  subtitle: "after the knight, the ink keeps bleeding.", difficulty: 4, par: 60 },
   { id: "aftermath-2", name: "TORN PAGES",     subtitle: "shooters in the gaps. mind the rips.",     difficulty: 4, par: 65 },
@@ -48,6 +52,7 @@ export function buildLevel(id: LevelId = "scribble-1"): Level {
     case "chase":      lv = buildChase(); break;
     case "speed-test": lv = buildSpeedTest(); break;
     case "just-run-bro": lv = buildJustRunBro(); break;
+    case "meet-invboi": lv = buildMeetInvboi(); break;
     case "roaring-knight": lv = buildRoaringKnight(); break;
     case "aftermath-1": lv = buildAftermath1(); break;
     case "aftermath-2": lv = buildAftermath2(); break;
@@ -113,7 +118,48 @@ function buildJustRunBro(): Level {
   };
 }
 
-// ---------- CHASE: long hallway pursued by a wall ----------
+// ---------- MEET INVBOI: introduces the invboi-star pickup ----------
+// Tiny flat level. Star is pre-placed in front of the player with a sign.
+// On grab, GameCanvas fires onInvboiPickup so the parent can show the
+// instructions overlay.
+function buildMeetInvboi(): Level {
+  const W = 4800;
+  const H = 720;
+  const groundY = H - 80;
+  const platforms: Platform[] = [
+    { x: 0, y: groundY, w: W, h: 80, kind: "ground" },
+    // a couple of decorative blocks to play with after grabbing the star
+    { x: 1400, y: groundY - 140, w: 160, h: 22, kind: "block" },
+    { x: 1700, y: groundY - 220, w: 160, h: 22, kind: "block" },
+    { x: 2000, y: groundY - 160, w: 160, h: 22, kind: "block" },
+    { x: 2600, y: groundY - 200, w: 200, h: 22, kind: "block" },
+    { x: 3100, y: groundY - 280, w: 200, h: 22, kind: "block" },
+    { x: 3600, y: groundY - 180, w: 200, h: 22, kind: "block" },
+  ];
+  // A few light enemies AFTER the star so invboi feels powerful.
+  const enemies: Enemy[] = [
+    { x: 1900, y: groundY - 50, w: 32, h: 50, vx: -70, alive: true, kind: "grunt" },
+    { x: 2400, y: groundY - 50, w: 32, h: 50, vx: 80, alive: true, kind: "grunt" },
+    { x: 3100, y: groundY - 280 - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 1.2 },
+    { x: 3700, y: groundY - 50, w: 32, h: 50, vx: -90, alive: true, kind: "grunt" },
+  ];
+  // Star location — right in front of the player spawn.
+  const starX = 320;
+  const starY = groundY - 80;
+  return {
+    width: W, height: H,
+    spawn: { x: 80, y: groundY - 80 },
+    goal: { x: W - 160, y: groundY - 120, w: 50, h: 120 },
+    platforms,
+    hazards: [],
+    enemies,
+    pickups: [],
+    signs: [
+      { x: starX, y: groundY - 170, text: "Hey you! grab this!" },
+    ],
+    invboiStart: { x: starX, y: starY, facing: 1 },
+  };
+}
 // A long, mostly flat hallway. A "chaser" enemy spawns just behind the
 // player's start and pursues forever. Touching it = damage. Parrying it
 // blasts it back and stuns it briefly so you can recover ground.
