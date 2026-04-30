@@ -625,7 +625,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
           }
           return;
         }
-        if (p.dashCooldown <= 0 && p.dashTime <= 0 && p.alive) {
+        if ((p.starman || (p.dashCooldown <= 0 && p.dashTime <= 0)) && p.alive) {
           const k = keysRef.current;
           const b = getLiveBinds();
           let dx = 0, dy = 0;
