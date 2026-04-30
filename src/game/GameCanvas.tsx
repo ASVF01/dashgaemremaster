@@ -400,6 +400,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       cameraX: 0,
       shake: 0,
       freezeFrames: 0,
+      freezeTime: 0,
+      bossExplosions: [],
       time: 0,
       combo: 0,
       comboTimer: 0,
