@@ -2303,20 +2303,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
       }
     }
 
-    // Update warnings: spin + re-aim toward player while spinning, then fire slash.
+    // Warnings + slashes are now PLAYER-CENTERED at a random angle picked at
+    // spawn time. They translate with the player but the angle stays locked,
+    // so the line "sticks" on the player from a fixed random direction.
     const p = r.player;
     const pcx = p.x + p.w / 2;
     const pcy = p.y + p.h / 2;
     for (const wn of boss.warnings) {
       wn.t += dt;
-      // continuously steer the angle toward the player so the red line "tracks" them
-      const bossWX = r.cameraX + boss.screenX;
-      const bossWY = boss.screenY;
-      const targetAngle = Math.atan2(pcy - bossWY, pcx - bossWX);
-      // shortest-arc lerp
-      let diff = ((targetAngle - wn.angle + Math.PI) % (Math.PI * 2)) - Math.PI;
-      if (diff < -Math.PI) diff += Math.PI * 2;
-      wn.angle += diff * Math.min(1, dt * 9);
+      // angle stays as picked at spawn (random) — no re-aiming, no spinning
       if (!wn.fired && wn.t >= wn.dur) {
         wn.fired = true;
         boss.slashes.push({ angle: wn.angle, len: wn.len, t: 0, dur: 0.2, hit: false });
@@ -2325,27 +2320,21 @@ export default function GameCanvas({ onHud, onFinish, onDeath, paused, keepAudio
     }
     boss.warnings = boss.warnings.filter((w) => !w.fired);
 
-    // Update slashes — re-aim to follow the player every frame ("stay on the player").
+    // Slashes — centered on the player, stretch len/2 each direction.
     for (const sl of boss.slashes) {
       sl.t += dt;
-      const bossWX = r.cameraX + boss.screenX;
-      const bossWY = boss.screenY;
-      const targetAngle = Math.atan2(pcy - bossWY, pcx - bossWX);
-      let diff = ((targetAngle - sl.angle + Math.PI) % (Math.PI * 2)) - Math.PI;
-      if (diff < -Math.PI) diff += Math.PI * 2;
-      // tighter tracking on active slash so it sticks on player
-      sl.angle += diff * Math.min(1, dt * 14);
       if (!sl.hit) {
-        const x1 = bossWX, y1 = bossWY;
-        const x2 = bossWX + Math.cos(sl.angle) * sl.len;
-        const y2 = bossWY + Math.sin(sl.angle) * sl.len;
+        const half = sl.len / 2;
+        const cx = Math.cos(sl.angle), cy = Math.sin(sl.angle);
+        const x1 = pcx - cx * half, y1 = pcy - cy * half;
+        const x2 = pcx + cx * half, y2 = pcy + cy * half;
         if (segRectOverlap(x1, y1, x2, y2, p.x, p.y, p.w, p.h)) {
           if (p.parrying > 0) {
             sl.hit = true;
-            parrySuccess(r, (x1 + x2) / 2, (y1 + y2) / 2);
+            parrySuccess(r, pcx, pcy);
           } else if (p.invuln <= 0 && p.alive) {
             sl.hit = true;
-            damage(r, (x1 + x2) / 2, (y1 + y2) / 2);
+            damage(r, pcx, pcy);
           }
         }
       }
