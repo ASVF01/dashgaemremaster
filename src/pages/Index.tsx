@@ -39,9 +39,13 @@ const Index = () => {
 
   // Intro card shown once on app start: fade in → hold 9s → fade out.
   // Phases: "in" (opacity 0→1), "hold" (opacity 1), "out" (1→0), "done".
+  // Click anywhere to skip: jumps straight to "out" so the card fades out
+  // and the menu music swells in immediately.
   const [introPhase, setIntroPhase] = useState<"in" | "hold" | "out" | "done">("in");
+  const introAudioRef = useRef<HTMLAudioElement | null>(null);
+  const introSkippedRef = useRef(false);
+  const FADE = 800; // ms
   useEffect(() => {
-    const FADE = 800; // ms
     const HOLD = 9000; // ms fully visible
     // Make absolutely sure no BGM is playing while the intro is on screen.
     stopBgm();
@@ -49,9 +53,11 @@ const Index = () => {
     const introAudio = new Audio(introBeginUrl);
     introAudio.preload = "auto";
     introAudio.volume = 0.9;
+    introAudioRef.current = introAudio;
     introAudio.play().catch(() => { /* autoplay blocked — will play after a gesture */ });
     const t1 = window.setTimeout(() => setIntroPhase("hold"), 30); // trigger fade-in next frame
     const t2 = window.setTimeout(() => {
+      if (introSkippedRef.current) return;
       setIntroPhase("out");
       // Music swells in as the card fades out.
       playMenuBgmFadeIn(FADE);
@@ -62,6 +68,16 @@ const Index = () => {
       try { introAudio.pause(); } catch { /* noop */ }
     };
   }, []);
+
+  const skipIntro = useCallback(() => {
+    if (introSkippedRef.current) return;
+    if (introPhase === "done" || introPhase === "out") return;
+    introSkippedRef.current = true;
+    try { introAudioRef.current?.pause(); } catch { /* noop */ }
+    setIntroPhase("out");
+    playMenuBgmFadeIn(FADE);
+    window.setTimeout(() => setIntroPhase("done"), FADE);
+  }, [introPhase]);
 
   // Load persisted prefs once.
   useEffect(() => {
