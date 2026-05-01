@@ -121,10 +121,33 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
   const visible = LEVELS.filter((l) => !l.hidden);
   const stats = useLevelStats();
   const [index, setIndex] = useState(0);
+  // -1 = sliding to previous, +1 = sliding to next, 0 = idle.
+  const [dir, setDir] = useState<-1 | 0 | 1>(0);
+  const animatingRef = useRef(false);
 
-  const go = (delta: number) => {
+  const TRANSITION_MS = 380;
+
+  const go = (delta: -1 | 1) => {
+    if (animatingRef.current) return;
+    animatingRef.current = true;
     sfx.menuHover();
-    setIndex((i) => (i + delta + visible.length) % visible.length);
+    setDir(delta);
+    window.setTimeout(() => {
+      setIndex((i) => (i + delta + visible.length) % visible.length);
+      setDir(0);
+      // brief pause before next click can fire so the entry animation is visible
+      window.setTimeout(() => { animatingRef.current = false; }, 60);
+    }, TRANSITION_MS);
+  };
+
+  const jumpTo = (target: number) => {
+    if (animatingRef.current || target === index) return;
+    const diff = target - index;
+    go(diff > 0 ? 1 : -1);
+    // For non-adjacent jumps, snap intermediate after the slide.
+    if (Math.abs(diff) > 1) {
+      window.setTimeout(() => setIndex(target), TRANSITION_MS);
+    }
   };
 
   // Keyboard arrows + Enter.
@@ -139,6 +162,29 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, visible.length]);
 
+  const featured = visible[index];
+  const left = visible[(index - 1 + visible.length) % visible.length];
+  const right = visible[(index + 1) % visible.length];
+
+  // Featured card slide: when dir=+1 it slides out left; when dir=-1 it slides out right.
+  const featuredTransform =
+    dir === 0 ? "translateX(0) scale(1)" :
+    dir === 1 ? "translateX(-120%) scale(0.85)" :
+                "translateX(120%) scale(0.85)";
+  const featuredOpacity = dir === 0 ? 1 : 0;
+
+  // Peek cards slide toward the center as the featured leaves.
+  const leftPeekTransform =
+    dir === -1 ? "translate(80%, 0) scale(1.1) rotate(0deg)" :
+    dir === 1  ? "translate(-30%, 0) scale(0.85) rotate(-6deg)" :
+                 "translate(0, 0) scale(1) rotate(-3deg)";
+  const rightPeekTransform =
+    dir === 1  ? "translate(-80%, 0) scale(1.1) rotate(0deg)" :
+    dir === -1 ? "translate(30%, 0) scale(0.85) rotate(6deg)" :
+                 "translate(0, 0) scale(1) rotate(3deg)";
+
+  const easing = "cubic-bezier(0.22, 1, 0.36, 1)";
+
   return (
     <div className="relative">
       {/* Carousel stage */}
@@ -152,47 +198,46 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
           <ChevronLeft className="w-6 h-6 text-ink" />
         </button>
 
-        {/* Sliding track: each slot is the full stage width, centered on `index`. */}
-        <div className="absolute inset-0 flex items-center">
-          <div
-            className="flex items-center transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform"
-            style={{
-              width: `${visible.length * 100}%`,
-              transform: `translateX(calc(50% - ${(index + 0.5) * (100 / visible.length)}%))`,
-            }}
-          >
-            {visible.map((l, i) => {
-              const isActive = i === index;
-              return (
-                <div
-                  key={l.id}
-                  className="flex items-center justify-center px-2"
-                  style={{ width: `${100 / visible.length}%` }}
-                >
-                  {isActive ? (
-                    <div className="w-full max-w-2xl mx-auto transition-all duration-500 ease-out">
-                      <FeaturedCard
-                        lvl={l}
-                        stat={stats[l.id]}
-                        onPlay={() => onPlay(l.id)}
-                      />
-                    </div>
-                  ) : (
-                    <div
-                      onClick={() => { sfx.menuHover(); setIndex(i); }}
-                      className={[
-                        "hidden md:block w-56 cursor-pointer transition-all duration-500 ease-out",
-                        i < index ? "-rotate-3" : "rotate-3",
-                        "opacity-50 hover:opacity-80",
-                      ].join(" ")}
-                    >
-                      <MiniCard lvl={l} />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+        {/* Left peek card */}
+        <div
+          onClick={() => go(-1)}
+          className="hidden md:block absolute left-12 top-1/2 w-56 cursor-pointer z-10"
+          style={{
+            transform: `translateY(-50%) ${leftPeekTransform}`,
+            opacity: dir === -1 ? 0 : 0.5,
+            transition: `transform ${TRANSITION_MS}ms ${easing}, opacity ${TRANSITION_MS}ms ${easing}`,
+          }}
+        >
+          <MiniCard lvl={left} />
+        </div>
+
+        {/* Featured */}
+        <div
+          className="relative z-20 w-full max-w-2xl mx-auto px-2"
+          style={{
+            transform: featuredTransform,
+            opacity: featuredOpacity,
+            transition: `transform ${TRANSITION_MS}ms ${easing}, opacity ${TRANSITION_MS}ms ${easing}`,
+          }}
+        >
+          <FeaturedCard
+            lvl={featured}
+            stat={stats[featured.id]}
+            onPlay={() => onPlay(featured.id)}
+          />
+        </div>
+
+        {/* Right peek card */}
+        <div
+          onClick={() => go(1)}
+          className="hidden md:block absolute right-12 top-1/2 w-56 cursor-pointer z-10"
+          style={{
+            transform: `translateY(-50%) ${rightPeekTransform}`,
+            opacity: dir === 1 ? 0 : 0.5,
+            transition: `transform ${TRANSITION_MS}ms ${easing}, opacity ${TRANSITION_MS}ms ${easing}`,
+          }}
+        >
+          <MiniCard lvl={right} />
         </div>
 
         {/* Next arrow */}
@@ -210,7 +255,7 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
         {visible.map((l, i) => (
           <button
             key={l.id}
-            onClick={() => { sfx.menuHover(); setIndex(i); }}
+            onClick={() => jumpTo(i)}
             aria-label={`Go to ${l.name}`}
             className={[
               "w-3 h-3 scribble-border transition-transform hover:scale-125",
