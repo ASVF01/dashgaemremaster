@@ -229,4 +229,26 @@
     20% { opacity: 1; }
     100% { opacity: 0; }
   }
+
+  /* Knight thumbnail: gentle floating */
+  @keyframes knight-float {
+    0%, 100% { transform: translateY(-6px); }
+    50%      { transform: translateY(6px); }
+  }
+  .animate-knight-float {
+    animation: knight-float 2.4s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  /* Knight thumbnail: pulsing afterimage. Lifetime 0.5s, repeats every 0.8s. */
+  @keyframes knight-afterimage {
+    0%   { opacity: 0.55; transform: translateY(-6px) scale(1); filter: blur(0px); }
+    62.5% { opacity: 0;    transform: translateY(-6px) scale(1.25); filter: blur(4px); }
+    100% { opacity: 0;    transform: translateY(-6px) scale(1.25); filter: blur(4px); }
+  }
+  .animate-knight-afterimage {
+    /* 0.5s active animation inside an 0.8s loop -> 0.625 of cycle is the pulse */
+    animation: knight-afterimage 0.8s ease-out infinite;
+    will-change: transform, opacity, filter;
+  }
 }

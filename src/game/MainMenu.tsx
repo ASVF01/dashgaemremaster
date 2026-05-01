@@ -11,6 +11,7 @@ import BgmPlayer from "@/game/BgmPlayer";
 import { SPRITE_GALLERY } from "@/game/sprites";
 import { useLevelStats, formatMs } from "@/game/levelStats";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import roaringKnightImg from "@/assets/roaring_knight.png";
 
 export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" | "credits";
 
@@ -138,15 +139,11 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, visible.length]);
 
-  const featured = visible[index];
-  const left = visible[(index - 1 + visible.length) % visible.length];
-  const right = visible[(index + 1) % visible.length];
-
   return (
     <div className="relative">
       {/* Carousel stage */}
-      <div className="relative h-[440px] flex items-center justify-center select-none">
-        {/* Side previews */}
+      <div className="relative h-[440px] flex items-center justify-center select-none overflow-hidden">
+        {/* Prev arrow */}
         <button
           onClick={() => go(-1)}
           aria-label="Previous level"
@@ -155,32 +152,50 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
           <ChevronLeft className="w-6 h-6 text-ink" />
         </button>
 
-        {/* Left peek card */}
-        <div
-          onClick={() => go(-1)}
-          className="hidden md:block absolute left-12 top-1/2 -translate-y-1/2 w-56 opacity-50 hover:opacity-80 cursor-pointer transition-all -rotate-3 z-10"
-        >
-          <MiniCard lvl={left} />
+        {/* Sliding track: each slot is the full stage width, centered on `index`. */}
+        <div className="absolute inset-0 flex items-center">
+          <div
+            className="flex items-center transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform"
+            style={{
+              width: `${visible.length * 100}%`,
+              transform: `translateX(calc(50% - ${(index + 0.5) * (100 / visible.length)}%))`,
+            }}
+          >
+            {visible.map((l, i) => {
+              const isActive = i === index;
+              return (
+                <div
+                  key={l.id}
+                  className="flex items-center justify-center px-2"
+                  style={{ width: `${100 / visible.length}%` }}
+                >
+                  {isActive ? (
+                    <div className="w-full max-w-2xl mx-auto transition-all duration-500 ease-out">
+                      <FeaturedCard
+                        lvl={l}
+                        stat={stats[l.id]}
+                        onPlay={() => onPlay(l.id)}
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => { sfx.menuHover(); setIndex(i); }}
+                      className={[
+                        "hidden md:block w-56 cursor-pointer transition-all duration-500 ease-out",
+                        i < index ? "-rotate-3" : "rotate-3",
+                        "opacity-50 hover:opacity-80",
+                      ].join(" ")}
+                    >
+                      <MiniCard lvl={l} />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Featured */}
-        <div className="relative z-20 w-full max-w-2xl mx-auto px-2">
-          <FeaturedCard
-            key={featured.id}
-            lvl={featured}
-            stat={stats[featured.id]}
-            onPlay={() => onPlay(featured.id)}
-          />
-        </div>
-
-        {/* Right peek card */}
-        <div
-          onClick={() => go(1)}
-          className="hidden md:block absolute right-12 top-1/2 -translate-y-1/2 w-56 opacity-50 hover:opacity-80 cursor-pointer transition-all rotate-3 z-10"
-        >
-          <MiniCard lvl={right} />
-        </div>
-
+        {/* Next arrow */}
         <button
           onClick={() => go(1)}
           aria-label="Next level"
@@ -214,6 +229,7 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
 function Thumbnail({ lvl, large = false }: { lvl: LevelMeta; large?: boolean }) {
   const theme = LEVEL_THEME[lvl.id];
   const isMarathon = lvl.id === "celestial-marathon";
+  const isKnight = lvl.id === "roaring-knight";
   return (
     <div
       className={[
@@ -221,22 +237,46 @@ function Thumbnail({ lvl, large = false }: { lvl: LevelMeta; large?: boolean }) 
         large ? "aspect-[16/7]" : "aspect-[16/9]",
         isMarathon ? "marathon-rainbow" : "",
       ].join(" ")}
-      style={isMarathon ? undefined : {
-        background: `linear-gradient(135deg, hsl(${theme.accent} / 0.25), hsl(${theme.accent} / 0.05))`,
-      }}
+      style={
+        isMarathon
+          ? undefined
+          : isKnight
+          ? { background: "#000" }
+          : { background: `linear-gradient(135deg, hsl(${theme.accent} / 0.25), hsl(${theme.accent} / 0.05))` }
+      }
     >
       {isMarathon && <MarathonStars />}
       <div className="absolute inset-0 flex items-center justify-center">
-        <span
-          className={[
-            "font-marker leading-none select-none",
-            large ? "text-[140px]" : "text-[80px]",
-            isMarathon ? "rainbow-text animate-jitter" : "",
-          ].join(" ")}
-          style={isMarathon ? undefined : { color: `hsl(${theme.accent})`, opacity: 0.85 }}
-        >
-          {theme.glyph}
-        </span>
+        {isKnight ? (
+          <div className="relative h-[78%] aspect-square flex items-center justify-center">
+            {/* afterimage (behind) */}
+            <img
+              src={roaringKnightImg}
+              alt=""
+              aria-hidden
+              className="absolute inset-0 w-full h-full object-contain animate-knight-afterimage pointer-events-none [image-rendering:pixelated]"
+              style={{ filter: "drop-shadow(0 0 12px hsl(260 70% 60% / 0.7))" }}
+            />
+            {/* main floating knight */}
+            <img
+              src={roaringKnightImg}
+              alt={lvl.name}
+              className="relative w-full h-full object-contain animate-knight-float [image-rendering:pixelated]"
+              style={{ filter: "drop-shadow(0 0 8px hsl(260 80% 55% / 0.5))" }}
+            />
+          </div>
+        ) : (
+          <span
+            className={[
+              "font-marker leading-none select-none",
+              large ? "text-[140px]" : "text-[80px]",
+              isMarathon ? "rainbow-text animate-jitter" : "",
+            ].join(" ")}
+            style={isMarathon ? undefined : { color: `hsl(${theme.accent})`, opacity: 0.85 }}
+          >
+            {theme.glyph}
+          </span>
+        )}
       </div>
       {/* corner par chip */}
       <div className="absolute top-2 right-2 scribble-border bg-paper px-2 py-0.5 font-bungee text-xs text-ink">
