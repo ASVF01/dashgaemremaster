@@ -238,7 +238,7 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
         {visible.map((l, i) => (
           <button
             key={l.id}
-            onClick={() => jumpTo(i)}
+            onClick={() => go(offsetFor(i))}
             aria-label={`Go to ${l.name}`}
             className={[
               "w-3 h-3 scribble-border transition-transform hover:scale-125",
