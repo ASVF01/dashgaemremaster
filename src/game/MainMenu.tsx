@@ -276,23 +276,7 @@ function Thumbnail({ lvl, large = false }: { lvl: LevelMeta; large?: boolean }) 
       {isMarathon && <MarathonStars />}
       <div className="absolute inset-0 flex items-center justify-center">
         {isKnight ? (
-          <div className="relative h-[78%] aspect-square flex items-center justify-center">
-            {/* afterimage (behind) */}
-            <img
-              src={roaringKnightImg}
-              alt=""
-              aria-hidden
-              className="absolute inset-0 w-full h-full object-contain animate-knight-afterimage pointer-events-none [image-rendering:pixelated]"
-              style={{ filter: "drop-shadow(0 0 12px hsl(260 70% 60% / 0.7))" }}
-            />
-            {/* main floating knight */}
-            <img
-              src={roaringKnightImg}
-              alt={lvl.name}
-              className="relative w-full h-full object-contain animate-knight-float [image-rendering:pixelated]"
-              style={{ filter: "drop-shadow(0 0 8px hsl(260 80% 55% / 0.5))" }}
-            />
-          </div>
+          <KnightVisual />
         ) : (
           <span
             className={[
