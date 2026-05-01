@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import { LEVELS, type LevelId, type LevelMeta } from "@/game/level";
 import {
   ACTIONS, DEFAULT_BINDS, type ActionId, type Keybinds,
@@ -426,15 +426,15 @@ function FeaturedCard({
   );
 }
 
-function MiniCard({ lvl }: { lvl: LevelMeta }) {
+const MiniCard = forwardRef<HTMLDivElement, { lvl: LevelMeta }>(function MiniCard({ lvl }, ref) {
   return (
-    <div className="scribble-border bg-paper p-2">
+    <div ref={ref} className="scribble-border bg-paper p-2">
       <Thumbnail lvl={lvl} />
       <div className="font-marker text-xl text-ink mt-1 truncate">{lvl.name}</div>
       <div className="font-scribble text-sm text-ink/60 truncate">{lvl.subtitle}</div>
     </div>
   );
-}
+});
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
@@ -546,14 +546,14 @@ function TutorialTab({ onStartTutorial }: { onStartTutorial: () => void }) {
   );
 }
 
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
+const Card = forwardRef<HTMLDivElement, { title: string; children: React.ReactNode }>(function Card({ title, children }, ref) {
   return (
-    <div className="scribble-border bg-paper p-4">
+    <div ref={ref} className="scribble-border bg-paper p-4">
       <div className="font-marker text-2xl text-ink mb-2 -rotate-1 inline-block">{title}</div>
       {children}
     </div>
   );
-}
+});
 
 // ---------------- KEYBINDS TAB ----------------
 function KeybindsTab() {
