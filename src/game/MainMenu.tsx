@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { LEVELS, type LevelId } from "@/game/level";
+import { LEVELS, type LevelId, type LevelMeta } from "@/game/level";
 import {
   ACTIONS, DEFAULT_BINDS, type ActionId, type Keybinds,
   keyLabel, useKeybinds,
@@ -9,6 +9,8 @@ import { sfx, setSfxVolume, unlockAudio } from "@/game/sfx";
 import { setBgmVolume } from "@/game/bgm";
 import BgmPlayer from "@/game/BgmPlayer";
 import { SPRITE_GALLERY } from "@/game/sprites";
+import { useLevelStats, formatMs } from "@/game/levelStats";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" | "credits";
 
@@ -86,74 +88,256 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
   );
 }
 
-// ---------------- PLAY TAB ----------------
+// ---------------- PLAY TAB (horizontal carousel) ----------------
+
+// Per-level extended descriptions + thumbnail theme. Subtitles on LEVELS
+// are kept short for the in-game HUD; here we get a little more room.
+type LevelTheme = {
+  description: string;
+  // HSL color (no hsl() wrapper) for the thumbnail accent.
+  accent: string;
+  // Big glyph drawn on the thumbnail.
+  glyph: string;
+};
+
+const LEVEL_THEME: Record<LevelId, LevelTheme> = {
+  "tutorial":           { description: "Learn to scribble. Run, jump, slide, parry — the whole vocabulary.", accent: "190 90% 55%", glyph: "✎" },
+  "scribble-1":         { description: "A short warm-up alley. Get used to the speed and find the rhythm.", accent: "32 95% 55%", glyph: "➤" },
+  "scribble-2":         { description: "Shooters everywhere. Time your parries or eat ink.", accent: "0 85% 60%", glyph: "✦" },
+  "scribble-3":         { description: "Foot off the brake. Pure overdrive — chain mach tiers all the way.", accent: "280 80% 60%", glyph: "⚡" },
+  "chase":              { description: "An ink wall is on your heels. Don't stop. Parry it back if it gets close.", accent: "350 85% 55%", glyph: "≫" },
+  "speed-test":         { description: "The hallway never ends. Or does it? Hold dash. Find out.", accent: "60 90% 55%", glyph: "∞" },
+  "just-run-bro":       { description: "No obstacles. No enemies. Just vibes and a horizon. Hold dash.", accent: "200 80% 60%", glyph: "♥" },
+  "meet-invboi":        { description: "Say hi to a new friend. Grab the star and become unstoppable.", accent: "50 95% 60%", glyph: "★" },
+  "roaring-knight":     { description: "Boss fight. Dodge his sweeps, parry the openings, dash to strike.", accent: "260 70% 50%", glyph: "♛" },
+  "aftermath-1":        { description: "After the knight, the ink keeps bleeding. Push through the ash.", accent: "20 50% 45%", glyph: "▲" },
+  "aftermath-2":        { description: "Shooters in the gaps. Mind the rips. Keep your line clean.", accent: "10 60% 50%", glyph: "▣" },
+  "aftermath-3":        { description: "Final draft. Everything you've learned, all in one breath.", accent: "0 70% 45%", glyph: "✗" },
+  "celestial-marathon": { description: "Every level. One breath. Invboi forever. The ultimate run.", accent: "300 80% 60%", glyph: "✦" },
+};
+
 function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
+  const visible = LEVELS.filter((l) => !l.hidden);
+  const stats = useLevelStats();
+  const [index, setIndex] = useState(0);
+
+  const go = (delta: number) => {
+    sfx.menuHover();
+    setIndex((i) => (i + delta + visible.length) % visible.length);
+  };
+
+  // Keyboard arrows + Enter.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code === "ArrowLeft")  { e.preventDefault(); go(-1); }
+      if (e.code === "ArrowRight") { e.preventDefault(); go(1); }
+      if (e.code === "Enter")      { e.preventDefault(); onPlay(visible[index].id); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index, visible.length]);
+
+  const featured = visible[index];
+  const left = visible[(index - 1 + visible.length) % visible.length];
+  const right = visible[(index + 1) % visible.length];
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {LEVELS.filter((l) => !l.hidden).map((lvl) => {
-        const isMarathon = lvl.id === "celestial-marathon";
-        return (
+    <div className="relative">
+      {/* Carousel stage */}
+      <div className="relative h-[440px] flex items-center justify-center select-none">
+        {/* Side previews */}
+        <button
+          onClick={() => go(-1)}
+          aria-label="Previous level"
+          className="absolute left-0 sm:left-4 top-1/2 -translate-y-1/2 z-30 scribble-border bg-paper p-2 hover:-rotate-3 transition-transform"
+        >
+          <ChevronLeft className="w-6 h-6 text-ink" />
+        </button>
+
+        {/* Left peek card */}
+        <div
+          onClick={() => go(-1)}
+          className="hidden md:block absolute left-12 top-1/2 -translate-y-1/2 w-56 opacity-50 hover:opacity-80 cursor-pointer transition-all -rotate-3 z-10"
+        >
+          <MiniCard lvl={left} />
+        </div>
+
+        {/* Featured */}
+        <div className="relative z-20 w-full max-w-2xl mx-auto px-2">
+          <FeaturedCard
+            key={featured.id}
+            lvl={featured}
+            stat={stats[featured.id]}
+            onPlay={() => onPlay(featured.id)}
+          />
+        </div>
+
+        {/* Right peek card */}
+        <div
+          onClick={() => go(1)}
+          className="hidden md:block absolute right-12 top-1/2 -translate-y-1/2 w-56 opacity-50 hover:opacity-80 cursor-pointer transition-all rotate-3 z-10"
+        >
+          <MiniCard lvl={right} />
+        </div>
+
+        <button
+          onClick={() => go(1)}
+          aria-label="Next level"
+          className="absolute right-0 sm:right-4 top-1/2 -translate-y-1/2 z-30 scribble-border bg-paper p-2 hover:rotate-3 transition-transform"
+        >
+          <ChevronRight className="w-6 h-6 text-ink" />
+        </button>
+      </div>
+
+      {/* Dots */}
+      <div className="flex justify-center gap-2 mt-4 flex-wrap">
+        {visible.map((l, i) => (
           <button
-            key={lvl.id}
-            onClick={() => onPlay(lvl.id)}
-            onMouseEnter={() => sfx.menuHover()}
+            key={l.id}
+            onClick={() => { sfx.menuHover(); setIndex(i); }}
+            aria-label={`Go to ${l.name}`}
             className={[
-              "scribble-border p-4 text-left hover:-rotate-1 transition-transform group relative overflow-hidden",
-              isMarathon
-                ? "bg-paper marathon-rainbow"
-                : "bg-paper hover:bg-[hsl(var(--accent))/0.15]",
+              "w-3 h-3 scribble-border transition-transform hover:scale-125",
+              i === index ? "bg-ink" : "bg-paper",
             ].join(" ")}
-          >
-            {isMarathon && <MarathonStars />}
-            <div className="relative z-10">
-              <div className="flex items-baseline justify-between mb-1">
-                <span
-                  className={[
-                    "font-marker text-3xl",
-                    isMarathon ? "rainbow-text animate-jitter" : "text-ink",
-                  ].join(" ")}
-                >
-                  {lvl.name}
-                </span>
-                <span className={isMarathon ? "font-bungee text-base text-ink" : "font-bungee text-base text-ink/60"}>
-                  PAR {lvl.par}s
-                </span>
-              </div>
-              <div className={isMarathon ? "font-scribble text-xl text-ink" : "font-scribble text-xl text-ink/80"}>
-                {lvl.subtitle}
-              </div>
-              <div className="mt-2 flex items-center gap-2">
-                <span className={isMarathon ? "font-scribble text-base text-ink" : "font-scribble text-base text-ink/60"}>
-                  difficulty
-                </span>
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <span
-                    key={i}
-                    className={[
-                      "inline-block w-3 h-3 scribble-border",
-                      i < lvl.difficulty ? "bg-[hsl(var(--accent))]" : "bg-paper",
-                    ].join(" ")}
-                  />
-                ))}
-              </div>
-              <div
-                className={[
-                  "mt-3 font-marker text-xl opacity-0 group-hover:opacity-100 transition-opacity",
-                  isMarathon ? "rainbow-text" : "text-[hsl(var(--accent))]",
-                ].join(" ")}
-              >
-                ▶ GO!!
-              </div>
-            </div>
-          </button>
-        );
-      })}
+          />
+        ))}
+      </div>
+      <div className="text-center font-scribble text-base text-ink/60 mt-2">
+        ← → arrows to browse • ENTER to play
+      </div>
+    </div>
+  );
+}
+
+function Thumbnail({ lvl, large = false }: { lvl: LevelMeta; large?: boolean }) {
+  const theme = LEVEL_THEME[lvl.id];
+  const isMarathon = lvl.id === "celestial-marathon";
+  return (
+    <div
+      className={[
+        "relative w-full overflow-hidden scribble-border",
+        large ? "aspect-[16/7]" : "aspect-[16/9]",
+        isMarathon ? "marathon-rainbow" : "",
+      ].join(" ")}
+      style={isMarathon ? undefined : {
+        background: `linear-gradient(135deg, hsl(${theme.accent} / 0.25), hsl(${theme.accent} / 0.05))`,
+      }}
+    >
+      {isMarathon && <MarathonStars />}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span
+          className={[
+            "font-marker leading-none select-none",
+            large ? "text-[140px]" : "text-[80px]",
+            isMarathon ? "rainbow-text animate-jitter" : "",
+          ].join(" ")}
+          style={isMarathon ? undefined : { color: `hsl(${theme.accent})`, opacity: 0.85 }}
+        >
+          {theme.glyph}
+        </span>
+      </div>
+      {/* corner par chip */}
+      <div className="absolute top-2 right-2 scribble-border bg-paper px-2 py-0.5 font-bungee text-xs text-ink">
+        PAR {lvl.par >= 9999 ? "∞" : `${lvl.par}s`}
+      </div>
+    </div>
+  );
+}
+
+function FeaturedCard({
+  lvl, stat, onPlay,
+}: {
+  lvl: LevelMeta;
+  stat: { bestTimeMs: number | null; bestScore: number; plays: number } | undefined;
+  onPlay: () => void;
+}) {
+  const theme = LEVEL_THEME[lvl.id];
+  const isMarathon = lvl.id === "celestial-marathon";
+  return (
+    <div className="scribble-border bg-paper p-4 sm:p-5 animate-scale-in">
+      <Thumbnail lvl={lvl} large />
+
+      <div className="mt-3 flex items-baseline justify-between gap-3 flex-wrap">
+        <div
+          className={[
+            "font-marker text-4xl sm:text-5xl leading-none -rotate-1",
+            isMarathon ? "rainbow-text animate-jitter" : "text-ink",
+          ].join(" ")}
+        >
+          {lvl.name}
+        </div>
+        <Difficulty value={lvl.difficulty} />
+      </div>
+
+      <div className="font-scribble text-xl text-ink/80 mt-1">{lvl.subtitle}</div>
+      <p className="font-scribble text-lg text-ink/70 mt-2 leading-snug">
+        {theme.description}
+      </p>
+
+      <div className="mt-3 grid grid-cols-3 gap-2">
+        <Stat label="BEST TIME" value={formatMs(stat?.bestTimeMs)} />
+        <Stat label="BEST SCORE" value={stat?.bestScore ? String(stat.bestScore) : "—"} />
+        <Stat label="PLAYS" value={String(stat?.plays ?? 0)} />
+      </div>
+
+      <div className="mt-4 flex justify-end">
+        <button
+          onClick={onPlay}
+          onMouseEnter={() => sfx.menuHover()}
+          className={[
+            "scribble-border font-marker text-3xl px-6 py-2 hover:-rotate-2 transition-transform",
+            isMarathon
+              ? "bg-ink text-paper"
+              : "bg-[hsl(var(--accent))] text-accent-foreground",
+          ].join(" ")}
+        >
+          ▶ PLAY
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function MiniCard({ lvl }: { lvl: LevelMeta }) {
+  return (
+    <div className="scribble-border bg-paper p-2">
+      <Thumbnail lvl={lvl} />
+      <div className="font-marker text-xl text-ink mt-1 truncate">{lvl.name}</div>
+      <div className="font-scribble text-sm text-ink/60 truncate">{lvl.subtitle}</div>
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="scribble-border bg-paper px-2 py-1.5 text-center">
+      <div className="font-scribble text-xs text-ink/60 leading-none">{label}</div>
+      <div className="font-bungee text-base text-ink mt-1 truncate">{value}</div>
+    </div>
+  );
+}
+
+function Difficulty({ value }: { value: 1 | 2 | 3 | 4 }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="font-scribble text-base text-ink/60">difficulty</span>
+      {Array.from({ length: 4 }).map((_, i) => (
+        <span
+          key={i}
+          className={[
+            "inline-block w-3 h-3 scribble-border",
+            i < value ? "bg-[hsl(var(--accent))]" : "bg-paper",
+          ].join(" ")}
+        />
+      ))}
     </div>
   );
 }
 
 // Sprinkles 8 sparkly stars at random spots on the CELESTIAL MARATHON
-// button. Positions/scales/delays randomize once per mount so each menu
+// thumbnail. Positions/scales/delays randomize once per mount so each menu
 // open is a slightly different constellation.
 function MarathonStars() {
   const stars = useRef(
