@@ -240,15 +240,14 @@
     will-change: transform;
   }
 
-  /* Knight thumbnail: pulsing afterimage. Lifetime 0.5s, repeats every 0.8s. */
-  @keyframes knight-afterimage {
-    0%   { opacity: 0.55; transform: translateY(-6px) scale(1); filter: blur(0px); }
-    62.5% { opacity: 0;    transform: translateY(-6px) scale(1.25); filter: blur(4px); }
-    100% { opacity: 0;    transform: translateY(-6px) scale(1.25); filter: blur(4px); }
+  /* Knight thumbnail: one-shot afterimage ghost. Lifetime 0.5s.
+     Stays at the snapshot Y (set via --ghost-y inline) and only scales/fades. */
+  @keyframes knight-ghost {
+    0%   { opacity: 0.6; transform: translateY(var(--ghost-y, 0px)) scale(1);    filter: blur(0px); }
+    100% { opacity: 0;   transform: translateY(var(--ghost-y, 0px)) scale(1.35); filter: blur(5px); }
   }
-  .animate-knight-afterimage {
-    /* 0.5s active animation inside an 0.8s loop -> 0.625 of cycle is the pulse */
-    animation: knight-afterimage 0.8s ease-out infinite;
+  .animate-knight-ghost {
+    animation: knight-ghost 0.5s ease-out forwards;
     will-change: transform, opacity, filter;
   }
 }
