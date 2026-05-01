@@ -123,7 +123,7 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
   const [index, setIndex] = useState(0);
   const animatingRef = useRef(false);
 
-  const TRANSITION_MS = 420;
+  const TRANSITION_MS = 600;
   // Spacing between adjacent card centers (px). Featured sits at 0.
   const SLOT = 360;
 
@@ -148,7 +148,7 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, visible.length]);
 
-  const easing = "cubic-bezier(0.22, 1, 0.36, 1)";
+  const easing = "cubic-bezier(0.16, 1, 0.3, 1)";
   const featured = visible[index];
 
   // Compute the signed shortest offset from `index` to card `i`, treating the
