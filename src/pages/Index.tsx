@@ -14,6 +14,7 @@ import introCardImg from "@/assets/intro_card.png";
 import introBeginUrl from "@/assets/audio/intro_begin.ogg";
 import { sfx, unlockAudio, setSfxVolume, silenceAllSfx, setMuted as setSfxMuted } from "@/game/sfx";
 import { getSettings } from "@/game/settings";
+import { recordLevelResult } from "@/game/levelStats";
 
 
 type Screen = "menu" | "loading" | "playing" | "dead" | "win" | "cutscene" | "death-cutscene";
@@ -143,6 +144,12 @@ const Index = () => {
   const handleHud = useCallback((h: HudState) => setHud(h), []);
   const handleFinish = useCallback((t: number, s: number) => {
     setFinalTime(t); setFinalScore(s);
+    // Persist personal-best for non-marathon completions only. Marathon is
+    // tracked separately as a whole-run timer and we don't want partial
+    // sub-level times polluting per-level bests.
+    if (marathonStep == null) {
+      recordLevelResult(levelId, t, s);
+    }
     // MARATHON: advance to the next sub-level instead of going to win, unless
     // we just cleared the last one. Skip the just-run-bro cutscene too —
     // marathon doesn't break the flow for it.
