@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { LEVELS, type LevelId } from "@/game/level";
+import { LEVELS, type LevelId, type LevelMeta } from "@/game/level";
 import {
   ACTIONS, DEFAULT_BINDS, type ActionId, type Keybinds,
   keyLabel, useKeybinds,
@@ -9,6 +9,8 @@ import { sfx, setSfxVolume, unlockAudio } from "@/game/sfx";
 import { setBgmVolume } from "@/game/bgm";
 import BgmPlayer from "@/game/BgmPlayer";
 import { SPRITE_GALLERY } from "@/game/sprites";
+import { useLevelStats, formatMs } from "@/game/levelStats";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" | "credits";
 
