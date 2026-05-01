@@ -215,6 +215,7 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
 function Thumbnail({ lvl, large = false }: { lvl: LevelMeta; large?: boolean }) {
   const theme = LEVEL_THEME[lvl.id];
   const isMarathon = lvl.id === "celestial-marathon";
+  const isKnight = lvl.id === "roaring-knight";
   return (
     <div
       className={[
@@ -222,22 +223,46 @@ function Thumbnail({ lvl, large = false }: { lvl: LevelMeta; large?: boolean }) 
         large ? "aspect-[16/7]" : "aspect-[16/9]",
         isMarathon ? "marathon-rainbow" : "",
       ].join(" ")}
-      style={isMarathon ? undefined : {
-        background: `linear-gradient(135deg, hsl(${theme.accent} / 0.25), hsl(${theme.accent} / 0.05))`,
-      }}
+      style={
+        isMarathon
+          ? undefined
+          : isKnight
+          ? { background: "#000" }
+          : { background: `linear-gradient(135deg, hsl(${theme.accent} / 0.25), hsl(${theme.accent} / 0.05))` }
+      }
     >
       {isMarathon && <MarathonStars />}
       <div className="absolute inset-0 flex items-center justify-center">
-        <span
-          className={[
-            "font-marker leading-none select-none",
-            large ? "text-[140px]" : "text-[80px]",
-            isMarathon ? "rainbow-text animate-jitter" : "",
-          ].join(" ")}
-          style={isMarathon ? undefined : { color: `hsl(${theme.accent})`, opacity: 0.85 }}
-        >
-          {theme.glyph}
-        </span>
+        {isKnight ? (
+          <div className="relative h-[78%] aspect-square flex items-center justify-center">
+            {/* afterimage (behind) */}
+            <img
+              src={roaringKnightImg}
+              alt=""
+              aria-hidden
+              className="absolute inset-0 w-full h-full object-contain animate-knight-afterimage pointer-events-none [image-rendering:pixelated]"
+              style={{ filter: "drop-shadow(0 0 12px hsl(260 70% 60% / 0.7))" }}
+            />
+            {/* main floating knight */}
+            <img
+              src={roaringKnightImg}
+              alt={lvl.name}
+              className="relative w-full h-full object-contain animate-knight-float [image-rendering:pixelated]"
+              style={{ filter: "drop-shadow(0 0 8px hsl(260 80% 55% / 0.5))" }}
+            />
+          </div>
+        ) : (
+          <span
+            className={[
+              "font-marker leading-none select-none",
+              large ? "text-[140px]" : "text-[80px]",
+              isMarathon ? "rainbow-text animate-jitter" : "",
+            ].join(" ")}
+            style={isMarathon ? undefined : { color: `hsl(${theme.accent})`, opacity: 0.85 }}
+          >
+            {theme.glyph}
+          </span>
+        )}
       </div>
       {/* corner par chip */}
       <div className="absolute top-2 right-2 scribble-border bg-paper px-2 py-0.5 font-bungee text-xs text-ink">
