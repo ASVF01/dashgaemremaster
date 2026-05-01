@@ -121,33 +121,19 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
   const visible = LEVELS.filter((l) => !l.hidden);
   const stats = useLevelStats();
   const [index, setIndex] = useState(0);
-  // -1 = sliding to previous, +1 = sliding to next, 0 = idle.
-  const [dir, setDir] = useState<-1 | 0 | 1>(0);
   const animatingRef = useRef(false);
 
-  const TRANSITION_MS = 380;
+  const TRANSITION_MS = 420;
+  // Spacing between adjacent card centers (px). Featured sits at 0.
+  const SLOT = 360;
 
-  const go = (delta: -1 | 1) => {
+  const go = (delta: number) => {
     if (animatingRef.current) return;
+    if (delta === 0) return;
     animatingRef.current = true;
     sfx.menuHover();
-    setDir(delta);
-    window.setTimeout(() => {
-      setIndex((i) => (i + delta + visible.length) % visible.length);
-      setDir(0);
-      // brief pause before next click can fire so the entry animation is visible
-      window.setTimeout(() => { animatingRef.current = false; }, 60);
-    }, TRANSITION_MS);
-  };
-
-  const jumpTo = (target: number) => {
-    if (animatingRef.current || target === index) return;
-    const diff = target - index;
-    go(diff > 0 ? 1 : -1);
-    // For non-adjacent jumps, snap intermediate after the slide.
-    if (Math.abs(diff) > 1) {
-      window.setTimeout(() => setIndex(target), TRANSITION_MS);
-    }
+    setIndex((i) => (i + delta + visible.length) % visible.length);
+    window.setTimeout(() => { animatingRef.current = false; }, TRANSITION_MS);
   };
 
   // Keyboard arrows + Enter.
@@ -162,56 +148,25 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, visible.length]);
 
-  const featured = visible[index];
-  const left = visible[(index - 1 + visible.length) % visible.length];
-  const right = visible[(index + 1) % visible.length];
-  // The "incoming" peek that will replace `left`/`right` after the spin —
-  // it orbits in from off-screen on the opposite side.
-  const farLeft = visible[(index - 2 + visible.length) % visible.length];
-  const farRight = visible[(index + 2) % visible.length];
-
   const easing = "cubic-bezier(0.22, 1, 0.36, 1)";
+  const featured = visible[index];
 
-  // Featured card stays put — no flip on the level block itself.
-  // The side peek cards orbit around it: when going next (+1), the right
-  // peek swings INTO the center spot (then snaps), and a new peek swings
-  // in from far-right. Symmetric for previous.
-  //
-  // Each peek defines: an "idle" transform (resting position) and an
-  // "exit"/"enter" transform driven by `dir`.
-  const peekBase = "translateY(-50%)";
-
-  // LEFT peek
-  const leftIdle = `${peekBase} rotate(-3deg)`;
-  const leftTransform =
-    dir === -1 ? `${peekBase} translateX(280px) rotate(0deg) scale(1.15)` : // swings to center
-    dir === 1  ? `${peekBase} translateX(-260px) rotate(-25deg) scale(0.7)` : // swings off-screen left
-                 leftIdle;
-  const leftOpacity = dir === 1 ? 0 : 0.55;
-
-  // RIGHT peek
-  const rightIdle = `${peekBase} rotate(3deg)`;
-  const rightTransform =
-    dir === 1  ? `${peekBase} translateX(-280px) rotate(0deg) scale(1.15)` : // swings to center
-    dir === -1 ? `${peekBase} translateX(260px) rotate(25deg) scale(0.7)` : // swings off-screen right
-                 rightIdle;
-  const rightOpacity = dir === -1 ? 0 : 0.55;
-
-  // INCOMING peeks — only visible during the transition, sweeping in from
-  // the far side as the current peek rotates toward center.
-  const farLeftTransform =
-    dir === -1 ? `${peekBase} translateX(0) rotate(-3deg) scale(1)` :
-                 `${peekBase} translateX(-360px) rotate(-25deg) scale(0.6)`;
-  const farRightTransform =
-    dir === 1  ? `${peekBase} translateX(0) rotate(3deg) scale(1)` :
-                 `${peekBase} translateX(360px) rotate(25deg) scale(0.6)`;
+  // Compute the signed shortest offset from `index` to card `i`, treating the
+  // list as a ring. e.g. with 5 cards, from index 0 to card 4 the offset is -1,
+  // not +4 — this keeps the "moving in the direction the player chose" feel.
+  const offsetFor = (i: number) => {
+    const n = visible.length;
+    let d = i - index;
+    if (d >  n / 2) d -= n;
+    if (d < -n / 2) d += n;
+    return d;
+  };
 
   return (
     <div className="relative">
-      {/* Carousel stage */}
+      {/* Carousel stage — ONE sliding strip; all cards translate together. */}
       <div
-        className="relative min-h-[420px] flex items-center justify-center select-none overflow-hidden"
-        style={{ perspective: "1200px" }}
+        className="relative min-h-[440px] flex items-center justify-center select-none overflow-hidden"
       >
         {/* Prev arrow */}
         <button
@@ -222,64 +177,51 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
           <ChevronLeft className="w-6 h-6 text-ink" />
         </button>
 
-        {/* Far-left incoming peek (visible only when going to previous) */}
-        <div
-          className="hidden md:block absolute left-16 top-1/2 w-44 pointer-events-none z-[5]"
-          style={{
-            transform: farLeftTransform,
-            opacity: dir === -1 ? 0.55 : 0,
-            transition: `transform ${TRANSITION_MS}ms ${easing}, opacity ${TRANSITION_MS}ms ${easing}`,
-          }}
-        >
-          <MiniCard lvl={farLeft} />
-        </div>
+        {/* All level cards laid out around the centered featured slot. */}
+        {visible.map((l, i) => {
+          const off = offsetFor(i);
+          const isCenter = off === 0;
+          const abs = Math.abs(off);
+          // Cards more than 2 slots away stay hidden but still translate so
+          // they appear/disappear naturally as the strip slides.
+          const visibleCard = abs <= 2;
 
-        {/* Left peek card */}
-        <div
-          onClick={() => go(-1)}
-          className="hidden md:block absolute left-16 top-1/2 w-44 cursor-pointer z-10"
-          style={{
-            transform: leftTransform,
-            opacity: leftOpacity,
-            transition: `transform ${TRANSITION_MS}ms ${easing}, opacity ${TRANSITION_MS}ms ${easing}`,
-          }}
-        >
-          <MiniCard lvl={left} />
-        </div>
+          // Center is bigger; sides shrink with distance.
+          const scale = isCenter ? 1 : abs === 1 ? 0.55 : 0.4;
+          const opacity = !visibleCard ? 0 : isCenter ? 1 : abs === 1 ? 0.55 : 0;
+          const tilt = isCenter ? 0 : off < 0 ? -3 : 3;
+          const z = 20 - abs;
 
-        {/* Featured (stays put) */}
-        <div className="relative z-20 w-full max-w-md mx-auto px-2">
-          <FeaturedCard
-            lvl={featured}
-            stat={stats[featured.id]}
-            onPlay={() => onPlay(featured.id)}
-          />
-        </div>
-
-        {/* Right peek card */}
-        <div
-          onClick={() => go(1)}
-          className="hidden md:block absolute right-16 top-1/2 w-44 cursor-pointer z-10"
-          style={{
-            transform: rightTransform,
-            opacity: rightOpacity,
-            transition: `transform ${TRANSITION_MS}ms ${easing}, opacity ${TRANSITION_MS}ms ${easing}`,
-          }}
-        >
-          <MiniCard lvl={right} />
-        </div>
-
-        {/* Far-right incoming peek (visible only when going to next) */}
-        <div
-          className="hidden md:block absolute right-16 top-1/2 w-44 pointer-events-none z-[5]"
-          style={{
-            transform: farRightTransform,
-            opacity: dir === 1 ? 0.55 : 0,
-            transition: `transform ${TRANSITION_MS}ms ${easing}, opacity ${TRANSITION_MS}ms ${easing}`,
-          }}
-        >
-          <MiniCard lvl={farRight} />
-        </div>
+          return (
+            <div
+              key={l.id}
+              onClick={() => { if (!isCenter) go(off); }}
+              className={[
+                "absolute top-1/2",
+                isCenter ? "" : "cursor-pointer hover:opacity-80",
+              ].join(" ")}
+              style={{
+                left: "50%",
+                width: isCenter ? "min(28rem, 90%)" : "11rem",
+                transform: `translate(-50%, -50%) translateX(${off * SLOT}px) scale(${scale}) rotate(${tilt}deg)`,
+                opacity,
+                zIndex: z,
+                pointerEvents: visibleCard ? "auto" : "none",
+                transition: `transform ${TRANSITION_MS}ms ${easing}, opacity ${TRANSITION_MS}ms ${easing}`,
+              }}
+            >
+              {isCenter ? (
+                <FeaturedCard
+                  lvl={l}
+                  stat={stats[l.id]}
+                  onPlay={() => onPlay(l.id)}
+                />
+              ) : (
+                <MiniCard lvl={l} />
+              )}
+            </div>
+          );
+        })}
 
         {/* Next arrow */}
         <button
