@@ -424,6 +424,67 @@ function MarathonStars() {
   );
 }
 
+// Knight thumbnail visual: floating knight with afterimage ghosts that
+// snapshot the knight's CURRENT position (so they look like they peeled
+// off him, not just spawned dead-center).
+function KnightVisual() {
+  const knightRef = useRef<HTMLImageElement | null>(null);
+  const [ghosts, setGhosts] = useState<Array<{ id: number; y: number }>>([]);
+
+  useEffect(() => {
+    let nextId = 0;
+    const interval = window.setInterval(() => {
+      const el = knightRef.current;
+      if (!el) return;
+      // Read the live translateY from the running float animation.
+      let y = 0;
+      const t = getComputedStyle(el).transform;
+      if (t && t !== "none") {
+        // matrix(a,b,c,d,tx,ty)  or  matrix3d(...)
+        const m = t.match(/matrix.*\((.+)\)/);
+        if (m) {
+          const parts = m[1].split(",").map((s) => parseFloat(s.trim()));
+          y = parts.length === 6 ? parts[5] : parts[13];
+        }
+      }
+      const id = nextId++;
+      setGhosts((g) => [...g, { id, y }]);
+      // ghost lifetime = 0.5s; clean up shortly after
+      window.setTimeout(() => {
+        setGhosts((g) => g.filter((x) => x.id !== id));
+      }, 600);
+    }, 800);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="relative h-[78%] aspect-square flex items-center justify-center">
+      {/* afterimage ghosts — snapshot of the knight at spawn time */}
+      {ghosts.map((g) => (
+        <img
+          key={g.id}
+          src={roaringKnightImg}
+          alt=""
+          aria-hidden
+          className="absolute inset-0 w-full h-full object-contain pointer-events-none [image-rendering:pixelated] animate-knight-ghost"
+          style={{
+            ["--ghost-y" as never]: `${g.y}px`,
+            filter: "drop-shadow(0 0 12px hsl(260 70% 60% / 0.7))",
+          }}
+        />
+      ))}
+      {/* main floating knight */}
+      <img
+        ref={knightRef}
+        src={roaringKnightImg}
+        alt="Roaring Knight"
+        className="relative w-full h-full object-contain animate-knight-float [image-rendering:pixelated]"
+        style={{ filter: "drop-shadow(0 0 8px hsl(260 80% 55% / 0.5))" }}
+      />
+    </div>
+  );
+}
+
 
 // ---------------- TUTORIAL TAB ----------------
 function TutorialTab({ onStartTutorial }: { onStartTutorial: () => void }) {
