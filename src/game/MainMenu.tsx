@@ -210,7 +210,7 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
     <div className="relative">
       {/* Carousel stage */}
       <div
-        className="relative h-[360px] flex items-center justify-center select-none overflow-hidden"
+        className="relative min-h-[420px] flex items-center justify-center select-none overflow-hidden"
         style={{ perspective: "1200px" }}
       >
         {/* Prev arrow */}
@@ -382,13 +382,13 @@ function FeaturedCard({
   const theme = LEVEL_THEME[lvl.id];
   const isMarathon = lvl.id === "celestial-marathon";
   return (
-    <div className="scribble-border bg-paper p-4 sm:p-5 animate-scale-in">
+    <div className="scribble-border bg-paper p-3 animate-scale-in">
       <Thumbnail lvl={lvl} large />
 
-      <div className="mt-3 flex items-baseline justify-between gap-3 flex-wrap">
+      <div className="mt-2 flex items-baseline justify-between gap-2 flex-wrap">
         <div
           className={[
-            "font-marker text-4xl sm:text-5xl leading-none -rotate-1",
+            "font-marker text-2xl sm:text-3xl leading-none -rotate-1",
             isMarathon ? "rainbow-text animate-jitter" : "text-ink",
           ].join(" ")}
         >
@@ -397,23 +397,23 @@ function FeaturedCard({
         <Difficulty value={lvl.difficulty} />
       </div>
 
-      <div className="font-scribble text-xl text-ink/80 mt-1">{lvl.subtitle}</div>
-      <p className="font-scribble text-lg text-ink/70 mt-2 leading-snug">
+      <div className="font-scribble text-base text-ink/80 mt-0.5">{lvl.subtitle}</div>
+      <p className="font-scribble text-sm text-ink/70 mt-1 leading-snug line-clamp-2">
         {theme.description}
       </p>
 
-      <div className="mt-3 grid grid-cols-3 gap-2">
+      <div className="mt-2 grid grid-cols-3 gap-1.5">
         <Stat label="BEST TIME" value={formatMs(stat?.bestTimeMs)} />
         <Stat label="BEST SCORE" value={stat?.bestScore ? String(stat.bestScore) : "—"} />
         <Stat label="PLAYS" value={String(stat?.plays ?? 0)} />
       </div>
 
-      <div className="mt-4 flex justify-end">
+      <div className="mt-2 flex justify-end">
         <button
           onClick={onPlay}
           onMouseEnter={() => sfx.menuHover()}
           className={[
-            "scribble-border font-marker text-3xl px-6 py-2 hover:-rotate-2 transition-transform",
+            "scribble-border font-marker text-xl px-4 py-1 hover:-rotate-2 transition-transform",
             isMarathon
               ? "bg-ink text-paper"
               : "bg-[hsl(var(--accent))] text-accent-foreground",
