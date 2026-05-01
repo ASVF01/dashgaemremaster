@@ -166,29 +166,23 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
   const left = visible[(index - 1 + visible.length) % visible.length];
   const right = visible[(index + 1) % visible.length];
 
-  // Featured card slide: when dir=+1 it slides out left; when dir=-1 it slides out right.
+  // SPIN: rotate the featured card on Y-axis. dir=+1 spins toward next (-180deg),
+  // dir=-1 spins toward previous (+180deg).
   const featuredTransform =
-    dir === 0 ? "translateX(0) scale(1)" :
-    dir === 1 ? "translateX(-120%) scale(0.85)" :
-                "translateX(120%) scale(0.85)";
+    dir === 0 ? "rotateY(0deg) scale(1)" :
+    dir === 1 ? "rotateY(-180deg) scale(0.85)" :
+                "rotateY(180deg) scale(0.85)";
   const featuredOpacity = dir === 0 ? 1 : 0;
-
-  // Peek cards slide toward the center as the featured leaves.
-  const leftPeekTransform =
-    dir === -1 ? "translate(80%, 0) scale(1.1) rotate(0deg)" :
-    dir === 1  ? "translate(-30%, 0) scale(0.85) rotate(-6deg)" :
-                 "translate(0, 0) scale(1) rotate(-3deg)";
-  const rightPeekTransform =
-    dir === 1  ? "translate(-80%, 0) scale(1.1) rotate(0deg)" :
-    dir === -1 ? "translate(30%, 0) scale(0.85) rotate(6deg)" :
-                 "translate(0, 0) scale(1) rotate(3deg)";
 
   const easing = "cubic-bezier(0.22, 1, 0.36, 1)";
 
   return (
     <div className="relative">
       {/* Carousel stage */}
-      <div className="relative h-[440px] flex items-center justify-center select-none overflow-hidden">
+      <div
+        className="relative h-[360px] flex items-center justify-center select-none overflow-hidden"
+        style={{ perspective: "1200px" }}
+      >
         {/* Prev arrow */}
         <button
           onClick={() => go(-1)}
@@ -201,22 +195,19 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
         {/* Left peek card */}
         <div
           onClick={() => go(-1)}
-          className="hidden md:block absolute left-12 top-1/2 w-56 cursor-pointer z-10"
-          style={{
-            transform: `translateY(-50%) ${leftPeekTransform}`,
-            opacity: dir === -1 ? 0 : 0.5,
-            transition: `transform ${TRANSITION_MS}ms ${easing}, opacity ${TRANSITION_MS}ms ${easing}`,
-          }}
+          className="hidden md:block absolute left-16 top-1/2 -translate-y-1/2 w-44 opacity-50 hover:opacity-80 cursor-pointer transition-all -rotate-3 z-10"
         >
           <MiniCard lvl={left} />
         </div>
 
-        {/* Featured */}
+        {/* Featured (spins on Y-axis) */}
         <div
-          className="relative z-20 w-full max-w-2xl mx-auto px-2"
+          className="relative z-20 w-full max-w-xl mx-auto px-2"
           style={{
             transform: featuredTransform,
             opacity: featuredOpacity,
+            transformStyle: "preserve-3d",
+            backfaceVisibility: "hidden",
             transition: `transform ${TRANSITION_MS}ms ${easing}, opacity ${TRANSITION_MS}ms ${easing}`,
           }}
         >
@@ -230,12 +221,7 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
         {/* Right peek card */}
         <div
           onClick={() => go(1)}
-          className="hidden md:block absolute right-12 top-1/2 w-56 cursor-pointer z-10"
-          style={{
-            transform: `translateY(-50%) ${rightPeekTransform}`,
-            opacity: dir === 1 ? 0 : 0.5,
-            transition: `transform ${TRANSITION_MS}ms ${easing}, opacity ${TRANSITION_MS}ms ${easing}`,
-          }}
+          className="hidden md:block absolute right-16 top-1/2 -translate-y-1/2 w-44 opacity-50 hover:opacity-80 cursor-pointer transition-all rotate-3 z-10"
         >
           <MiniCard lvl={right} />
         </div>
