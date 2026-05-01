@@ -11,6 +11,7 @@ import BgmPlayer from "@/game/BgmPlayer";
 import { SPRITE_GALLERY } from "@/game/sprites";
 import { useLevelStats, formatMs } from "@/game/levelStats";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import roaringKnightImg from "@/assets/roaring_knight.png";
 
 export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" | "credits";
 
