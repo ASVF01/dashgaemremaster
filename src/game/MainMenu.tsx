@@ -139,15 +139,11 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, visible.length]);
 
-  const featured = visible[index];
-  const left = visible[(index - 1 + visible.length) % visible.length];
-  const right = visible[(index + 1) % visible.length];
-
   return (
     <div className="relative">
       {/* Carousel stage */}
-      <div className="relative h-[440px] flex items-center justify-center select-none">
-        {/* Side previews */}
+      <div className="relative h-[440px] flex items-center justify-center select-none overflow-hidden">
+        {/* Prev arrow */}
         <button
           onClick={() => go(-1)}
           aria-label="Previous level"
@@ -156,32 +152,50 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
           <ChevronLeft className="w-6 h-6 text-ink" />
         </button>
 
-        {/* Left peek card */}
-        <div
-          onClick={() => go(-1)}
-          className="hidden md:block absolute left-12 top-1/2 -translate-y-1/2 w-56 opacity-50 hover:opacity-80 cursor-pointer transition-all -rotate-3 z-10"
-        >
-          <MiniCard lvl={left} />
+        {/* Sliding track: each slot is the full stage width, centered on `index`. */}
+        <div className="absolute inset-0 flex items-center">
+          <div
+            className="flex items-center transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform"
+            style={{
+              width: `${visible.length * 100}%`,
+              transform: `translateX(calc(50% - ${(index + 0.5) * (100 / visible.length)}%))`,
+            }}
+          >
+            {visible.map((l, i) => {
+              const isActive = i === index;
+              return (
+                <div
+                  key={l.id}
+                  className="flex items-center justify-center px-2"
+                  style={{ width: `${100 / visible.length}%` }}
+                >
+                  {isActive ? (
+                    <div className="w-full max-w-2xl mx-auto transition-all duration-500 ease-out">
+                      <FeaturedCard
+                        lvl={l}
+                        stat={stats[l.id]}
+                        onPlay={() => onPlay(l.id)}
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => { sfx.menuHover(); setIndex(i); }}
+                      className={[
+                        "hidden md:block w-56 cursor-pointer transition-all duration-500 ease-out",
+                        i < index ? "-rotate-3" : "rotate-3",
+                        "opacity-50 hover:opacity-80",
+                      ].join(" ")}
+                    >
+                      <MiniCard lvl={l} />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Featured */}
-        <div className="relative z-20 w-full max-w-2xl mx-auto px-2">
-          <FeaturedCard
-            key={featured.id}
-            lvl={featured}
-            stat={stats[featured.id]}
-            onPlay={() => onPlay(featured.id)}
-          />
-        </div>
-
-        {/* Right peek card */}
-        <div
-          onClick={() => go(1)}
-          className="hidden md:block absolute right-12 top-1/2 -translate-y-1/2 w-56 opacity-50 hover:opacity-80 cursor-pointer transition-all rotate-3 z-10"
-        >
-          <MiniCard lvl={right} />
-        </div>
-
+        {/* Next arrow */}
         <button
           onClick={() => go(1)}
           aria-label="Next level"
