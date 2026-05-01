@@ -248,7 +248,7 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
         </div>
 
         {/* Featured (stays put) */}
-        <div className="relative z-20 w-full max-w-xl mx-auto px-2">
+        <div className="relative z-20 w-full max-w-md mx-auto px-2">
           <FeaturedCard
             lvl={featured}
             stat={stats[featured.id]}
