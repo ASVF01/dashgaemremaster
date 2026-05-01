@@ -165,16 +165,46 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
   const featured = visible[index];
   const left = visible[(index - 1 + visible.length) % visible.length];
   const right = visible[(index + 1) % visible.length];
-
-  // SPIN: rotate the featured card on Y-axis. dir=+1 spins toward next (-180deg),
-  // dir=-1 spins toward previous (+180deg).
-  const featuredTransform =
-    dir === 0 ? "rotateY(0deg) scale(1)" :
-    dir === 1 ? "rotateY(-180deg) scale(0.85)" :
-                "rotateY(180deg) scale(0.85)";
-  const featuredOpacity = dir === 0 ? 1 : 0;
+  // The "incoming" peek that will replace `left`/`right` after the spin —
+  // it orbits in from off-screen on the opposite side.
+  const farLeft = visible[(index - 2 + visible.length) % visible.length];
+  const farRight = visible[(index + 2) % visible.length];
 
   const easing = "cubic-bezier(0.22, 1, 0.36, 1)";
+
+  // Featured card stays put — no flip on the level block itself.
+  // The side peek cards orbit around it: when going next (+1), the right
+  // peek swings INTO the center spot (then snaps), and a new peek swings
+  // in from far-right. Symmetric for previous.
+  //
+  // Each peek defines: an "idle" transform (resting position) and an
+  // "exit"/"enter" transform driven by `dir`.
+  const peekBase = "translateY(-50%)";
+
+  // LEFT peek
+  const leftIdle = `${peekBase} rotate(-3deg)`;
+  const leftTransform =
+    dir === -1 ? `${peekBase} translateX(280px) rotate(0deg) scale(1.15)` : // swings to center
+    dir === 1  ? `${peekBase} translateX(-260px) rotate(-25deg) scale(0.7)` : // swings off-screen left
+                 leftIdle;
+  const leftOpacity = dir === 1 ? 0 : 0.55;
+
+  // RIGHT peek
+  const rightIdle = `${peekBase} rotate(3deg)`;
+  const rightTransform =
+    dir === 1  ? `${peekBase} translateX(-280px) rotate(0deg) scale(1.15)` : // swings to center
+    dir === -1 ? `${peekBase} translateX(260px) rotate(25deg) scale(0.7)` : // swings off-screen right
+                 rightIdle;
+  const rightOpacity = dir === -1 ? 0 : 0.55;
+
+  // INCOMING peeks — only visible during the transition, sweeping in from
+  // the far side as the current peek rotates toward center.
+  const farLeftTransform =
+    dir === -1 ? `${peekBase} translateX(0) rotate(-3deg) scale(1)` :
+                 `${peekBase} translateX(-360px) rotate(-25deg) scale(0.6)`;
+  const farRightTransform =
+    dir === 1  ? `${peekBase} translateX(0) rotate(3deg) scale(1)` :
+                 `${peekBase} translateX(360px) rotate(25deg) scale(0.6)`;
 
   return (
     <div className="relative">
@@ -192,25 +222,33 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
           <ChevronLeft className="w-6 h-6 text-ink" />
         </button>
 
+        {/* Far-left incoming peek (visible only when going to previous) */}
+        <div
+          className="hidden md:block absolute left-16 top-1/2 w-44 pointer-events-none z-[5]"
+          style={{
+            transform: farLeftTransform,
+            opacity: dir === -1 ? 0.55 : 0,
+            transition: `transform ${TRANSITION_MS}ms ${easing}, opacity ${TRANSITION_MS}ms ${easing}`,
+          }}
+        >
+          <MiniCard lvl={farLeft} />
+        </div>
+
         {/* Left peek card */}
         <div
           onClick={() => go(-1)}
-          className="hidden md:block absolute left-16 top-1/2 -translate-y-1/2 w-44 opacity-50 hover:opacity-80 cursor-pointer transition-all -rotate-3 z-10"
+          className="hidden md:block absolute left-16 top-1/2 w-44 cursor-pointer z-10"
+          style={{
+            transform: leftTransform,
+            opacity: leftOpacity,
+            transition: `transform ${TRANSITION_MS}ms ${easing}, opacity ${TRANSITION_MS}ms ${easing}`,
+          }}
         >
           <MiniCard lvl={left} />
         </div>
 
-        {/* Featured (spins on Y-axis) */}
-        <div
-          className="relative z-20 w-full max-w-xl mx-auto px-2"
-          style={{
-            transform: featuredTransform,
-            opacity: featuredOpacity,
-            transformStyle: "preserve-3d",
-            backfaceVisibility: "hidden",
-            transition: `transform ${TRANSITION_MS}ms ${easing}, opacity ${TRANSITION_MS}ms ${easing}`,
-          }}
-        >
+        {/* Featured (stays put) */}
+        <div className="relative z-20 w-full max-w-xl mx-auto px-2">
           <FeaturedCard
             lvl={featured}
             stat={stats[featured.id]}
@@ -221,9 +259,26 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
         {/* Right peek card */}
         <div
           onClick={() => go(1)}
-          className="hidden md:block absolute right-16 top-1/2 -translate-y-1/2 w-44 opacity-50 hover:opacity-80 cursor-pointer transition-all rotate-3 z-10"
+          className="hidden md:block absolute right-16 top-1/2 w-44 cursor-pointer z-10"
+          style={{
+            transform: rightTransform,
+            opacity: rightOpacity,
+            transition: `transform ${TRANSITION_MS}ms ${easing}, opacity ${TRANSITION_MS}ms ${easing}`,
+          }}
         >
           <MiniCard lvl={right} />
+        </div>
+
+        {/* Far-right incoming peek (visible only when going to next) */}
+        <div
+          className="hidden md:block absolute right-16 top-1/2 w-44 pointer-events-none z-[5]"
+          style={{
+            transform: farRightTransform,
+            opacity: dir === 1 ? 0.55 : 0,
+            transition: `transform ${TRANSITION_MS}ms ${easing}, opacity ${TRANSITION_MS}ms ${easing}`,
+          }}
+        >
+          <MiniCard lvl={farRight} />
         </div>
 
         {/* Next arrow */}
