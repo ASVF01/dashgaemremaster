@@ -12,6 +12,7 @@ import { SPRITE_GALLERY } from "@/game/sprites";
 import { useLevelStats, formatMs } from "@/game/levelStats";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import roaringKnightImg from "@/assets/roaring_knight.png";
+import celestialMarathonEmblem from "@/assets/celestial-marathon-emblem.png";
 
 export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" | "credits";
 
@@ -277,14 +278,23 @@ function Thumbnail({ lvl, large = false }: { lvl: LevelMeta; large?: boolean }) 
       <div className="absolute inset-0 flex items-center justify-center">
         {isKnight ? (
           <KnightVisual />
+        ) : isMarathon ? (
+          <img
+            src={celestialMarathonEmblem}
+            alt="Celestial Marathon emblem"
+            className={[
+              "object-contain select-none pointer-events-none animate-jitter drop-shadow-[0_0_12px_rgba(0,0,0,0.45)]",
+              large ? "h-[88%]" : "h-[82%]",
+            ].join(" ")}
+            draggable={false}
+          />
         ) : (
           <span
             className={[
               "font-marker leading-none select-none",
               large ? "text-[140px]" : "text-[80px]",
-              isMarathon ? "rainbow-text animate-jitter" : "",
             ].join(" ")}
-            style={isMarathon ? undefined : { color: `hsl(${theme.accent})`, opacity: 0.85 }}
+            style={{ color: `hsl(${theme.accent})`, opacity: 0.85 }}
           >
             {theme.glyph}
           </span>
