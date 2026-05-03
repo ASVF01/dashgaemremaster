@@ -23,6 +23,18 @@ import roaringKnightVulnUrl from "@/assets/roaring_knight_vulnerable.png";
 import roaringKnightHurtUrl from "@/assets/sprites/boss_knight_hurt.png";
 import bossBgUrl from "@/assets/boss_bg.gif";
 import bossBgSheetUrl from "@/assets/boss_bg_sheet.webp";
+import bossParryFlashUrl from "@/assets/boss_parry_flash.png";
+import sugarcoatSfxUrl from "@/assets/sugarcoat.mp3";
+
+const bossParryFlashImg = new Image(); bossParryFlashImg.src = bossParryFlashUrl;
+let sugarcoatAudio: HTMLAudioElement | null = null;
+function playSugarcoat() {
+  try {
+    if (!sugarcoatAudio) { sugarcoatAudio = new Audio(sugarcoatSfxUrl); sugarcoatAudio.volume = 0.8; }
+    sugarcoatAudio.currentTime = 0;
+    void sugarcoatAudio.play();
+  } catch {}
+}
 
 type Keys = Record<string, boolean>;
 
@@ -292,6 +304,7 @@ interface GameRefs {
   boss: Boss | null;
   // Player beams (invboi vs boss only).
   beams: { x: number; y: number; vx: number; vy: number; life: number; maxLife: number; hit: boolean }[];
+  bossParryFlash: number;
 }
 
 // Boss is rendered in screen-space (top-right). World-space slashes attack the player.
@@ -463,6 +476,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       heartbeatTimer: 0,
       boss: levelId === "roaring-knight" ? makeBoss() : null,
       beams: [],
+      bossParryFlash: 0,
     };
     // Pre-place the invboi star if this level configures one (e.g. meet-invboi).
     if (level.invboiStart) {
@@ -1910,6 +1924,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
     r.player.parrying = 0;
     r.player.parryCooldown = r.boss ? 0.25 : 2.5;
     sfx.parryHit();
+    if (r.boss) {
+      r.bossParryFlash = 0.3;
+      playSugarcoat();
+    }
     // Preserve the player's existing momentum on a successful parry — no
     // upward pop, no forward shove, no backward knock. Just keep going.
     // (vx and vy are intentionally left untouched here.)
