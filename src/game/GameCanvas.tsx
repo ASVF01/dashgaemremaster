@@ -1261,6 +1261,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
     // parry timers
     if (p.parrying > 0) p.parrying -= dt;
     if (p.parryCooldown > 0) p.parryCooldown -= dt;
+    if (r.bossParryFlash > 0) r.bossParryFlash -= dt;
     if (p.invuln > 0) p.invuln -= dt;
     if (p.hitFlash > 0) p.hitFlash -= dt;
     // critical-hp heartbeat: faint, fast lub-dub when hp is 1
@@ -2836,6 +2837,14 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
 
     // boss screen-space layer (sprite + afterimages + hp pip) — draws on top of world.
     if (r.boss) drawBossScreen(ctx, r, r.boss, w);
+
+    // boss parry flash overlay (full-screen png)
+    if (r.boss && r.bossParryFlash > 0 && bossParryFlashImg.complete && bossParryFlashImg.naturalWidth) {
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, r.bossParryFlash / 0.3);
+      ctx.drawImage(bossParryFlashImg, 0, 0, w, h);
+      ctx.restore();
+    }
 
     // (rainbow star rain is rendered earlier as a background layer)
 
