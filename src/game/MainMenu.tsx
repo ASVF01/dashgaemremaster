@@ -283,7 +283,7 @@ function Thumbnail({ lvl, large = false }: { lvl: LevelMeta; large?: boolean }) 
             src={celestialMarathonEmblem}
             alt="Celestial Marathon emblem"
             className={[
-              "object-contain select-none pointer-events-none animate-jitter [animation-duration:0.22s] drop-shadow-[0_0_12px_rgba(0,0,0,0.45)]",
+              "object-contain select-none pointer-events-none animate-jitter-soft drop-shadow-[0_0_12px_rgba(0,0,0,0.45)]",
               large ? "h-[120%]" : "h-[112%]",
             ].join(" ")}
             draggable={false}
