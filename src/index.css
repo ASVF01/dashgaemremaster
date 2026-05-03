@@ -207,6 +207,14 @@
   }
   .animate-jitter { animation: jitter 0.08s linear infinite; }
 
+  @keyframes jitter-soft {
+    0%, 100% { transform: translate(0, 0); }
+    25% { transform: translate(-0.5px, 0.5px); }
+    50% { transform: translate(0.5px, -0.5px); }
+    75% { transform: translate(-0.5px, -0.5px); }
+  }
+  .animate-jitter-soft { animation: jitter-soft 0.35s ease-in-out infinite; }
+
   @keyframes glitch-flash {
     0%, 100% { opacity: 0; }
     50% { opacity: 1; }
