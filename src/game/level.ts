@@ -43,7 +43,7 @@ export const LEVELS: LevelMeta[] = [
   { id: "celestial-marathon", name: "CELESTIAL MARATHON", subtitle: "every level. one breath. invboi forever.", difficulty: 4, par: 9999 },
 ];
 
-export function buildLevel(id: LevelId = "scribble-1"): Level {
+export function buildLevel(id: LevelId = "scribble-1", opts: { marathon?: boolean } = {}): Level {
   let lv: Level;
   switch (id) {
     case "tutorial":   lv = buildTutorial(); break;
@@ -52,7 +52,7 @@ export function buildLevel(id: LevelId = "scribble-1"): Level {
     case "scribble-3": lv = buildLevel3(); break;
     case "chase":      lv = buildChase(); break;
     case "speed-test": lv = buildSpeedTest(); break;
-    case "just-run-bro": lv = buildJustRunBro(); break;
+    case "just-run-bro": lv = buildJustRunBro(opts.marathon); break;
     case "meet-invboi": lv = buildMeetInvboi(); break;
     case "roaring-knight": lv = buildRoaringKnight(); break;
     case "aftermath-1": lv = buildAftermath1(); break;
@@ -61,6 +61,12 @@ export function buildLevel(id: LevelId = "scribble-1"): Level {
     // Marathon is a meta-level handled by Index (chains all levels back-to-back).
     // If it ever loads as a real level, fall back to tutorial.
     case "celestial-marathon": lv = buildTutorial(); break;
+  }
+  // In CELESTIAL MARATHON, hide the tutorial's instructional signs — the
+  // marathon assumes the player already knows the moves, and floating
+  // prompts would clutter the run.
+  if (opts.marathon && id === "tutorial") {
+    lv.signs = [];
   }
   // Fill any pit directly below a hazard with a ground platform so spikes
   // sit on solid floor instead of marking a bottomless gap.
