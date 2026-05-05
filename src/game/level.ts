@@ -399,14 +399,47 @@ function buildTutorial(): Level {
   }
 
   const signs = [
-    { x: 120,  y: groundY - 110, text: "← → or A D to RUN" },
-    { x: 420,  y: groundY - 110, text: "SPACE to JUMP" },
-    { x: 1080, y: groundY - 130, text: "hold ↓ / S to SLIDE under stuff" },
-    { x: 1880, y: groundY - 110, text: "stomp enemies from above!" },
-    { x: 2900, y: groundY - 110, text: "press J to PARRY shots →" },
-    { x: 3680, y: groundY - 110, text: "in the air, hold ↓ to DIVE down fast" },
-    { x: 4620, y: groundY - 110, text: "build speed → tap SHIFT for a SUPER DASH" },
-    { x: 5950, y: groundY - 110, text: "almost there!! reach the FLAG →" },
+    // --- part 1: welcome + run ---
+    { x: 80,   y: groundY - 150, text: "welcome to scribble rush!" },
+    { x: 80,   y: groundY - 110, text: "we'll teach you the basics, bro." },
+    { x: 240,  y: groundY - 110, text: "STEP 1: press ← → (or A / D) to RUN" },
+    { x: 420,  y: groundY - 110, text: "nice. keep moving →" },
+
+    // --- part 2: jump + air control ---
+    { x: 560,  y: groundY - 110, text: "STEP 2: press SPACE to JUMP" },
+    { x: 640,  y: groundY - 180, text: "hold SPACE longer = jump higher!" },
+    { x: 820,  y: groundY - 280, text: "platform up! climb these →" },
+
+    // --- part 3: slide ---
+    { x: 1020, y: groundY - 110, text: "STEP 3: hold ↓ / S to SLIDE" },
+    { x: 1080, y: groundY - 130, text: "slide UNDER this low ceiling →" },
+    { x: 1600, y: groundY - 110, text: "clean slide bro." },
+
+    // --- part 4: stomp ---
+    { x: 1820, y: groundY - 110, text: "STEP 4: jump on enemies to STOMP them" },
+    { x: 1880, y: groundY - 150, text: "land on their head — not their side!" },
+    { x: 2680, y: groundY - 110, text: "easy. keep going →" },
+
+    // --- part 5: parry ---
+    { x: 2860, y: groundY - 110, text: "STEP 5: press J to PARRY shots" },
+    { x: 2960, y: groundY - 150, text: "time it as the bullet hits you!" },
+    { x: 3060, y: groundY - 190, text: "successful parry = bullet flies back" },
+    { x: 3380, y: groundY - 110, text: "you got the rhythm bro." },
+
+    // --- part 6: dive ---
+    { x: 3600, y: groundY - 110, text: "STEP 6: in the air, hold ↓ to DIVE" },
+    { x: 3700, y: groundY - 150, text: "dive crosses gaps fast — try this pit →" },
+    { x: 4360, y: groundY - 110, text: "dive landed. you're flying bro." },
+
+    // --- part 7: super dash ---
+    { x: 4540, y: groundY - 110, text: "STEP 7: build speed, then tap K to DASH" },
+    { x: 4620, y: groundY - 150, text: "hold K while running for SUPER DASH" },
+    { x: 4720, y: groundY - 190, text: "the longer you hold, the faster you go!" },
+    { x: 5500, y: groundY - 110, text: "speed unlocked. you're ready." },
+
+    // --- part 8: finale ---
+    { x: 5800, y: groundY - 110, text: "FINAL STEP: reach the FLAG →" },
+    { x: 6100, y: groundY - 150, text: "go go go! you got this bro!" },
   ];
 
   return {
