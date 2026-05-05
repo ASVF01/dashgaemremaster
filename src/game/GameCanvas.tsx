@@ -398,7 +398,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
 
   // init / reset
   useEffect(() => {
-    const level = buildLevel(levelId);
+    const level = buildLevel(levelId, { marathon: startAsInvboi });
     refs.current = {
       level,
       player: {
