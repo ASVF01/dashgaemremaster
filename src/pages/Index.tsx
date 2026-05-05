@@ -462,6 +462,9 @@ const Index = () => {
             levelId={levelId}
           />
           {screen === "playing" && !invboiIntroOpen && !chaseIntroOpen && <Hud hud={hud} />}
+          {screen === "playing" && levelId === "tutorial" && marathonStep == null && !invboiIntroOpen && !chaseIntroOpen && (
+            <TutorialPrompt progress={hud.progress} />
+          )}
           {screen === "playing" && marathonStep != null && !invboiIntroOpen && !chaseIntroOpen && (
             <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-20">
               <div className="scribble-border bg-paper px-4 py-1.5 -rotate-1 flex items-center gap-3">
