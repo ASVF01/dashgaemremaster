@@ -327,126 +327,87 @@ function buildSpeedTest(): Level {
 }
 
 // ---------- TUTORIAL ----------
+// Long instructional level. There are NO in-world signs — prompts are
+// rendered as on-screen overlays by Index.tsx, driven by hud.progress so
+// each mechanic gets its own framed step.
 function buildTutorial(): Level {
-  const W = 6400;
+  const W = 9200;
   const H = 720;
   const groundY = H - 80;
 
   const platforms: Platform[] = [
-    { x: 0,    y: groundY, w: 900,  h: 80, kind: "ground" },
-    { x: 1000, y: groundY, w: 700,  h: 80, kind: "ground" },
-    { x: 1820, y: groundY, w: 900,  h: 80, kind: "ground" },
-    { x: 2820, y: groundY, w: 700,  h: 80, kind: "ground" },
-    { x: 3620, y: groundY, w: 780,  h: 80, kind: "ground" },
-    // new stretch: super dash hallway + finish
-    { x: 4500, y: groundY, w: 900,  h: 80, kind: "ground" },
-    { x: 5500, y: groundY, w: 900,  h: 80, kind: "ground" },
-
-    // jump up tutorial
-    { x: 500,  y: groundY - 140, w: 140, h: 22, kind: "block" },
-    { x: 700,  y: groundY - 240, w: 140, h: 22, kind: "block" },
-
-    // slide-under low ceiling
-    { x: 1100, y: groundY - 90,  w: 460, h: 30, kind: "block" },
-
-    // longer floats for momentum
-    { x: 1900, y: groundY - 200, w: 160, h: 22, kind: "block" },
-    { x: 2150, y: groundY - 280, w: 160, h: 22, kind: "block" },
-    { x: 2400, y: groundY - 220, w: 180, h: 22, kind: "block" },
-
-    // parry training platform
-    { x: 3000, y: groundY - 220, w: 200, h: 22, kind: "block" },
-
-    // dive-down chamber: a high block then a pit to dive across
-    { x: 3700, y: groundY - 260, w: 200, h: 22, kind: "block" },
-    { x: 3950, y: groundY - 320, w: 160, h: 22, kind: "block" },
-    { x: 4200, y: groundY - 200, w: 180, h: 22, kind: "block" },
-
-    // super-dash hallway floats — long flat run to build mach
-    { x: 4700, y: groundY - 180, w: 240, h: 22, kind: "block" },
-    { x: 5050, y: groundY - 260, w: 220, h: 22, kind: "block" },
-    { x: 5380, y: groundY - 200, w: 200, h: 22, kind: "block" },
-
-    // finale floats above flag
-    { x: 5800, y: groundY - 240, w: 220, h: 22, kind: "block" },
-    { x: 6100, y: groundY - 320, w: 180, h: 22, kind: "block" },
+    // --- part 1: warm-up run lane ---
+    { x: 0,    y: groundY, w: 1100, h: 80, kind: "ground" },
+    // --- part 2: jump-up staircase ---
+    { x: 1200, y: groundY, w: 900,  h: 80, kind: "ground" },
+    { x: 1400, y: groundY - 120, w: 140, h: 22, kind: "block" },
+    { x: 1600, y: groundY - 220, w: 140, h: 22, kind: "block" },
+    { x: 1800, y: groundY - 320, w: 140, h: 22, kind: "block" },
+    // --- part 3: slide-under low ceilings ---
+    { x: 2200, y: groundY, w: 1100, h: 80, kind: "ground" },
+    { x: 2300, y: groundY - 90,  w: 380, h: 30, kind: "block" },
+    { x: 2800, y: groundY - 90,  w: 380, h: 30, kind: "block" },
+    // --- part 4: stomp grunts ---
+    { x: 3400, y: groundY, w: 1000, h: 80, kind: "ground" },
+    { x: 3700, y: groundY - 200, w: 160, h: 22, kind: "block" },
+    { x: 3950, y: groundY - 280, w: 160, h: 22, kind: "block" },
+    { x: 4200, y: groundY - 220, w: 180, h: 22, kind: "block" },
+    // --- part 5: parry training ---
+    { x: 4500, y: groundY, w: 900, h: 80, kind: "ground" },
+    { x: 4700, y: groundY - 220, w: 200, h: 22, kind: "block" },
+    // --- part 6: dive across pit ---
+    { x: 5500, y: groundY, w: 800, h: 80, kind: "ground" },
+    { x: 5600, y: groundY - 260, w: 200, h: 22, kind: "block" },
+    { x: 5850, y: groundY - 320, w: 160, h: 22, kind: "block" },
+    { x: 6100, y: groundY - 200, w: 180, h: 22, kind: "block" },
+    // --- part 7: super-dash hallway ---
+    { x: 6400, y: groundY, w: 1100, h: 80, kind: "ground" },
+    { x: 6700, y: groundY - 180, w: 240, h: 22, kind: "block" },
+    { x: 7050, y: groundY - 260, w: 220, h: 22, kind: "block" },
+    { x: 7380, y: groundY - 200, w: 200, h: 22, kind: "block" },
+    // --- part 8: combo lane ---
+    { x: 7600, y: groundY, w: 800, h: 80, kind: "ground" },
+    { x: 7700, y: groundY - 90, w: 280, h: 30, kind: "block" }, // slide
+    // --- part 9: finale ---
+    { x: 8500, y: groundY, w: 700, h: 80, kind: "ground" },
+    { x: 8700, y: groundY - 240, w: 220, h: 22, kind: "block" },
+    { x: 9000, y: groundY - 320, w: 180, h: 22, kind: "block" },
   ];
 
   const hazards: Hazard[] = [
-    { x: 900,  y: groundY - 18, w: 100, h: 18 },
-    { x: 1700, y: groundY - 18, w: 120, h: 18 },
-    { x: 2720, y: groundY - 18, w: 100, h: 18 },
-    { x: 3520, y: groundY - 18, w: 100, h: 18 },
-    // new pits
-    { x: 4400, y: groundY - 18, w: 100, h: 18 },
-    { x: 5400, y: groundY - 18, w: 100, h: 18 },
+    { x: 1100, y: groundY - 18, w: 100, h: 18 }, // pit before jumps
+    { x: 2100, y: groundY - 18, w: 100, h: 18 }, // pit before slide
+    { x: 3300, y: groundY - 18, w: 100, h: 18 }, // pit before stomp
+    { x: 4400, y: groundY - 18, w: 100, h: 18 }, // pit before parry
+    { x: 5400, y: groundY - 18, w: 100, h: 18 }, // pit before dive
+    { x: 6300, y: groundY - 18, w: 100, h: 18 }, // pit before dash
+    { x: 7500, y: groundY - 18, w: 100, h: 18 }, // pit before combo
+    { x: 8400, y: groundY - 18, w: 100, h: 18 }, // pit before finale
   ];
 
   const enemies: Enemy[] = [
-    // one easy grunt to stomp
-    { x: 1300, y: groundY - 50, w: 32, h: 50, vx: 0, alive: true, kind: "grunt" },
-    // a shooter for parry practice
-    { x: 3200, y: groundY - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 1.6 },
-    // a second grunt to test stomp + run momentum
-    { x: 4850, y: groundY - 50, w: 32, h: 50, vx: 0, alive: true, kind: "grunt" },
-    // a final shooter guarding the lane to the flag
-    { x: 5750, y: groundY - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 1.4 },
+    // stomp section: two grunts
+    { x: 3700, y: groundY - 50, w: 32, h: 50, vx: 0, alive: true, kind: "grunt" },
+    { x: 4100, y: groundY - 50, w: 32, h: 50, vx: 0, alive: true, kind: "grunt" },
+    // parry section: two shooters at different cadences
+    { x: 4900, y: groundY - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 1.6 },
+    { x: 5250, y: groundY - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 1.4 },
+    // combo lane: grunt + shooter
+    { x: 7800, y: groundY - 50, w: 32, h: 50, vx: 0, alive: true, kind: "grunt" },
+    { x: 8200, y: groundY - 50, w: 32, h: 50, vx: 0, alive: true, kind: "shooter", shootTimer: 1.4 },
   ];
 
   const pickups: Pickup[] = [];
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < 20; i++) {
     pickups.push({ x: 350 + i * 420, y: groundY - 160 - (i % 3) * 60, collected: false });
   }
-
-  const signs = [
-    // --- part 1: welcome + run ---
-    { x: 80,   y: groundY - 150, text: "welcome to scribble rush!" },
-    { x: 80,   y: groundY - 110, text: "we'll teach you the basics, bro." },
-    { x: 240,  y: groundY - 110, text: "STEP 1: press ← → (or A / D) to RUN" },
-    { x: 420,  y: groundY - 110, text: "nice. keep moving →" },
-
-    // --- part 2: jump + air control ---
-    { x: 560,  y: groundY - 110, text: "STEP 2: press SPACE to JUMP" },
-    { x: 640,  y: groundY - 180, text: "hold SPACE longer = jump higher!" },
-    { x: 820,  y: groundY - 280, text: "platform up! climb these →" },
-
-    // --- part 3: slide ---
-    { x: 1020, y: groundY - 110, text: "STEP 3: hold ↓ / S to SLIDE" },
-    { x: 1080, y: groundY - 130, text: "slide UNDER this low ceiling →" },
-    { x: 1600, y: groundY - 110, text: "clean slide bro." },
-
-    // --- part 4: stomp ---
-    { x: 1820, y: groundY - 110, text: "STEP 4: jump on enemies to STOMP them" },
-    { x: 1880, y: groundY - 150, text: "land on their head — not their side!" },
-    { x: 2680, y: groundY - 110, text: "easy. keep going →" },
-
-    // --- part 5: parry ---
-    { x: 2860, y: groundY - 110, text: "STEP 5: press J to PARRY shots" },
-    { x: 2960, y: groundY - 150, text: "time it as the bullet hits you!" },
-    { x: 3060, y: groundY - 190, text: "successful parry = bullet flies back" },
-    { x: 3380, y: groundY - 110, text: "you got the rhythm bro." },
-
-    // --- part 6: dive ---
-    { x: 3600, y: groundY - 110, text: "STEP 6: in the air, hold ↓ to DIVE" },
-    { x: 3700, y: groundY - 150, text: "dive crosses gaps fast — try this pit →" },
-    { x: 4360, y: groundY - 110, text: "dive landed. you're flying bro." },
-
-    // --- part 7: super dash ---
-    { x: 4540, y: groundY - 110, text: "STEP 7: build speed, then tap K to DASH" },
-    { x: 4620, y: groundY - 150, text: "hold K while running for SUPER DASH" },
-    { x: 4720, y: groundY - 190, text: "the longer you hold, the faster you go!" },
-    { x: 5500, y: groundY - 110, text: "speed unlocked. you're ready." },
-
-    // --- part 8: finale ---
-    { x: 5800, y: groundY - 110, text: "FINAL STEP: reach the FLAG →" },
-    { x: 6100, y: groundY - 150, text: "go go go! you got this bro!" },
-  ];
 
   return {
     width: W, height: H,
     spawn: { x: 80, y: groundY - 80 },
     goal: { x: W - 120, y: groundY - 120, w: 50, h: 120 },
-    platforms, hazards, enemies, pickups, signs,
+    platforms, hazards, enemies, pickups,
+    signs: [],
   };
 }
 
