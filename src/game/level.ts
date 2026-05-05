@@ -93,38 +93,50 @@ export function buildLevel(id: LevelId = "scribble-1", opts: { marathon?: boolea
 }
 
 // ---------- JUST RUN BRO: flat, endless, no obstacles ----------
-function buildJustRunBro(): Level {
+function buildJustRunBro(marathon: boolean = false): Level {
   // A SUPER long flat stretch — no hazards, no enemies, just vibes.
   // The super dash ramp is intentionally slow, so this length rewards
   // committing to the hold for the full payoff.
-  const W = 360000;
+  // In CELESTIAL MARATHON we use a much shorter cut (about 1/6 the length)
+  // so the run doesn't stall here, but it's still long enough to feel
+  // like the "just run bro" stretch and reward the super dash.
+  const W = marathon ? 60000 : 360000;
   const H = 720;
   const groundY = H - 80;
   const platforms: Platform[] = [
     { x: 0, y: groundY, w: W, h: 80, kind: "ground" },
+  ];
+  const fullSigns = [
+    { x: 200,    y: groundY - 110, text: "just run bro.." },
+    { x: 1500,   y: groundY - 110, text: "seriously. that's it." },
+    { x: 5000,   y: groundY - 110, text: "hold dash. trust me." },
+    { x: 15000,  y: groundY - 110, text: "you're doing great bro" },
+    { x: 35000,  y: groundY - 110, text: "still going? respect." },
+    { x: 60000,  y: groundY - 110, text: "warm up complete bro" },
+    { x: 90000,  y: groundY - 110, text: "this is the long haul" },
+    { x: 130000, y: groundY - 110, text: "halfway-ish. keep vibing." },
+    { x: 170000, y: groundY - 110, text: "bro is locked in" },
+    { x: 210000, y: groundY - 110, text: "the horizon fears you" },
+    { x: 250000, y: groundY - 110, text: "no thoughts. just run." },
+    { x: 290000, y: groundY - 110, text: "bro you're built different" },
+    { x: 320000, y: groundY - 110, text: "ok almost there bro" },
+    { x: 345000, y: groundY - 110, text: "flag's right there bro" },
+    { x: 358000, y: groundY - 110, text: "GO GO GO" },
+  ];
+  const marathonSigns = [
+    { x: 200,   y: groundY - 110, text: "just run bro.." },
+    { x: 2000,  y: groundY - 110, text: "hold dash. trust me." },
+    { x: 12000, y: groundY - 110, text: "marathon edition: short cut bro" },
+    { x: 28000, y: groundY - 110, text: "halfway-ish. don't stop." },
+    { x: 45000, y: groundY - 110, text: "almost there bro" },
+    { x: 58000, y: groundY - 110, text: "GO GO GO" },
   ];
   return {
     width: W, height: H,
     spawn: { x: 80, y: groundY - 80 },
     goal: { x: W - 160, y: groundY - 120, w: 50, h: 120 },
     platforms, hazards: [], enemies: [], pickups: [],
-    signs: [
-      { x: 200,    y: groundY - 110, text: "just run bro.." },
-      { x: 1500,   y: groundY - 110, text: "seriously. that's it." },
-      { x: 5000,   y: groundY - 110, text: "hold dash. trust me." },
-      { x: 15000,  y: groundY - 110, text: "you're doing great bro" },
-      { x: 35000,  y: groundY - 110, text: "still going? respect." },
-      { x: 60000,  y: groundY - 110, text: "warm up complete bro" },
-      { x: 90000,  y: groundY - 110, text: "this is the long haul" },
-      { x: 130000, y: groundY - 110, text: "halfway-ish. keep vibing." },
-      { x: 170000, y: groundY - 110, text: "bro is locked in" },
-      { x: 210000, y: groundY - 110, text: "the horizon fears you" },
-      { x: 250000, y: groundY - 110, text: "no thoughts. just run." },
-      { x: 290000, y: groundY - 110, text: "bro you're built different" },
-      { x: 320000, y: groundY - 110, text: "ok almost there bro" },
-      { x: 345000, y: groundY - 110, text: "flag's right there bro" },
-      { x: 358000, y: groundY - 110, text: "GO GO GO" },
-    ],
+    signs: marathon ? marathonSigns : fullSigns,
   };
 }
 
