@@ -682,6 +682,45 @@ function fmtMarathon(ms: number): string {
   return `${min}:${sec.toString().padStart(2, "0")}.${cs.toString().padStart(2, "0")}`;
 }
 
+// On-screen tutorial prompts. Driven by hud.progress (0..1) so each
+// section of the tutorial level shows its own framed step. Lives at the
+// top of the canvas so it doesn't cover the action.
+const TUTORIAL_STEPS: { from: number; title: string; body: string; key?: string }[] = [
+  { from: 0.00, title: "STEP 1 — RUN",        body: "press ← → (or A / D) to move. keep heading right →", key: "→ / D" },
+  { from: 0.12, title: "STEP 2 — JUMP",       body: "press SPACE to JUMP. hold longer = jump higher. climb the stairs!", key: "SPACE" },
+  { from: 0.22, title: "STEP 3 — SLIDE",      body: "hold ↓ / S to SLIDE under low ceilings. keeps your speed.", key: "↓ / S" },
+  { from: 0.34, title: "STEP 4 — STOMP",      body: "jump on enemies' heads to STOMP them. don't touch their sides!", key: "SPACE → land" },
+  { from: 0.46, title: "STEP 5 — PARRY",      body: "press J as a bullet hits you to PARRY it back at the shooter.", key: "J" },
+  { from: 0.58, title: "STEP 6 — DIVE",       body: "while in the air, hold ↓ to DIVE down fast and cross gaps.", key: "↓ in air" },
+  { from: 0.68, title: "STEP 7 — SUPER DASH", body: "build speed, then HOLD K. the longer you hold, the faster you fly.", key: "hold K" },
+  { from: 0.82, title: "STEP 8 — COMBO IT",   body: "mix everything: run, slide, parry, dash. trust your scribble.", key: "all of it" },
+  { from: 0.92, title: "FINAL — REACH THE FLAG", body: "you got this bro. go go go →", key: "→" },
+];
+
+function TutorialPrompt({ progress }: { progress: number }) {
+  const step = TUTORIAL_STEPS.slice().reverse().find((s) => progress >= s.from) ?? TUTORIAL_STEPS[0];
+  return (
+    <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-20 w-[min(92%,640px)]">
+      <div className="scribble-border bg-paper/95 px-5 py-3 -rotate-1 text-center">
+        <div className="font-marker text-xl md:text-2xl text-[hsl(var(--accent))] tracking-wide">
+          {step.title}
+        </div>
+        <div className="font-scribble text-base md:text-lg text-ink mt-1">
+          {step.body}
+        </div>
+        {step.key && (
+          <div className="mt-2 inline-flex items-center gap-2">
+            <span className="font-marker text-xs text-ink/60">KEY</span>
+            <span className="scribble-border bg-paper px-2 py-0.5 font-marker text-sm text-ink">
+              {step.key}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function Overlay({ children }: { children: React.ReactNode }) {
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-paper/85 backdrop-blur-[2px]">
