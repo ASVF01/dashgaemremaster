@@ -459,11 +459,11 @@ function KnightVisual() {
       }
       const id = nextId++;
       setGhosts((g) => [...g, { id, y }]);
-      // ghost lifetime = 0.5s; clean up shortly after
+      // ghost lifetime = 0.7s; clean up shortly after
       window.setTimeout(() => {
         setGhosts((g) => g.filter((x) => x.id !== id));
-      }, 600);
-    }, 300);
+      }, 800);
+    }, 500);
     return () => window.clearInterval(interval);
   }, []);
 
