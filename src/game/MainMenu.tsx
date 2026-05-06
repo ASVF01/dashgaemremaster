@@ -275,7 +275,7 @@ function Thumbnail({ lvl, large = false }: { lvl: LevelMeta; large?: boolean }) 
       }
     >
       {isMarathon && <MarathonStars />}
-      <div className="absolute inset-0 flex items-end justify-center">
+      <div className="absolute inset-0 flex items-center justify-center">
         {isKnight ? (
           <KnightVisual />
         ) : isMarathon ? (
