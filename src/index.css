@@ -248,15 +248,14 @@
     will-change: transform;
   }
 
-  /* Knight thumbnail: pulse afterimage — silhouette gently scales out and
-     fades, like an aura pulsing off the knight (no blur/explosion). */
+  /* Knight thumbnail: one-shot afterimage ghost. Lifetime 0.5s.
+     Stays at the snapshot Y (set via --ghost-y inline) and only scales/fades. */
   @keyframes knight-ghost {
-    0%   { opacity: 0;    transform: translateY(var(--ghost-y, 0px)) scale(1);    }
-    25%  { opacity: 0.65; transform: translateY(var(--ghost-y, 0px)) scale(1.06); }
-    100% { opacity: 0;    transform: translateY(var(--ghost-y, 0px)) scale(1.22); }
+    0%   { opacity: 0.6; transform: translateY(var(--ghost-y, 0px)) scale(1);    filter: blur(0px); }
+    100% { opacity: 0;   transform: translateY(var(--ghost-y, 0px)) scale(1.35); filter: blur(5px); }
   }
   .animate-knight-ghost {
-    animation: knight-ghost 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    will-change: transform, opacity;
+    animation: knight-ghost 0.5s ease-out forwards;
+    will-change: transform, opacity, filter;
   }
 }
