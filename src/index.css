@@ -251,8 +251,8 @@
   /* Knight thumbnail: pulse afterimage — silhouette gently scales out and
      fades, like an aura pulsing off the knight (no blur/explosion). */
   @keyframes knight-ghost {
-    0%   { opacity: 0.55; transform: translateY(var(--ghost-y, 0px)) scale(1);    }
-    100% { opacity: 0;    transform: translateY(var(--ghost-y, 0px)) scale(1.18); }
+    0%   { opacity: 0.6; transform: translateY(var(--ghost-y, 0px)) scale(1);    }
+    100% { opacity: 0;   transform: translateY(var(--ghost-y, 0px)) scale(1.45); }
   }
   .animate-knight-ghost {
     animation: knight-ghost 0.7s ease-out forwards;
