@@ -256,7 +256,7 @@
     100% { opacity: 0;    transform: translateY(var(--ghost-y, 0px)) scale(1.22); }
   }
   .animate-knight-ghost {
-    animation: knight-ghost 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: knight-ghost 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     will-change: transform, opacity;
   }
 }
