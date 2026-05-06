@@ -463,7 +463,7 @@ function KnightVisual() {
       window.setTimeout(() => {
         setGhosts((g) => g.filter((x) => x.id !== id));
       }, 800);
-    }, 500);
+    }, 900);
     return () => window.clearInterval(interval);
   }, []);
 
