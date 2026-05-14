@@ -170,6 +170,12 @@
   }
 }
 
+/* Force landscape on small screens. Shown only when the viewport is both
+   narrow AND taller-than-wide (i.e. a phone/tablet held in portrait). */
+@media (max-width: 900px) and (orientation: portrait) {
+  .portrait-lock { display: flex !important; }
+}
+
 @layer utilities {
   .font-marker { font-family: 'Permanent Marker', cursive; }
   .font-bungee { font-family: 'Bungee', cursive; }
