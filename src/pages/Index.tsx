@@ -394,6 +394,22 @@ const Index = () => {
 
   return (
     <main className="min-h-screen w-full bg-paper text-ink overflow-hidden relative">
+      {/* small-screen portrait lock: ask the player to rotate */}
+      <div className="fixed inset-0 z-[200] bg-paper text-ink hidden portrait-lock items-center justify-center px-6 text-center">
+        <div>
+          <div className="font-marker text-5xl text-[hsl(var(--accent))] mb-3 animate-wobble inline-block">
+            ROTATE!!
+          </div>
+          <p className="font-scribble text-2xl text-ink mb-2">
+            this game is built for landscape.
+          </p>
+          <p className="font-scribble text-lg text-ink/70">
+            turn your device sideways to play →
+          </p>
+          <div className="font-marker text-6xl mt-6 inline-block animate-jitter-soft">📱↻</div>
+        </div>
+      </div>
+
       {/* page header */}
       <header className="px-3 sm:px-6 pt-2 sm:pt-4 pb-1 sm:pb-2 flex items-center justify-between gap-2 max-w-[1500px] mx-auto">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
