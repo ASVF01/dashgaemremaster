@@ -384,16 +384,34 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
   marathonRef.current = startAsInvboi;
   const [size, setSize] = useState({ w: 1200, h: 600 });
 
-  // resize
+  // resize — adapt to small screens (phones / tablets) as well as desktop.
   useEffect(() => {
     const update = () => {
-      const w = Math.min(window.innerWidth - 24, 1400);
-      const h = Math.min(window.innerHeight - 180, 720);
-      setSize({ w, h: Math.max(420, h) });
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const isTouch =
+        typeof window !== "undefined" &&
+        (window.matchMedia?.("(pointer: coarse)").matches ||
+          (navigator.maxTouchPoints ?? 0) > 0);
+      // Reserve vertical space for the page header + (on touch) the on-screen
+      // controls + a small bottom hint. Smaller phones get a tighter reserve
+      // so the canvas isn't squeezed below playable height.
+      const headerReserve = vw < 640 ? 56 : 96;
+      const touchReserve = isTouch ? (vw < 640 ? 130 : 150) : 0;
+      const bottomPad = 16;
+      const reserve = headerReserve + touchReserve + bottomPad;
+      // Horizontal padding from the section wrapper (px-3 = 24, plus a little).
+      const w = Math.max(280, Math.min(vw - 16, 1400));
+      const h = Math.max(260, Math.min(vh - reserve, 720));
+      setSize({ w, h });
     };
     update();
     window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+    window.addEventListener("orientationchange", update);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("orientationchange", update);
+    };
   }, []);
 
   // init / reset
