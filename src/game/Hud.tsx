@@ -12,17 +12,17 @@ export default function Hud({ hud }: { hud: HudState }) {
   const invBarBg = ss ? "#22e2ff" : undefined;
 
   return (
-    <div className="pointer-events-none absolute inset-0 p-4 flex flex-col gap-2">
+    <div className="pointer-events-none absolute inset-0 p-2 sm:p-4 flex flex-col gap-1.5 sm:gap-2">
       {/* top row */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-2 sm:gap-4 flex-wrap">
         {/* HP */}
-        <div className="flex items-center gap-2 scribble-border bg-paper px-3 py-2">
-          <span className="font-marker text-ink text-lg">HP</span>
+        <div className="flex items-center gap-1.5 sm:gap-2 scribble-border bg-paper px-2 sm:px-3 py-1 sm:py-2">
+          <span className="font-marker text-ink text-sm sm:text-lg">HP</span>
           <div className="flex gap-1">
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className={`w-5 h-5 border-2 border-ink ${i < hud.hp ? "bg-[hsl(var(--accent))]" : "bg-paper"}`}
+                className={`w-3.5 h-3.5 sm:w-5 sm:h-5 border-2 border-ink ${i < hud.hp ? "bg-[hsl(var(--accent))]" : "bg-paper"}`}
                 style={{ transform: `rotate(${(i - 1) * 6}deg)` }}
               />
             ))}
@@ -30,26 +30,26 @@ export default function Hud({ hud }: { hud: HudState }) {
         </div>
 
         {/* TIMER */}
-        <div className="scribble-border bg-paper px-4 py-2">
-          <div className="font-bungee text-ink text-2xl leading-none">{seconds}<span className="text-sm">s</span></div>
+        <div className="scribble-border bg-paper px-2 sm:px-4 py-1 sm:py-2">
+          <div className="font-bungee text-ink text-lg sm:text-2xl leading-none">{seconds}<span className="text-[10px] sm:text-sm">s</span></div>
         </div>
 
         {/* SCORE */}
-        <div className="scribble-border bg-paper px-3 py-2 text-right">
-          <div className="font-marker text-ink text-xl leading-none">{hud.score}</div>
+        <div className="scribble-border bg-paper px-2 sm:px-3 py-1 sm:py-2 text-right">
+          <div className="font-marker text-ink text-base sm:text-xl leading-none">{hud.score}</div>
           {hud.combo > 1 && (
-            <div className="font-marker text-[hsl(var(--accent))] text-sm animate-jitter">x{hud.combo} COMBO!!</div>
+            <div className="font-marker text-[hsl(var(--accent))] text-[10px] sm:text-sm animate-jitter">x{hud.combo} COMBO!!</div>
           )}
         </div>
       </div>
 
       {/* mach indicator (bottom-left) */}
-      <div className="mt-auto flex items-end justify-between gap-2">
-        <div className="scribble-border bg-paper px-2 py-1.5 min-w-[180px]">
+      <div className="mt-auto flex items-end justify-between gap-1.5 sm:gap-2 flex-wrap">
+        <div className="scribble-border bg-paper px-1.5 sm:px-2 py-1 sm:py-1.5 min-w-[120px] sm:min-w-[180px]">
           <div className="flex items-center justify-between mb-0.5 gap-2">
-            <span className="font-marker text-ink text-[10px] tracking-widest">SPEED</span>
+            <span className="font-marker text-ink text-[9px] sm:text-[10px] tracking-widest">SPEED</span>
             <span
-              className={`font-bungee text-sm leading-none ${sm && !ss ? "rainbow-text animate-jitter" : sm && ss ? "animate-jitter" : hud.mach >= 3 ? "animate-jitter" : ""}`}
+              className={`font-bungee text-[11px] sm:text-sm leading-none ${sm && !ss ? "rainbow-text animate-jitter" : sm && ss ? "animate-jitter" : hud.mach >= 3 ? "animate-jitter" : ""}`}
               style={
                 sm && ss
                   ? { color: "#22e2ff", textShadow: "1px 1px 0 #22e2ff55" }
@@ -76,18 +76,18 @@ export default function Hud({ hud }: { hud: HudState }) {
         </div>
 
         {/* parry meter */}
-        <div className="scribble-border bg-paper px-2 py-1.5">
-          <div className="font-marker text-ink text-[10px] tracking-widest mb-0.5">PARRY [J]</div>
+        <div className="scribble-border bg-paper px-1.5 sm:px-2 py-1 sm:py-1.5">
+          <div className="font-marker text-ink text-[9px] sm:text-[10px] tracking-widest mb-0.5">PARRY [J]</div>
           <div
-            className={`w-14 h-2 border-2 border-ink ${sm ? invBarClass : hud.parryReady ? "bg-parry" : "bg-paper"}`}
+            className={`w-10 sm:w-14 h-2 border-2 border-ink ${sm ? invBarClass : hud.parryReady ? "bg-parry" : "bg-paper"}`}
             style={sm && ss ? { background: "#22e2ff" } : undefined}
           />
         </div>
 
         {/* dash meter */}
-        <div className="scribble-border bg-paper px-2 py-1.5">
-          <div className="font-marker text-ink text-[10px] tracking-widest mb-0.5">DASH [K]</div>
-          <div className="w-14 h-2 border-2 border-ink bg-paper relative overflow-hidden">
+        <div className="scribble-border bg-paper px-1.5 sm:px-2 py-1 sm:py-1.5">
+          <div className="font-marker text-ink text-[9px] sm:text-[10px] tracking-widest mb-0.5">DASH [K]</div>
+          <div className="w-10 sm:w-14 h-2 border-2 border-ink bg-paper relative overflow-hidden">
             <div
               className={`h-full ${sm ? invBarClass : ""}`}
               style={{
@@ -99,8 +99,8 @@ export default function Hud({ hud }: { hud: HudState }) {
           </div>
         </div>
 
-        {/* progress */}
-        <div className="scribble-border bg-paper px-2 py-1.5 flex-1 max-w-xs">
+        {/* progress (hidden on the smallest screens to save horizontal room) */}
+        <div className="hidden sm:block scribble-border bg-paper px-2 py-1.5 flex-1 max-w-xs">
           <div className="font-marker text-ink text-[10px] tracking-widest mb-0.5">LEVEL PROGRESS</div>
           <div className="h-2 border-2 border-ink bg-paper relative">
             <div
