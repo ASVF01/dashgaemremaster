@@ -395,9 +395,9 @@ const Index = () => {
   return (
     <main className="min-h-screen w-full bg-paper text-ink overflow-hidden relative">
       {/* page header */}
-      <header className="px-6 pt-4 pb-2 flex items-center justify-between max-w-[1500px] mx-auto">
-        <div className="flex items-center gap-3">
-          <h1 className="font-marker text-3xl md:text-5xl text-ink leading-none">
+      <header className="px-3 sm:px-6 pt-2 sm:pt-4 pb-1 sm:pb-2 flex items-center justify-between gap-2 max-w-[1500px] mx-auto">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <h1 className="font-marker text-xl sm:text-3xl md:text-5xl text-ink leading-none truncate">
             DASH GAEM <span className="text-[hsl(var(--accent))] inline-block -rotate-2">R</span>
           </h1>
           {hasJrbBadge && (
@@ -409,9 +409,27 @@ const Index = () => {
                 sfx.meow();
                 setBadgeFace((f) => (f === ":3" ? "X3" : ":3"));
               }}
-              className="scribble-border bg-[hsl(var(--accent))] text-accent-foreground font-marker text-sm md:text-base px-2 py-1 rotate-3 inline-block animate-jitter select-none hover:rotate-6 active:scale-95 transition-transform cursor-pointer"
+              className="scribble-border bg-[hsl(var(--accent))] text-accent-foreground font-marker text-xs sm:text-sm md:text-base px-1.5 sm:px-2 py-0.5 sm:py-1 rotate-3 inline-block animate-jitter select-none hover:rotate-6 active:scale-95 transition-transform cursor-pointer"
             >
               {badgeFace}
+            </button>
+          )}
+        </div>
+        {/* compact controls visible on small screens */}
+        <div className="flex md:hidden items-center gap-1.5 shrink-0">
+          <button
+            onClick={toggleMute}
+            aria-label={muted ? "Unmute music" : "Mute music"}
+            className="scribble-border bg-paper px-2 py-1 font-marker text-xs text-ink"
+          >
+            {muted ? "🔇" : "🔊"}
+          </button>
+          {screen === "playing" && (
+            <button
+              onClick={backToMenu}
+              className="scribble-border bg-paper px-2 py-1 font-marker text-xs text-ink"
+            >
+              ←
             </button>
           )}
         </div>
@@ -448,7 +466,7 @@ const Index = () => {
       </header>
 
       {/* game stage */}
-      <section className="relative max-w-[1500px] mx-auto px-3">
+      <section className="relative max-w-[1500px] mx-auto px-1 sm:px-3">
         <div className="relative">
           <GameCanvas
             onHud={handleHud}
