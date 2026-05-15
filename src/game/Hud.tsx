@@ -12,7 +12,7 @@ export default function Hud({ hud }: { hud: HudState }) {
   const invBarBg = ss ? "#22e2ff" : undefined;
 
   return (
-    <div className="pointer-events-none absolute inset-0 p-2 sm:p-4 flex flex-col gap-1.5 sm:gap-2">
+    <div className="hud-touch-pad pointer-events-none absolute inset-0 p-2 sm:p-4 flex flex-col gap-1.5 sm:gap-2">
       {/* top row */}
       <div className="flex items-start justify-between gap-2 sm:gap-4 flex-wrap">
         {/* HP */}
