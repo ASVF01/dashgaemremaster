@@ -26,7 +26,7 @@ function isTouchDevice(): boolean {
 }
 
 type BtnProps = {
-  code: string | string[]; // dispatch one or many key codes simultaneously
+  code: string | string[];
   label: string;
   className?: string;
   ariaLabel?: string;
@@ -51,7 +51,6 @@ function HoldButton({ code, label, className, ariaLabel }: BtnProps) {
     codes.forEach((c) => fire("keyup", c));
   };
 
-  // safety: release on unmount
   useEffect(() => () => {
     if (heldRef.current) codes.forEach((c) => fire("keyup", c));
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -68,8 +67,8 @@ function HoldButton({ code, label, className, ariaLabel }: BtnProps) {
       onContextMenu={(e) => e.preventDefault()}
       className={
         "select-none touch-none active:scale-95 transition-transform " +
-        "scribble-border bg-paper text-ink font-bungee " +
-        "flex items-center justify-center " +
+        "scribble-border bg-paper/85 text-ink font-bungee " +
+        "flex items-center justify-center pointer-events-auto " +
         (className ?? "")
       }
       style={{ WebkitTapHighlightColor: "transparent", userSelect: "none" }}
@@ -86,23 +85,26 @@ export default function TouchControls({ visible }: { visible: boolean }) {
 
   if (!visible || !touch) return null;
 
+  // Overlay layout: lives INSIDE the game stage (absolute) so it never
+  // pushes the canvas around. Buttons sit at the bottom corners with a
+  // translucent background so the action stays visible behind them.
   return (
     <div
-      className="w-full mt-3 px-3 flex items-end justify-between gap-3 select-none"
+      className="absolute inset-0 z-30 pointer-events-none select-none"
       style={{ touchAction: "none" }}
     >
-      {/* LEFT cluster: D-pad style left/right */}
-      <div className="flex gap-2">
-        <HoldButton code="ArrowLeft" label="◀" className="w-16 h-16 text-2xl" ariaLabel="Move left" />
-        <HoldButton code="ArrowRight" label="▶" className="w-16 h-16 text-2xl" ariaLabel="Move right" />
+      {/* LEFT cluster: d-pad */}
+      <div className="absolute left-2 bottom-2 sm:left-3 sm:bottom-3 flex gap-1.5 sm:gap-2">
+        <HoldButton code="ArrowLeft"  label="◀" className="w-12 h-12 sm:w-14 sm:h-14 text-xl" ariaLabel="Move left" />
+        <HoldButton code="ArrowRight" label="▶" className="w-12 h-12 sm:w-14 sm:h-14 text-xl" ariaLabel="Move right" />
       </div>
 
-      {/* RIGHT cluster: action buttons */}
-      <div className="grid grid-cols-3 gap-2">
-        <HoldButton code="ShiftLeft" label="SLIDE" className="w-16 h-14 text-[11px]" />
-        <HoldButton code="Space"     label="JUMP"  className="w-16 h-14 text-[11px]" />
-        <HoldButton code="KeyK"      label="DASH"  className="w-16 h-14 text-[11px]" />
-        <HoldButton code="KeyJ"      label="PARRY" className="w-16 h-14 text-[11px] col-start-2" />
+      {/* RIGHT cluster: actions */}
+      <div className="absolute right-2 bottom-2 sm:right-3 sm:bottom-3 grid grid-cols-3 gap-1.5 sm:gap-2">
+        <HoldButton code="ShiftLeft" label="SLIDE" className="w-12 h-10 sm:w-14 sm:h-12 text-[10px]" />
+        <HoldButton code="Space"     label="JUMP"  className="w-12 h-10 sm:w-14 sm:h-12 text-[10px]" />
+        <HoldButton code="KeyK"      label="DASH"  className="w-12 h-10 sm:w-14 sm:h-12 text-[10px]" />
+        <HoldButton code="KeyJ"      label="PARRY" className="w-12 h-10 sm:w-14 sm:h-12 text-[10px] col-start-2" />
       </div>
     </div>
   );

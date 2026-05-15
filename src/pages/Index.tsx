@@ -659,15 +659,10 @@ const Index = () => {
               </div>
             </Overlay>
           )}
+          {/* touch controls overlay the canvas corners on touch devices —
+              they don't push the canvas down or hide the HUD. */}
+          <TouchControls visible={screen === "playing"} />
         </div>
-
-        {/* touch controls live BELOW the game stage so they never cover the HUD */}
-        <TouchControls visible={screen === "playing"} />
-
-        {/* mobile controls hint */}
-        <p className="md:hidden text-center font-scribble text-lg mt-2 text-ink/70">
-          (best on desktop with a keyboard!)
-        </p>
       </section>
 
       {/* One-time intro card on app start. Fades in, holds 9s, fades out. */}
