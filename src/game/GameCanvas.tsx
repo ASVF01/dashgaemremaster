@@ -363,8 +363,11 @@ export interface HudState {
   progress: number;
   timeMs: number;
   parryReady: boolean;
+  parryCooldown: number;
   dashCooldown: number;
   dashCooldownMax: number;
+  playerScreenX: number;
+  playerScreenY: number;
   starman?: boolean;
   somSom?: boolean;
 }
