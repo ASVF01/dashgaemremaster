@@ -385,24 +385,18 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
   const [size, setSize] = useState({ w: 1200, h: 600 });
 
   // resize — adapt to small screens (phones / tablets) as well as desktop.
+  // Touch controls and HUD overlay the canvas, so we only reserve vertical
+  // space for the page header. This lets the canvas fill the full visible
+  // viewport on phones in landscape without ever being clipped off-screen.
   useEffect(() => {
     const update = () => {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      const isTouch =
-        typeof window !== "undefined" &&
-        (window.matchMedia?.("(pointer: coarse)").matches ||
-          (navigator.maxTouchPoints ?? 0) > 0);
-      // Reserve vertical space for the page header + (on touch) the on-screen
-      // controls + a small bottom hint. Smaller phones get a tighter reserve
-      // so the canvas isn't squeezed below playable height.
-      const headerReserve = vw < 640 ? 56 : 96;
-      const touchReserve = isTouch ? (vw < 640 ? 130 : 150) : 0;
-      const bottomPad = 16;
-      const reserve = headerReserve + touchReserve + bottomPad;
-      // Horizontal padding from the section wrapper (px-3 = 24, plus a little).
-      const w = Math.max(280, Math.min(vw - 16, 1400));
-      const h = Math.max(260, Math.min(vh - reserve, 720));
+      const headerReserve = vw < 640 ? 44 : vw < 900 ? 60 : 96;
+      const bottomPad = vw < 900 ? 8 : 16;
+      const reserve = headerReserve + bottomPad;
+      const w = Math.max(280, Math.min(vw - 8, 1400));
+      const h = Math.max(220, Math.min(vh - reserve, 720));
       setSize({ w, h });
     };
     update();
