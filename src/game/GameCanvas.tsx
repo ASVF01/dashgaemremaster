@@ -363,8 +363,11 @@ export interface HudState {
   progress: number;
   timeMs: number;
   parryReady: boolean;
+  parryCooldown: number;
   dashCooldown: number;
   dashCooldownMax: number;
+  playerScreenX: number;
+  playerScreenY: number;
   starman?: boolean;
   somSom?: boolean;
 }
@@ -772,8 +775,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
           progress: Math.min(1, r.player.x / r.level.width),
           timeMs: r.finished ? r.finishTime : performance.now() - r.startedAt,
           parryReady: r.player.starman ? true : r.player.parryCooldown <= 0,
+          parryCooldown: r.player.starman ? 0 : Math.max(0, r.player.parryCooldown),
           dashCooldown: r.player.starman ? 0 : Math.max(0, r.player.dashCooldown),
           dashCooldownMax: DASH_COOLDOWN,
+          playerScreenX: r.player.x - r.cameraX + r.player.w * 0.5,
+          playerScreenY: r.player.y,
           starman: r.player.starman,
           somSom: r.player.somSom,
         });
