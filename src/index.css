@@ -176,6 +176,12 @@
   .portrait-lock { display: flex !important; }
 }
 
+/* On touch devices the on-screen controls overlay the bottom corners of
+   the canvas. Reserve room so the HUD's bottom row never sits under them. */
+@media (pointer: coarse) {
+  .hud-touch-pad { padding-bottom: 60px !important; }
+}
+
 @layer utilities {
   .font-marker { font-family: 'Permanent Marker', cursive; }
   .font-bungee { font-family: 'Bungee', cursive; }
