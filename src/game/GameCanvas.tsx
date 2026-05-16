@@ -795,8 +795,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
           parryCooldown: r.player.starman ? 0 : Math.max(0, r.player.parryCooldown),
           dashCooldown: r.player.starman ? 0 : Math.max(0, r.player.dashCooldown),
           dashCooldownMax: DASH_COOLDOWN,
-          playerScreenX: r.player.x - r.cameraX + r.player.w * 0.5,
-          playerScreenY: r.player.y,
+          playerScreenX: (r.player.x - r.cameraX + r.player.w * 0.5) * (size.dw / size.w),
+          playerScreenY: r.player.y * (size.dh / size.h),
           starman: r.player.starman,
           somSom: r.player.somSom,
         });
