@@ -390,6 +390,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
   // generous logical view and scale the canvas down with CSS so phone/iPad
   // players can actually see a meaningful chunk of the level.
   const [size, setSize] = useState({ w: 1200, h: 600, dw: 1200, dh: 600 });
+  // True on touch devices or narrow viewports — when true, the camera
+  // centers the player instead of using the offset-follow with lookahead,
+  // so phone/tablet players never lose the player off the edge of the view.
+  const isMobileViewRef = useRef(false);
 
   // resize — adapt to small screens (phones / tablets) as well as desktop.
   useEffect(() => {
