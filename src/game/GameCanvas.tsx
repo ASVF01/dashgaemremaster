@@ -1920,7 +1920,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       // Mobile / touch view: keep the player centered so the whole scene
       // around them stays visible regardless of facing or speed.
       const playerCenterX = p.x + p.w / 2;
-      const targetCam = playerCenterX - size.w * 0.5;
+      // Shift the camera right so the player sits slightly left of center,
+      // giving more visible space ahead of them.
+      const targetCam = playerCenterX - size.w * 0.4;
       r.cameraX += (targetCam - r.cameraX) * Math.min(1, dt * 10);
       if (r.cameraX < 0) r.cameraX = 0;
       if (r.cameraX > r.level.width - size.w) r.cameraX = r.level.width - size.w;
