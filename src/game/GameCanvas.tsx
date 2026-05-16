@@ -422,6 +422,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       const dw = Math.max(160, Math.round(logicalW * scale));
       const dh = Math.max(120, Math.round(logicalH * scale));
       setSize({ w: logicalW, h: logicalH, dw, dh });
+      const coarse = typeof window !== "undefined" && (
+        "ontouchstart" in window ||
+        (navigator.maxTouchPoints ?? 0) > 0 ||
+        window.matchMedia("(pointer: coarse)").matches
+      );
+      isMobileViewRef.current = coarse || vw < 1100 || vh < 560;
     };
     update();
     window.addEventListener("resize", update);
