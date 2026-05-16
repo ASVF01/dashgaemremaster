@@ -385,12 +385,13 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
   // just-run-bro because the boss level needs the same track to continue).
   const marathonRef = useRef<boolean>(startAsInvboi);
   marathonRef.current = startAsInvboi;
-  const [size, setSize] = useState({ w: 1200, h: 600 });
+  // `w`/`h` are the LOGICAL render size (canvas internal pixels = world view).
+  // `dw`/`dh` are the CSS DISPLAY size — for small screens we keep a fixed
+  // generous logical view and scale the canvas down with CSS so phone/iPad
+  // players can actually see a meaningful chunk of the level.
+  const [size, setSize] = useState({ w: 1200, h: 600, dw: 1200, dh: 600 });
 
   // resize — adapt to small screens (phones / tablets) as well as desktop.
-  // Touch controls and HUD overlay the canvas, so we only reserve vertical
-  // space for the page header. This lets the canvas fill the full visible
-  // viewport on phones in landscape without ever being clipped off-screen.
   useEffect(() => {
     const update = () => {
       const vw = window.innerWidth;
@@ -398,9 +399,25 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       const headerReserve = vw < 640 ? 44 : vw < 900 ? 60 : 96;
       const bottomPad = vw < 900 ? 8 : 16;
       const reserve = headerReserve + bottomPad;
-      const w = Math.max(280, Math.min(vw - 8, 1400));
-      const h = Math.max(220, Math.min(vh - reserve, 720));
-      setSize({ w, h });
+      const availW = Math.max(240, vw - 8);
+      const availH = Math.max(160, vh - reserve);
+
+      // On small viewports, lock the logical render size to a fixed 1200x600
+      // "world view" and CSS-scale to fit. On larger viewports, render at
+      // native resolution for crispness.
+      let logicalW: number;
+      let logicalH: number;
+      if (availW < 1100 || availH < 560) {
+        logicalW = 1200;
+        logicalH = 600;
+      } else {
+        logicalW = Math.min(availW, 1400);
+        logicalH = Math.min(availH, 720);
+      }
+      const scale = Math.min(availW / logicalW, availH / logicalH, 1);
+      const dw = Math.max(160, Math.round(logicalW * scale));
+      const dh = Math.max(120, Math.round(logicalH * scale));
+      setSize({ w: logicalW, h: logicalH, dw, dh });
     };
     update();
     window.addEventListener("resize", update);
