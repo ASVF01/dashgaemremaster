@@ -260,6 +260,7 @@ interface GameRefs {
   chaserTrail: { x: number; y: number; w: number; h: number; life: number; maxLife: number }[];
   chaserTrailTimer: number;
   cameraX: number;
+  cameraY: number;
   shake: number;
   freezeFrames: number;
   freezeTime: number; // hard hitstop in seconds (skips update entirely)
@@ -486,6 +487,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       chaserTrail: [],
       chaserTrailTimer: 0,
       cameraX: 0,
+      cameraY: 0,
       shake: 0,
       freezeFrames: 0,
       freezeTime: 0,
@@ -806,7 +808,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
           dashCooldown: r.player.starman ? 0 : Math.max(0, r.player.dashCooldown),
           dashCooldownMax: DASH_COOLDOWN,
           playerScreenX: (r.player.x - r.cameraX + r.player.w * 0.5) * (size.dw / size.w),
-          playerScreenY: r.player.y * (size.dh / size.h),
+          playerScreenY: (r.player.y - r.cameraY) * (size.dh / size.h),
           starman: r.player.starman,
           somSom: r.player.somSom,
         });
@@ -1920,17 +1922,24 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       // Mobile / touch view: keep the player centered so the whole scene
       // around them stays visible regardless of facing or speed.
       const playerCenterX = p.x + p.w / 2;
-      // Shift the camera right so the player sits slightly left of center,
-      // giving more visible space ahead of them.
+      const playerCenterY = p.y + p.h / 2;
       const targetCam = playerCenterX - size.w * 0.4;
       r.cameraX += (targetCam - r.cameraX) * Math.min(1, dt * 10);
       if (r.cameraX < 0) r.cameraX = 0;
       if (r.cameraX > r.level.width - size.w) r.cameraX = r.level.width - size.w;
+      // Bring the camera down to the player's level so they stay in view
+      // vertically too on small screens.
+      const targetCamY = playerCenterY - size.h * 0.55;
+      r.cameraY += (targetCamY - r.cameraY) * Math.min(1, dt * 8);
+      const maxCamY = Math.max(0, r.level.height - size.h);
+      if (r.cameraY < 0) r.cameraY = 0;
+      if (r.cameraY > maxCamY) r.cameraY = maxCamY;
     } else {
       const targetCam = p.x - size.w * 0.35 + p.facing * 80 + p.vx * 0.12;
       r.cameraX += (targetCam - r.cameraX) * Math.min(1, dt * 6);
       if (r.cameraX < 0) r.cameraX = 0;
       if (r.cameraX > r.level.width - size.w) r.cameraX = r.level.width - size.w;
+      r.cameraY += (0 - r.cameraY) * Math.min(1, dt * 6);
     }
   }
 
@@ -2446,7 +2455,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
     }
 
     const camX = Math.floor(r.cameraX);
-    ctx.translate(-camX, 0);
+    const camY = Math.floor(r.cameraY);
+    ctx.translate(-camX, -camY);
 
     // distant scribbled clouds / scenery
     drawScenery(ctx, camX, w, r.level.height);
