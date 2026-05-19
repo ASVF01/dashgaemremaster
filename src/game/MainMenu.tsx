@@ -933,3 +933,90 @@ function CreditsTab() {
     </div>
   );
 }
+
+// ---------------- UPDATES TAB ----------------
+
+type UpdateEntry = {
+  version: string;
+  date: string;
+  title: string;
+  changes: string[];
+};
+
+const UPDATES: UpdateEntry[] = [
+  {
+    version: "v1.3",
+    date: "2026-05-19",
+    title: "Mobile-Friendly Camera",
+    changes: [
+      "Added a follow camera that keeps the player centered on iPhone/iPad in landscape.",
+      "Game canvas now scales properly for smaller screens so the whole level is visible.",
+      "Camera shifted slightly so you can see more of what's ahead.",
+    ],
+  },
+  {
+    version: "v1.2",
+    date: "2026-05-19",
+    title: "HUD Cleanup",
+    changes: [
+      "Moved parry & dash cooldowns above the player as floating numbers.",
+      "Level progress now sits under the level timer.",
+      "Removed the speed meter — it was just in the way.",
+    ],
+  },
+  {
+    version: "v1.1",
+    date: "2026-05-18",
+    title: "Celestial Marathon",
+    changes: [
+      "Every level chained back-to-back as one continuous run.",
+      "Speedrun timer ticks across all sub-levels.",
+      "Invboi stays with you the whole run, starman BGM never stops.",
+    ],
+  },
+  {
+    version: "v1.0",
+    date: "2026-05-15",
+    title: "DASH GAEM REMASTERED",
+    changes: [
+      "Full remaster with new sprites, levels, and BGM.",
+      "Added Roaring Knight boss fight.",
+      "Just Run Bro cutscene + badge reward.",
+    ],
+  },
+];
+
+function UpdatesTab() {
+  return (
+    <div className="max-w-3xl mx-auto">
+      <div className="text-center mb-4">
+        <div className="font-marker text-4xl text-ink -rotate-1 inline-block">UPDATE LOG</div>
+        <p className="font-scribble text-lg text-ink/70 mt-1">
+          what's new, what's fixed, what's broken on purpose
+        </p>
+      </div>
+      <div className="space-y-4">
+        {UPDATES.map((u, i) => (
+          <div
+            key={u.version}
+            className="scribble-border bg-paper p-4"
+            style={{ transform: `rotate(${i % 2 === 0 ? -0.4 : 0.4}deg)` }}
+          >
+            <div className="flex items-baseline justify-between flex-wrap gap-2 mb-2">
+              <div className="flex items-baseline gap-3">
+                <span className="font-bungee text-xl text-[hsl(var(--accent))]">{u.version}</span>
+                <span className="font-marker text-2xl text-ink">{u.title}</span>
+              </div>
+              <span className="font-scribble text-sm text-ink/60">{u.date}</span>
+            </div>
+            <ul className="font-scribble text-lg text-ink/85 space-y-1 list-disc list-inside">
+              {u.changes.map((c, j) => (
+                <li key={j}>{c}</li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
