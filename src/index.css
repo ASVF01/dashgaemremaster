@@ -187,6 +187,15 @@
   .font-bungee { font-family: 'Bungee', cursive; }
   .font-scribble { font-family: 'Caveat', cursive; }
 
+  /* On mobile, override the fancy fonts with the pixel font so the whole
+     UI matches the default. Targets phones/tablets in any orientation. */
+  @media (max-width: 900px), (pointer: coarse) {
+    .font-marker, .font-bungee, .font-scribble {
+      font-family: 'Press Start 2P', 'Courier New', monospace !important;
+      letter-spacing: 0;
+    }
+  }
+
   .text-stroke-ink {
     -webkit-text-stroke: 2px hsl(var(--ink));
     text-shadow: 4px 4px 0 hsl(var(--ink));
