@@ -17,6 +17,8 @@ export default {
         marker: ["'Permanent Marker'", "cursive"],
         bungee: ["'Bungee'", "cursive"],
         scribble: ["'Caveat'", "cursive"],
+        pixel: ["'Press Start 2P'", "monospace"],
+        sans: ["'Press Start 2P'", "monospace"],
       },
       colors: {
         ink: "hsl(var(--ink))",
