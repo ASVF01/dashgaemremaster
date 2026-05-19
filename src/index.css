@@ -160,7 +160,7 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Caveat', cursive;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
     background-image:
       radial-gradient(hsl(var(--ink) / 0.04) 1px, transparent 1px),
       radial-gradient(hsl(var(--ink) / 0.03) 1px, transparent 1px);
