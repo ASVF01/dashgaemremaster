@@ -58,6 +58,7 @@ export default function MainMenu({ onPlay }: Props) {
           <TabBtn active={tab === "keybinds"} onClick={() => switchTab("keybinds")}>KEYBINDS</TabBtn>
           <TabBtn active={tab === "settings"} onClick={() => switchTab("settings")}>SETTINGS</TabBtn>
           <TabBtn active={tab === "extras"}   onClick={() => switchTab("extras")}>EXTRAS</TabBtn>
+          <TabBtn active={tab === "updates"}  onClick={() => switchTab("updates")}>UPDATES</TabBtn>
           <TabBtn active={tab === "credits"}  onClick={() => switchTab("credits")}>CREDITS</TabBtn>
         </nav>
 
@@ -68,6 +69,7 @@ export default function MainMenu({ onPlay }: Props) {
           {tab === "keybinds" && <KeybindsTab />}
           {tab === "settings" && <SettingsTab />}
           {tab === "extras"   && <ExtrasTab onPlay={handlePlay} />}
+          {tab === "updates"  && <UpdatesTab />}
           {tab === "credits"  && <CreditsTab />}
         </div>
       </div>
