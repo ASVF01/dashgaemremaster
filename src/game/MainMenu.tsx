@@ -14,7 +14,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import roaringKnightImg from "@/assets/roaring_knight_titlecard.png";
 import celestialMarathonEmblem from "@/assets/celestial-marathon-emblem.png";
 
-export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" | "updates" | "credits";
+export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" | "updates" | "credits" | "youtube";
 
 interface Props {
   onPlay: (id: LevelId) => void;
@@ -60,6 +60,7 @@ export default function MainMenu({ onPlay }: Props) {
           <TabBtn active={tab === "extras"}   onClick={() => switchTab("extras")}>EXTRAS</TabBtn>
           <TabBtn active={tab === "updates"}  onClick={() => switchTab("updates")}>UPDATES</TabBtn>
           <TabBtn active={tab === "credits"}  onClick={() => switchTab("credits")}>CREDITS</TabBtn>
+          <TabBtn active={tab === "youtube"} onClick={() => switchTab("youtube")}>YOUTUBE</TabBtn>
         </nav>
 
         {/* Body */}
@@ -71,6 +72,7 @@ export default function MainMenu({ onPlay }: Props) {
           {tab === "extras"   && <ExtrasTab onPlay={handlePlay} />}
           {tab === "updates"  && <UpdatesTab />}
           {tab === "credits"  && <CreditsTab />}
+          {tab === "youtube"  && <YouTubeTab />}
         </div>
       </div>
     </div>
