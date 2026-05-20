@@ -1018,7 +1018,28 @@ function UpdatesTab() {
             </ul>
           </div>
         ))}
+        </div>
       </div>
+    );
+  }
+}
+
+// ---------------- YOUTUBE TAB ----------------
+function YouTubeTab() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[300px]">
+      <a
+        href="https://www.youtube.com/@StarryEVO"
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={() => { unlockAudio(); sfx.menuConfirm(); }}
+        className="animate-yt-glow font-marker text-4xl md:text-6xl text-center hover:scale-105 transition-transform"
+      >
+        SUB TO THE YT!
+      </a>
+      <p className="font-scribble text-xl text-ink/70 mt-6">
+        @StarryEVO — new devlogs, speedruns, and chaos
+      </p>
     </div>
   );
 }
