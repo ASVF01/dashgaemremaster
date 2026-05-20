@@ -1024,9 +1024,15 @@ function UpdatesTab() {
   }
 
 // ---------------- YOUTUBE TAB ----------------
+const YT_PLAYLISTS: { videoId: string; listId: string; title: string }[] = [
+  { videoId: "iLWcdug6oqY", listId: "PLbnpeZR6mTMqh7rXBNyaiph005odpazgi", title: "Playlist 1" },
+  { videoId: "MMOziflvcZo", listId: "PLbnpeZR6mTMrXyq0WMWecp8oFSY3DR-3h", title: "Playlist 2" },
+  { videoId: "DMBYQEHxxA0", listId: "PLbnpeZR6mTMoTxvpVdx4heygZazsujA-N", title: "Playlist 3" },
+];
+
 function YouTubeTab() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[300px]">
+    <div className="flex flex-col items-center min-h-[300px] py-6 px-4 overflow-y-auto max-h-[80vh] w-full">
       <a
         href="https://www.youtube.com/@StarryEVO"
         target="_blank"
@@ -1036,9 +1042,38 @@ function YouTubeTab() {
       >
         SUB TO THE YT!
       </a>
-      <p className="font-scribble text-xl text-ink/70 mt-6">
+      <p className="font-scribble text-xl text-ink/70 mt-4">
         @StarryEVO — new devlogs, speedruns, and chaos
       </p>
+
+      <p className="font-marker text-2xl md:text-3xl text-ink mt-10 mb-4 text-center">
+        check out the appitizers first..
+      </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 w-full max-w-6xl">
+        {YT_PLAYLISTS.map((p, i) => (
+          <div key={p.listId} className="scribble-border bg-paper rounded overflow-hidden flex flex-col">
+            <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
+              <iframe
+                className="absolute inset-0 w-full h-full"
+                src={`https://www.youtube.com/embed/${p.videoId}?list=${p.listId}`}
+                title={p.title}
+                loading="lazy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
+            <a
+              href={`https://www.youtube.com/playlist?list=${p.listId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-marker text-center text-ink py-2 hover:bg-ink hover:text-paper transition-colors"
+            >
+              ▶ open playlist {i + 1}
+            </a>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
