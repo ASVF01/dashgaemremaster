@@ -275,6 +275,21 @@ const Index = () => {
     }
   }, [screen, levelId, resetKey]);
 
+  // On the win screen, pressing Enter advances to the next level (if any).
+  useEffect(() => {
+    if (screen !== "win") return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Enter" || e.repeat) return;
+      if (nextLevel) {
+        e.preventDefault();
+        startLevel(nextLevel.id);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screen, levelId]);
+
   const startLevel = (id: LevelId) => {
     // CELESTIAL MARATHON: hijack into the chained sequence. Start the
     // starman BGM exactly once on entry; subsequent sub-level transitions
