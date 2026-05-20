@@ -196,6 +196,29 @@
     }
   }
 
+  /* Red / white pulsing glow for the YouTube tab CTA */
+  @keyframes yt-glow {
+    0%, 100% {
+      text-shadow:
+        0 0 4px #ff0000,
+        0 0 12px #ff0000,
+        0 0 24px #ff4444,
+        0 0 4px #ffffff;
+      color: #ff0000;
+    }
+    50% {
+      text-shadow:
+        0 0 6px #ffffff,
+        0 0 16px #ff4444,
+        0 0 32px #ff0000,
+        0 0 6px #ff0000;
+      color: #ffffff;
+    }
+  }
+  .animate-yt-glow {
+    animation: yt-glow 1.2s ease-in-out infinite;
+  }
+
   .text-stroke-ink {
     -webkit-text-stroke: 2px hsl(var(--ink));
     text-shadow: 4px 4px 0 hsl(var(--ink));
