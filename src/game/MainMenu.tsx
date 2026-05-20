@@ -1022,7 +1022,6 @@ function UpdatesTab() {
       </div>
     );
   }
-}
 
 // ---------------- YOUTUBE TAB ----------------
 function YouTubeTab() {
