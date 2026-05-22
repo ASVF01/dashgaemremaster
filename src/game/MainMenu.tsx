@@ -1030,18 +1030,36 @@ const YT_PLAYLISTS: { videoId: string; listId: string; title: string }[] = [
   { videoId: "DMBYQEHxxA0", listId: "PLbnpeZR6mTMoTxvpVdx4heygZazsujA-N", title: "Playlist 3" },
 ];
 
-function YouTubeTab() {
+export function YouTubeTab() {
   const [blocked, setBlocked] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    // Probe YouTube reachability. GoGuardian / school filters typically block
-    // the request entirely, which makes a no-cors fetch reject.
     fetch("https://www.youtube.com/favicon.ico", { mode: "no-cors", cache: "no-store" })
       .then(() => { /* reachable */ })
       .catch(() => { if (!cancelled) setBlocked(true); });
     return () => { cancelled = true; };
   }, []);
+
+  // Debug shortcut: hold "1" and press Backspace to force-block all playlists.
+  useEffect(() => {
+    const keys = new Set<string>();
+    const down = (e: KeyboardEvent) => {
+      keys.add(e.key);
+      if (keys.has("1") && e.key === "Backspace") {
+        e.preventDefault();
+        setBlocked(true);
+      }
+    };
+    const up = (e: KeyboardEvent) => { keys.delete(e.key); };
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+    };
+  }, []);
+
 
   return (
     <div className="flex flex-col items-center min-h-[300px] py-4 sm:py-6 px-2 sm:px-4 overflow-y-auto max-h-[85vh] w-full">
