@@ -1145,3 +1145,75 @@ function PlaylistCard({
     </div>
   );
 }
+
+// ---------------- BESTIARY TAB ----------------
+import ragingCrittersImg from "@/assets/bestiary/raging-critters.png";
+
+type BestiaryEntry = {
+  id: string;
+  name: string;
+  image: string;
+  description: string;
+  tags?: string[];
+};
+
+const BESTIARY: BestiaryEntry[] = [
+  {
+    id: "raging-critters",
+    name: "Raging Critters",
+    image: ragingCrittersImg,
+    description:
+      "Tiny red circle goons with anger issues. They travel in packs and charge anything that moves. Quick to spawn, quicker to lose their temper.",
+    tags: ["common", "melee", "swarm"],
+  },
+];
+
+function BestiaryTab() {
+  return (
+    <div className="flex flex-col items-center min-h-[300px] py-4 sm:py-6 px-2 sm:px-4 overflow-y-auto max-h-[85vh] w-full">
+      <p className="font-marker text-2xl sm:text-4xl md:text-5xl text-ink mb-2 text-center">
+        BESTIARY
+      </p>
+      <p className="font-scribble text-base sm:text-lg text-ink/70 mb-6 text-center">
+        a field guide to everything that wants you dead.
+      </p>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 w-full max-w-6xl">
+        {BESTIARY.map((e) => (
+          <div
+            key={e.id}
+            className="scribble-border bg-paper rounded overflow-hidden flex flex-col min-w-0"
+          >
+            <div className="relative w-full bg-paper" style={{ paddingTop: "75%" }}>
+              <img
+                src={e.image}
+                alt={e.name}
+                loading="lazy"
+                className="absolute inset-0 w-full h-full object-contain"
+                style={{ imageRendering: "pixelated" }}
+              />
+            </div>
+            <div className="p-3 sm:p-4 flex flex-col gap-2">
+              <h3 className="font-marker text-lg sm:text-xl text-ink">{e.name}</h3>
+              {e.tags && (
+                <div className="flex flex-wrap gap-1">
+                  {e.tags.map((t) => (
+                    <span
+                      key={t}
+                      className="font-scribble text-xs px-2 py-0.5 border border-ink/40 rounded text-ink/70"
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <p className="font-scribble text-sm sm:text-base text-ink/80 leading-snug">
+                {e.description}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
