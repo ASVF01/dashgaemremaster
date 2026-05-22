@@ -1031,6 +1031,18 @@ const YT_PLAYLISTS: { videoId: string; listId: string; title: string }[] = [
 ];
 
 function YouTubeTab() {
+  const [blocked, setBlocked] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    // Probe YouTube reachability. GoGuardian / school filters typically block
+    // the request entirely, which makes a no-cors fetch reject.
+    fetch("https://www.youtube.com/favicon.ico", { mode: "no-cors", cache: "no-store" })
+      .then(() => { /* reachable */ })
+      .catch(() => { if (!cancelled) setBlocked(true); });
+    return () => { cancelled = true; };
+  }, []);
+
   return (
     <div className="flex flex-col items-center min-h-[300px] py-4 sm:py-6 px-2 sm:px-4 overflow-y-auto max-h-[85vh] w-full">
       <a
@@ -1050,30 +1062,66 @@ function YouTubeTab() {
         check out the appitizers first..
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 w-full max-w-6xl">
-        {YT_PLAYLISTS.map((p, i) => (
-          <div key={p.listId} className="scribble-border bg-paper rounded overflow-hidden flex flex-col min-w-0">
-            <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
-              <iframe
-                className="absolute inset-0 w-full h-full"
-                src={`https://www.youtube.com/embed/${p.videoId}?list=${p.listId}`}
-                title={p.title}
-                loading="lazy"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              />
-            </div>
-            <a
-              href={`https://www.youtube.com/playlist?list=${p.listId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-marker text-center text-sm sm:text-base text-ink py-2 px-2 hover:bg-ink hover:text-paper transition-colors"
-            >
-              ▶ open playlist {i + 1}
-            </a>
-          </div>
-        ))}
+      {blocked ? (
+        <div className="scribble-border bg-paper rounded w-full max-w-3xl py-10 px-6 text-center">
+          <p className="animate-yt-glow font-marker text-2xl sm:text-4xl md:text-5xl">
+            CURSE YOU GOGUARDIAN!!!! &gt;:(
+          </p>
+          <p className="font-scribble text-base sm:text-lg text-ink/70 mt-4">
+            the playlists are blocked on this network.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 w-full max-w-6xl">
+          {YT_PLAYLISTS.map((p, i) => (
+            <PlaylistCard key={p.listId} p={p} i={i} onBlocked={() => setBlocked(true)} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PlaylistCard({
+  p,
+  i,
+  onBlocked,
+}: {
+  p: { videoId: string; listId: string; title: string };
+  i: number;
+  onBlocked: () => void;
+}) {
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      if (!loaded) onBlocked();
+    }, 6000);
+    return () => window.clearTimeout(t);
+  }, [loaded, onBlocked]);
+
+  return (
+    <div className="scribble-border bg-paper rounded overflow-hidden flex flex-col min-w-0">
+      <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
+        <iframe
+          className="absolute inset-0 w-full h-full"
+          src={`https://www.youtube.com/embed/${p.videoId}?list=${p.listId}`}
+          title={p.title}
+          loading="lazy"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+          onLoad={() => setLoaded(true)}
+          onError={() => onBlocked()}
+        />
       </div>
+      <a
+        href={`https://www.youtube.com/playlist?list=${p.listId}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-marker text-center text-sm sm:text-base text-ink py-2 px-2 hover:bg-ink hover:text-paper transition-colors"
+      >
+        ▶ open playlist {i + 1}
+      </a>
     </div>
   );
 }
