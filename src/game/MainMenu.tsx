@@ -1148,6 +1148,8 @@ function PlaylistCard({
 
 // ---------------- BESTIARY TAB ----------------
 import ragingCrittersImg from "@/assets/bestiary/raging-critters.png";
+import bestiaryBgm from "@/assets/audio/bgm_champion_map.mp3";
+import { setBgmMuted as setGameBgmMuted, isBgmMuted as isGameBgmMuted } from "@/game/bgm";
 
 type BestiaryEntry = {
   id: string;
