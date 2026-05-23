@@ -1253,29 +1253,8 @@ const BESTIARY: BestiaryEntry[] = [
 ];
 
 function BestiaryTab() {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const mutedGameRef = useRef(false);
   const [selected, setSelected] = useState<BestiaryEntry | null>(null);
-
-  useEffect(() => {
-    const a = new Audio(bestiaryBgm);
-    a.loop = true;
-    a.volume = 0.6;
-    audioRef.current = a;
-    if (!isGameBgmMuted()) {
-      setGameBgmMuted(true);
-      mutedGameRef.current = true;
-    }
-    a.play().catch(() => { /* needs gesture */ });
-    return () => {
-      a.pause();
-      a.src = "";
-      if (mutedGameRef.current) {
-        setGameBgmMuted(false);
-        mutedGameRef.current = false;
-      }
-    };
-  }, []);
+  const { muted, setMuted } = useTabBgm(bestiaryBgm);
 
   // Close panel on Escape
   useEffect(() => {
@@ -1288,7 +1267,11 @@ function BestiaryTab() {
   }, [selected]);
 
   return (
-    <div className="flex flex-col items-center min-h-[300px] py-4 sm:py-6 px-2 sm:px-4 overflow-y-auto max-h-[85vh] w-full">
+    <div className="flex flex-col items-center min-h-[300px] py-4 sm:py-6 px-2 sm:px-4 overflow-y-auto max-h-[85vh] w-full animate-fade-in">
+      <div className="w-full max-w-6xl flex items-center justify-between mb-2 gap-2">
+        <span className="font-scribble text-sm text-ink/50">♪ field guide ambience</span>
+        <MuteBtn muted={muted} onToggle={() => setMuted((m) => !m)} />
+      </div>
       <p className="font-marker text-2xl sm:text-4xl md:text-5xl text-ink mb-2 text-center">
         BESTIARY
       </p>
