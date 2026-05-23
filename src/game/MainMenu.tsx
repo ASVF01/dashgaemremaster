@@ -1157,6 +1157,8 @@ type BestiaryEntry = {
   image: string;
   description: string;
   tags?: string[];
+  lore?: string;
+  combat?: string[];
 };
 
 const BESTIARY: BestiaryEntry[] = [
@@ -1167,12 +1169,20 @@ const BESTIARY: BestiaryEntry[] = [
     description:
       "Tiny red circle goons with anger issues. They travel in packs and charge anything that moves. Quick to spawn, quicker to lose their temper.",
     tags: ["common", "melee", "swarm"],
+    lore:
+      "Nobody's sure where the critters come from — one moment the field is empty, the next there's a dozen of them rolling at you in a furious little stampede. Locals say they're the leftover tantrums of bigger monsters, given just enough body to roll.",
+    combat: [
+      "Dash through gaps in the swarm — never stand still.",
+      "They commit to a charge; sidestep at the last second.",
+      "Pick off stragglers before the pack regroups.",
+    ],
   },
 ];
 
 function BestiaryTab() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const mutedGameRef = useRef(false);
+  const [selected, setSelected] = useState<BestiaryEntry | null>(null);
 
   useEffect(() => {
     const a = new Audio(bestiaryBgm);
@@ -1194,20 +1204,32 @@ function BestiaryTab() {
     };
   }, []);
 
+  // Close panel on Escape
+  useEffect(() => {
+    if (!selected) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelected(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selected]);
+
   return (
     <div className="flex flex-col items-center min-h-[300px] py-4 sm:py-6 px-2 sm:px-4 overflow-y-auto max-h-[85vh] w-full">
       <p className="font-marker text-2xl sm:text-4xl md:text-5xl text-ink mb-2 text-center">
         BESTIARY
       </p>
       <p className="font-scribble text-base sm:text-lg text-ink/70 mb-6 text-center">
-        a field guide to everything that wants you dead.
+        a field guide to everything that wants you dead. click an entry for details.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 w-full max-w-6xl">
         {BESTIARY.map((e) => (
-          <div
+          <button
             key={e.id}
-            className="scribble-border bg-paper rounded overflow-hidden flex flex-col min-w-0"
+            type="button"
+            onClick={() => setSelected(e)}
+            className="scribble-border bg-paper rounded overflow-hidden flex flex-col min-w-0 text-left hover:-rotate-1 hover:scale-[1.01] transition-transform cursor-pointer"
           >
             <div className="relative w-full bg-paper" style={{ paddingTop: "75%" }}>
               <img
@@ -1236,9 +1258,78 @@ function BestiaryTab() {
                 {e.description}
               </p>
             </div>
-          </div>
+          </button>
         ))}
       </div>
+
+      {selected && (
+        <div
+          className="fixed inset-0 z-50 bg-ink/70 flex items-center justify-center p-4"
+          onClick={() => setSelected(null)}
+        >
+          <div
+            className="scribble-border bg-paper rounded max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(ev) => ev.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3 p-4 sm:p-6 border-b border-ink/20">
+              <div>
+                <h2 className="font-marker text-3xl sm:text-5xl text-ink leading-none">
+                  {selected.name}
+                </h2>
+                {selected.tags && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {selected.tags.map((t) => (
+                      <span
+                        key={t}
+                        className="font-scribble text-xs px-2 py-0.5 border border-ink/40 rounded text-ink/70"
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelected(null)}
+                className="scribble-border bg-paper px-3 py-1 font-marker text-xl text-ink hover:rotate-3 transition-transform"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4 sm:gap-6 p-4 sm:p-6">
+              <div className="relative w-full bg-paper scribble-border" style={{ paddingTop: "75%" }}>
+                <img
+                  src={selected.image}
+                  alt={selected.name}
+                  className="absolute inset-0 w-full h-full object-contain p-2"
+                  style={{ imageRendering: "pixelated" }}
+                />
+              </div>
+              <div className="flex flex-col gap-4 min-w-0">
+                <div>
+                  <h3 className="font-marker text-xl text-ink mb-1 -rotate-1">LORE</h3>
+                  <p className="font-scribble text-base text-ink/80 leading-snug">
+                    {selected.lore ?? selected.description}
+                  </p>
+                </div>
+                {selected.combat && selected.combat.length > 0 && (
+                  <div>
+                    <h3 className="font-marker text-xl text-ink mb-1 rotate-1">COMBAT NOTES</h3>
+                    <ul className="font-scribble text-base text-ink/80 leading-snug list-disc pl-5 space-y-1">
+                      {selected.combat.map((c, i) => (
+                        <li key={i}>{c}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
