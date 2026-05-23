@@ -14,7 +14,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import roaringKnightImg from "@/assets/roaring_knight_titlecard.png";
 import celestialMarathonEmblem from "@/assets/celestial-marathon-emblem.png";
 
-export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" | "updates" | "credits" | "youtube" | "bestiary";
+export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" | "updates" | "credits" | "youtube" | "bestiary" | "characters";
 
 interface Props {
   onPlay: (id: LevelId) => void;
@@ -62,6 +62,7 @@ export default function MainMenu({ onPlay }: Props) {
           <TabBtn active={tab === "credits"}  onClick={() => switchTab("credits")}>CREDITS</TabBtn>
           <TabBtn active={tab === "youtube"} onClick={() => switchTab("youtube")}>YOUTUBE</TabBtn>
           <TabBtn active={tab === "bestiary"} onClick={() => switchTab("bestiary")}>BESTIARY</TabBtn>
+          <TabBtn active={tab === "characters"} onClick={() => switchTab("characters")}>WIP CHARACTER SELECTION</TabBtn>
         </nav>
 
         {/* Body */}
@@ -75,6 +76,7 @@ export default function MainMenu({ onPlay }: Props) {
           {tab === "credits"  && <CreditsTab />}
           {tab === "youtube"  && <YouTubeTab />}
           {tab === "bestiary" && <BestiaryTab />}
+          {tab === "characters" && <CharactersTab />}
         </div>
       </div>
     </div>
@@ -1149,7 +1151,78 @@ function PlaylistCard({
 // ---------------- BESTIARY TAB ----------------
 import ragingCrittersImg from "@/assets/bestiary/raging-critters.png";
 import bestiaryBgm from "@/assets/audio/bgm_champion_map.mp3";
+import gachaBgm from "@/assets/audio/bgm_gacha.mp3";
 import { setBgmMuted as setGameBgmMuted, isBgmMuted as isGameBgmMuted } from "@/game/bgm";
+
+// Shared fade-in/out tab BGM with a mute toggle.
+function useTabBgm(src: string, targetVolume = 0.6, fadeInMs = 1200, fadeOutMs = 500) {
+  const [muted, setMuted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const mutedRef = useRef(false);
+  const mutedGameRef = useRef(false);
+  mutedRef.current = muted;
+
+  useEffect(() => {
+    const a = new Audio(src);
+    a.loop = true;
+    a.volume = 0;
+    audioRef.current = a;
+    if (!isGameBgmMuted()) {
+      setGameBgmMuted(true);
+      mutedGameRef.current = true;
+    }
+    a.play().catch(() => { /* needs gesture */ });
+
+    let raf = 0;
+    const start = performance.now();
+    const tickIn = (t: number) => {
+      const k = Math.min(1, (t - start) / fadeInMs);
+      a.volume = mutedRef.current ? 0 : targetVolume * k;
+      if (k < 1) raf = requestAnimationFrame(tickIn);
+    };
+    raf = requestAnimationFrame(tickIn);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      const startOut = performance.now();
+      const startVol = a.volume;
+      const tickOut = (t: number) => {
+        const k = Math.min(1, (t - startOut) / fadeOutMs);
+        a.volume = startVol * (1 - k);
+        if (k < 1) requestAnimationFrame(tickOut);
+        else { a.pause(); a.src = ""; }
+      };
+      requestAnimationFrame(tickOut);
+      if (mutedGameRef.current) {
+        setGameBgmMuted(false);
+        mutedGameRef.current = false;
+      }
+    };
+  }, [src, targetVolume, fadeInMs, fadeOutMs]);
+
+  // Live mute toggle (after fade-in completes, keep volume in sync)
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (muted) a.volume = 0;
+    else if (a.volume === 0) a.volume = targetVolume;
+  }, [muted, targetVolume]);
+
+  return { muted, setMuted };
+}
+
+function MuteBtn({ muted, onToggle }: { muted: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="scribble-border bg-paper px-3 py-1 font-marker text-base sm:text-lg text-ink hover:-rotate-2 transition-transform"
+      aria-label={muted ? "Unmute tab music" : "Mute tab music"}
+    >
+      {muted ? "🔇 MUTED" : "🔊 MUSIC ON"}
+    </button>
+  );
+}
 
 type BestiaryEntry = {
   id: string;
@@ -1180,29 +1253,8 @@ const BESTIARY: BestiaryEntry[] = [
 ];
 
 function BestiaryTab() {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const mutedGameRef = useRef(false);
   const [selected, setSelected] = useState<BestiaryEntry | null>(null);
-
-  useEffect(() => {
-    const a = new Audio(bestiaryBgm);
-    a.loop = true;
-    a.volume = 0.6;
-    audioRef.current = a;
-    if (!isGameBgmMuted()) {
-      setGameBgmMuted(true);
-      mutedGameRef.current = true;
-    }
-    a.play().catch(() => { /* needs gesture */ });
-    return () => {
-      a.pause();
-      a.src = "";
-      if (mutedGameRef.current) {
-        setGameBgmMuted(false);
-        mutedGameRef.current = false;
-      }
-    };
-  }, []);
+  const { muted, setMuted } = useTabBgm(bestiaryBgm);
 
   // Close panel on Escape
   useEffect(() => {
@@ -1215,7 +1267,11 @@ function BestiaryTab() {
   }, [selected]);
 
   return (
-    <div className="flex flex-col items-center min-h-[300px] py-4 sm:py-6 px-2 sm:px-4 overflow-y-auto max-h-[85vh] w-full">
+    <div className="flex flex-col items-center min-h-[300px] py-4 sm:py-6 px-2 sm:px-4 overflow-y-auto max-h-[85vh] w-full animate-fade-in">
+      <div className="w-full max-w-6xl flex items-center justify-between mb-2 gap-2">
+        <span className="font-scribble text-sm text-ink/50">♪ field guide ambience</span>
+        <MuteBtn muted={muted} onToggle={() => setMuted((m) => !m)} />
+      </div>
       <p className="font-marker text-2xl sm:text-4xl md:text-5xl text-ink mb-2 text-center">
         BESTIARY
       </p>
@@ -1330,6 +1386,88 @@ function BestiaryTab() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ---------------- WIP CHARACTER SELECTION TAB ----------------
+type WipCharacter = {
+  id: string;
+  name: string;
+  blurb: string;
+  rarity: "common" | "rare" | "epic" | "legendary";
+};
+
+const WIP_CHARACTERS: WipCharacter[] = [
+  { id: "stick",   name: "The Original Stick", blurb: "The OG. Runs. Jumps. Vibes.",              rarity: "common" },
+  { id: "dasher",  name: "Dasher Prime",       blurb: "Dashes faster. Thinks slower.",            rarity: "rare" },
+  { id: "shadow",  name: "Shadow Sketch",      blurb: "A rumor in pencil form. Hard to pin down.", rarity: "epic" },
+  { id: "??????",  name: "??????",             blurb: "Locked behind a story we haven't written.", rarity: "legendary" },
+];
+
+const RARITY_STYLES: Record<WipCharacter["rarity"], string> = {
+  common:    "border-ink/40 text-ink/70",
+  rare:      "border-blue-500/60 text-blue-700",
+  epic:      "border-purple-500/60 text-purple-700",
+  legendary: "border-[hsl(var(--accent))] text-[hsl(var(--accent))]",
+};
+
+function CharactersTab() {
+  const { muted, setMuted } = useTabBgm(gachaBgm);
+  const [picked, setPicked] = useState<string | null>(null);
+
+  return (
+    <div className="flex flex-col items-center min-h-[300px] py-4 sm:py-6 px-2 sm:px-4 overflow-y-auto max-h-[85vh] w-full animate-fade-in">
+      <div className="w-full max-w-6xl flex items-center justify-between mb-2 gap-2">
+        <span className="font-scribble text-sm text-ink/50">♪ gacha lobby theme</span>
+        <MuteBtn muted={muted} onToggle={() => setMuted((m) => !m)} />
+      </div>
+      <p className="font-marker text-2xl sm:text-4xl md:text-5xl text-ink mb-1 text-center -rotate-1">
+        WIP CHARACTER SELECTION
+      </p>
+      <p className="font-scribble text-base sm:text-lg text-ink/70 mb-6 text-center">
+        nothing is final. nobody is playable yet. squint and dream.
+      </p>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 w-full max-w-6xl">
+        {WIP_CHARACTERS.map((c) => {
+          const active = picked === c.id;
+          return (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => setPicked(c.id)}
+              className={[
+                "scribble-border bg-paper rounded p-3 sm:p-4 flex flex-col items-center text-center gap-2 transition-transform hover:-rotate-2 hover:scale-[1.02]",
+                active ? "ring-4 ring-[hsl(var(--accent))]" : "",
+              ].join(" ")}
+            >
+              <div
+                className="w-full bg-paper border-2 border-dashed border-ink/30 flex items-center justify-center font-marker text-4xl text-ink/40"
+                style={{ aspectRatio: "1 / 1" }}
+              >
+                ?
+              </div>
+              <h3 className="font-marker text-lg sm:text-xl text-ink leading-tight">{c.name}</h3>
+              <span
+                className={[
+                  "font-scribble text-xs px-2 py-0.5 border rounded uppercase tracking-wide",
+                  RARITY_STYLES[c.rarity],
+                ].join(" ")}
+              >
+                {c.rarity}
+              </span>
+              <p className="font-scribble text-xs sm:text-sm text-ink/70 leading-snug">{c.blurb}</p>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-6 scribble-border bg-paper px-4 py-3 font-marker text-lg text-ink/70 -rotate-1">
+        {picked
+          ? `you picked ${WIP_CHARACTERS.find((c) => c.id === picked)?.name}. nothing happens yet. (WIP!)`
+          : "pick a silhouette. it won't matter until later. that's the point."}
+      </div>
     </div>
   );
 }
