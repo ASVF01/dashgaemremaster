@@ -1148,6 +1148,8 @@ function PlaylistCard({
 
 // ---------------- BESTIARY TAB ----------------
 import ragingCrittersImg from "@/assets/bestiary/raging-critters.png";
+import bestiaryBgm from "@/assets/audio/bgm_champion_map.mp3";
+import { setBgmMuted as setGameBgmMuted, isBgmMuted as isGameBgmMuted } from "@/game/bgm";
 
 type BestiaryEntry = {
   id: string;
@@ -1169,6 +1171,29 @@ const BESTIARY: BestiaryEntry[] = [
 ];
 
 function BestiaryTab() {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const mutedGameRef = useRef(false);
+
+  useEffect(() => {
+    const a = new Audio(bestiaryBgm);
+    a.loop = true;
+    a.volume = 0.6;
+    audioRef.current = a;
+    if (!isGameBgmMuted()) {
+      setGameBgmMuted(true);
+      mutedGameRef.current = true;
+    }
+    a.play().catch(() => { /* needs gesture */ });
+    return () => {
+      a.pause();
+      a.src = "";
+      if (mutedGameRef.current) {
+        setGameBgmMuted(false);
+        mutedGameRef.current = false;
+      }
+    };
+  }, []);
+
   return (
     <div className="flex flex-col items-center min-h-[300px] py-4 sm:py-6 px-2 sm:px-4 overflow-y-auto max-h-[85vh] w-full">
       <p className="font-marker text-2xl sm:text-4xl md:text-5xl text-ink mb-2 text-center">
