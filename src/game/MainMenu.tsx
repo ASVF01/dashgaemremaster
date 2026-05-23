@@ -1151,7 +1151,78 @@ function PlaylistCard({
 // ---------------- BESTIARY TAB ----------------
 import ragingCrittersImg from "@/assets/bestiary/raging-critters.png";
 import bestiaryBgm from "@/assets/audio/bgm_champion_map.mp3";
+import gachaBgm from "@/assets/audio/bgm_gacha.mp3";
 import { setBgmMuted as setGameBgmMuted, isBgmMuted as isGameBgmMuted } from "@/game/bgm";
+
+// Shared fade-in/out tab BGM with a mute toggle.
+function useTabBgm(src: string, targetVolume = 0.6, fadeInMs = 1200, fadeOutMs = 500) {
+  const [muted, setMuted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const mutedRef = useRef(false);
+  const mutedGameRef = useRef(false);
+  mutedRef.current = muted;
+
+  useEffect(() => {
+    const a = new Audio(src);
+    a.loop = true;
+    a.volume = 0;
+    audioRef.current = a;
+    if (!isGameBgmMuted()) {
+      setGameBgmMuted(true);
+      mutedGameRef.current = true;
+    }
+    a.play().catch(() => { /* needs gesture */ });
+
+    let raf = 0;
+    const start = performance.now();
+    const tickIn = (t: number) => {
+      const k = Math.min(1, (t - start) / fadeInMs);
+      a.volume = mutedRef.current ? 0 : targetVolume * k;
+      if (k < 1) raf = requestAnimationFrame(tickIn);
+    };
+    raf = requestAnimationFrame(tickIn);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      const startOut = performance.now();
+      const startVol = a.volume;
+      const tickOut = (t: number) => {
+        const k = Math.min(1, (t - startOut) / fadeOutMs);
+        a.volume = startVol * (1 - k);
+        if (k < 1) requestAnimationFrame(tickOut);
+        else { a.pause(); a.src = ""; }
+      };
+      requestAnimationFrame(tickOut);
+      if (mutedGameRef.current) {
+        setGameBgmMuted(false);
+        mutedGameRef.current = false;
+      }
+    };
+  }, [src, targetVolume, fadeInMs, fadeOutMs]);
+
+  // Live mute toggle (after fade-in completes, keep volume in sync)
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (muted) a.volume = 0;
+    else if (a.volume === 0) a.volume = targetVolume;
+  }, [muted, targetVolume]);
+
+  return { muted, setMuted };
+}
+
+function MuteBtn({ muted, onToggle }: { muted: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="scribble-border bg-paper px-3 py-1 font-marker text-base sm:text-lg text-ink hover:-rotate-2 transition-transform"
+      aria-label={muted ? "Unmute tab music" : "Mute tab music"}
+    >
+      {muted ? "🔇 MUTED" : "🔊 MUSIC ON"}
+    </button>
+  );
+}
 
 type BestiaryEntry = {
   id: string;
