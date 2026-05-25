@@ -1152,6 +1152,7 @@ function PlaylistCard({
 import ragingCrittersImg from "@/assets/bestiary/raging-critters.png";
 import bestiaryBgm from "@/assets/audio/bgm_champion_map.mp3";
 import gachaBgm from "@/assets/audio/bgm_gacha.mp3";
+import thePlayerArt from "@/assets/characters/the_player.png";
 import { setBgmMuted as setGameBgmMuted, isBgmMuted as isGameBgmMuted } from "@/game/bgm";
 
 // Shared mute state across all tab BGMs — one toggle controls whichever is playing.
