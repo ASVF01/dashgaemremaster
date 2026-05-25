@@ -62,7 +62,7 @@ export default function MainMenu({ onPlay }: Props) {
           <TabBtn active={tab === "credits"}  onClick={() => switchTab("credits")}>CREDITS</TabBtn>
           <TabBtn active={tab === "youtube"} onClick={() => switchTab("youtube")}>YOUTUBE</TabBtn>
           <TabBtn active={tab === "bestiary"} onClick={() => switchTab("bestiary")}>BESTIARY</TabBtn>
-          <TabBtn active={tab === "characters"} onClick={() => switchTab("characters")}>WIP CHARACTER SELECTION</TabBtn>
+          <TabBtn active={tab === "characters"} onClick={() => switchTab("characters")}>CHARACTER SELECT</TabBtn>
         </nav>
 
         {/* Body */}
@@ -1416,10 +1416,11 @@ type WipCharacter = {
   name: string;
   blurb: string;
   rarity: "common" | "rare" | "epic" | "legendary";
+  art?: string;
 };
 
 const WIP_CHARACTERS: WipCharacter[] = [
-  { id: "stick",   name: "The Player", blurb: "The OG. Runs. Jumps. Vibes.",              rarity: "common" },
+  { id: "stick",   name: "The Player", blurb: "The OG. Runs. Jumps. Vibes.",              rarity: "common",    art: thePlayerArt },
   { id: "dasher",  name: "Blue Blur",       blurb: "Dashes faster. Thinks slower.",            rarity: "rare" },
   { id: "shadow",  name: "Shark Gal",      blurb: "A rumor in pencil form. Hard to pin down.", rarity: "epic" },
   { id: "x3mode",  name: "X3 MODE",             blurb: "Locked behind a story we haven't written.", rarity: "legendary" },
@@ -1443,7 +1444,7 @@ function CharactersTab() {
         <MuteBtn muted={muted} onToggle={() => setMuted((m) => !m)} />
       </div>
       <p className="font-marker text-2xl sm:text-4xl md:text-5xl text-ink mb-1 text-center -rotate-1">
-        WIP CHARACTER SELECTION
+        CHARACTER SELECT
       </p>
       <p className="font-scribble text-base sm:text-lg text-ink/70 mb-6 text-center">
         nothing is final. nobody is playable yet. squint and dream.
@@ -1463,10 +1464,14 @@ function CharactersTab() {
               ].join(" ")}
             >
               <div
-                className="w-full bg-paper border-2 border-dashed border-ink/30 flex items-center justify-center font-marker text-4xl text-ink/40"
+                className="w-full bg-paper border-2 border-dashed border-ink/30 flex items-center justify-center font-marker text-4xl text-ink/40 overflow-hidden"
                 style={{ aspectRatio: "1 / 1" }}
               >
-                ?
+                {c.art ? (
+                  <img src={c.art} alt={c.name} className="w-full h-full object-contain" />
+                ) : (
+                  "?"
+                )}
               </div>
               <h3 className="font-marker text-lg sm:text-xl text-ink leading-tight">{c.name}</h3>
               <span
