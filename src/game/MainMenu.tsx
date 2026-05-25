@@ -1419,10 +1419,10 @@ type WipCharacter = {
 };
 
 const WIP_CHARACTERS: WipCharacter[] = [
-  { id: "stick",   name: "The Original Stick", blurb: "The OG. Runs. Jumps. Vibes.",              rarity: "common" },
-  { id: "dasher",  name: "Dasher Prime",       blurb: "Dashes faster. Thinks slower.",            rarity: "rare" },
-  { id: "shadow",  name: "Shadow Sketch",      blurb: "A rumor in pencil form. Hard to pin down.", rarity: "epic" },
-  { id: "??????",  name: "??????",             blurb: "Locked behind a story we haven't written.", rarity: "legendary" },
+  { id: "stick",   name: "The Player", blurb: "The OG. Runs. Jumps. Vibes.",              rarity: "common" },
+  { id: "dasher",  name: "Blue Blur",       blurb: "Dashes faster. Thinks slower.",            rarity: "rare" },
+  { id: "shadow",  name: "Shark gal",      blurb: "A rumor in pencil form. Hard to pin down.", rarity: "epic" },
+  { id: "x3mode",  name: "X3 MODE",             blurb: "Locked behind a story we haven't written.", rarity: "legendary" },
 ];
 
 const RARITY_STYLES: Record<WipCharacter["rarity"], string> = {
