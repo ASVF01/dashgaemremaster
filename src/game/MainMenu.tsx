@@ -1154,9 +1154,29 @@ import bestiaryBgm from "@/assets/audio/bgm_champion_map.mp3";
 import gachaBgm from "@/assets/audio/bgm_gacha.mp3";
 import { setBgmMuted as setGameBgmMuted, isBgmMuted as isGameBgmMuted } from "@/game/bgm";
 
-// Shared fade-in/out tab BGM with a mute toggle.
+// Shared mute state across all tab BGMs — one toggle controls whichever is playing.
+let _tabBgmMuted = false;
+const _tabBgmListeners = new Set<(m: boolean) => void>();
+function setTabBgmMutedShared(m: boolean) {
+  _tabBgmMuted = m;
+  _tabBgmListeners.forEach((fn) => fn(m));
+}
+function useSharedTabMute(): [boolean, (m: boolean | ((p: boolean) => boolean)) => void] {
+  const [muted, setMuted] = useState(_tabBgmMuted);
+  useEffect(() => {
+    const fn = (m: boolean) => setMuted(m);
+    _tabBgmListeners.add(fn);
+    return () => { _tabBgmListeners.delete(fn); };
+  }, []);
+  const update = (m: boolean | ((p: boolean) => boolean)) => {
+    setTabBgmMutedShared(typeof m === "function" ? (m as (p: boolean) => boolean)(_tabBgmMuted) : m);
+  };
+  return [muted, update];
+}
+
+// Shared fade-in/out tab BGM with a shared mute toggle.
 function useTabBgm(src: string, targetVolume = 0.6, fadeInMs = 1200, fadeOutMs = 500) {
-  const [muted, setMuted] = useState(false);
+  const [muted, setMuted] = useSharedTabMute();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const mutedRef = useRef(false);
   const mutedGameRef = useRef(false);
