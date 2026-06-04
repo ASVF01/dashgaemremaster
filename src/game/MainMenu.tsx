@@ -14,7 +14,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import roaringKnightImg from "@/assets/roaring_knight_titlecard.png";
 import celestialMarathonEmblem from "@/assets/celestial-marathon-emblem.png";
 
-export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" | "updates" | "credits" | "youtube" | "bestiary" | "characters";
+export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" | "updates" | "credits" | "youtube" | "bestiary";
 
 interface Props {
   onPlay: (id: LevelId) => void;
@@ -22,6 +22,7 @@ interface Props {
 
 export default function MainMenu({ onPlay }: Props) {
   const [tab, setTab] = useState<MenuTab>("play");
+  const [charSelectOpen, setCharSelectOpen] = useState(false);
 
   const handlePlay = (id: LevelId) => {
     unlockAudio();
@@ -34,6 +35,12 @@ export default function MainMenu({ onPlay }: Props) {
     unlockAudio();
     sfx.menuTab();
     setTab(next);
+  };
+
+  const openCharSelect = () => {
+    unlockAudio();
+    sfx.menuTab();
+    setCharSelectOpen(true);
   };
 
   return (
@@ -62,7 +69,7 @@ export default function MainMenu({ onPlay }: Props) {
           <TabBtn active={tab === "credits"}  onClick={() => switchTab("credits")}>CREDITS</TabBtn>
           <TabBtn active={tab === "youtube"} onClick={() => switchTab("youtube")}>YOUTUBE</TabBtn>
           <TabBtn active={tab === "bestiary"} onClick={() => switchTab("bestiary")}>BESTIARY</TabBtn>
-          <TabBtn active={tab === "characters"} onClick={() => switchTab("characters")}>CHARACTER SELECT</TabBtn>
+          <TabBtn active={false} onClick={openCharSelect}>CHARACTER SELECT</TabBtn>
         </nav>
 
         {/* Body */}
@@ -76,9 +83,10 @@ export default function MainMenu({ onPlay }: Props) {
           {tab === "credits"  && <CreditsTab />}
           {tab === "youtube"  && <YouTubeTab />}
           {tab === "bestiary" && <BestiaryTab />}
-          {tab === "characters" && <CharactersTab />}
         </div>
       </div>
+
+      {charSelectOpen && <CharacterSelectScreen onClose={() => setCharSelectOpen(false)} />}
     </div>
   );
 }
@@ -1417,7 +1425,10 @@ type WipCharacter = {
   name: string;
   blurb: string;
   rarity: "common" | "rare" | "epic" | "legendary";
+  /** Small art shown on the grid card. */
   art?: string;
+  /** Larger preview art shown in the left INFO panel. Falls back to a placeholder until provided. */
+  preview?: string;
 };
 
 const WIP_CHARACTERS: WipCharacter[] = [
@@ -1442,143 +1453,185 @@ const CARD_TINT: Record<string, string> = {
   x3mode: "#e11d2a",
 };
 
-function CharactersTab() {
+function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   const { muted, setMuted } = useTabBgm(gachaBgm);
   const [picked, setPicked] = useState<string>("stick");
   const selected = WIP_CHARACTERS.find((c) => c.id === picked) ?? WIP_CHARACTERS[0];
+
+  // Swipe-in / swipe-out transition.
+  const [shown, setShown] = useState(false);
+  const [closing, setClosing] = useState(false);
+  useEffect(() => {
+    const r = requestAnimationFrame(() => setShown(true));
+    return () => cancelAnimationFrame(r);
+  }, []);
+
+  const handleClose = () => {
+    if (closing) return;
+    sfx.menuTab();
+    setClosing(true);
+    setShown(false);
+    window.setTimeout(onClose, 420);
+  };
+
+  // ESC to leave.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code === "Escape") { e.preventDefault(); handleClose(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [closing]);
 
   // Page nav (only one page for now — arrows are decorative/disabled).
   const PAGE = 1;
   const MAX_PAGE = 1;
 
   return (
-    <div className="flex flex-col items-center min-h-[300px] py-4 sm:py-6 px-2 sm:px-4 overflow-y-auto max-h-[85vh] w-full animate-fade-in">
-      <div className="w-full max-w-6xl flex items-center justify-between mb-3 gap-2">
-        <span className="font-scribble text-sm text-ink/50">♪ gacha lobby theme</span>
-        <MuteBtn muted={muted} onToggle={() => setMuted((m) => !m)} />
-      </div>
-
-      {/* Two-panel layout to mirror the reference sketch */}
-      <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-[5fr_6fr] gap-3 sm:gap-4">
-        {/* LEFT — info / preview panel */}
-        <div
-          className="relative scribble-border rounded-md p-4 sm:p-6 min-h-[420px] flex items-center justify-center overflow-hidden"
-          style={{ background: "#c9c9c9" }}
-        >
-          {/* GET OUT arrow (clears selection) */}
+    <div
+      className="fixed inset-0 z-50 overflow-hidden"
+      style={{
+        background: "#c9c9c9",
+        transform: shown ? "translateX(0)" : "translateX(100%)",
+        opacity: shown ? 1 : 0,
+        transition: "transform 420ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease-out",
+      }}
+    >
+      <div className="w-full h-full overflow-y-auto px-4 sm:px-8 py-4 sm:py-6 flex flex-col items-center">
+        {/* Top bar: GET OUT + title + mute */}
+        <div className="w-full max-w-6xl flex items-center justify-between gap-3 mb-4">
           <button
             type="button"
-            onClick={() => setPicked("stick")}
-            className="absolute top-2 left-2 sm:top-3 sm:left-3 flex items-center gap-1 font-marker text-[10px] sm:text-xs text-paper px-2 py-1 hover:-rotate-2 transition-transform"
+            onClick={handleClose}
+            className="flex items-center font-marker text-xs sm:text-sm text-paper px-3 py-1.5 hover:-rotate-2 transition-transform"
             style={{
               background: "#e11d2a",
-              clipPath: "polygon(12% 0, 100% 0, 100% 100%, 12% 100%, 0 50%)",
-              paddingLeft: "1.25rem",
+              clipPath: "polygon(10% 0, 100% 0, 100% 100%, 10% 100%, 0 50%)",
+              paddingLeft: "1.5rem",
             }}
-            title="deselect"
+            title="back to menu"
           >
             GET OUT.
           </button>
-
-          {/* Big character preview */}
-          <div className="flex items-center justify-center w-full h-full pt-6">
-            {selected.art ? (
-              <img
-                src={selected.art}
-                alt={selected.name}
-                className="max-h-[320px] w-auto object-contain drop-shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
-              />
-            ) : (
-              <div className="font-marker text-[8rem] text-ink/30 select-none">?</div>
-            )}
-          </div>
-
-          {/* INFO tag bottom-left */}
-          <div className="absolute bottom-3 left-3 right-3 sm:right-auto sm:max-w-[70%] -rotate-2">
-            <div className="bg-ink text-paper font-marker text-2xl sm:text-3xl tracking-widest px-4 py-2 inline-block">
-              INFO
-            </div>
-            <div className="mt-1 bg-paper/90 scribble-border px-3 py-2 font-scribble text-sm sm:text-base text-ink leading-snug">
-              <div className="font-marker text-base sm:text-lg leading-none mb-1">{selected.name}</div>
-              <span
-                className={[
-                  "font-scribble text-[10px] px-1.5 py-0.5 border rounded uppercase tracking-wide mr-2",
-                  RARITY_STYLES[selected.rarity],
-                ].join(" ")}
-              >
-                {selected.rarity}
-              </span>
-              {selected.blurb}
-            </div>
+          <span className="font-marker text-2xl sm:text-4xl text-ink -rotate-1 hidden sm:inline-block">
+            CHARACTER SELECT
+          </span>
+          <div className="flex items-center gap-2">
+            <span className="font-scribble text-xs sm:text-sm text-ink/60 hidden sm:inline">♪ gacha lobby theme</span>
+            <MuteBtn muted={muted} onToggle={() => setMuted((m) => !m)} />
           </div>
         </div>
 
-        {/* RIGHT — grid panel */}
-        <div
-          className="relative scribble-border rounded-md p-4 sm:p-5 min-h-[420px] -rotate-1"
-          style={{ background: "#8a8a8a" }}
-        >
-          {/* PG. header */}
-          <div className="font-marker text-2xl sm:text-3xl text-ink mb-2 text-center tracking-wider">
-            PG . {PAGE}
-          </div>
-
-          <div className="flex gap-3 sm:gap-4 items-stretch">
-            {/* Up/Down arrows column */}
-            <div className="flex flex-col items-center justify-center gap-3 sm:gap-4 py-2">
-              <button
-                type="button"
-                disabled={PAGE <= 1}
-                className="font-marker text-3xl sm:text-4xl text-ink disabled:opacity-30 hover:-translate-y-0.5 transition-transform"
-                aria-label="previous page"
-              >
-                ↑
-              </button>
-              <button
-                type="button"
-                disabled={PAGE >= MAX_PAGE}
-                className="font-marker text-3xl sm:text-4xl text-ink disabled:opacity-30 hover:translate-y-0.5 transition-transform"
-                aria-label="next page"
-              >
-                ↓
-              </button>
+        {/* Two-panel layout to mirror the reference sketch */}
+        <div className="w-full max-w-6xl flex-1 grid grid-cols-1 md:grid-cols-[5fr_6fr] gap-4 sm:gap-6">
+          {/* LEFT — info / preview panel */}
+          <div
+            className="relative scribble-border rounded-md p-4 sm:p-6 min-h-[460px] flex items-center justify-center overflow-hidden"
+            style={{ background: "#bdbdbd" }}
+          >
+            {/* Big character preview (separate sprite slot) */}
+            <div className="flex items-center justify-center w-full h-full pt-6">
+              {selected.preview ? (
+                <img
+                  src={selected.preview}
+                  alt={`${selected.name} preview`}
+                  className="max-h-[420px] w-auto object-contain drop-shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+                />
+              ) : (
+                <div className="flex flex-col items-center text-ink/40 select-none">
+                  <div className="font-marker text-[10rem] leading-none">?</div>
+                  <div className="font-scribble text-sm mt-2">preview sprite coming soon</div>
+                </div>
+              )}
             </div>
 
-            {/* 2x2 character cards */}
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 flex-1">
-              {WIP_CHARACTERS.map((c) => {
-                const active = picked === c.id;
-                const tint = CARD_TINT[c.id] ?? "#1a1a1a";
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => setPicked(c.id)}
-                    className={[
-                      "relative bg-paper rounded-sm flex items-center justify-center overflow-hidden transition-transform hover:scale-[1.03]",
-                      active ? "ring-4 ring-[hsl(var(--accent))] scale-[1.02]" : "",
-                    ].join(" ")}
-                    style={{
-                      aspectRatio: "3 / 4",
-                      border: `3px solid ${tint}`,
-                      boxShadow: "2px 2px 0 rgba(0,0,0,0.35)",
-                    }}
-                    title={c.name}
-                  >
-                    {c.art ? (
-                      <img src={c.art} alt={c.name} className="w-full h-full object-contain p-1" />
-                    ) : (
-                      <span className="font-marker text-5xl" style={{ color: tint }}>?</span>
-                    )}
-                  </button>
-                );
-              })}
+            {/* INFO tag bottom-left */}
+            <div className="absolute bottom-3 left-3 right-3 sm:right-auto sm:max-w-[75%] -rotate-2">
+              <div className="bg-ink text-paper font-marker text-2xl sm:text-3xl tracking-widest px-4 py-2 inline-block">
+                INFO
+              </div>
+              <div className="mt-1 bg-paper/90 scribble-border px-3 py-2 font-scribble text-sm sm:text-base text-ink leading-snug">
+                <div className="font-marker text-base sm:text-lg leading-none mb-1">{selected.name}</div>
+                <span
+                  className={[
+                    "font-scribble text-[10px] px-1.5 py-0.5 border rounded uppercase tracking-wide mr-2",
+                    RARITY_STYLES[selected.rarity],
+                  ].join(" ")}
+                >
+                  {selected.rarity}
+                </span>
+                {selected.blurb}
+              </div>
             </div>
           </div>
 
-          {/* Pencil decoration */}
-          <div className="absolute bottom-2 right-3 font-marker text-xl sm:text-2xl text-ink/70 rotate-12 select-none">
-            ✏
+          {/* RIGHT — grid panel */}
+          <div
+            className="relative scribble-border rounded-md p-4 sm:p-5 min-h-[460px] -rotate-1"
+            style={{ background: "#8a8a8a" }}
+          >
+            <div className="font-marker text-2xl sm:text-3xl text-ink mb-2 text-center tracking-wider">
+              PG . {PAGE}
+            </div>
+
+            <div className="flex gap-3 sm:gap-4 items-stretch">
+              {/* Up/Down arrows column */}
+              <div className="flex flex-col items-center justify-center gap-3 sm:gap-4 py-2">
+                <button
+                  type="button"
+                  disabled={PAGE <= 1}
+                  className="font-marker text-3xl sm:text-4xl text-ink disabled:opacity-30 hover:-translate-y-0.5 transition-transform"
+                  aria-label="previous page"
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  disabled={PAGE >= MAX_PAGE}
+                  className="font-marker text-3xl sm:text-4xl text-ink disabled:opacity-30 hover:translate-y-0.5 transition-transform"
+                  aria-label="next page"
+                >
+                  ↓
+                </button>
+              </div>
+
+              {/* 2x2 character cards */}
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 flex-1">
+                {WIP_CHARACTERS.map((c) => {
+                  const active = picked === c.id;
+                  const tint = CARD_TINT[c.id] ?? "#1a1a1a";
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setPicked(c.id)}
+                      className={[
+                        "relative bg-paper rounded-sm flex items-center justify-center overflow-hidden transition-transform hover:scale-[1.03]",
+                        active ? "ring-4 ring-[hsl(var(--accent))] scale-[1.02]" : "",
+                      ].join(" ")}
+                      style={{
+                        aspectRatio: "3 / 4",
+                        border: `3px solid ${tint}`,
+                        boxShadow: "2px 2px 0 rgba(0,0,0,0.35)",
+                      }}
+                      title={c.name}
+                    >
+                      {c.art ? (
+                        <img src={c.art} alt={c.name} className="w-full h-full object-contain p-1" />
+                      ) : (
+                        <span className="font-marker text-5xl" style={{ color: tint }}>?</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Pencil decoration */}
+            <div className="absolute bottom-2 right-3 font-marker text-xl sm:text-2xl text-ink/70 rotate-12 select-none">
+              ✏
+            </div>
           </div>
         </div>
       </div>
