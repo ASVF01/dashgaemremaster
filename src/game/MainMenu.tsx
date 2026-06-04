@@ -22,6 +22,7 @@ interface Props {
 
 export default function MainMenu({ onPlay }: Props) {
   const [tab, setTab] = useState<MenuTab>("play");
+  const [charSelectOpen, setCharSelectOpen] = useState(false);
 
   const handlePlay = (id: LevelId) => {
     unlockAudio();
@@ -34,6 +35,12 @@ export default function MainMenu({ onPlay }: Props) {
     unlockAudio();
     sfx.menuTab();
     setTab(next);
+  };
+
+  const openCharSelect = () => {
+    unlockAudio();
+    sfx.menuTab();
+    setCharSelectOpen(true);
   };
 
   return (
@@ -62,7 +69,7 @@ export default function MainMenu({ onPlay }: Props) {
           <TabBtn active={tab === "credits"}  onClick={() => switchTab("credits")}>CREDITS</TabBtn>
           <TabBtn active={tab === "youtube"} onClick={() => switchTab("youtube")}>YOUTUBE</TabBtn>
           <TabBtn active={tab === "bestiary"} onClick={() => switchTab("bestiary")}>BESTIARY</TabBtn>
-          <TabBtn active={tab === "characters"} onClick={() => switchTab("characters")}>CHARACTER SELECT</TabBtn>
+          <TabBtn active={false} onClick={openCharSelect}>CHARACTER SELECT</TabBtn>
         </nav>
 
         {/* Body */}
@@ -76,9 +83,10 @@ export default function MainMenu({ onPlay }: Props) {
           {tab === "credits"  && <CreditsTab />}
           {tab === "youtube"  && <YouTubeTab />}
           {tab === "bestiary" && <BestiaryTab />}
-          {tab === "characters" && <CharactersTab />}
         </div>
       </div>
+
+      {charSelectOpen && <CharacterSelectScreen onClose={() => setCharSelectOpen(false)} />}
     </div>
   );
 }
