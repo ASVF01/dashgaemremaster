@@ -1209,7 +1209,7 @@ function useTabBgm(src: string, targetVolume = 0.6, fadeInMs = 1200, fadeOutMs =
       const startVol = a.volume;
       const tickOut = (t: number) => {
         const k = Math.min(1, (t - startOut) / fadeOutMs);
-        a.volume = startVol * (1 - k);
+        a.volume = Math.max(0, Math.min(1, startVol * (1 - k)));
         if (k < 1) requestAnimationFrame(tickOut);
         else { a.pause(); a.src = ""; }
       };
