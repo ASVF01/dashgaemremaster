@@ -1425,7 +1425,10 @@ type WipCharacter = {
   name: string;
   blurb: string;
   rarity: "common" | "rare" | "epic" | "legendary";
+  /** Small art shown on the grid card. */
   art?: string;
+  /** Larger preview art shown in the left INFO panel. Falls back to a placeholder until provided. */
+  preview?: string;
 };
 
 const WIP_CHARACTERS: WipCharacter[] = [
