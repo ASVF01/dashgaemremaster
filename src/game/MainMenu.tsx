@@ -1434,65 +1434,153 @@ const RARITY_STYLES: Record<WipCharacter["rarity"], string> = {
   legendary: "border-[hsl(var(--accent))] text-[hsl(var(--accent))]",
 };
 
+// Per-character outline tint for the grid cards (matches reference colors).
+const CARD_TINT: Record<string, string> = {
+  stick:  "#1a1a1a",
+  dasher: "#2b6cff",
+  shadow: "#1a1a1a",
+  x3mode: "#e11d2a",
+};
+
 function CharactersTab() {
   const { muted, setMuted } = useTabBgm(gachaBgm);
-  const [picked, setPicked] = useState<string | null>(null);
+  const [picked, setPicked] = useState<string>("stick");
+  const selected = WIP_CHARACTERS.find((c) => c.id === picked) ?? WIP_CHARACTERS[0];
+
+  // Page nav (only one page for now — arrows are decorative/disabled).
+  const PAGE = 1;
+  const MAX_PAGE = 1;
 
   return (
     <div className="flex flex-col items-center min-h-[300px] py-4 sm:py-6 px-2 sm:px-4 overflow-y-auto max-h-[85vh] w-full animate-fade-in">
-      <div className="w-full max-w-6xl flex items-center justify-between mb-2 gap-2">
+      <div className="w-full max-w-6xl flex items-center justify-between mb-3 gap-2">
         <span className="font-scribble text-sm text-ink/50">♪ gacha lobby theme</span>
         <MuteBtn muted={muted} onToggle={() => setMuted((m) => !m)} />
       </div>
-      <p className="font-marker text-2xl sm:text-4xl md:text-5xl text-ink mb-1 text-center -rotate-1">
-        CHARACTER SELECT
-      </p>
-      <p className="font-scribble text-base sm:text-lg text-ink/70 mb-6 text-center">
-        nothing is final. nobody is playable yet. squint and dream.
-      </p>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 w-full max-w-6xl">
-        {WIP_CHARACTERS.map((c) => {
-          const active = picked === c.id;
-          return (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => setPicked(c.id)}
-              className={[
-                "scribble-border bg-paper rounded p-3 sm:p-4 flex flex-col items-center text-center gap-2 transition-transform hover:-rotate-2 hover:scale-[1.02]",
-                active ? "ring-4 ring-[hsl(var(--accent))]" : "",
-              ].join(" ")}
-            >
-              <div
-                className="w-full bg-paper border-2 border-dashed border-ink/30 flex items-center justify-center font-marker text-4xl text-ink/40 overflow-hidden"
-                style={{ aspectRatio: "1 / 1" }}
-              >
-                {c.art ? (
-                  <img src={c.art} alt={c.name} className="w-full h-full object-contain" />
-                ) : (
-                  "?"
-                )}
-              </div>
-              <h3 className="font-marker text-lg sm:text-xl text-ink leading-tight">{c.name}</h3>
+      {/* Two-panel layout to mirror the reference sketch */}
+      <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-[5fr_6fr] gap-3 sm:gap-4">
+        {/* LEFT — info / preview panel */}
+        <div
+          className="relative scribble-border rounded-md p-4 sm:p-6 min-h-[420px] flex items-center justify-center overflow-hidden"
+          style={{ background: "#c9c9c9" }}
+        >
+          {/* GET OUT arrow (clears selection) */}
+          <button
+            type="button"
+            onClick={() => setPicked("stick")}
+            className="absolute top-2 left-2 sm:top-3 sm:left-3 flex items-center gap-1 font-marker text-[10px] sm:text-xs text-paper px-2 py-1 hover:-rotate-2 transition-transform"
+            style={{
+              background: "#e11d2a",
+              clipPath: "polygon(12% 0, 100% 0, 100% 100%, 12% 100%, 0 50%)",
+              paddingLeft: "1.25rem",
+            }}
+            title="deselect"
+          >
+            GET OUT.
+          </button>
+
+          {/* Big character preview */}
+          <div className="flex items-center justify-center w-full h-full pt-6">
+            {selected.art ? (
+              <img
+                src={selected.art}
+                alt={selected.name}
+                className="max-h-[320px] w-auto object-contain drop-shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+              />
+            ) : (
+              <div className="font-marker text-[8rem] text-ink/30 select-none">?</div>
+            )}
+          </div>
+
+          {/* INFO tag bottom-left */}
+          <div className="absolute bottom-3 left-3 right-3 sm:right-auto sm:max-w-[70%] -rotate-2">
+            <div className="bg-ink text-paper font-marker text-2xl sm:text-3xl tracking-widest px-4 py-2 inline-block">
+              INFO
+            </div>
+            <div className="mt-1 bg-paper/90 scribble-border px-3 py-2 font-scribble text-sm sm:text-base text-ink leading-snug">
+              <div className="font-marker text-base sm:text-lg leading-none mb-1">{selected.name}</div>
               <span
                 className={[
-                  "font-scribble text-xs px-2 py-0.5 border rounded uppercase tracking-wide",
-                  RARITY_STYLES[c.rarity],
+                  "font-scribble text-[10px] px-1.5 py-0.5 border rounded uppercase tracking-wide mr-2",
+                  RARITY_STYLES[selected.rarity],
                 ].join(" ")}
               >
-                {c.rarity}
+                {selected.rarity}
               </span>
-              <p className="font-scribble text-xs sm:text-sm text-ink/70 leading-snug">{c.blurb}</p>
-            </button>
-          );
-        })}
-      </div>
+              {selected.blurb}
+            </div>
+          </div>
+        </div>
 
-      <div className="mt-6 scribble-border bg-paper px-4 py-3 font-marker text-lg text-ink/70 -rotate-1">
-        {picked
-          ? `you picked ${WIP_CHARACTERS.find((c) => c.id === picked)?.name}. nothing happens yet. (WIP!)`
-          : "pick a silhouette. it won't matter until later. that's the point."}
+        {/* RIGHT — grid panel */}
+        <div
+          className="relative scribble-border rounded-md p-4 sm:p-5 min-h-[420px] -rotate-1"
+          style={{ background: "#8a8a8a" }}
+        >
+          {/* PG. header */}
+          <div className="font-marker text-2xl sm:text-3xl text-ink mb-2 text-center tracking-wider">
+            PG . {PAGE}
+          </div>
+
+          <div className="flex gap-3 sm:gap-4 items-stretch">
+            {/* Up/Down arrows column */}
+            <div className="flex flex-col items-center justify-center gap-3 sm:gap-4 py-2">
+              <button
+                type="button"
+                disabled={PAGE <= 1}
+                className="font-marker text-3xl sm:text-4xl text-ink disabled:opacity-30 hover:-translate-y-0.5 transition-transform"
+                aria-label="previous page"
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                disabled={PAGE >= MAX_PAGE}
+                className="font-marker text-3xl sm:text-4xl text-ink disabled:opacity-30 hover:translate-y-0.5 transition-transform"
+                aria-label="next page"
+              >
+                ↓
+              </button>
+            </div>
+
+            {/* 2x2 character cards */}
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 flex-1">
+              {WIP_CHARACTERS.map((c) => {
+                const active = picked === c.id;
+                const tint = CARD_TINT[c.id] ?? "#1a1a1a";
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setPicked(c.id)}
+                    className={[
+                      "relative bg-paper rounded-sm flex items-center justify-center overflow-hidden transition-transform hover:scale-[1.03]",
+                      active ? "ring-4 ring-[hsl(var(--accent))] scale-[1.02]" : "",
+                    ].join(" ")}
+                    style={{
+                      aspectRatio: "3 / 4",
+                      border: `3px solid ${tint}`,
+                      boxShadow: "2px 2px 0 rgba(0,0,0,0.35)",
+                    }}
+                    title={c.name}
+                  >
+                    {c.art ? (
+                      <img src={c.art} alt={c.name} className="w-full h-full object-contain p-1" />
+                    ) : (
+                      <span className="font-marker text-5xl" style={{ color: tint }}>?</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Pencil decoration */}
+          <div className="absolute bottom-2 right-3 font-marker text-xl sm:text-2xl text-ink/70 rotate-12 select-none">
+            ✏
+          </div>
+        </div>
       </div>
     </div>
   );
