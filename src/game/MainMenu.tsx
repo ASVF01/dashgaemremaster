@@ -1206,7 +1206,7 @@ function useTabBgm(src: string, targetVolume = 0.6, fadeInMs = 1200, fadeOutMs =
     const start = performance.now();
     const tickIn = (t: number) => {
       const k = Math.min(1, (t - start) / fadeInMs);
-      a.volume = mutedRef.current ? 0 : targetVolume * k;
+      a.volume = mutedRef.current ? 0 : Math.max(0, Math.min(1, targetVolume * k));
       if (k < 1) raf = requestAnimationFrame(tickIn);
     };
     raf = requestAnimationFrame(tickIn);
@@ -1234,7 +1234,7 @@ function useTabBgm(src: string, targetVolume = 0.6, fadeInMs = 1200, fadeOutMs =
     const a = audioRef.current;
     if (!a) return;
     if (muted) a.volume = 0;
-    else if (a.volume === 0) a.volume = targetVolume;
+    else if (a.volume === 0) a.volume = Math.max(0, Math.min(1, targetVolume));
   }, [muted, targetVolume]);
 
   return { muted, setMuted };
