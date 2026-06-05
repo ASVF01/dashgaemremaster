@@ -1498,90 +1498,84 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
         transition: "transform 420ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease-out",
       }}
     >
-      <div className="w-full h-full overflow-y-auto px-4 sm:px-8 py-4 sm:py-6 flex flex-col items-center">
-        {/* Top bar: GET OUT + title + mute */}
-        <div className="w-full max-w-6xl flex items-center justify-between gap-3 mb-4">
+      {/* Hidden mute control (keeps BGM toggle reachable via keyboard / a11y) */}
+      <div className="absolute top-2 right-2 z-10 opacity-60 hover:opacity-100 transition-opacity">
+        <MuteBtn muted={muted} onToggle={() => setMuted((m) => !m)} />
+      </div>
+
+      {/* Two-panel layout — full screen, mirrors the reference sketch 1:1 */}
+      <div className="w-full h-full grid grid-cols-1 md:grid-cols-[5fr_6fr]">
+        {/* LEFT — light gray panel, GET OUT top-left, big preview, INFO tag bottom-left */}
+        <div className="relative overflow-hidden" style={{ background: "#c9c9c9" }}>
+          {/* GET OUT arrow — top-left, points left */}
           <button
             type="button"
             onClick={handleClose}
-            className="flex items-center font-marker text-xs sm:text-sm text-paper px-3 py-1.5 hover:-rotate-2 transition-transform"
+            className="absolute top-4 left-4 z-10 font-marker text-sm sm:text-base text-paper px-5 py-2 hover:-rotate-2 transition-transform"
             style={{
               background: "#e11d2a",
-              clipPath: "polygon(10% 0, 100% 0, 100% 100%, 10% 100%, 0 50%)",
-              paddingLeft: "1.5rem",
+              clipPath: "polygon(15% 0, 100% 0, 100% 100%, 15% 100%, 0 50%)",
+              paddingLeft: "2rem",
+              boxShadow: "2px 2px 0 rgba(0,0,0,0.4)",
             }}
             title="back to menu"
           >
             GET OUT.
           </button>
-          <span className="font-marker text-2xl sm:text-4xl text-ink -rotate-1 hidden sm:inline-block">
-            CHARACTER SELECT
-          </span>
-          <div className="flex items-center gap-2">
-            <span className="font-scribble text-xs sm:text-sm text-ink/60 hidden sm:inline">♪ gacha lobby theme</span>
-            <MuteBtn muted={muted} onToggle={() => setMuted((m) => !m)} />
+
+          {/* Big character preview, centered */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            {selected.preview ? (
+              <img
+                src={selected.preview}
+                alt={`${selected.name} preview`}
+                className="max-h-[70%] w-auto object-contain drop-shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+              />
+            ) : selected.art ? (
+              <img
+                src={selected.art}
+                alt={`${selected.name} preview`}
+                className="max-h-[70%] w-auto object-contain drop-shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+              />
+            ) : (
+              <div className="flex flex-col items-center text-ink/40 select-none">
+                <div className="font-marker text-[10rem] leading-none">?</div>
+                <div className="font-scribble text-sm mt-2">preview sprite coming soon</div>
+              </div>
+            )}
+          </div>
+
+          {/* INFO tag — bottom-left, tilted */}
+          <div
+            className="absolute bottom-6 left-4 sm:left-8 bg-ink text-paper font-marker text-3xl sm:text-5xl tracking-[0.25em] px-5 py-2 -rotate-3 select-none"
+            style={{ boxShadow: "3px 3px 0 rgba(0,0,0,0.35)" }}
+          >
+            INFO
           </div>
         </div>
 
-        {/* Two-panel layout to mirror the reference sketch */}
-        <div className="w-full max-w-6xl flex-1 grid grid-cols-1 md:grid-cols-[5fr_6fr] gap-4 sm:gap-6">
-          {/* LEFT — info / preview panel */}
+        {/* RIGHT — darker gray panel, slightly tilted, PG.1 + arrows + 2x2 grid */}
+        <div className="relative flex items-center justify-center p-4 sm:p-6">
           <div
-            className="relative scribble-border rounded-md p-4 sm:p-6 min-h-[460px] flex items-center justify-center overflow-hidden"
-            style={{ background: "#bdbdbd" }}
+            className="relative w-full h-[92%] p-4 sm:p-6 rotate-[2deg]"
+            style={{
+              background: "#8a8a8a",
+              boxShadow: "4px 4px 0 rgba(0,0,0,0.4)",
+              border: "3px solid #1a1a1a",
+            }}
           >
-            {/* Big character preview (separate sprite slot) */}
-            <div className="flex items-center justify-center w-full h-full pt-6">
-              {selected.preview ? (
-                <img
-                  src={selected.preview}
-                  alt={`${selected.name} preview`}
-                  className="max-h-[420px] w-auto object-contain drop-shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
-                />
-              ) : (
-                <div className="flex flex-col items-center text-ink/40 select-none">
-                  <div className="font-marker text-[10rem] leading-none">?</div>
-                  <div className="font-scribble text-sm mt-2">preview sprite coming soon</div>
-                </div>
-              )}
-            </div>
-
-            {/* INFO tag bottom-left */}
-            <div className="absolute bottom-3 left-3 right-3 sm:right-auto sm:max-w-[75%] -rotate-2">
-              <div className="bg-ink text-paper font-marker text-2xl sm:text-3xl tracking-widest px-4 py-2 inline-block">
-                INFO
-              </div>
-              <div className="mt-1 bg-paper/90 scribble-border px-3 py-2 font-scribble text-sm sm:text-base text-ink leading-snug">
-                <div className="font-marker text-base sm:text-lg leading-none mb-1">{selected.name}</div>
-                <span
-                  className={[
-                    "font-scribble text-[10px] px-1.5 py-0.5 border rounded uppercase tracking-wide mr-2",
-                    RARITY_STYLES[selected.rarity],
-                  ].join(" ")}
-                >
-                  {selected.rarity}
-                </span>
-                {selected.blurb}
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT — grid panel */}
-          <div
-            className="relative scribble-border rounded-md p-4 sm:p-5 min-h-[460px] -rotate-1"
-            style={{ background: "#8a8a8a" }}
-          >
-            <div className="font-marker text-2xl sm:text-3xl text-ink mb-2 text-center tracking-wider">
+            {/* PG . 1 header */}
+            <div className="font-marker text-3xl sm:text-5xl text-ink mb-3 text-center tracking-[0.2em] select-none">
               PG . {PAGE}
             </div>
 
-            <div className="flex gap-3 sm:gap-4 items-stretch">
+            <div className="flex gap-4 sm:gap-6 items-stretch h-[calc(100%-4rem)]">
               {/* Up/Down arrows column */}
-              <div className="flex flex-col items-center justify-center gap-3 sm:gap-4 py-2">
+              <div className="flex flex-col items-center justify-center gap-6 sm:gap-10 py-2">
                 <button
                   type="button"
                   disabled={PAGE <= 1}
-                  className="font-marker text-3xl sm:text-4xl text-ink disabled:opacity-30 hover:-translate-y-0.5 transition-transform"
+                  className="font-marker text-4xl sm:text-6xl text-ink disabled:opacity-40 hover:-translate-y-0.5 transition-transform leading-none"
                   aria-label="previous page"
                 >
                   ↑
@@ -1589,7 +1583,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                 <button
                   type="button"
                   disabled={PAGE >= MAX_PAGE}
-                  className="font-marker text-3xl sm:text-4xl text-ink disabled:opacity-30 hover:translate-y-0.5 transition-transform"
+                  className="font-marker text-4xl sm:text-6xl text-ink disabled:opacity-40 hover:translate-y-0.5 transition-transform leading-none"
                   aria-label="next page"
                 >
                   ↓
@@ -1597,7 +1591,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
               </div>
 
               {/* 2x2 character cards */}
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 flex-1">
+              <div className="grid grid-cols-2 gap-3 sm:gap-5 flex-1">
                 {WIP_CHARACTERS.map((c) => {
                   const active = picked === c.id;
                   const tint = CARD_TINT[c.id] ?? "#1a1a1a";
@@ -1607,20 +1601,19 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                       type="button"
                       onClick={() => setPicked(c.id)}
                       className={[
-                        "relative bg-paper rounded-sm flex items-center justify-center overflow-hidden transition-transform hover:scale-[1.03]",
+                        "relative bg-paper flex items-center justify-center overflow-hidden transition-transform hover:scale-[1.03]",
                         active ? "ring-4 ring-[hsl(var(--accent))] scale-[1.02]" : "",
                       ].join(" ")}
                       style={{
-                        aspectRatio: "3 / 4",
-                        border: `3px solid ${tint}`,
-                        boxShadow: "2px 2px 0 rgba(0,0,0,0.35)",
+                        border: `4px solid ${tint}`,
+                        boxShadow: "3px 3px 0 rgba(0,0,0,0.4)",
                       }}
                       title={c.name}
                     >
                       {c.art ? (
-                        <img src={c.art} alt={c.name} className="w-full h-full object-contain p-1" />
+                        <img src={c.art} alt={c.name} className="w-full h-full object-contain p-2" />
                       ) : (
-                        <span className="font-marker text-5xl" style={{ color: tint }}>?</span>
+                        <span className="font-marker text-6xl sm:text-7xl" style={{ color: tint }}>?</span>
                       )}
                     </button>
                   );
@@ -1628,8 +1621,8 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
               </div>
             </div>
 
-            {/* Pencil decoration */}
-            <div className="absolute bottom-2 right-3 font-marker text-xl sm:text-2xl text-ink/70 rotate-12 select-none">
+            {/* Pencil decoration — bottom-right */}
+            <div className="absolute -bottom-2 right-4 font-marker text-2xl sm:text-3xl text-ink/80 rotate-12 select-none pointer-events-none">
               ✏
             </div>
           </div>
