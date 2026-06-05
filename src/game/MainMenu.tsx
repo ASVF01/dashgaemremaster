@@ -1471,7 +1471,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
     sfx.menuTab();
     setClosing(true);
     setShown(false);
-    window.setTimeout(onClose, 420);
+    window.setTimeout(onClose, 600);
   };
 
   // ESC to leave.
