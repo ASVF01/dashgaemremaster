@@ -1206,7 +1206,7 @@ function useTabBgm(src: string, targetVolume = 0.6, fadeInMs = 1200, fadeOutMs =
     const start = performance.now();
     const tickIn = (t: number) => {
       const k = Math.min(1, (t - start) / fadeInMs);
-      a.volume = mutedRef.current ? 0 : targetVolume * k;
+      a.volume = mutedRef.current ? 0 : Math.max(0, Math.min(1, targetVolume * k));
       if (k < 1) raf = requestAnimationFrame(tickIn);
     };
     raf = requestAnimationFrame(tickIn);
@@ -1234,7 +1234,7 @@ function useTabBgm(src: string, targetVolume = 0.6, fadeInMs = 1200, fadeOutMs =
     const a = audioRef.current;
     if (!a) return;
     if (muted) a.volume = 0;
-    else if (a.volume === 0) a.volume = targetVolume;
+    else if (a.volume === 0) a.volume = Math.max(0, Math.min(1, targetVolume));
   }, [muted, targetVolume]);
 
   return { muted, setMuted };
@@ -1471,7 +1471,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
     sfx.menuTab();
     setClosing(true);
     setShown(false);
-    window.setTimeout(onClose, 420);
+    window.setTimeout(onClose, 600);
   };
 
   // ESC to leave.
@@ -1493,9 +1493,8 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
       className="fixed inset-0 z-50 overflow-hidden"
       style={{
         background: "#c9c9c9",
-        transform: shown ? "translateX(0)" : "translateX(100%)",
         opacity: shown ? 1 : 0,
-        transition: "transform 420ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease-out",
+        transition: "opacity 520ms ease-out",
       }}
     >
       {/* Hidden mute control (keeps BGM toggle reachable via keyboard / a11y) */}
@@ -1511,44 +1510,62 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
           <button
             type="button"
             onClick={handleClose}
-            className="absolute top-4 left-4 z-10 font-marker text-sm sm:text-base text-paper px-5 py-2 hover:-rotate-2 transition-transform"
+            className="absolute top-4 left-4 z-10 font-marker text-sm sm:text-base text-paper px-5 py-2 hover:-rotate-2"
             style={{
               background: "#e11d2a",
               clipPath: "polygon(15% 0, 100% 0, 100% 100%, 15% 100%, 0 50%)",
               paddingLeft: "2rem",
               boxShadow: "2px 2px 0 rgba(0,0,0,0.4)",
+              transform: shown ? "translateY(0)" : "translateY(-20px)",
+              opacity: shown ? 1 : 0,
+              transition: "transform 600ms cubic-bezier(0.16,1,0.3,1) 60ms, opacity 500ms ease-out 60ms",
             }}
             title="back to menu"
           >
             GET OUT.
           </button>
 
-          {/* Big character preview, centered */}
+          {/* Big character preview, centered. Selecting a character lifts it up. */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            {selected.preview ? (
-              <img
-                src={selected.preview}
-                alt={`${selected.name} preview`}
-                className="max-h-[70%] w-auto object-contain drop-shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
-              />
-            ) : selected.art ? (
-              <img
-                src={selected.art}
-                alt={`${selected.name} preview`}
-                className="max-h-[70%] w-auto object-contain drop-shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
-              />
-            ) : (
-              <div className="flex flex-col items-center text-ink/40 select-none">
-                <div className="font-marker text-[10rem] leading-none">?</div>
-                <div className="font-scribble text-sm mt-2">preview sprite coming soon</div>
-              </div>
-            )}
+            <div
+              key={selected.id}
+              style={{
+                transform: shown ? "translateY(-24px)" : "translateY(40px)",
+                opacity: shown ? 1 : 0,
+                transition: "transform 650ms cubic-bezier(0.16,1,0.3,1) 120ms, opacity 550ms ease-out 120ms",
+              }}
+              className="flex items-center justify-center"
+            >
+              {selected.preview ? (
+                <img
+                  src={selected.preview}
+                  alt={`${selected.name} preview`}
+                  className="max-h-[70vh] w-auto object-contain drop-shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+                />
+              ) : selected.art ? (
+                <img
+                  src={selected.art}
+                  alt={`${selected.name} preview`}
+                  className="max-h-[70vh] w-auto object-contain drop-shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+                />
+              ) : (
+                <div className="flex flex-col items-center text-ink/40 select-none">
+                  <div className="font-marker text-[10rem] leading-none">?</div>
+                  <div className="font-scribble text-sm mt-2">preview sprite coming soon</div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* INFO tag — bottom-left, tilted */}
           <div
             className="absolute bottom-6 left-4 sm:left-8 bg-ink text-paper font-marker text-3xl sm:text-5xl tracking-[0.25em] px-5 py-2 -rotate-3 select-none"
-            style={{ boxShadow: "3px 3px 0 rgba(0,0,0,0.35)" }}
+            style={{
+              boxShadow: "3px 3px 0 rgba(0,0,0,0.35)",
+              transform: shown ? "translateY(0) rotate(-3deg)" : "translateY(30px) rotate(-3deg)",
+              opacity: shown ? 1 : 0,
+              transition: "transform 600ms cubic-bezier(0.16,1,0.3,1) 200ms, opacity 500ms ease-out 200ms",
+            }}
           >
             INFO
           </div>
@@ -1562,6 +1579,9 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
               background: "#8a8a8a",
               boxShadow: "4px 4px 0 rgba(0,0,0,0.4)",
               border: "3px solid #1a1a1a",
+              transform: shown ? "translateY(0) rotate(2deg)" : "translateY(30px) rotate(2deg)",
+              opacity: shown ? 1 : 0,
+              transition: "transform 650ms cubic-bezier(0.16,1,0.3,1) 80ms, opacity 550ms ease-out 80ms",
             }}
           >
             {/* PG . 1 header */}
@@ -1590,23 +1610,30 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                 </button>
               </div>
 
-              {/* 2x2 character cards */}
+              {/* 2x2 character cards — staggered swipe-up on entrance */}
               <div className="grid grid-cols-2 gap-3 sm:gap-5 flex-1">
-                {WIP_CHARACTERS.map((c) => {
+                {WIP_CHARACTERS.map((c, i) => {
                   const active = picked === c.id;
                   const tint = CARD_TINT[c.id] ?? "#1a1a1a";
+                  const delay = 220 + i * 120; // stagger each card
                   return (
                     <button
                       key={c.id}
                       type="button"
                       onClick={() => setPicked(c.id)}
                       className={[
-                        "relative bg-paper flex items-center justify-center overflow-hidden transition-transform hover:scale-[1.03]",
-                        active ? "ring-4 ring-[hsl(var(--accent))] scale-[1.02]" : "",
+                        "relative bg-paper flex items-center justify-center overflow-hidden hover:scale-[1.03]",
                       ].join(" ")}
                       style={{
-                        border: `4px solid ${tint}`,
-                        boxShadow: "3px 3px 0 rgba(0,0,0,0.4)",
+                        border: active ? "4px solid #ffffff" : `4px solid ${tint}`,
+                        boxShadow: active
+                          ? "0 0 0 3px #1a1a1a, 3px 3px 0 rgba(0,0,0,0.4)"
+                          : "3px 3px 0 rgba(0,0,0,0.4)",
+                        transform: shown
+                          ? `translateY(0) scale(${active ? 1.04 : 1})`
+                          : "translateY(60px) scale(1)",
+                        opacity: shown ? 1 : 0,
+                        transition: `transform 650ms cubic-bezier(0.16,1,0.3,1) ${delay}ms, opacity 550ms ease-out ${delay}ms, border-color 200ms ease-out, box-shadow 200ms ease-out`,
                       }}
                       title={c.name}
                     >
