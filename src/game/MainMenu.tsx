@@ -1442,8 +1442,9 @@ const CARD_TINT: Record<string, string> = {
 };
 
 function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
-  const { muted, setMuted } = useTabBgm(gachaBgm);
+  useTabBgm(gachaBgm);
   const [picked, setPicked] = useState<string>("stick");
+  const [infoOpen, setInfoOpen] = useState(false);
   const selected = WIP_CHARACTERS.find((c) => c.id === picked) ?? WIP_CHARACTERS[0];
 
   // Swipe-in / swipe-out transition.
@@ -1462,15 +1463,19 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
     window.setTimeout(onClose, 600);
   };
 
-  // ESC to leave.
+  // ESC to leave (or close info panel if it's open).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.code === "Escape") { e.preventDefault(); handleClose(); }
+      if (e.code === "Escape") {
+        e.preventDefault();
+        if (infoOpen) setInfoOpen(false);
+        else handleClose();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [closing]);
+  }, [closing, infoOpen]);
 
   // Page nav (only one page for now — arrows are decorative/disabled).
   const PAGE = 1;
@@ -1485,10 +1490,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
         transition: "opacity 520ms ease-out",
       }}
     >
-      {/* Hidden mute control (keeps BGM toggle reachable via keyboard / a11y) */}
-      <div className="absolute top-2 right-2 z-10 opacity-60 hover:opacity-100 transition-opacity">
-        <MuteBtn muted={muted} onToggle={() => setMuted((m) => !m)} />
-      </div>
+
 
       {/* Two-panel layout — full screen, mirrors the reference sketch 1:1 */}
       <div className="w-full h-full grid grid-cols-1 md:grid-cols-[5fr_6fr]">
