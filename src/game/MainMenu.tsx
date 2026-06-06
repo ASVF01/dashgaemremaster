@@ -1180,7 +1180,6 @@ function useTabBgm(src: string, targetVolume = 0.6, fadeInMs = 1200, fadeOutMs =
   const [muted, setMuted] = useSharedTabMute();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const mutedRef = useRef(false);
-  const mutedGameRef = useRef(false);
   mutedRef.current = muted;
 
   useEffect(() => {
@@ -1188,10 +1187,10 @@ function useTabBgm(src: string, targetVolume = 0.6, fadeInMs = 1200, fadeOutMs =
     a.loop = true;
     a.volume = 0;
     audioRef.current = a;
-    if (!isGameBgmMuted()) {
-      setGameBgmMuted(true);
-      mutedGameRef.current = true;
-    }
+    // Pause the underlying WebAudio BGM so the tab track plays solo. This
+    // doesn't change the user-facing mute state (the title button stays in
+    // sync with the actual mute flag).
+    pauseBgm();
     a.play().catch(() => { /* needs gesture */ });
 
     let raf = 0;
@@ -1214,10 +1213,7 @@ function useTabBgm(src: string, targetVolume = 0.6, fadeInMs = 1200, fadeOutMs =
         else { a.pause(); a.src = ""; }
       };
       requestAnimationFrame(tickOut);
-      if (mutedGameRef.current) {
-        setGameBgmMuted(false);
-        mutedGameRef.current = false;
-      }
+      resumeBgm();
     };
   }, [src, targetVolume, fadeInMs, fadeOutMs]);
 
@@ -1230,6 +1226,19 @@ function useTabBgm(src: string, targetVolume = 0.6, fadeInMs = 1200, fadeOutMs =
   }, [muted, targetVolume]);
 
   return { muted, setMuted };
+}
+
+function MuteBtn({ muted, onToggle }: { muted: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="scribble-border bg-paper px-3 py-1 font-marker text-base sm:text-lg text-ink hover:-rotate-2 transition-transform"
+      aria-label={muted ? "Unmute tab music" : "Mute tab music"}
+    >
+      {muted ? "🔇 MUTED" : "🔊 MUSIC ON"}
+    </button>
+  );
 }
 
 function MuteBtn({ muted, onToggle }: { muted: boolean; onToggle: () => void }) {
