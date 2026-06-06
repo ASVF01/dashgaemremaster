@@ -1228,18 +1228,6 @@ function useTabBgm(src: string, targetVolume = 0.6, fadeInMs = 1200, fadeOutMs =
   return { muted, setMuted };
 }
 
-function MuteBtn({ muted, onToggle }: { muted: boolean; onToggle: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      className="scribble-border bg-paper px-3 py-1 font-marker text-base sm:text-lg text-ink hover:-rotate-2 transition-transform"
-      aria-label={muted ? "Unmute tab music" : "Mute tab music"}
-    >
-      {muted ? "🔇 MUTED" : "🔊 MUSIC ON"}
-    </button>
-  );
-}
 
 
 
