@@ -1161,24 +1161,16 @@ import ragingCrittersImg from "@/assets/bestiary/raging-critters.png";
 import bestiaryBgm from "@/assets/audio/bgm_champion_map.mp3";
 import gachaBgm from "@/assets/audio/bgm_gacha.mp3";
 import thePlayerArt from "@/assets/characters/the_player.png";
-import { setBgmMuted as setGameBgmMuted, isBgmMuted as isGameBgmMuted } from "@/game/bgm";
+import { setBgmMuted as setGameBgmMuted, isBgmMuted as isGameBgmMuted, subscribeBgmMuted } from "@/game/bgm";
+import infoButtonAsset from "@/assets/info_button.png.asset.json";
 
-// Shared mute state across all tab BGMs — one toggle controls whichever is playing.
-let _tabBgmMuted = false;
-const _tabBgmListeners = new Set<(m: boolean) => void>();
-function setTabBgmMutedShared(m: boolean) {
-  _tabBgmMuted = m;
-  _tabBgmListeners.forEach((fn) => fn(m));
-}
+// Tab BGM mute now mirrors the global BGM mute state (the toggle next to the
+// DASH GAEM REMASTERED title). One switch controls every track.
 function useSharedTabMute(): [boolean, (m: boolean | ((p: boolean) => boolean)) => void] {
-  const [muted, setMuted] = useState(_tabBgmMuted);
-  useEffect(() => {
-    const fn = (m: boolean) => setMuted(m);
-    _tabBgmListeners.add(fn);
-    return () => { _tabBgmListeners.delete(fn); };
-  }, []);
+  const [muted, setMuted] = useState(isGameBgmMuted());
+  useEffect(() => subscribeBgmMuted((m) => setMuted(m)), []);
   const update = (m: boolean | ((p: boolean) => boolean)) => {
-    setTabBgmMutedShared(typeof m === "function" ? (m as (p: boolean) => boolean)(_tabBgmMuted) : m);
+    setGameBgmMuted(typeof m === "function" ? (m as (p: boolean) => boolean)(isGameBgmMuted()) : m);
   };
   return [muted, update];
 }
