@@ -433,12 +433,19 @@ export function resumeBgm() {
   if (ctx && ctx.state === "suspended") ctx.resume().catch(() => {});
 }
 
+const _muteListeners = new Set<(m: boolean) => void>();
+export function subscribeBgmMuted(fn: (m: boolean) => void): () => void {
+  _muteListeners.add(fn);
+  return () => { _muteListeners.delete(fn); };
+}
+
 export function setBgmMuted(v: boolean) {
   muted = v;
   if (masterGain) masterGain.gain.value = muted ? 0 : volume * endDuck;
   try {
     if (typeof window !== "undefined") localStorage.setItem("bgmMuted", v ? "1" : "0");
   } catch { /* ignore */ }
+  _muteListeners.forEach((fn) => { try { fn(v); } catch { /* noop */ } });
 }
 
 export function isBgmMuted() { return muted; }
