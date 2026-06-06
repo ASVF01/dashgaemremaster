@@ -1541,18 +1541,30 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
-          {/* INFO tag — bottom-left, tilted */}
-          <div
-            className="absolute bottom-6 left-4 sm:left-8 bg-ink text-paper font-marker text-3xl sm:text-5xl tracking-[0.25em] px-5 py-2 -rotate-3 select-none"
+          {/* INFO button — bottom-left, scribbled image, opens character info */}
+          <button
+            type="button"
+            onClick={() => { sfx.menuTab(); setInfoOpen(true); }}
+            onMouseEnter={() => sfx.menuHover()}
+            aria-label={`Show info for ${selected.name}`}
+            className="absolute bottom-6 left-4 sm:left-8 z-10 select-none hover:-rotate-6 active:scale-95"
             style={{
-              boxShadow: "3px 3px 0 rgba(0,0,0,0.35)",
               transform: shown ? "translateY(0) rotate(-3deg)" : "translateY(30px) rotate(-3deg)",
               opacity: shown ? 1 : 0,
               transition: "transform 600ms cubic-bezier(0.16,1,0.3,1) 200ms, opacity 500ms ease-out 200ms",
+              background: "transparent",
+              border: "none",
+              padding: 0,
             }}
           >
-            INFO
-          </div>
+            <img
+              src={infoButtonAsset.url}
+              alt="INFO"
+              draggable={false}
+              className="h-20 sm:h-28 md:h-32 w-auto drop-shadow-[3px_3px_0_rgba(0,0,0,0.35)] pointer-events-none"
+            />
+          </button>
+
         </div>
 
         {/* RIGHT — darker gray panel, slightly tilted, PG.1 + arrows + 2x2 grid */}
