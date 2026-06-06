@@ -1651,6 +1651,45 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
           </div>
         </div>
       </div>
+
+      {/* INFO modal — character details. Click outside or press ESC to close. */}
+      {infoOpen && (
+        <div
+          className="absolute inset-0 z-30 flex items-center justify-center p-4 sm:p-8 animate-fade-in"
+          style={{ background: "rgba(0,0,0,0.55)" }}
+          onClick={() => setInfoOpen(false)}
+        >
+          <div
+            className="relative bg-paper max-w-xl w-full p-6 sm:p-8 -rotate-1"
+            style={{
+              border: "4px solid #1a1a1a",
+              boxShadow: "6px 6px 0 rgba(0,0,0,0.4)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setInfoOpen(false)}
+              className="absolute top-2 right-2 scribble-border bg-paper px-3 py-1 font-marker text-xl text-ink hover:rotate-3 transition-transform"
+              aria-label="Close info"
+            >
+              ✕
+            </button>
+            <div
+              className={`inline-block font-marker text-xs px-2 py-0.5 border-2 rotate-1 mb-2 ${RARITY_STYLES[selected.rarity]}`}
+            >
+              {selected.rarity.toUpperCase()}
+            </div>
+            <h2 className="font-marker text-4xl sm:text-5xl text-ink mb-3 -rotate-1">
+              {selected.name}
+            </h2>
+            <p className="font-scribble text-lg sm:text-xl text-ink/80 leading-snug">
+              {selected.blurb}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
