@@ -1241,18 +1241,8 @@ function MuteBtn({ muted, onToggle }: { muted: boolean; onToggle: () => void }) 
   );
 }
 
-function MuteBtn({ muted, onToggle }: { muted: boolean; onToggle: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      className="scribble-border bg-paper px-3 py-1 font-marker text-base sm:text-lg text-ink hover:-rotate-2 transition-transform"
-      aria-label={muted ? "Unmute tab music" : "Mute tab music"}
-    >
-      {muted ? "🔇 MUTED" : "🔊 MUSIC ON"}
-    </button>
-  );
-}
+
+
 
 type BestiaryEntry = {
   id: string;
