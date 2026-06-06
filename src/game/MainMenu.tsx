@@ -1274,7 +1274,7 @@ const BESTIARY: BestiaryEntry[] = [
 
 function BestiaryTab() {
   const [selected, setSelected] = useState<BestiaryEntry | null>(null);
-  const { muted, setMuted } = useTabBgm(bestiaryBgm);
+  useTabBgm(bestiaryBgm);
 
   // Close panel on Escape
   useEffect(() => {
