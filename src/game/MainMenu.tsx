@@ -6,7 +6,7 @@ import {
 } from "@/game/keybinds";
 import { useSettings, type Settings } from "@/game/settings";
 import { sfx, setSfxVolume, unlockAudio } from "@/game/sfx";
-import { setBgmVolume } from "@/game/bgm";
+import { setBgmVolume, pauseBgm, resumeBgm } from "@/game/bgm";
 import BgmPlayer from "@/game/BgmPlayer";
 import { SPRITE_GALLERY } from "@/game/sprites";
 import { useLevelStats, formatMs } from "@/game/levelStats";
