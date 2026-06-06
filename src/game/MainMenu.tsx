@@ -6,7 +6,7 @@ import {
 } from "@/game/keybinds";
 import { useSettings, type Settings } from "@/game/settings";
 import { sfx, setSfxVolume, unlockAudio } from "@/game/sfx";
-import { setBgmVolume } from "@/game/bgm";
+import { setBgmVolume, pauseBgm, resumeBgm } from "@/game/bgm";
 import BgmPlayer from "@/game/BgmPlayer";
 import { SPRITE_GALLERY } from "@/game/sprites";
 import { useLevelStats, formatMs } from "@/game/levelStats";
@@ -1161,24 +1161,16 @@ import ragingCrittersImg from "@/assets/bestiary/raging-critters.png";
 import bestiaryBgm from "@/assets/audio/bgm_champion_map.mp3";
 import gachaBgm from "@/assets/audio/bgm_gacha.mp3";
 import thePlayerArt from "@/assets/characters/the_player.png";
-import { setBgmMuted as setGameBgmMuted, isBgmMuted as isGameBgmMuted } from "@/game/bgm";
+import { setBgmMuted as setGameBgmMuted, isBgmMuted as isGameBgmMuted, subscribeBgmMuted } from "@/game/bgm";
+import infoButtonAsset from "@/assets/info_button.png.asset.json";
 
-// Shared mute state across all tab BGMs — one toggle controls whichever is playing.
-let _tabBgmMuted = false;
-const _tabBgmListeners = new Set<(m: boolean) => void>();
-function setTabBgmMutedShared(m: boolean) {
-  _tabBgmMuted = m;
-  _tabBgmListeners.forEach((fn) => fn(m));
-}
+// Tab BGM mute now mirrors the global BGM mute state (the toggle next to the
+// DASH GAEM REMASTERED title). One switch controls every track.
 function useSharedTabMute(): [boolean, (m: boolean | ((p: boolean) => boolean)) => void] {
-  const [muted, setMuted] = useState(_tabBgmMuted);
-  useEffect(() => {
-    const fn = (m: boolean) => setMuted(m);
-    _tabBgmListeners.add(fn);
-    return () => { _tabBgmListeners.delete(fn); };
-  }, []);
+  const [muted, setMuted] = useState(isGameBgmMuted());
+  useEffect(() => subscribeBgmMuted((m) => setMuted(m)), []);
   const update = (m: boolean | ((p: boolean) => boolean)) => {
-    setTabBgmMutedShared(typeof m === "function" ? (m as (p: boolean) => boolean)(_tabBgmMuted) : m);
+    setGameBgmMuted(typeof m === "function" ? (m as (p: boolean) => boolean)(isGameBgmMuted()) : m);
   };
   return [muted, update];
 }
@@ -1188,7 +1180,6 @@ function useTabBgm(src: string, targetVolume = 0.6, fadeInMs = 1200, fadeOutMs =
   const [muted, setMuted] = useSharedTabMute();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const mutedRef = useRef(false);
-  const mutedGameRef = useRef(false);
   mutedRef.current = muted;
 
   useEffect(() => {
@@ -1196,10 +1187,10 @@ function useTabBgm(src: string, targetVolume = 0.6, fadeInMs = 1200, fadeOutMs =
     a.loop = true;
     a.volume = 0;
     audioRef.current = a;
-    if (!isGameBgmMuted()) {
-      setGameBgmMuted(true);
-      mutedGameRef.current = true;
-    }
+    // Pause the underlying WebAudio BGM so the tab track plays solo. This
+    // doesn't change the user-facing mute state (the title button stays in
+    // sync with the actual mute flag).
+    pauseBgm();
     a.play().catch(() => { /* needs gesture */ });
 
     let raf = 0;
@@ -1222,10 +1213,7 @@ function useTabBgm(src: string, targetVolume = 0.6, fadeInMs = 1200, fadeOutMs =
         else { a.pause(); a.src = ""; }
       };
       requestAnimationFrame(tickOut);
-      if (mutedGameRef.current) {
-        setGameBgmMuted(false);
-        mutedGameRef.current = false;
-      }
+      resumeBgm();
     };
   }, [src, targetVolume, fadeInMs, fadeOutMs]);
 
@@ -1240,18 +1228,9 @@ function useTabBgm(src: string, targetVolume = 0.6, fadeInMs = 1200, fadeOutMs =
   return { muted, setMuted };
 }
 
-function MuteBtn({ muted, onToggle }: { muted: boolean; onToggle: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      className="scribble-border bg-paper px-3 py-1 font-marker text-base sm:text-lg text-ink hover:-rotate-2 transition-transform"
-      aria-label={muted ? "Unmute tab music" : "Mute tab music"}
-    >
-      {muted ? "🔇 MUTED" : "🔊 MUSIC ON"}
-    </button>
-  );
-}
+
+
+
 
 type BestiaryEntry = {
   id: string;
@@ -1283,7 +1262,7 @@ const BESTIARY: BestiaryEntry[] = [
 
 function BestiaryTab() {
   const [selected, setSelected] = useState<BestiaryEntry | null>(null);
-  const { muted, setMuted } = useTabBgm(bestiaryBgm);
+  useTabBgm(bestiaryBgm);
 
   // Close panel on Escape
   useEffect(() => {
@@ -1297,10 +1276,7 @@ function BestiaryTab() {
 
   return (
     <div className="flex flex-col items-center min-h-[300px] py-4 sm:py-6 px-2 sm:px-4 overflow-y-auto max-h-[85vh] w-full animate-fade-in">
-      <div className="w-full max-w-6xl flex items-center justify-between mb-2 gap-2">
-        <span className="font-scribble text-sm text-ink/50">♪ field guide ambience</span>
-        <MuteBtn muted={muted} onToggle={() => setMuted((m) => !m)} />
-      </div>
+
       <p className="font-marker text-2xl sm:text-4xl md:text-5xl text-ink mb-2 text-center">
         BESTIARY
       </p>
@@ -1454,8 +1430,9 @@ const CARD_TINT: Record<string, string> = {
 };
 
 function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
-  const { muted, setMuted } = useTabBgm(gachaBgm);
+  useTabBgm(gachaBgm);
   const [picked, setPicked] = useState<string>("stick");
+  const [infoOpen, setInfoOpen] = useState(false);
   const selected = WIP_CHARACTERS.find((c) => c.id === picked) ?? WIP_CHARACTERS[0];
 
   // Swipe-in / swipe-out transition.
@@ -1474,15 +1451,19 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
     window.setTimeout(onClose, 600);
   };
 
-  // ESC to leave.
+  // ESC to leave (or close info panel if it's open).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.code === "Escape") { e.preventDefault(); handleClose(); }
+      if (e.code === "Escape") {
+        e.preventDefault();
+        if (infoOpen) setInfoOpen(false);
+        else handleClose();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [closing]);
+  }, [closing, infoOpen]);
 
   // Page nav (only one page for now — arrows are decorative/disabled).
   const PAGE = 1;
@@ -1497,10 +1478,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
         transition: "opacity 520ms ease-out",
       }}
     >
-      {/* Hidden mute control (keeps BGM toggle reachable via keyboard / a11y) */}
-      <div className="absolute top-2 right-2 z-10 opacity-60 hover:opacity-100 transition-opacity">
-        <MuteBtn muted={muted} onToggle={() => setMuted((m) => !m)} />
-      </div>
+
 
       {/* Two-panel layout — full screen, mirrors the reference sketch 1:1 */}
       <div className="w-full h-full grid grid-cols-1 md:grid-cols-[5fr_6fr]">
@@ -1551,18 +1529,30 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
-          {/* INFO tag — bottom-left, tilted */}
-          <div
-            className="absolute bottom-6 left-4 sm:left-8 bg-ink text-paper font-marker text-3xl sm:text-5xl tracking-[0.25em] px-5 py-2 -rotate-3 select-none"
+          {/* INFO button — bottom-left, scribbled image, opens character info */}
+          <button
+            type="button"
+            onClick={() => { sfx.menuTab(); setInfoOpen(true); }}
+            onMouseEnter={() => sfx.menuHover()}
+            aria-label={`Show info for ${selected.name}`}
+            className="absolute bottom-6 left-4 sm:left-8 z-10 select-none hover:-rotate-6 active:scale-95"
             style={{
-              boxShadow: "3px 3px 0 rgba(0,0,0,0.35)",
               transform: shown ? "translateY(0) rotate(-3deg)" : "translateY(30px) rotate(-3deg)",
               opacity: shown ? 1 : 0,
               transition: "transform 600ms cubic-bezier(0.16,1,0.3,1) 200ms, opacity 500ms ease-out 200ms",
+              background: "transparent",
+              border: "none",
+              padding: 0,
             }}
           >
-            INFO
-          </div>
+            <img
+              src={infoButtonAsset.url}
+              alt="INFO"
+              draggable={false}
+              className="h-20 sm:h-28 md:h-32 w-auto drop-shadow-[3px_3px_0_rgba(0,0,0,0.35)] pointer-events-none"
+            />
+          </button>
+
         </div>
 
         {/* RIGHT — darker gray panel, slightly tilted, PG.1 + arrows + 2x2 grid */}
@@ -1649,6 +1639,45 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
           </div>
         </div>
       </div>
+
+      {/* INFO modal — character details. Click outside or press ESC to close. */}
+      {infoOpen && (
+        <div
+          className="absolute inset-0 z-30 flex items-center justify-center p-4 sm:p-8 animate-fade-in"
+          style={{ background: "rgba(0,0,0,0.55)" }}
+          onClick={() => setInfoOpen(false)}
+        >
+          <div
+            className="relative bg-paper max-w-xl w-full p-6 sm:p-8 -rotate-1"
+            style={{
+              border: "4px solid #1a1a1a",
+              boxShadow: "6px 6px 0 rgba(0,0,0,0.4)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setInfoOpen(false)}
+              className="absolute top-2 right-2 scribble-border bg-paper px-3 py-1 font-marker text-xl text-ink hover:rotate-3 transition-transform"
+              aria-label="Close info"
+            >
+              ✕
+            </button>
+            <div
+              className={`inline-block font-marker text-xs px-2 py-0.5 border-2 rotate-1 mb-2 ${RARITY_STYLES[selected.rarity]}`}
+            >
+              {selected.rarity.toUpperCase()}
+            </div>
+            <h2 className="font-marker text-4xl sm:text-5xl text-ink mb-3 -rotate-1">
+              {selected.name}
+            </h2>
+            <p className="font-scribble text-lg sm:text-xl text-ink/80 leading-snug">
+              {selected.blurb}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
