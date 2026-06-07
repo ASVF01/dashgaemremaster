@@ -1606,7 +1606,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                       type="button"
                       onClick={() => setPicked(c.id)}
                       className={[
-                        "relative bg-paper flex items-center justify-center overflow-hidden hover:scale-[1.03]",
+                        "relative bg-black flex items-center justify-center overflow-hidden hover:scale-[1.03]",
                       ].join(" ")}
                       style={{
                         border: active ? "4px solid #ffffff" : `4px solid ${tint}`,
