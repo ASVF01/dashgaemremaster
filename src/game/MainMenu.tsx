@@ -1161,6 +1161,7 @@ import ragingCrittersImg from "@/assets/bestiary/raging-critters.png";
 import bestiaryBgm from "@/assets/audio/bgm_champion_map.mp3";
 import gachaBgm from "@/assets/audio/bgm_gacha.mp3";
 import thePlayerArt from "@/assets/characters/the_player.png";
+import thePlayerPreviewAsset from "@/assets/characters/the_player_preview.png.asset.json";
 import { setBgmMuted as setGameBgmMuted, isBgmMuted as isGameBgmMuted, subscribeBgmMuted } from "@/game/bgm";
 import infoButtonAsset from "@/assets/info_button.png.asset.json";
 
@@ -1408,7 +1409,7 @@ type WipCharacter = {
 };
 
 const WIP_CHARACTERS: WipCharacter[] = [
-  { id: "stick",   name: "The Player", blurb: "The OG. Runs. Jumps. Vibes.",              rarity: "common",    art: thePlayerArt },
+  { id: "stick",   name: "The Player", blurb: "The OG. Runs. Jumps. Vibes.",              rarity: "common",    art: thePlayerArt, preview: thePlayerPreviewAsset.url },
   { id: "dasher",  name: "Blue Blur",       blurb: "Dashes faster. Thinks slower.",            rarity: "rare" },
   { id: "shadow",  name: "Shark Gal",      blurb: "A rumor in pencil form. Hard to pin down.", rarity: "epic" },
   { id: "x3mode",  name: "X3 MODE",             blurb: "Locked behind a story we haven't written.", rarity: "legendary" },
