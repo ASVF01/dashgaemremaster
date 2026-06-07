@@ -959,6 +959,20 @@ type UpdateEntry = {
 
 const UPDATES: UpdateEntry[] = [
   {
+    version: "v1.4",
+    date: "2026-06-07",
+    title: "Character Select Glow-Up",
+    changes: [
+      "Character Select now uses a slow swipe transition with cards rising one-by-one.",
+      "Selected card gets a white outline and the preview lifts up when picked.",
+      "INFO button works — opens a panel with How to Play, Lore, and Abilities.",
+      "Removed rarity tags — replaced with proper character info.",
+      "The Player got an updated preview sprite.",
+      "Mute button moved to the title bar — controls all BGM globally.",
+      "Character cards stay black in both light and dark mode.",
+    ],
+  },
+  {
     version: "v1.3",
     date: "2026-05-19",
     title: "Mobile-Friendly Camera",
