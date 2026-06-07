@@ -1401,26 +1401,37 @@ type WipCharacter = {
   id: string;
   name: string;
   blurb: string;
-  rarity: "common" | "rare" | "epic" | "legendary";
   /** Small art shown on the grid card. */
   art?: string;
   /** Larger preview art shown in the left INFO panel. Falls back to a placeholder until provided. */
   preview?: string;
+  /** Detailed info shown in the INFO modal. */
+  howToPlay?: string;
+  lore?: string;
+  abilities?: { name: string; description: string }[];
 };
 
 const WIP_CHARACTERS: WipCharacter[] = [
-  { id: "stick",   name: "The Player", blurb: "The OG. Runs. Jumps. Vibes.",              rarity: "common",    art: thePlayerArt, preview: thePlayerPreviewAsset.url },
-  { id: "dasher",  name: "Blue Blur",       blurb: "Dashes faster. Thinks slower.",            rarity: "rare" },
-  { id: "shadow",  name: "Shark Gal",      blurb: "A rumor in pencil form. Hard to pin down.", rarity: "epic" },
-  { id: "x3mode",  name: "X3 MODE",             blurb: "Locked behind a story we haven't written.", rarity: "legendary" },
+  {
+    id: "stick",
+    name: "The Player",
+    blurb: "The OG. Runs. Jumps. Vibes.",
+    art: thePlayerArt,
+    preview: thePlayerPreviewAsset.url,
+    howToPlay:
+      "Keep moving. The Player thrives on momentum — chain jumps and dashes to maintain speed across gaps. Tap jump for short hops over small hazards, hold for higher arcs. Use dash to cancel fall speed and slip past tight obstacles. Stay grounded only long enough to reposition.",
+    lore:
+      "Nobody remembers when The Player showed up. One day the world started scrolling and they were already running. No name, no backstory — just a silhouette with a death wish and perfect form. The OG. Every other character is, in some way, a reaction to them.",
+    abilities: [
+      { name: "Run", description: "Constant forward momentum. Speed builds the longer you stay alive without taking a hit." },
+      { name: "Jump", description: "Variable-height jump. Tap for hops, hold for full arcs. Master it to thread spike gaps." },
+      { name: "Dash", description: "Short horizontal burst that briefly cancels gravity. Use it to recover from misjudged jumps." },
+    ],
+  },
+  { id: "dasher",  name: "Blue Blur",       blurb: "Dashes faster. Thinks slower." },
+  { id: "shadow",  name: "Shark Gal",      blurb: "A rumor in pencil form. Hard to pin down." },
+  { id: "x3mode",  name: "X3 MODE",             blurb: "Locked behind a story we haven't written." },
 ];
-
-const RARITY_STYLES: Record<WipCharacter["rarity"], string> = {
-  common:    "border-ink/40 text-ink/70",
-  rare:      "border-blue-500/60 text-blue-700",
-  epic:      "border-purple-500/60 text-purple-700",
-  legendary: "border-[hsl(var(--accent))] text-[hsl(var(--accent))]",
-};
 
 // Per-character outline tint for the grid cards (matches reference colors).
 const CARD_TINT: Record<string, string> = {
@@ -1664,17 +1675,41 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
             >
               ✕
             </button>
-            <div
-              className={`inline-block font-marker text-xs px-2 py-0.5 border-2 rotate-1 mb-2 ${RARITY_STYLES[selected.rarity]}`}
-            >
-              {selected.rarity.toUpperCase()}
-            </div>
-            <h2 className="font-marker text-4xl sm:text-5xl text-ink mb-3 -rotate-1">
+            <h2 className="font-marker text-4xl sm:text-5xl text-ink mb-2 -rotate-1">
               {selected.name}
             </h2>
-            <p className="font-scribble text-lg sm:text-xl text-ink/80 leading-snug">
+            <p className="font-scribble text-lg text-ink/70 leading-snug mb-4 italic">
               {selected.blurb}
             </p>
+            <div className="max-h-[60vh] overflow-y-auto pr-2 space-y-4">
+              {selected.howToPlay && (
+                <section>
+                  <h3 className="font-marker text-2xl text-ink mb-1 rotate-1">How to Play</h3>
+                  <p className="font-scribble text-base text-ink/85 leading-snug">{selected.howToPlay}</p>
+                </section>
+              )}
+              {selected.lore && (
+                <section>
+                  <h3 className="font-marker text-2xl text-ink mb-1 -rotate-1">Lore</h3>
+                  <p className="font-scribble text-base text-ink/85 leading-snug">{selected.lore}</p>
+                </section>
+              )}
+              {selected.abilities && selected.abilities.length > 0 && (
+                <section>
+                  <h3 className="font-marker text-2xl text-ink mb-1 rotate-1">Abilities &amp; Mastery</h3>
+                  <ul className="space-y-2">
+                    {selected.abilities.map((a) => (
+                      <li key={a.name} className="font-scribble text-base text-ink/85 leading-snug">
+                        <span className="font-marker text-ink">{a.name}:</span> {a.description}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+              {!selected.howToPlay && !selected.lore && !selected.abilities && (
+                <p className="font-scribble text-base text-ink/60 italic">More info coming soon.</p>
+              )}
+            </div>
           </div>
         </div>
       )}
