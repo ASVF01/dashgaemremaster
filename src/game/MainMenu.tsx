@@ -1161,6 +1161,7 @@ import ragingCrittersImg from "@/assets/bestiary/raging-critters.png";
 import bestiaryBgm from "@/assets/audio/bgm_champion_map.mp3";
 import gachaBgm from "@/assets/audio/bgm_gacha.mp3";
 import thePlayerArt from "@/assets/characters/the_player.png";
+import thePlayerPreviewAsset from "@/assets/characters/the_player_preview.png.asset.json";
 import { setBgmMuted as setGameBgmMuted, isBgmMuted as isGameBgmMuted, subscribeBgmMuted } from "@/game/bgm";
 import infoButtonAsset from "@/assets/info_button.png.asset.json";
 
