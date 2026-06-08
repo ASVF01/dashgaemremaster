@@ -23,6 +23,7 @@ const TRACKS: Track[] = [
   { id: "map1",     title: "Map 1 (speed test)",        src: bgmMap1 },
   { id: "starman",  title: "Starman",                   src: bgmStarman },
   { id: "somsom",   title: "A Lil Som Som",             src: bgmSomSom },
+  { id: "map5",    title: "Map 5 (character select)",  src: bgmMap5 },
   { id: "knight",   title: "Black Knife (Roaring Knight)", src: bgmBlackKnife },
 ];
 
