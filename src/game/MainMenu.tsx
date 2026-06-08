@@ -44,6 +44,12 @@ export default function MainMenu({ onPlay }: Props) {
     setCharSelectOpen(true);
   };
 
+  const openBestiary = () => {
+    unlockAudio();
+    sfx.menuTab();
+    setBestiaryOpen(true);
+  };
+
   return (
     <div className="absolute inset-0 flex items-stretch justify-center bg-paper/95 backdrop-blur-[2px] overflow-auto">
       <div className="w-full max-w-5xl mx-auto px-6 py-8 flex flex-col">
