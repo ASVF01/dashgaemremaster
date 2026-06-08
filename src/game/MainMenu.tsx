@@ -1179,6 +1179,7 @@ function PlaylistCard({
 
 // ---------------- BESTIARY TAB ----------------
 import ragingCrittersImg from "@/assets/bestiary/raging-critters.png";
+import chargedOutletsAsset from "@/assets/bestiary/charged_out_outlets.png.asset.json";
 import bestiaryBgm from "@/assets/audio/bgm_champion_map.mp3";
 import gachaBgmAsset from "@/assets/audio/bgm_map5.ogg.asset.json";
 const gachaBgm = gachaBgmAsset.url;
