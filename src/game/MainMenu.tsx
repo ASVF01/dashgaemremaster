@@ -1282,6 +1282,21 @@ const BESTIARY: BestiaryEntry[] = [
       "Pick off stragglers before the pack regroups.",
     ],
   },
+  {
+    id: "charged-out-outlets",
+    name: "Charged-Out Outlets",
+    image: chargedOutletsAsset.url,
+    description:
+      "Wall-socket goons that pace the back rows and lob bolts of leftover voltage. Range attackers — they want you pinned, not tackled.",
+    tags: ["ranged", "shooter", "uncommon"],
+    lore:
+      "When the world stopped being plugged in, the outlets kept their charge. Bitter little rectangles, still humming, still mad they got unplugged. They cope by zapping anything that runs past.",
+    combat: [
+      "Close the gap fast — they're useless within arm's reach.",
+      "Watch the prong-tip — it sparks one beat before the shot.",
+      "Use uneven ground to break their line of sight.",
+    ],
+  },
 ];
 
 function BestiaryTab() {
