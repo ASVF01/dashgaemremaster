@@ -9,6 +9,8 @@ import bgmStarman from "@/assets/audio/bgm_starman.mp3";
 import bgmSomSom from "@/assets/audio/a_lil_som_som.mp3";
 import bgmMap1 from "@/assets/audio/bgm_map1.mp3";
 import bgmBlackKnife from "@/assets/audio/black_knife.mp3";
+import bgmMap5Asset from "@/assets/audio/bgm_map5.ogg.asset.json";
+const bgmMap5 = bgmMap5Asset.url;
 
 type Track = { id: string; title: string; src: string };
 
