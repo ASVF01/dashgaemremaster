@@ -23,6 +23,7 @@ interface Props {
 export default function MainMenu({ onPlay }: Props) {
   const [tab, setTab] = useState<MenuTab>("play");
   const [charSelectOpen, setCharSelectOpen] = useState(false);
+  const [bestiaryOpen, setBestiaryOpen] = useState(false);
 
   const handlePlay = (id: LevelId) => {
     unlockAudio();
