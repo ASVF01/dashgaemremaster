@@ -75,7 +75,7 @@ export default function MainMenu({ onPlay }: Props) {
           <TabBtn active={tab === "updates"}  onClick={() => switchTab("updates")}>UPDATES</TabBtn>
           <TabBtn active={tab === "credits"}  onClick={() => switchTab("credits")}>CREDITS</TabBtn>
           <TabBtn active={tab === "youtube"} onClick={() => switchTab("youtube")}>YOUTUBE</TabBtn>
-          <TabBtn active={tab === "bestiary"} onClick={() => switchTab("bestiary")}>BESTIARY</TabBtn>
+          <TabBtn active={false} onClick={openBestiary}>BESTIARY</TabBtn>
           <TabBtn active={false} onClick={openCharSelect}>CHARACTER SELECT</TabBtn>
         </nav>
 
@@ -89,11 +89,11 @@ export default function MainMenu({ onPlay }: Props) {
           {tab === "updates"  && <UpdatesTab />}
           {tab === "credits"  && <CreditsTab />}
           {tab === "youtube"  && <YouTubeTab />}
-          {tab === "bestiary" && <BestiaryTab />}
         </div>
       </div>
 
       {charSelectOpen && <CharacterSelectScreen onClose={() => setCharSelectOpen(false)} />}
+      {bestiaryOpen && <BestiaryScreen onClose={() => setBestiaryOpen(false)} />}
     </div>
   );
 }
