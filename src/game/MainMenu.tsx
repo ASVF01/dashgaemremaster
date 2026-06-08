@@ -1299,137 +1299,243 @@ const BESTIARY: BestiaryEntry[] = [
   },
 ];
 
-function BestiaryTab() {
-  const [selected, setSelected] = useState<BestiaryEntry | null>(null);
+function BestiaryScreen({ onClose }: { onClose: () => void }) {
   useTabBgm(bestiaryBgm);
+  const [pickedId, setPickedId] = useState<string>(BESTIARY[0]?.id ?? "");
+  const selected = BESTIARY.find((b) => b.id === pickedId) ?? BESTIARY[0];
 
-  // Close panel on Escape
+  const [shown, setShown] = useState(false);
+  const [closing, setClosing] = useState(false);
   useEffect(() => {
-    if (!selected) return;
+    const r = requestAnimationFrame(() => setShown(true));
+    return () => cancelAnimationFrame(r);
+  }, []);
+
+  const handleClose = () => {
+    if (closing) return;
+    sfx.menuTab();
+    setClosing(true);
+    setShown(false);
+    window.setTimeout(onClose, 500);
+  };
+
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSelected(null);
+      if (e.code === "Escape") { e.preventDefault(); handleClose(); }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [selected]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [closing]);
+
+  // Field-guide palette — distinct from character select's cool gray.
+  const PAPER = "#1a1410";        // dark "scorched parchment" backdrop
+  const KRAFT = "#d9c69a";        // aged kraft paper card
+  const INK   = "#1a1410";
+  const ACCENT = "#c44a2c";       // hazard red-orange
 
   return (
-    <div className="flex flex-col items-center min-h-[300px] py-4 sm:py-6 px-2 sm:px-4 overflow-y-auto max-h-[85vh] w-full animate-fade-in">
-
-      <p className="font-marker text-2xl sm:text-4xl md:text-5xl text-ink mb-2 text-center">
-        BESTIARY
-      </p>
-      <p className="font-scribble text-base sm:text-lg text-ink/70 mb-6 text-center">
-        a field guide to everything that wants you dead. click an entry for details.
-      </p>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 w-full max-w-6xl">
-        {BESTIARY.map((e) => (
-          <button
-            key={e.id}
-            type="button"
-            onClick={() => setSelected(e)}
-            className="scribble-border bg-paper rounded overflow-hidden flex flex-col min-w-0 text-left hover:-rotate-1 hover:scale-[1.01] transition-transform cursor-pointer"
-          >
-            <div className="relative w-full bg-paper" style={{ paddingTop: "75%" }}>
-              <img
-                src={e.image}
-                alt={e.name}
-                loading="lazy"
-                className="absolute inset-0 w-full h-full object-contain"
-                style={{ imageRendering: "pixelated" }}
-              />
-            </div>
-            <div className="p-3 sm:p-4 flex flex-col gap-2">
-              <h3 className="font-marker text-lg sm:text-xl text-ink">{e.name}</h3>
-              {e.tags && (
-                <div className="flex flex-wrap gap-1">
-                  {e.tags.map((t) => (
-                    <span
-                      key={t}
-                      className="font-scribble text-xs px-2 py-0.5 border border-ink/40 rounded text-ink/70"
-                    >
-                      {t}
-                    </span>
-                  ))}
-                </div>
-              )}
-              <p className="font-scribble text-sm sm:text-base text-ink/80 leading-snug">
-                {e.description}
-              </p>
-            </div>
-          </button>
-        ))}
+    <div
+      className="fixed inset-0 z-50 overflow-hidden"
+      style={{
+        background: PAPER,
+        backgroundImage:
+          "repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 4px), radial-gradient(ellipse at center, rgba(217,198,154,0.08), transparent 70%)",
+        opacity: shown ? 1 : 0,
+        transition: "opacity 480ms ease-out",
+      }}
+    >
+      {/* Top bar — title + close */}
+      <div
+        className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 sm:px-8 py-3"
+        style={{
+          background: KRAFT,
+          borderBottom: `4px solid ${INK}`,
+          transform: shown ? "translateY(0)" : "translateY(-100%)",
+          transition: "transform 550ms cubic-bezier(0.16,1,0.3,1)",
+        }}
+      >
+        <div
+          className="font-marker text-2xl sm:text-4xl tracking-widest"
+          style={{ color: INK }}
+        >
+          ✶ BESTIARY ✶ <span className="opacity-60 text-base sm:text-xl">field guide</span>
+        </div>
+        <button
+          type="button"
+          onClick={handleClose}
+          className="font-marker text-base sm:text-xl px-4 py-1 hover:rotate-2 transition-transform"
+          style={{
+            background: ACCENT,
+            color: KRAFT,
+            border: `3px solid ${INK}`,
+            boxShadow: `3px 3px 0 ${INK}`,
+          }}
+        >
+          ◀ CLOSE
+        </button>
       </div>
 
-      {selected && (
-        <div
-          className="fixed inset-0 z-50 bg-ink/70 flex items-center justify-center p-4"
-          onClick={() => setSelected(null)}
+      {/* Layout — left scrolling index, right featured creature dossier */}
+      <div className="absolute inset-0 pt-[68px] sm:pt-[84px] grid grid-cols-1 md:grid-cols-[280px_1fr] gap-0">
+        {/* LEFT — sticker-style index of creatures */}
+        <aside
+          className="overflow-y-auto p-3 sm:p-4 space-y-3"
+          style={{
+            background: "#2a1f17",
+            borderRight: `3px dashed ${KRAFT}`,
+            transform: shown ? "translateX(0)" : "translateX(-30px)",
+            opacity: shown ? 1 : 0,
+            transition: "transform 600ms cubic-bezier(0.16,1,0.3,1) 100ms, opacity 500ms ease-out 100ms",
+          }}
         >
-          <div
-            className="scribble-border bg-paper rounded max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-            onClick={(ev) => ev.stopPropagation()}
-          >
-            <div className="flex items-start justify-between gap-3 p-4 sm:p-6 border-b border-ink/20">
-              <div>
-                <h2 className="font-marker text-3xl sm:text-5xl text-ink leading-none">
+          <div className="font-marker text-sm tracking-widest" style={{ color: KRAFT, opacity: 0.7 }}>
+            CATALOGUED — {BESTIARY.length}
+          </div>
+          {BESTIARY.map((b, i) => {
+            const active = b.id === pickedId;
+            return (
+              <button
+                key={b.id}
+                type="button"
+                onClick={() => { sfx.menuHover(); setPickedId(b.id); }}
+                onMouseEnter={() => sfx.menuHover()}
+                className="w-full text-left flex items-center gap-3 p-2 transition-transform hover:translate-x-1"
+                style={{
+                  background: active ? KRAFT : "rgba(217,198,154,0.08)",
+                  border: `2px solid ${active ? ACCENT : KRAFT}`,
+                  borderLeftWidth: active ? "6px" : "2px",
+                  borderLeftColor: active ? ACCENT : KRAFT,
+                  color: active ? INK : KRAFT,
+                  transform: `${shown ? "translateY(0)" : "translateY(20px)"} rotate(${i % 2 ? -0.5 : 0.5}deg)`,
+                  opacity: shown ? 1 : 0,
+                  transition: `transform 500ms cubic-bezier(0.16,1,0.3,1) ${180 + i * 70}ms, opacity 400ms ease-out ${180 + i * 70}ms, background 200ms, border-color 200ms`,
+                }}
+              >
+                <div
+                  className="w-12 h-12 flex-shrink-0 flex items-center justify-center"
+                  style={{ background: "#000", border: `2px solid ${INK}` }}
+                >
+                  <img
+                    src={b.image}
+                    alt=""
+                    className="w-full h-full object-contain p-0.5"
+                    style={{ imageRendering: "pixelated" }}
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="font-marker text-base leading-tight truncate">{b.name}</div>
+                  {b.tags && (
+                    <div className="font-scribble text-xs opacity-70 truncate">
+                      {b.tags.join(" · ")}
+                    </div>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </aside>
+
+        {/* RIGHT — large dossier card */}
+        <section
+          key={selected?.id}
+          className="overflow-y-auto p-4 sm:p-8"
+          style={{
+            transform: shown ? "translateY(0)" : "translateY(30px)",
+            opacity: shown ? 1 : 0,
+            transition: "transform 600ms cubic-bezier(0.16,1,0.3,1) 220ms, opacity 500ms ease-out 220ms",
+          }}
+        >
+          {selected && (
+            <div
+              className="mx-auto max-w-4xl p-5 sm:p-8"
+              style={{
+                background: KRAFT,
+                border: `4px solid ${INK}`,
+                boxShadow: `8px 8px 0 ${ACCENT}, 8px 8px 0 4px ${INK}`,
+                transform: "rotate(-0.4deg)",
+              }}
+            >
+              {/* Header */}
+              <div className="flex items-baseline gap-3 flex-wrap mb-4 pb-3 border-b-2 border-dashed" style={{ borderColor: INK }}>
+                <div className="font-marker text-xs sm:text-sm tracking-[0.3em]" style={{ color: ACCENT }}>
+                  ENTRY № {String(BESTIARY.findIndex((b) => b.id === selected.id) + 1).padStart(3, "0")}
+                </div>
+                <h2 className="font-marker text-4xl sm:text-6xl leading-none" style={{ color: INK }}>
                   {selected.name}
                 </h2>
-                {selected.tags && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {selected.tags.map((t) => (
-                      <span
-                        key={t}
-                        className="font-scribble text-xs px-2 py-0.5 border border-ink/40 rounded text-ink/70"
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                )}
               </div>
-              <button
-                type="button"
-                onClick={() => setSelected(null)}
-                className="scribble-border bg-paper px-3 py-1 font-marker text-xl text-ink hover:rotate-3 transition-transform"
-                aria-label="Close"
-              >
-                ✕
-              </button>
-            </div>
 
-            <div className="grid md:grid-cols-2 gap-4 sm:gap-6 p-4 sm:p-6">
-              <div className="relative w-full bg-paper scribble-border" style={{ paddingTop: "75%" }}>
-                <img
-                  src={selected.image}
-                  alt={selected.name}
-                  className="absolute inset-0 w-full h-full object-contain p-2"
-                  style={{ imageRendering: "pixelated" }}
-                />
-              </div>
-              <div className="flex flex-col gap-4 min-w-0">
-                <div>
-                  <h3 className="font-marker text-xl text-ink mb-1 -rotate-1">LORE</h3>
-                  <p className="font-scribble text-base text-ink/80 leading-snug">
-                    {selected.lore ?? selected.description}
-                  </p>
+              <div className="grid md:grid-cols-[1fr_1.2fr] gap-5 sm:gap-7">
+                {/* Specimen image with hazard frame */}
+                <div
+                  className="relative aspect-square flex items-center justify-center"
+                  style={{
+                    background: "#000",
+                    border: `4px solid ${INK}`,
+                    boxShadow: `inset 0 0 0 6px ${KRAFT}, inset 0 0 0 8px ${INK}`,
+                  }}
+                >
+                  <img
+                    src={selected.image}
+                    alt={selected.name}
+                    className="w-[88%] h-[88%] object-contain"
+                    style={{ imageRendering: "pixelated" }}
+                  />
+                  {/* corner tape */}
+                  <span
+                    className="absolute -top-3 -left-3 w-12 h-5 -rotate-12 opacity-80"
+                    style={{ background: "rgba(255,255,210,0.55)", border: "1px solid rgba(0,0,0,0.2)" }}
+                  />
+                  <span
+                    className="absolute -bottom-3 -right-3 w-12 h-5 rotate-12 opacity-80"
+                    style={{ background: "rgba(255,255,210,0.55)", border: "1px solid rgba(0,0,0,0.2)" }}
+                  />
                 </div>
-                {selected.combat && selected.combat.length > 0 && (
-                  <div>
-                    <h3 className="font-marker text-xl text-ink mb-1 rotate-1">COMBAT NOTES</h3>
-                    <ul className="font-scribble text-base text-ink/80 leading-snug list-disc pl-5 space-y-1">
-                      {selected.combat.map((c, i) => (
-                        <li key={i}>{c}</li>
+
+                {/* Details */}
+                <div className="min-w-0 flex flex-col gap-4" style={{ color: INK }}>
+                  {selected.tags && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {selected.tags.map((t) => (
+                        <span
+                          key={t}
+                          className="font-scribble text-xs uppercase tracking-widest px-2 py-0.5"
+                          style={{ background: INK, color: KRAFT }}
+                        >
+                          {t}
+                        </span>
                       ))}
-                    </ul>
+                    </div>
+                  )}
+                  <p className="font-scribble text-base sm:text-lg leading-snug italic">
+                    “{selected.description}”
+                  </p>
+                  <div>
+                    <h3 className="font-marker text-2xl mb-1" style={{ color: ACCENT }}>FIELD LORE</h3>
+                    <p className="font-scribble text-base leading-snug">
+                      {selected.lore ?? selected.description}
+                    </p>
                   </div>
-                )}
+                  {selected.combat && selected.combat.length > 0 && (
+                    <div>
+                      <h3 className="font-marker text-2xl mb-1" style={{ color: ACCENT }}>COMBAT NOTES</h3>
+                      <ul className="font-scribble text-base leading-snug space-y-1">
+                        {selected.combat.map((c, i) => (
+                          <li key={i} className="flex gap-2">
+                            <span style={{ color: ACCENT }}>✶</span>
+                            <span>{c}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
+        </section>
+      </div>
     </div>
   );
 }
