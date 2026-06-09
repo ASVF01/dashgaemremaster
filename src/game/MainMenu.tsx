@@ -1724,12 +1724,25 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
               transition: "transform 650ms cubic-bezier(0.16,1,0.3,1) 80ms, opacity 550ms ease-out 80ms",
             }}
           >
-            {/* PG . 1 header */}
-            <div className="font-marker text-3xl sm:text-5xl text-ink mb-3 text-center tracking-[0.2em] select-none">
-              PG . {PAGE}
+            {/* PG . 1 corner tag — dark sticker tilted on the top-left */}
+            <div
+              className="absolute select-none pointer-events-none"
+              style={{
+                top: "-18px",
+                left: "-14px",
+                background: "#1a1a1a",
+                color: "#f5f3ee",
+                padding: "6px 18px 6px 14px",
+                transform: "rotate(-8deg)",
+                boxShadow: "2px 2px 0 rgba(0,0,0,0.45)",
+                fontFamily: "var(--font-marker, 'Permanent Marker', cursive)",
+                letterSpacing: "0.18em",
+              }}
+            >
+              <span className="font-marker text-xl sm:text-2xl">PG . {PAGE}</span>
             </div>
 
-            <div className="flex gap-4 sm:gap-6 items-stretch h-[calc(100%-4rem)]">
+            <div className="flex gap-4 sm:gap-6 items-stretch h-full">
               {/* Up/Down arrows column */}
               <div className="flex flex-col items-center justify-center gap-6 sm:gap-10 py-2">
                 <button
