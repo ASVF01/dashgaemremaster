@@ -1629,108 +1629,94 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
     <div
       className="fixed inset-0 z-50 overflow-hidden"
       style={{
-        background: "#c9c9c9",
+        background: "#0a0a0a",
         opacity: shown ? 1 : 0,
         transition: "opacity 520ms ease-out",
       }}
     >
+      {/* GET OUT — top-left of screen, on the black field */}
+      <button
+        type="button"
+        onClick={handleClose}
+        className="absolute top-4 left-4 z-20 font-marker text-sm sm:text-base text-paper px-5 py-2 hover:-rotate-2"
+        style={{
+          background: "#e11d2a",
+          clipPath: "polygon(15% 0, 100% 0, 100% 100%, 15% 100%, 0 50%)",
+          paddingLeft: "2rem",
+          boxShadow: "2px 2px 0 rgba(0,0,0,0.6)",
+          transform: shown ? "translateY(0)" : "translateY(-20px)",
+          opacity: shown ? 1 : 0,
+          transition: "transform 600ms cubic-bezier(0.16,1,0.3,1) 60ms, opacity 500ms ease-out 60ms",
+        }}
+        title="back to menu"
+      >
+        GET OUT.
+      </button>
 
+      {/* INFO button — bottom-left of screen */}
+      <button
+        type="button"
+        onClick={() => { sfx.menuTab(); setInfoOpen(true); }}
+        onMouseEnter={() => sfx.menuHover()}
+        aria-label={`Show info for ${selected.name}`}
+        className="absolute bottom-6 left-4 sm:left-8 z-20 select-none hover:-rotate-6 active:scale-95"
+        style={{
+          transform: shown ? "translateY(0) rotate(-3deg)" : "translateY(30px) rotate(-3deg)",
+          opacity: shown ? 1 : 0,
+          transition: "transform 600ms cubic-bezier(0.16,1,0.3,1) 200ms, opacity 500ms ease-out 200ms",
+          background: "transparent",
+          border: "none",
+          padding: 0,
+        }}
+      >
+        <img
+          src={infoButtonAsset.url}
+          alt="INFO"
+          draggable={false}
+          className="h-20 sm:h-28 md:h-32 w-auto drop-shadow-[3px_3px_0_rgba(0,0,0,0.6)] pointer-events-none"
+        />
+      </button>
 
-      {/* Two-panel layout — full screen, mirrors the reference sketch 1:1 */}
-      <div className="w-full h-full grid grid-cols-1 md:grid-cols-[5fr_6fr]">
-        {/* LEFT — light gray panel, GET OUT top-left, big preview, INFO tag bottom-left */}
-        <div className="relative overflow-hidden" style={{ background: "#c9c9c9" }}>
-          {/* GET OUT arrow — top-left, points left */}
-          <button
-            type="button"
-            onClick={handleClose}
-            className="absolute top-4 left-4 z-10 font-marker text-sm sm:text-base text-paper px-5 py-2 hover:-rotate-2"
-            style={{
-              background: "#e11d2a",
-              clipPath: "polygon(15% 0, 100% 0, 100% 100%, 15% 100%, 0 50%)",
-              paddingLeft: "2rem",
-              boxShadow: "2px 2px 0 rgba(0,0,0,0.4)",
-              transform: shown ? "translateY(0)" : "translateY(-20px)",
-              opacity: shown ? 1 : 0,
-              transition: "transform 600ms cubic-bezier(0.16,1,0.3,1) 60ms, opacity 500ms ease-out 60ms",
-            }}
-            title="back to menu"
-          >
-            GET OUT.
-          </button>
-
-          {/* Big character preview, centered. Selecting a character lifts it up. */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div
-              key={selected.id}
-              style={{
-                transform: shown ? "translateY(-24px)" : "translateY(40px)",
-                opacity: shown ? 1 : 0,
-                transition: "transform 650ms cubic-bezier(0.16,1,0.3,1) 120ms, opacity 550ms ease-out 120ms",
-              }}
-              className="flex items-center justify-center"
-            >
-              {selected.preview ? (
-                <img
-                  src={selected.preview}
-                  alt={`${selected.name} preview`}
-                  className="max-h-[70vh] w-auto object-contain drop-shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
-                />
-              ) : (
-                <div className="flex flex-col items-center text-ink/40 select-none">
-                  <div className="font-marker text-[10rem] leading-none">?</div>
-                  <div className="font-scribble text-sm mt-2">preview sprite coming soon</div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* INFO button — bottom-left, scribbled image, opens character info */}
-          <button
-            type="button"
-            onClick={() => { sfx.menuTab(); setInfoOpen(true); }}
-            onMouseEnter={() => sfx.menuHover()}
-            aria-label={`Show info for ${selected.name}`}
-            className="absolute bottom-6 left-4 sm:left-8 z-10 select-none hover:-rotate-6 active:scale-95"
-            style={{
-              transform: shown ? "translateY(0) rotate(-3deg)" : "translateY(30px) rotate(-3deg)",
-              opacity: shown ? 1 : 0,
-              transition: "transform 600ms cubic-bezier(0.16,1,0.3,1) 200ms, opacity 500ms ease-out 200ms",
-              background: "transparent",
-              border: "none",
-              padding: 0,
-            }}
-          >
-            <img
-              src={infoButtonAsset.url}
-              alt="INFO"
-              draggable={false}
-              className="h-20 sm:h-28 md:h-32 w-auto drop-shadow-[3px_3px_0_rgba(0,0,0,0.35)] pointer-events-none"
-            />
-          </button>
-
-        </div>
-
-        {/* RIGHT — darker gray panel, slightly tilted, PG.1 + arrows + 2x2 grid */}
-        <div className="relative flex items-center justify-center p-4 sm:p-6">
+      {/* Centered tilted gray card on the black field — matches the reference 1:1 */}
+      <div className="absolute inset-0 flex items-center justify-center p-6 sm:p-10">
+        <div
+          className="relative"
+          style={{
+            width: "min(78vw, 760px)",
+            height: "min(82vh, 760px)",
+            transform: shown ? "rotate(-4deg) translateY(0)" : "rotate(-4deg) translateY(40px)",
+            opacity: shown ? 1 : 0,
+            transition: "transform 700ms cubic-bezier(0.16,1,0.3,1) 80ms, opacity 600ms ease-out 80ms",
+          }}
+        >
+          {/* Back panel — lighter strip peeking out from behind on the left */}
           <div
-            className="relative w-full h-[92%] p-4 sm:p-6 rotate-[2deg]"
+            className="absolute"
+            style={{
+              top: "-2%",
+              left: "-4%",
+              width: "100%",
+              height: "104%",
+              background: "#a8a8a8",
+              boxShadow: "2px 2px 0 rgba(0,0,0,0.5)",
+            }}
+          />
+
+          {/* Main gray card */}
+          <div
+            className="absolute inset-0 p-5 sm:p-7"
             style={{
               background: "#8a8a8a",
-              boxShadow: "4px 4px 0 rgba(0,0,0,0.4)",
-              border: "3px solid #1a1a1a",
-              transform: shown ? "translateY(0) rotate(2deg)" : "translateY(30px) rotate(2deg)",
-              opacity: shown ? 1 : 0,
-              transition: "transform 650ms cubic-bezier(0.16,1,0.3,1) 80ms, opacity 550ms ease-out 80ms",
+              boxShadow: "6px 6px 0 rgba(0,0,0,0.55)",
             }}
           >
-            {/* PG . 1 header */}
-            <div className="font-marker text-3xl sm:text-5xl text-ink mb-3 text-center tracking-[0.2em] select-none">
-              PG . {PAGE}
+            {/* PG · 1 — top-left corner of the card */}
+            <div className="font-marker text-2xl sm:text-4xl text-paper tracking-[0.15em] select-none absolute top-2 left-3 sm:top-3 sm:left-5">
+              PG · {PAGE}
             </div>
 
-            <div className="flex gap-4 sm:gap-6 items-stretch h-[calc(100%-4rem)]">
-              {/* Up/Down arrows column */}
+            {/* Body: arrows column + 2x2 grid */}
+            <div className="flex gap-4 sm:gap-6 items-stretch h-full pt-10 sm:pt-14">
               <div className="flex flex-col items-center justify-center gap-6 sm:gap-10 py-2">
                 <button
                   type="button"
@@ -1750,20 +1736,17 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                 </button>
               </div>
 
-              {/* 2x2 character cards — staggered swipe-up on entrance */}
-              <div className="grid grid-cols-2 gap-3 sm:gap-5 flex-1">
+              <div className="grid grid-cols-2 gap-3 sm:gap-5 flex-1 pb-2">
                 {WIP_CHARACTERS.map((c, i) => {
                   const active = picked === c.id;
                   const tint = CARD_TINT[c.id] ?? "#1a1a1a";
-                  const delay = 220 + i * 120; // stagger each card
+                  const delay = 220 + i * 120;
                   return (
                     <button
                       key={c.id}
                       type="button"
                       onClick={() => setPicked(c.id)}
-                      className={[
-                        "relative bg-black flex items-center justify-center overflow-hidden hover:scale-[1.03]",
-                      ].join(" ")}
+                      className="relative bg-black flex items-center justify-center overflow-hidden hover:scale-[1.03]"
                       style={{
                         border: active ? "4px solid #ffffff" : `4px solid ${tint}`,
                         boxShadow: active
@@ -1786,11 +1769,6 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                   );
                 })}
               </div>
-            </div>
-
-            {/* Pencil decoration — bottom-right */}
-            <div className="absolute -bottom-2 right-4 font-marker text-2xl sm:text-3xl text-ink/80 rotate-12 select-none pointer-events-none">
-              ✏
             </div>
           </div>
         </div>
