@@ -1714,22 +1714,30 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
         {/* RIGHT — darker gray panel, slightly tilted, PG.1 + arrows + 2x2 grid */}
         <div className="relative flex items-center justify-center p-4 sm:p-6">
           <div
-            className="relative w-full h-[92%] p-4 sm:p-6 rotate-[2deg]"
+            className="relative w-full h-[92%] p-4 sm:p-6"
             style={{
-              background: "#8a8a8a",
-              boxShadow: "4px 4px 0 rgba(0,0,0,0.4)",
+              background: "#7a7a7a",
               border: "3px solid #1a1a1a",
-              transform: shown ? "translateY(0) rotate(2deg)" : "translateY(30px) rotate(2deg)",
+              boxShadow: "-6px 6px 0 #5a5a5a, -6px 6px 0 3px #1a1a1a, 4px 4px 0 rgba(0,0,0,0.45)",
+              transform: shown ? "translateY(0) rotate(-3deg)" : "translateY(30px) rotate(-3deg)",
               opacity: shown ? 1 : 0,
               transition: "transform 650ms cubic-bezier(0.16,1,0.3,1) 80ms, opacity 550ms ease-out 80ms",
             }}
           >
-            {/* PG . 1 header */}
-            <div className="font-marker text-3xl sm:text-5xl text-ink mb-3 text-center tracking-[0.2em] select-none">
+            {/* PG . 1 — folder-tab style, top-left, juts above the panel */}
+            <div
+              className="absolute -top-7 sm:-top-9 left-0 font-pixel text-base sm:text-2xl text-paper px-4 sm:px-6 py-1 select-none"
+              style={{
+                background: "#5a5a5a",
+                border: "3px solid #1a1a1a",
+                borderBottom: "none",
+                letterSpacing: "0.15em",
+              }}
+            >
               PG . {PAGE}
             </div>
 
-            <div className="flex gap-4 sm:gap-6 items-stretch h-[calc(100%-4rem)]">
+            <div className="flex gap-4 sm:gap-6 items-stretch h-full pt-2">
               {/* Up/Down arrows column */}
               <div className="flex flex-col items-center justify-center gap-6 sm:gap-10 py-2">
                 <button
