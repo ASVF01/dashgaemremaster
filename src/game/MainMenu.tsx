@@ -1645,19 +1645,25 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
           <button
             type="button"
             onClick={handleClose}
-            className="absolute top-4 left-4 z-10 font-marker text-sm sm:text-base text-paper px-5 py-2 hover:-rotate-2"
+            onMouseEnter={() => sfx.menuHover()}
+            aria-label="back to menu"
+            title="back to menu"
+            className="absolute top-4 left-4 z-10 select-none hover:-rotate-2 active:scale-95"
             style={{
-              background: "#e11d2a",
-              clipPath: "polygon(15% 0, 100% 0, 100% 100%, 15% 100%, 0 50%)",
-              paddingLeft: "2rem",
-              boxShadow: "2px 2px 0 rgba(0,0,0,0.4)",
+              background: "transparent",
+              border: "none",
+              padding: 0,
               transform: shown ? "translateY(0)" : "translateY(-20px)",
               opacity: shown ? 1 : 0,
               transition: "transform 600ms cubic-bezier(0.16,1,0.3,1) 60ms, opacity 500ms ease-out 60ms",
             }}
-            title="back to menu"
           >
-            GET OUT.
+            <img
+              src={getOutButtonAsset.url}
+              alt="GET OUT"
+              draggable={false}
+              className="h-16 sm:h-20 md:h-24 w-auto drop-shadow-[2px_2px_0_rgba(0,0,0,0.4)] pointer-events-none"
+            />
           </button>
 
           {/* Big character preview, centered. Selecting a character lifts it up. */}
