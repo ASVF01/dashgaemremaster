@@ -1737,7 +1737,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
               PG . {PAGE}
             </div>
 
-            <div className="flex gap-4 sm:gap-6 items-stretch h-[calc(100%-4rem)]">
+            <div className="flex gap-4 sm:gap-6 items-stretch h-full pt-2">
               {/* Up/Down arrows column */}
               <div className="flex flex-col items-center justify-center gap-6 sm:gap-10 py-2">
                 <button
