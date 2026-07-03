@@ -1186,6 +1186,7 @@ const gachaBgm = gachaBgmAsset.url;
 import thePlayerArt from "@/assets/characters/the_player.png";
 import thePlayerPreviewAsset from "@/assets/characters/the_player_preview.png.asset.json";
 import blueBlurArtAsset from "@/assets/characters/blue_blur_art.png.asset.json";
+import sharkGalArtAsset from "@/assets/characters/shark_gal_art.png.asset.json";
 import { setBgmMuted as setGameBgmMuted, isBgmMuted as isGameBgmMuted, subscribeBgmMuted } from "@/game/bgm";
 import infoButtonAsset from "@/assets/info_button.png.asset.json";
 import getOutButtonAsset from "@/assets/get_out_button.png.asset.json";
@@ -1575,7 +1576,7 @@ const WIP_CHARACTERS: WipCharacter[] = [
     ],
   },
   { id: "dasher",  name: "Blue Blur",       blurb: "Dashes faster. Thinks slower.", art: blueBlurArtAsset.url },
-  { id: "shadow",  name: "Shark Gal",      blurb: "A rumor in pencil form. Hard to pin down." },
+  { id: "shadow",  name: "Shark Gal",      blurb: "A rumor in pencil form. Hard to pin down.", art: sharkGalArtAsset.url },
   { id: "x3mode",  name: "X3 MODE",             blurb: "Locked behind a story we haven't written." },
 ];
 
@@ -1794,7 +1795,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                       title={c.name}
                     >
                       {c.art ? (
-                        <img src={c.art} alt={c.name} className="w-full h-full object-contain p-2" />
+                        <img src={c.art} alt={c.name} className="w-full h-full object-cover" />
                       ) : (
                         <span className="font-marker text-6xl sm:text-7xl" style={{ color: tint }}>?</span>
                       )}
