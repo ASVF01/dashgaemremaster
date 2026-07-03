@@ -962,21 +962,20 @@ type UpdateEntry = {
   date: string;
   title: string;
   changes: string[];
+  image?: string;
 };
+
+
 
 const UPDATES: UpdateEntry[] = [
   {
     version: "v1.4",
     date: "2026-06-07",
     title: "Character Select Glow-Up",
+    image: massiveUpdateAsset.url,
     changes: [
-      "Character Select now uses a slow swipe transition with cards rising one-by-one.",
-      "Selected card gets a white outline and the preview lifts up when picked.",
-      "INFO button works — opens a panel with How to Play, Lore, and Abilities.",
-      "Removed rarity tags — replaced with proper character info.",
-      "The Player got an updated preview sprite.",
-      "Mute button moved to the title bar — controls all BGM globally.",
-      "Character cards stay black in both light and dark mode.",
+      "Added Characters and a proper character selection",
+      "Revamped bestiary's ui",
     ],
   },
   {
@@ -1044,6 +1043,13 @@ function UpdatesTab() {
               </div>
               <span className="font-scribble text-sm text-ink/60">{u.date}</span>
             </div>
+            {u.image && (
+              <img
+                src={u.image}
+                alt={u.title}
+                className="w-full h-auto mb-3 border-2 border-ink"
+              />
+            )}
             <ul className="font-scribble text-lg text-ink/85 space-y-1 list-disc list-inside">
               {u.changes.map((c, j) => (
                 <li key={j}>{c}</li>
@@ -1187,6 +1193,7 @@ import thePlayerArt from "@/assets/characters/the_player.png";
 import thePlayerPreviewAsset from "@/assets/characters/the_player_preview.png.asset.json";
 import blueBlurArtAsset from "@/assets/characters/blue_blur_art.png.asset.json";
 import sharkGalArtAsset from "@/assets/characters/shark_gal_art.png.asset.json";
+import massiveUpdateAsset from "@/assets/updates/massive_update.png.asset.json";
 import { setBgmMuted as setGameBgmMuted, isBgmMuted as isGameBgmMuted, subscribeBgmMuted } from "@/game/bgm";
 import infoButtonAsset from "@/assets/info_button.png.asset.json";
 import getOutButtonAsset from "@/assets/get_out_button.png.asset.json";
@@ -1583,9 +1590,9 @@ const WIP_CHARACTERS: WipCharacter[] = [
 // Per-character outline tint for the grid cards (matches reference colors).
 const CARD_TINT: Record<string, string> = {
   stick:  "#1a1a1a",
-  dasher: "#2b6cff",
+  dasher: "#1a1a1a",
   shadow: "#1a1a1a",
-  x3mode: "#e11d2a",
+  x3mode: "#1a1a1a",
 };
 
 function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
