@@ -1682,7 +1682,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                 <img
                   src={selected.preview}
                   alt={`${selected.name} preview`}
-                  className="max-h-[70vh] w-auto object-contain"
+                  className="max-h-[90vh] w-auto object-contain scale-125"
                 />
               ) : (
                 <div className="flex flex-col items-center text-ink/40 select-none">
