@@ -1185,6 +1185,7 @@ import gachaBgmAsset from "@/assets/audio/bgm_map5.ogg.asset.json";
 const gachaBgm = gachaBgmAsset.url;
 import thePlayerArt from "@/assets/characters/the_player.png";
 import thePlayerPreviewAsset from "@/assets/characters/the_player_preview.png.asset.json";
+import blueBlurArtAsset from "@/assets/characters/blue_blur_art.png.asset.json";
 import { setBgmMuted as setGameBgmMuted, isBgmMuted as isGameBgmMuted, subscribeBgmMuted } from "@/game/bgm";
 import infoButtonAsset from "@/assets/info_button.png.asset.json";
 import getOutButtonAsset from "@/assets/get_out_button.png.asset.json";
@@ -1573,7 +1574,7 @@ const WIP_CHARACTERS: WipCharacter[] = [
       { name: "Dash", description: "Short horizontal burst that briefly cancels gravity. Use it to recover from misjudged jumps." },
     ],
   },
-  { id: "dasher",  name: "Blue Blur",       blurb: "Dashes faster. Thinks slower." },
+  { id: "dasher",  name: "Blue Blur",       blurb: "Dashes faster. Thinks slower.", art: blueBlurArtAsset.url },
   { id: "shadow",  name: "Shark Gal",      blurb: "A rumor in pencil form. Hard to pin down." },
   { id: "x3mode",  name: "X3 MODE",             blurb: "Locked behind a story we haven't written." },
 ];
@@ -1681,7 +1682,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                 <img
                   src={selected.preview}
                   alt={`${selected.name} preview`}
-                  className="max-h-[70vh] w-auto object-contain"
+                  className="max-h-[90vh] w-auto object-contain scale-125"
                 />
               ) : (
                 <div className="flex flex-col items-center text-ink/40 select-none">
