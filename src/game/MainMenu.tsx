@@ -1043,6 +1043,13 @@ function UpdatesTab() {
               </div>
               <span className="font-scribble text-sm text-ink/60">{u.date}</span>
             </div>
+            {u.image && (
+              <img
+                src={u.image}
+                alt={u.title}
+                className="w-full h-auto mb-3 border-2 border-ink"
+              />
+            )}
             <ul className="font-scribble text-lg text-ink/85 space-y-1 list-disc list-inside">
               {u.changes.map((c, j) => (
                 <li key={j}>{c}</li>
