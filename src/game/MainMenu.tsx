@@ -1575,7 +1575,7 @@ const WIP_CHARACTERS: WipCharacter[] = [
     ],
   },
   { id: "dasher",  name: "Blue Blur",       blurb: "Dashes faster. Thinks slower.", art: blueBlurArtAsset.url },
-  { id: "shadow",  name: "Shark Gal",      blurb: "A rumor in pencil form. Hard to pin down." },
+  { id: "shadow",  name: "Shark Gal",      blurb: "A rumor in pencil form. Hard to pin down.", art: sharkGalArtAsset.url },
   { id: "x3mode",  name: "X3 MODE",             blurb: "Locked behind a story we haven't written." },
 ];
 
