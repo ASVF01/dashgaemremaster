@@ -1583,9 +1583,9 @@ const WIP_CHARACTERS: WipCharacter[] = [
 // Per-character outline tint for the grid cards (matches reference colors).
 const CARD_TINT: Record<string, string> = {
   stick:  "#1a1a1a",
-  dasher: "#2b6cff",
+  dasher: "#1a1a1a",
   shadow: "#1a1a1a",
-  x3mode: "#e11d2a",
+  x3mode: "#1a1a1a",
 };
 
 function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
