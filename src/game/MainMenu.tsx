@@ -1662,7 +1662,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
               src={getOutButtonAsset.url}
               alt="GET OUT"
               draggable={false}
-              className="h-16 sm:h-20 md:h-24 w-auto drop-shadow-[2px_2px_0_rgba(0,0,0,0.4)] pointer-events-none"
+              className="h-16 sm:h-20 md:h-24 w-auto pointer-events-none"
             />
           </button>
 
@@ -1681,7 +1681,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                 <img
                   src={selected.preview}
                   alt={`${selected.name} preview`}
-                  className="max-h-[70vh] w-auto object-contain drop-shadow-[2px_2px_0_rgba(0,0,0,0.25)]"
+                  className="max-h-[70vh] w-auto object-contain"
                 />
               ) : (
                 <div className="flex flex-col items-center text-ink/40 select-none">
