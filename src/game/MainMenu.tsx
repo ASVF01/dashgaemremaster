@@ -1795,7 +1795,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                       title={c.name}
                     >
                       {c.art ? (
-                        <img src={c.art} alt={c.name} className="w-full h-full object-contain p-2" />
+                        <img src={c.art} alt={c.name} className="w-full h-full object-cover" />
                       ) : (
                         <span className="font-marker text-6xl sm:text-7xl" style={{ color: tint }}>?</span>
                       )}
