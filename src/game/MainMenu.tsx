@@ -962,21 +962,20 @@ type UpdateEntry = {
   date: string;
   title: string;
   changes: string[];
+  image?: string;
 };
+
+import massiveUpdateAsset from "@/assets/updates/massive_update.png.asset.json";
 
 const UPDATES: UpdateEntry[] = [
   {
     version: "v1.4",
     date: "2026-06-07",
     title: "Character Select Glow-Up",
+    image: massiveUpdateAsset.url,
     changes: [
-      "Character Select now uses a slow swipe transition with cards rising one-by-one.",
-      "Selected card gets a white outline and the preview lifts up when picked.",
-      "INFO button works — opens a panel with How to Play, Lore, and Abilities.",
-      "Removed rarity tags — replaced with proper character info.",
-      "The Player got an updated preview sprite.",
-      "Mute button moved to the title bar — controls all BGM globally.",
-      "Character cards stay black in both light and dark mode.",
+      "Added Characters and a proper character selection",
+      "Revamped bestiary's ui",
     ],
   },
   {
