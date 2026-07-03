@@ -965,7 +965,7 @@ type UpdateEntry = {
   image?: string;
 };
 
-import massiveUpdateAsset from "@/assets/updates/massive_update.png.asset.json";
+
 
 const UPDATES: UpdateEntry[] = [
   {
