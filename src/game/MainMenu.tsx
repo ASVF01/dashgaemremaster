@@ -1186,6 +1186,7 @@ import thePlayerArt from "@/assets/characters/the_player.png";
 import thePlayerPreviewAsset from "@/assets/characters/the_player_preview.png.asset.json";
 import blueBlurArtAsset from "@/assets/characters/blue_blur_art.png.asset.json";
 import sharkGalArtAsset from "@/assets/characters/shark_gal_art.png.asset.json";
+import massiveUpdateAsset from "@/assets/updates/massive_update.png.asset.json";
 import { setBgmMuted as setGameBgmMuted, isBgmMuted as isGameBgmMuted, subscribeBgmMuted } from "@/game/bgm";
 import infoButtonAsset from "@/assets/info_button.png.asset.json";
 import getOutButtonAsset from "@/assets/get_out_button.png.asset.json";
