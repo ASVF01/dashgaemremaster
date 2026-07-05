@@ -1193,6 +1193,7 @@ import thePlayerArt from "@/assets/characters/the_player.png";
 import thePlayerPreviewAsset from "@/assets/characters/the_player_preview.png.asset.json";
 import blueBlurArtAsset from "@/assets/characters/blue_blur_art.png.asset.json";
 import sharkGalArtAsset from "@/assets/characters/shark_gal_art.png.asset.json";
+import theAlternateArtAsset from "@/assets/characters/the_alternate_art.png.asset.json";
 import massiveUpdateAsset from "@/assets/updates/massive_update.png.asset.json";
 import { setBgmMuted as setGameBgmMuted, isBgmMuted as isGameBgmMuted, subscribeBgmMuted } from "@/game/bgm";
 import infoButtonAsset from "@/assets/info_button.png.asset.json";
@@ -1563,6 +1564,7 @@ type WipCharacter = {
   howToPlay?: string;
   lore?: string;
   abilities?: { name: string; description: string }[];
+  locked?: boolean;
 };
 
 const WIP_CHARACTERS: WipCharacter[] = [
@@ -1584,7 +1586,7 @@ const WIP_CHARACTERS: WipCharacter[] = [
   },
   { id: "dasher",  name: "Blue Blur",       blurb: "Dashes faster. Thinks slower.", art: blueBlurArtAsset.url },
   { id: "shadow",  name: "Shark Gal",      blurb: "A rumor in pencil form. Hard to pin down.", art: sharkGalArtAsset.url },
-  { id: "x3mode",  name: "X3 MODE",             blurb: "Locked behind a story we haven't written." },
+  { id: "x3mode",  name: "THE ALTERNATE",       blurb: "Locked behind a story we haven't written.", art: theAlternateArtAsset.url, locked: true },
 ];
 
 // Per-character outline tint for the grid cards (matches reference colors).
@@ -1802,9 +1804,19 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                       title={c.name}
                     >
                       {c.art ? (
-                        <img src={c.art} alt={c.name} className="w-full h-full object-cover" />
+                        <img
+                          src={c.art}
+                          alt={c.name}
+                          className="w-full h-full object-cover"
+                          style={c.locked ? { filter: "grayscale(1) brightness(0.55)" } : undefined}
+                        />
                       ) : (
                         <span className="font-marker text-6xl sm:text-7xl" style={{ color: tint }}>?</span>
+                      )}
+                      {c.locked && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <span className="font-marker text-6xl sm:text-7xl text-white drop-shadow-[2px_2px_0_rgba(0,0,0,0.9)]">🔒</span>
+                        </div>
                       )}
                     </button>
                   );
