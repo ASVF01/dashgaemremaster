@@ -1564,6 +1564,7 @@ type WipCharacter = {
   howToPlay?: string;
   lore?: string;
   abilities?: { name: string; description: string }[];
+  locked?: boolean;
 };
 
 const WIP_CHARACTERS: WipCharacter[] = [
