@@ -1792,7 +1792,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                         if (c.locked) {
                           sfx.keyJingle();
                           setShakingId(c.id);
-                          setShowUnlockHint(true);
+                          
                           window.setTimeout(() => setShakingId((s) => (s === c.id ? null : s)), 700);
                           window.setTimeout(() => setInfoOpen(true), 260);
                         }
