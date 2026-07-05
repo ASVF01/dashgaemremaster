@@ -1601,6 +1601,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   useTabBgm(gachaBgm);
   const [picked, setPicked] = useState<string>("stick");
   const [infoOpen, setInfoOpen] = useState(false);
+  const [shakingId, setShakingId] = useState<string | null>(null);
   const selected = WIP_CHARACTERS.find((c) => c.id === picked) ?? WIP_CHARACTERS[0];
 
   // Swipe-in / swipe-out transition.
@@ -1786,7 +1787,16 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                     <button
                       key={c.id}
                       type="button"
-                      onClick={() => setPicked(c.id)}
+                      onClick={() => {
+                        setPicked(c.id);
+                        if (c.locked) {
+                          sfx.keyJingle();
+                          setShakingId(c.id);
+                          
+                          window.setTimeout(() => setShakingId((s) => (s === c.id ? null : s)), 700);
+                          window.setTimeout(() => setInfoOpen(true), 260);
+                        }
+                      }}
                       className={[
                         "relative bg-black flex items-center justify-center overflow-hidden hover:scale-[1.03]",
                       ].join(" ")}
@@ -1815,7 +1825,14 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                       )}
                       {c.locked && (
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <span className="font-marker text-6xl sm:text-7xl text-white drop-shadow-[2px_2px_0_rgba(0,0,0,0.9)]">🔒</span>
+                          <span
+                            className={[
+                              "font-marker text-6xl sm:text-7xl text-white drop-shadow-[2px_2px_0_rgba(0,0,0,0.9)]",
+                              shakingId === c.id ? "animate-jitter" : "",
+                            ].join(" ")}
+                          >
+                            🔒
+                          </span>
                         </div>
                       )}
                     </button>
@@ -1861,6 +1878,11 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
             <p className="font-scribble text-lg text-ink/70 leading-snug mb-4 italic">
               {selected.blurb}
             </p>
+            {selected.locked && (
+              <p className="font-scribble text-base text-accent leading-snug mb-4 -rotate-1">
+                to unlock, obtain the cat badge, click it once and play the tutorial
+              </p>
+            )}
             <div className="max-h-[60vh] overflow-y-auto pr-2 space-y-4">
               {selected.howToPlay && (
                 <section>

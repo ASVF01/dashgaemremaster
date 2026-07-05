@@ -551,6 +551,19 @@ export const sfx = {
     loadSample(sfxCompleteUrl);
     loadSample(sfxYesUrl);
   },
+  keyJingle() {
+    // little bunch-of-keys jingle — several bright metallic pings clustered
+    const pings = 7;
+    for (let i = 0; i < pings; i++) {
+      const f = 2200 + Math.random() * 3200;
+      tone({ freq: f, to: f * (0.85 + Math.random() * 0.2), dur: 0.09 + Math.random() * 0.06,
+             type: "triangle", vol: 0.10 + Math.random() * 0.05, attack: 0.001, release: 0.07,
+             delay: i * 0.025 + Math.random() * 0.015 });
+      tone({ freq: f * 2, dur: 0.05, type: "square", vol: 0.03, attack: 0.001, release: 0.04,
+             delay: i * 0.025 });
+    }
+    noise(0.18, 0.05, 4000, 12000);
+  },
 };
 
 // ---------- looping "shine" sound for the invboi (starman) state ----------
