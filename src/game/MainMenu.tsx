@@ -1795,6 +1795,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                           setShakingId(c.id);
                           setShowUnlockHint(true);
                           window.setTimeout(() => setShakingId((s) => (s === c.id ? null : s)), 700);
+                          window.setTimeout(() => setInfoOpen(true), 260);
                         }
                       }}
                       className={[
