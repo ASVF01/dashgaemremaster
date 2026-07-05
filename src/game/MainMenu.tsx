@@ -1804,9 +1804,19 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                       title={c.name}
                     >
                       {c.art ? (
-                        <img src={c.art} alt={c.name} className="w-full h-full object-cover" />
+                        <img
+                          src={c.art}
+                          alt={c.name}
+                          className="w-full h-full object-cover"
+                          style={c.locked ? { filter: "grayscale(1) brightness(0.55)" } : undefined}
+                        />
                       ) : (
                         <span className="font-marker text-6xl sm:text-7xl" style={{ color: tint }}>?</span>
+                      )}
+                      {c.locked && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <span className="font-marker text-6xl sm:text-7xl text-white drop-shadow-[2px_2px_0_rgba(0,0,0,0.9)]">🔒</span>
+                        </div>
                       )}
                     </button>
                   );
