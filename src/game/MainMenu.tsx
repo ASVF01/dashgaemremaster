@@ -1878,6 +1878,11 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
             <p className="font-scribble text-lg text-ink/70 leading-snug mb-4 italic">
               {selected.blurb}
             </p>
+            {selected.locked && (
+              <p className="font-scribble text-base text-accent leading-snug mb-4 -rotate-1">
+                to unlock, obtain the cat badge, click it once and play the tutorial
+              </p>
+            )}
             <div className="max-h-[60vh] overflow-y-auto pr-2 space-y-4">
               {selected.howToPlay && (
                 <section>
