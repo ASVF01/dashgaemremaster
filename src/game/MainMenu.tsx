@@ -1602,7 +1602,6 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   const [picked, setPicked] = useState<string>("stick");
   const [infoOpen, setInfoOpen] = useState(false);
   const [shakingId, setShakingId] = useState<string | null>(null);
-  const [showUnlockHint, setShowUnlockHint] = useState(false);
   const selected = WIP_CHARACTERS.find((c) => c.id === picked) ?? WIP_CHARACTERS[0];
 
   // Swipe-in / swipe-out transition.
