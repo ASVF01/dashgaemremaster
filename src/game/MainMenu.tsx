@@ -1788,7 +1788,15 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                     <button
                       key={c.id}
                       type="button"
-                      onClick={() => setPicked(c.id)}
+                      onClick={() => {
+                        setPicked(c.id);
+                        if (c.locked) {
+                          sfx.keyJingle();
+                          setShakingId(c.id);
+                          setShowUnlockHint(true);
+                          window.setTimeout(() => setShakingId((s) => (s === c.id ? null : s)), 700);
+                        }
+                      }}
                       className={[
                         "relative bg-black flex items-center justify-center overflow-hidden hover:scale-[1.03]",
                       ].join(" ")}
@@ -1817,7 +1825,14 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                       )}
                       {c.locked && (
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <span className="font-marker text-6xl sm:text-7xl text-white drop-shadow-[2px_2px_0_rgba(0,0,0,0.9)]">🔒</span>
+                          <span
+                            className={[
+                              "font-marker text-6xl sm:text-7xl text-white drop-shadow-[2px_2px_0_rgba(0,0,0,0.9)]",
+                              shakingId === c.id ? "animate-jitter" : "",
+                            ].join(" ")}
+                          >
+                            🔒
+                          </span>
                         </div>
                       )}
                     </button>
