@@ -1198,6 +1198,7 @@ import massiveUpdateAsset from "@/assets/updates/massive_update.png.asset.json";
 import { setBgmMuted as setGameBgmMuted, isBgmMuted as isGameBgmMuted, subscribeBgmMuted } from "@/game/bgm";
 import infoButtonAsset from "@/assets/info_button.png.asset.json";
 import getOutButtonAsset from "@/assets/get_out_button.png.asset.json";
+import { useCharacter, selectCharacter, unlockCharacter, type CharacterId } from "@/game/character";
 
 // Tab BGM mute now mirrors the global BGM mute state (the toggle next to the
 // DASH GAEM REMASTERED title). One switch controls every track.
