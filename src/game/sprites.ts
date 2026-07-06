@@ -18,6 +18,10 @@ import superDash2 from "@/assets/sprites/super_dash_2.png";
 import superDash3 from "@/assets/sprites/super_dash_3.png";
 import beamAtkUrl from "@/assets/sprites/beam_atk.png";
 import beamAtkJumpUrl from "@/assets/sprites/beam_atk_jump.png";
+import altIdleAsset from "@/assets/sprites/alternate/alt_idle.png.asset.json";
+import altWalkAsset from "@/assets/sprites/alternate/alt_walk.png.asset.json";
+import altJumpAsset from "@/assets/sprites/alternate/alt_jump.png.asset.json";
+import { getSelectedCharacter, type CharacterId } from "@/game/character";
 
 export type SpriteState = "idle" | "run" | "runFast" | "jump" | "fall" | "slide" | "dive" | "dash" | "skid" | "superDash" | "hurt" | "beam" | "beamJump";
 
