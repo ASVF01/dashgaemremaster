@@ -21,6 +21,14 @@ import beamAtkJumpUrl from "@/assets/sprites/beam_atk_jump.png";
 import altIdleAsset from "@/assets/sprites/alternate/alt_idle.png.asset.json";
 import altWalkAsset from "@/assets/sprites/alternate/alt_walk.png.asset.json";
 import altJumpAsset from "@/assets/sprites/alternate/alt_jump.png.asset.json";
+import altRun1 from "@/assets/sprites/alternate/alt_run_1.png.asset.json";
+import altRun2 from "@/assets/sprites/alternate/alt_run_2.png.asset.json";
+import altRun3 from "@/assets/sprites/alternate/alt_run_3.png.asset.json";
+import altRun4 from "@/assets/sprites/alternate/alt_run_4.png.asset.json";
+import altRun5 from "@/assets/sprites/alternate/alt_run_5.png.asset.json";
+import altRun6 from "@/assets/sprites/alternate/alt_run_6.png.asset.json";
+import altRun7 from "@/assets/sprites/alternate/alt_run_7.png.asset.json";
+import altRun8 from "@/assets/sprites/alternate/alt_run_8.png.asset.json";
 import { getSelectedCharacter, type CharacterId } from "@/game/character";
 
 export type SpriteState = "idle" | "run" | "runFast" | "jump" | "fall" | "slide" | "dive" | "dash" | "skid" | "superDash" | "hurt" | "beam" | "beamJump";
@@ -55,6 +63,16 @@ const CHAR_URLS: Partial<Record<CharacterId, Partial<Record<SpriteState, string>
   },
 };
 
+const CHAR_CYCLES: Partial<Record<CharacterId, Partial<Record<SpriteState, string[]>>>> = {
+  x3mode: {
+    // Alternate has an 8-frame run cycle — used as his fast-run animation.
+    runFast: [
+      altRun1.url, altRun2.url, altRun3.url, altRun4.url,
+      altRun5.url, altRun6.url, altRun7.url, altRun8.url,
+    ],
+  },
+};
+
 type Key = string; // `${characterId}:${state}`
 const cache: Record<Key, HTMLImageElement> = {};
 const loaded: Record<Key, boolean> = {};
@@ -65,8 +83,7 @@ function urlFor(char: CharacterId, state: SpriteState): string | undefined {
   return CHAR_URLS[char]?.[state] ?? URLS[state];
 }
 function cycleFor(char: CharacterId, state: SpriteState): string[] | undefined {
-  // Characters only override single-frame states for now; cycles come from default.
-  return CYCLES[state];
+  return CHAR_CYCLES[char]?.[state] ?? CYCLES[state];
 }
 
 function load(char: CharacterId, state: SpriteState): HTMLImageElement | null {
@@ -103,6 +120,7 @@ function loadCycle(char: CharacterId, state: SpriteState) {
 (Object.keys(CYCLES) as SpriteState[]).forEach((s) => loadCycle("stick", s));
 // Also warm alternate overrides so switching in-game is instant.
 (Object.keys(CHAR_URLS.x3mode ?? {}) as SpriteState[]).forEach((s) => load("x3mode", s));
+(Object.keys(CHAR_CYCLES.x3mode ?? {}) as SpriteState[]).forEach((s) => loadCycle("x3mode", s));
 
 // Public gallery: every sprite (and animated cycle frame) with a label.
 // Used by the SPRITE GALLERY in the main menu.
