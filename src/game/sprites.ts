@@ -63,6 +63,16 @@ const CHAR_URLS: Partial<Record<CharacterId, Partial<Record<SpriteState, string>
   },
 };
 
+const CHAR_CYCLES: Partial<Record<CharacterId, Partial<Record<SpriteState, string[]>>>> = {
+  x3mode: {
+    // Alternate has an 8-frame run cycle — used as his fast-run animation.
+    runFast: [
+      altRun1.url, altRun2.url, altRun3.url, altRun4.url,
+      altRun5.url, altRun6.url, altRun7.url, altRun8.url,
+    ],
+  },
+};
+
 type Key = string; // `${characterId}:${state}`
 const cache: Record<Key, HTMLImageElement> = {};
 const loaded: Record<Key, boolean> = {};
@@ -73,8 +83,7 @@ function urlFor(char: CharacterId, state: SpriteState): string | undefined {
   return CHAR_URLS[char]?.[state] ?? URLS[state];
 }
 function cycleFor(char: CharacterId, state: SpriteState): string[] | undefined {
-  // Characters only override single-frame states for now; cycles come from default.
-  return CYCLES[state];
+  return CHAR_CYCLES[char]?.[state] ?? CYCLES[state];
 }
 
 function load(char: CharacterId, state: SpriteState): HTMLImageElement | null {
