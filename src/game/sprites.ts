@@ -21,6 +21,14 @@ import beamAtkJumpUrl from "@/assets/sprites/beam_atk_jump.png";
 import altIdleAsset from "@/assets/sprites/alternate/alt_idle.png.asset.json";
 import altWalkAsset from "@/assets/sprites/alternate/alt_walk.png.asset.json";
 import altJumpAsset from "@/assets/sprites/alternate/alt_jump.png.asset.json";
+import altRun1 from "@/assets/sprites/alternate/alt_run_1.png.asset.json";
+import altRun2 from "@/assets/sprites/alternate/alt_run_2.png.asset.json";
+import altRun3 from "@/assets/sprites/alternate/alt_run_3.png.asset.json";
+import altRun4 from "@/assets/sprites/alternate/alt_run_4.png.asset.json";
+import altRun5 from "@/assets/sprites/alternate/alt_run_5.png.asset.json";
+import altRun6 from "@/assets/sprites/alternate/alt_run_6.png.asset.json";
+import altRun7 from "@/assets/sprites/alternate/alt_run_7.png.asset.json";
+import altRun8 from "@/assets/sprites/alternate/alt_run_8.png.asset.json";
 import { getSelectedCharacter, type CharacterId } from "@/game/character";
 
 export type SpriteState = "idle" | "run" | "runFast" | "jump" | "fall" | "slide" | "dive" | "dash" | "skid" | "superDash" | "hurt" | "beam" | "beamJump";
