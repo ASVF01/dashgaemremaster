@@ -1794,18 +1794,20 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                   const active = picked === c.id;
                   const tint = CARD_TINT[c.id] ?? "#1a1a1a";
                   const delay = 220 + i * 120; // stagger each card
+                  const locked = isCharLocked(c.id);
                   return (
                     <button
                       key={c.id}
                       type="button"
                       onClick={() => {
                         setPicked(c.id);
-                        if (c.locked) {
+                        if (locked) {
                           sfx.keyJingle();
                           setShakingId(c.id);
-                          
                           window.setTimeout(() => setShakingId((s) => (s === c.id ? null : s)), 700);
                           window.setTimeout(() => setInfoOpen(true), 260);
+                        } else {
+                          selectCharacter(c.id as CharacterId);
                         }
                       }}
                       className={[
@@ -1829,12 +1831,12 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                           src={c.art}
                           alt={c.name}
                           className="w-full h-full object-cover"
-                          style={c.locked ? { filter: "grayscale(1) brightness(0.55)" } : undefined}
+                          style={locked ? { filter: "grayscale(1) brightness(0.55)" } : undefined}
                         />
                       ) : (
                         <span className="font-marker text-6xl sm:text-7xl" style={{ color: tint }}>?</span>
                       )}
-                      {c.locked && (
+                      {locked && (
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                           <span
                             className={[
