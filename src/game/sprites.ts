@@ -45,26 +45,47 @@ const CYCLES: Partial<Record<SpriteState, string[]>> = {
   superDash: [superDash1, superDash2, superDash3],
 };
 
-const cache: Partial<Record<SpriteState, HTMLImageElement>> = {};
-const loaded: Partial<Record<SpriteState, boolean>> = {};
-const cycleCache: Partial<Record<SpriteState, HTMLImageElement[]>> = {};
-const cycleLoaded: Partial<Record<SpriteState, boolean[]>> = {};
+// Per-character sprite overrides. Missing states fall back to the default
+// (stick) URLS/CYCLES so partial sprite sets still render sensibly.
+const CHAR_URLS: Partial<Record<CharacterId, Partial<Record<SpriteState, string>>>> = {
+  x3mode: {
+    idle: altIdleAsset.url,
+    run: altWalkAsset.url,
+    jump: altJumpAsset.url,
+  },
+};
 
-function load(state: SpriteState): HTMLImageElement | null {
-  const url = URLS[state];
+type Key = string; // `${characterId}:${state}`
+const cache: Record<Key, HTMLImageElement> = {};
+const loaded: Record<Key, boolean> = {};
+const cycleCache: Record<Key, HTMLImageElement[]> = {};
+const cycleLoaded: Record<Key, boolean[]> = {};
+
+function urlFor(char: CharacterId, state: SpriteState): string | undefined {
+  return CHAR_URLS[char]?.[state] ?? URLS[state];
+}
+function cycleFor(char: CharacterId, state: SpriteState): string[] | undefined {
+  // Characters only override single-frame states for now; cycles come from default.
+  return CYCLES[state];
+}
+
+function load(char: CharacterId, state: SpriteState): HTMLImageElement | null {
+  const url = urlFor(char, state);
   if (!url) return null;
-  if (cache[state]) return loaded[state] ? cache[state]! : null;
+  const key = `${char}:${state}`;
+  if (cache[key]) return loaded[key] ? cache[key]! : null;
   const img = new Image();
-  img.onload = () => { loaded[state] = true; };
+  img.onload = () => { loaded[key] = true; };
   img.src = url;
-  cache[state] = img;
+  cache[key] = img;
   return null;
 }
 
-function loadCycle(state: SpriteState) {
-  const urls = CYCLES[state];
+function loadCycle(char: CharacterId, state: SpriteState) {
+  const urls = cycleFor(char, state);
   if (!urls) return;
-  if (cycleCache[state]) return;
+  const key = `${char}:${state}`;
+  if (cycleCache[key]) return;
   const imgs: HTMLImageElement[] = [];
   const flags: boolean[] = urls.map(() => false);
   urls.forEach((u, i) => {
@@ -73,13 +94,15 @@ function loadCycle(state: SpriteState) {
     img.src = u;
     imgs.push(img);
   });
-  cycleCache[state] = imgs;
-  cycleLoaded[state] = flags;
+  cycleCache[key] = imgs;
+  cycleLoaded[key] = flags;
 }
 
-// Eager-load on module init so the first frame can use them.
-(Object.keys(URLS) as SpriteState[]).forEach(load);
-(Object.keys(CYCLES) as SpriteState[]).forEach(loadCycle);
+// Eager-load default character on module init so the first frame can use them.
+(Object.keys(URLS) as SpriteState[]).forEach((s) => load("stick", s));
+(Object.keys(CYCLES) as SpriteState[]).forEach((s) => loadCycle("stick", s));
+// Also warm alternate overrides so switching in-game is instant.
+(Object.keys(CHAR_URLS.x3mode ?? {}) as SpriteState[]).forEach((s) => load("x3mode", s));
 
 // Public gallery: every sprite (and animated cycle frame) with a label.
 // Used by the SPRITE GALLERY in the main menu.
