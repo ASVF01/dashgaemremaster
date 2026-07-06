@@ -1198,6 +1198,7 @@ import massiveUpdateAsset from "@/assets/updates/massive_update.png.asset.json";
 import { setBgmMuted as setGameBgmMuted, isBgmMuted as isGameBgmMuted, subscribeBgmMuted } from "@/game/bgm";
 import infoButtonAsset from "@/assets/info_button.png.asset.json";
 import getOutButtonAsset from "@/assets/get_out_button.png.asset.json";
+import { useCharacter, selectCharacter, unlockCharacter, type CharacterId } from "@/game/character";
 
 // Tab BGM mute now mirrors the global BGM mute state (the toggle next to the
 // DASH GAEM REMASTERED title). One switch controls every track.
@@ -1599,10 +1600,15 @@ const CARD_TINT: Record<string, string> = {
 
 function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   useTabBgm(gachaBgm);
-  const [picked, setPicked] = useState<string>("stick");
+  const charState = useCharacter();
+  const [picked, setPicked] = useState<string>(charState.selected);
   const [infoOpen, setInfoOpen] = useState(false);
   const [shakingId, setShakingId] = useState<string | null>(null);
   const selected = WIP_CHARACTERS.find((c) => c.id === picked) ?? WIP_CHARACTERS[0];
+  const isCharLocked = (id: string) =>
+    (id === "stick" || id === "dasher" || id === "shadow" || id === "x3mode")
+      ? !charState.unlocked[id as CharacterId]
+      : false;
 
   // Swipe-in / swipe-out transition.
   const [shown, setShown] = useState(false);
@@ -1620,19 +1626,24 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
     window.setTimeout(onClose, 600);
   };
 
-  // ESC to leave (or close info panel if it's open).
+  // ESC to leave (or close info panel if it's open). Debug: `3` unlocks THE ALTERNATE.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.code === "Escape") {
         e.preventDefault();
         if (infoOpen) setInfoOpen(false);
         else handleClose();
+      } else if (e.key === "3" && !e.repeat) {
+        if (!charState.unlocked.x3mode) {
+          unlockCharacter("x3mode");
+          sfx.keyJingle();
+        }
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [closing, infoOpen]);
+  }, [closing, infoOpen, charState.unlocked.x3mode]);
 
   // Page nav (only one page for now — arrows are decorative/disabled).
   const PAGE = 1;
@@ -1783,18 +1794,20 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                   const active = picked === c.id;
                   const tint = CARD_TINT[c.id] ?? "#1a1a1a";
                   const delay = 220 + i * 120; // stagger each card
+                  const locked = isCharLocked(c.id);
                   return (
                     <button
                       key={c.id}
                       type="button"
                       onClick={() => {
                         setPicked(c.id);
-                        if (c.locked) {
+                        if (locked) {
                           sfx.keyJingle();
                           setShakingId(c.id);
-                          
                           window.setTimeout(() => setShakingId((s) => (s === c.id ? null : s)), 700);
                           window.setTimeout(() => setInfoOpen(true), 260);
+                        } else {
+                          selectCharacter(c.id as CharacterId);
                         }
                       }}
                       className={[
@@ -1818,12 +1831,12 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                           src={c.art}
                           alt={c.name}
                           className="w-full h-full object-cover"
-                          style={c.locked ? { filter: "grayscale(1) brightness(0.55)" } : undefined}
+                          style={locked ? { filter: "grayscale(1) brightness(0.55)" } : undefined}
                         />
                       ) : (
                         <span className="font-marker text-6xl sm:text-7xl" style={{ color: tint }}>?</span>
                       )}
-                      {c.locked && (
+                      {locked && (
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                           <span
                             className={[
@@ -1878,7 +1891,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
             <p className="font-scribble text-lg text-ink/70 leading-snug mb-4 italic">
               {selected.blurb}
             </p>
-            {selected.locked && (
+            {isCharLocked(selected.id) && (
               <p className="font-scribble text-base text-accent leading-snug mb-4 -rotate-1">
                 to unlock, obtain the cat badge, click it once and play the tutorial
               </p>

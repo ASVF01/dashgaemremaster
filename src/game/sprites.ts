@@ -18,6 +18,10 @@ import superDash2 from "@/assets/sprites/super_dash_2.png";
 import superDash3 from "@/assets/sprites/super_dash_3.png";
 import beamAtkUrl from "@/assets/sprites/beam_atk.png";
 import beamAtkJumpUrl from "@/assets/sprites/beam_atk_jump.png";
+import altIdleAsset from "@/assets/sprites/alternate/alt_idle.png.asset.json";
+import altWalkAsset from "@/assets/sprites/alternate/alt_walk.png.asset.json";
+import altJumpAsset from "@/assets/sprites/alternate/alt_jump.png.asset.json";
+import { getSelectedCharacter, type CharacterId } from "@/game/character";
 
 export type SpriteState = "idle" | "run" | "runFast" | "jump" | "fall" | "slide" | "dive" | "dash" | "skid" | "superDash" | "hurt" | "beam" | "beamJump";
 
@@ -41,26 +45,47 @@ const CYCLES: Partial<Record<SpriteState, string[]>> = {
   superDash: [superDash1, superDash2, superDash3],
 };
 
-const cache: Partial<Record<SpriteState, HTMLImageElement>> = {};
-const loaded: Partial<Record<SpriteState, boolean>> = {};
-const cycleCache: Partial<Record<SpriteState, HTMLImageElement[]>> = {};
-const cycleLoaded: Partial<Record<SpriteState, boolean[]>> = {};
+// Per-character sprite overrides. Missing states fall back to the default
+// (stick) URLS/CYCLES so partial sprite sets still render sensibly.
+const CHAR_URLS: Partial<Record<CharacterId, Partial<Record<SpriteState, string>>>> = {
+  x3mode: {
+    idle: altIdleAsset.url,
+    run: altWalkAsset.url,
+    jump: altJumpAsset.url,
+  },
+};
 
-function load(state: SpriteState): HTMLImageElement | null {
-  const url = URLS[state];
+type Key = string; // `${characterId}:${state}`
+const cache: Record<Key, HTMLImageElement> = {};
+const loaded: Record<Key, boolean> = {};
+const cycleCache: Record<Key, HTMLImageElement[]> = {};
+const cycleLoaded: Record<Key, boolean[]> = {};
+
+function urlFor(char: CharacterId, state: SpriteState): string | undefined {
+  return CHAR_URLS[char]?.[state] ?? URLS[state];
+}
+function cycleFor(char: CharacterId, state: SpriteState): string[] | undefined {
+  // Characters only override single-frame states for now; cycles come from default.
+  return CYCLES[state];
+}
+
+function load(char: CharacterId, state: SpriteState): HTMLImageElement | null {
+  const url = urlFor(char, state);
   if (!url) return null;
-  if (cache[state]) return loaded[state] ? cache[state]! : null;
+  const key = `${char}:${state}`;
+  if (cache[key]) return loaded[key] ? cache[key]! : null;
   const img = new Image();
-  img.onload = () => { loaded[state] = true; };
+  img.onload = () => { loaded[key] = true; };
   img.src = url;
-  cache[state] = img;
+  cache[key] = img;
   return null;
 }
 
-function loadCycle(state: SpriteState) {
-  const urls = CYCLES[state];
+function loadCycle(char: CharacterId, state: SpriteState) {
+  const urls = cycleFor(char, state);
   if (!urls) return;
-  if (cycleCache[state]) return;
+  const key = `${char}:${state}`;
+  if (cycleCache[key]) return;
   const imgs: HTMLImageElement[] = [];
   const flags: boolean[] = urls.map(() => false);
   urls.forEach((u, i) => {
@@ -69,13 +94,15 @@ function loadCycle(state: SpriteState) {
     img.src = u;
     imgs.push(img);
   });
-  cycleCache[state] = imgs;
-  cycleLoaded[state] = flags;
+  cycleCache[key] = imgs;
+  cycleLoaded[key] = flags;
 }
 
-// Eager-load on module init so the first frame can use them.
-(Object.keys(URLS) as SpriteState[]).forEach(load);
-(Object.keys(CYCLES) as SpriteState[]).forEach(loadCycle);
+// Eager-load default character on module init so the first frame can use them.
+(Object.keys(URLS) as SpriteState[]).forEach((s) => load("stick", s));
+(Object.keys(CYCLES) as SpriteState[]).forEach((s) => loadCycle("stick", s));
+// Also warm alternate overrides so switching in-game is instant.
+(Object.keys(CHAR_URLS.x3mode ?? {}) as SpriteState[]).forEach((s) => load("x3mode", s));
 
 // Public gallery: every sprite (and animated cycle frame) with a label.
 // Used by the SPRITE GALLERY in the main menu.
@@ -105,16 +132,17 @@ export const SPRITE_GALLERY: GallerySprite[] = [
 // fallbacks (fall → jump → idle, dive → slide → idle, etc.).
 // `frame` is an arbitrary integer used to pick a frame for animated cycles.
 export function getSprite(state: SpriteState, frame = 0): HTMLImageElement | null {
-  // animated cycle?
-  const cyc = cycleCache[state];
+  const char = getSelectedCharacter();
+  const key = (c: CharacterId, s: SpriteState) => `${c}:${s}`;
+
+  // animated cycle? (currently only from default character)
+  const cyc = cycleCache[key(char, state)] ?? cycleCache[key("stick", state)];
   if (cyc && cyc.length) {
-    const flags = cycleLoaded[state]!;
-    // try requested frame, then walk forward to find any loaded one
+    const flags = cycleLoaded[key(char, state)] ?? cycleLoaded[key("stick", state)]!;
     for (let i = 0; i < cyc.length; i++) {
       const idx = ((frame % cyc.length) + i) % cyc.length;
       if (flags[idx]) return cyc[idx];
     }
-    // not loaded yet — fall through to fallbacks
   }
 
   const order: SpriteState[] =
@@ -131,10 +159,15 @@ export function getSprite(state: SpriteState, frame = 0): HTMLImageElement | nul
     state === "dash"  ? ["dash", "run", "idle"] :
     state === "run"   ? ["run", "idle"] :
                         ["idle"];
-  for (const s of order) {
-    const img = cache[s];
-    if (img && loaded[s]) return img;
-    if (URLS[s] && !cache[s]) load(s);
+  // Try the selected character first, then fall back to the default (stick).
+  const chars: CharacterId[] = char === "stick" ? ["stick"] : [char, "stick"];
+  for (const c of chars) {
+    for (const s of order) {
+      const k = key(c, s);
+      const img = cache[k];
+      if (img && loaded[k]) return img;
+      if (urlFor(c, s) && !cache[k]) load(c, s);
+    }
   }
   return null;
 }
