@@ -132,16 +132,17 @@ export const SPRITE_GALLERY: GallerySprite[] = [
 // fallbacks (fall → jump → idle, dive → slide → idle, etc.).
 // `frame` is an arbitrary integer used to pick a frame for animated cycles.
 export function getSprite(state: SpriteState, frame = 0): HTMLImageElement | null {
-  // animated cycle?
-  const cyc = cycleCache[state];
+  const char = getSelectedCharacter();
+  const key = (c: CharacterId, s: SpriteState) => `${c}:${s}`;
+
+  // animated cycle? (currently only from default character)
+  const cyc = cycleCache[key(char, state)] ?? cycleCache[key("stick", state)];
   if (cyc && cyc.length) {
-    const flags = cycleLoaded[state]!;
-    // try requested frame, then walk forward to find any loaded one
+    const flags = cycleLoaded[key(char, state)] ?? cycleLoaded[key("stick", state)]!;
     for (let i = 0; i < cyc.length; i++) {
       const idx = ((frame % cyc.length) + i) % cyc.length;
       if (flags[idx]) return cyc[idx];
     }
-    // not loaded yet — fall through to fallbacks
   }
 
   const order: SpriteState[] =
@@ -158,10 +159,15 @@ export function getSprite(state: SpriteState, frame = 0): HTMLImageElement | nul
     state === "dash"  ? ["dash", "run", "idle"] :
     state === "run"   ? ["run", "idle"] :
                         ["idle"];
-  for (const s of order) {
-    const img = cache[s];
-    if (img && loaded[s]) return img;
-    if (URLS[s] && !cache[s]) load(s);
+  // Try the selected character first, then fall back to the default (stick).
+  const chars: CharacterId[] = char === "stick" ? ["stick"] : [char, "stick"];
+  for (const c of chars) {
+    for (const s of order) {
+      const k = key(c, s);
+      const img = cache[k];
+      if (img && loaded[k]) return img;
+      if (urlFor(c, s) && !cache[k]) load(c, s);
+    }
   }
   return null;
 }
