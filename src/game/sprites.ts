@@ -120,6 +120,7 @@ function loadCycle(char: CharacterId, state: SpriteState) {
 (Object.keys(CYCLES) as SpriteState[]).forEach((s) => loadCycle("stick", s));
 // Also warm alternate overrides so switching in-game is instant.
 (Object.keys(CHAR_URLS.x3mode ?? {}) as SpriteState[]).forEach((s) => load("x3mode", s));
+(Object.keys(CHAR_CYCLES.x3mode ?? {}) as SpriteState[]).forEach((s) => loadCycle("x3mode", s));
 
 // Public gallery: every sprite (and animated cycle frame) with a label.
 // Used by the SPRITE GALLERY in the main menu.
