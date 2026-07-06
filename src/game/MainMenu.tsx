@@ -1891,7 +1891,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
             <p className="font-scribble text-lg text-ink/70 leading-snug mb-4 italic">
               {selected.blurb}
             </p>
-            {selected.locked && (
+            {isCharLocked(selected.id) && (
               <p className="font-scribble text-base text-accent leading-snug mb-4 -rotate-1">
                 to unlock, obtain the cat badge, click it once and play the tutorial
               </p>
