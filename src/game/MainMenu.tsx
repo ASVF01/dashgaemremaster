@@ -1599,10 +1599,15 @@ const CARD_TINT: Record<string, string> = {
 
 function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   useTabBgm(gachaBgm);
-  const [picked, setPicked] = useState<string>("stick");
+  const charState = useCharacter();
+  const [picked, setPicked] = useState<string>(charState.selected);
   const [infoOpen, setInfoOpen] = useState(false);
   const [shakingId, setShakingId] = useState<string | null>(null);
   const selected = WIP_CHARACTERS.find((c) => c.id === picked) ?? WIP_CHARACTERS[0];
+  const isCharLocked = (id: string) =>
+    (id === "stick" || id === "dasher" || id === "shadow" || id === "x3mode")
+      ? !charState.unlocked[id as CharacterId]
+      : false;
 
   // Swipe-in / swipe-out transition.
   const [shown, setShown] = useState(false);
