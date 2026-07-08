@@ -33,6 +33,7 @@ import altSlideAsset from "@/assets/sprites/alternate/alt_slide.png.asset.json";
 import altSkidAsset from "@/assets/sprites/alternate/alt_skid.png.asset.json";
 import altFallAsset from "@/assets/sprites/alternate/alt_fall.png.asset.json";
 import altDashAsset from "@/assets/sprites/alternate/alt_dash.png.asset.json";
+import altDiveAsset from "@/assets/sprites/alternate/alt_dive.png.asset.json";
 import { getSelectedCharacter, type CharacterId } from "@/game/character";
 
 export type SpriteState = "idle" | "run" | "runFast" | "jump" | "fall" | "slide" | "dive" | "dash" | "skid" | "superDash" | "hurt" | "beam" | "beamJump";
@@ -68,6 +69,7 @@ const CHAR_URLS: Partial<Record<CharacterId, Partial<Record<SpriteState, string>
     skid: altSkidAsset.url,
     fall: altFallAsset.url,
     dash: altDashAsset.url,
+    dive: altDiveAsset.url,
   },
 };
 
