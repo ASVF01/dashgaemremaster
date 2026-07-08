@@ -64,6 +64,10 @@ const CHAR_URLS: Partial<Record<CharacterId, Partial<Record<SpriteState, string>
     idle: altIdleAsset.url,
     run: altWalkAsset.url,
     jump: altJumpAsset.url,
+    slide: altSlideAsset.url,
+    skid: altSkidAsset.url,
+    fall: altFallAsset.url,
+    dash: altDashAsset.url,
   },
 };
 
