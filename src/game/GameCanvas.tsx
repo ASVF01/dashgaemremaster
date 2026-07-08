@@ -16,8 +16,6 @@ import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, 
 import weSfxUrl from "@/assets/audio/impact_aura_charge.ogg";
 import { getSettings } from "@/game/settings";
 import { getSprite, type SpriteState } from "@/game/sprites";
-import { getSelectedCharacter } from "@/game/character";
-
 import spookUrl from "@/assets/sprites/spook.png";
 import spookHurtUrl from "@/assets/sprites/spook_hurt.png";
 import roaringKnightUrl from "@/assets/roaring_knight.png";
@@ -236,13 +234,7 @@ interface Player {
   laserDir: 1 | -1; // direction the laser is pointed
   laserDamageTick: number; // accumulator for periodic boss damage
   laserWasHeld: boolean; // edge-detect for re-arming float per press
-  // THE ALTERNATE (x3mode) charged punch
-  charging: boolean;
-  chargeTime: number;    // 0..3 seconds while B is held
-  firing: number;        // 0 = idle. counts UP from 0 during the punch (0..~0.45s)
-  punchApplied: boolean; // true after the lunge/enemy fling has been applied this punch
 }
-
 
 interface Afterimage {
   x: number; y: number; w: number; h: number;
@@ -487,12 +479,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
         laserDir: 1,
         laserDamageTick: 0,
         laserWasHeld: false,
-        charging: false,
-        chargeTime: 0,
-        firing: 0,
-        punchApplied: false,
       },
-
       projectiles: [],
       particles: [],
       afterimages: [],
@@ -752,20 +739,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
           igniteDash(r, p, dx, dy, jumpAlso);
         }
       }
-      // THE ALTERNATE — press & hold B to charge a punch. Only for x3mode.
-      if (e.code === "KeyB" && refs.current && !e.repeat) {
-        const r = refs.current;
-        const p = r.player;
-        if (getSelectedCharacter() === "x3mode" && p.alive && !r.finished && !p.charging && p.firing <= 0) {
-          p.charging = true;
-          p.chargeTime = 0;
-          p.punchApplied = false;
-          unlockAudio();
-        }
-      }
     };
     const up = (e: KeyboardEvent) => {
-
       keysRef.current[e.code] = false;
       // release super dash
       if (matchesAction(e.code, "dash") && refs.current) {
@@ -779,15 +754,6 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
           sfx.laserStop();
         }
       }
-      // Release B before 3s → cancel charge (no punch).
-      if (e.code === "KeyB" && refs.current) {
-        const p = refs.current.player;
-        if (p.charging && p.firing <= 0) {
-          p.charging = false;
-          p.chargeTime = 0;
-        }
-      }
-
     };
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
