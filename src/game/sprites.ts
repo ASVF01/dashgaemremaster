@@ -29,6 +29,10 @@ import altRun5 from "@/assets/sprites/alternate/alt_run_5.png.asset.json";
 import altRun6 from "@/assets/sprites/alternate/alt_run_6.png.asset.json";
 import altRun7 from "@/assets/sprites/alternate/alt_run_7.png.asset.json";
 import altRun8 from "@/assets/sprites/alternate/alt_run_8.png.asset.json";
+import altSlideAsset from "@/assets/sprites/alternate/alt_slide.png.asset.json";
+import altSkidAsset from "@/assets/sprites/alternate/alt_skid.png.asset.json";
+import altFallAsset from "@/assets/sprites/alternate/alt_fall.png.asset.json";
+import altDashAsset from "@/assets/sprites/alternate/alt_dash.png.asset.json";
 import { getSelectedCharacter, type CharacterId } from "@/game/character";
 
 export type SpriteState = "idle" | "run" | "runFast" | "jump" | "fall" | "slide" | "dive" | "dash" | "skid" | "superDash" | "hurt" | "beam" | "beamJump";
@@ -60,6 +64,10 @@ const CHAR_URLS: Partial<Record<CharacterId, Partial<Record<SpriteState, string>
     idle: altIdleAsset.url,
     run: altWalkAsset.url,
     jump: altJumpAsset.url,
+    slide: altSlideAsset.url,
+    skid: altSkidAsset.url,
+    fall: altFallAsset.url,
+    dash: altDashAsset.url,
   },
 };
 
