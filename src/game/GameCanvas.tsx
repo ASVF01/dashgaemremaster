@@ -779,6 +779,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
           sfx.laserStop();
         }
       }
+      // Release B before 3s → cancel charge (no punch).
+      if (e.code === "KeyB" && refs.current) {
+        const p = refs.current.player;
+        if (p.charging && p.firing <= 0) {
+          p.charging = false;
+          p.chargeTime = 0;
+        }
+      }
+
     };
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
