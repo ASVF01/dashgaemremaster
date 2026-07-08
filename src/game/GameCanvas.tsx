@@ -752,8 +752,20 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
           igniteDash(r, p, dx, dy, jumpAlso);
         }
       }
+      // THE ALTERNATE — press & hold B to charge a punch. Only for x3mode.
+      if (e.code === "KeyB" && refs.current && !e.repeat) {
+        const r = refs.current;
+        const p = r.player;
+        if (getSelectedCharacter() === "x3mode" && p.alive && !r.finished && !p.charging && p.firing <= 0) {
+          p.charging = true;
+          p.chargeTime = 0;
+          p.punchApplied = false;
+          unlockAudio();
+        }
+      }
     };
     const up = (e: KeyboardEvent) => {
+
       keysRef.current[e.code] = false;
       // release super dash
       if (matchesAction(e.code, "dash") && refs.current) {
