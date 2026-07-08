@@ -34,9 +34,13 @@ import altSkidAsset from "@/assets/sprites/alternate/alt_skid.png.asset.json";
 import altFallAsset from "@/assets/sprites/alternate/alt_fall.png.asset.json";
 import altDashAsset from "@/assets/sprites/alternate/alt_dash.png.asset.json";
 import altDiveAsset from "@/assets/sprites/alternate/alt_dive.png.asset.json";
+import altChargeReadyAsset from "@/assets/sprites/alternate/alt_charge_ready.png.asset.json";
+import altChargeAimAsset from "@/assets/sprites/alternate/alt_charge_aim.png.asset.json";
+import altChargeFireAsset from "@/assets/sprites/alternate/alt_charge_fire.png.asset.json";
 import { getSelectedCharacter, type CharacterId } from "@/game/character";
 
-export type SpriteState = "idle" | "run" | "runFast" | "jump" | "fall" | "slide" | "dive" | "dash" | "skid" | "superDash" | "hurt" | "beam" | "beamJump";
+export type SpriteState = "idle" | "run" | "runFast" | "jump" | "fall" | "slide" | "dive" | "dash" | "skid" | "superDash" | "hurt" | "beam" | "beamJump" | "chargeReady" | "chargeAim" | "chargeFire";
+
 
 const URLS: Partial<Record<SpriteState, string>> = {
   idle: standUrl,
@@ -70,8 +74,12 @@ const CHAR_URLS: Partial<Record<CharacterId, Partial<Record<SpriteState, string>
     fall: altFallAsset.url,
     dash: altDashAsset.url,
     dive: altDiveAsset.url,
+    chargeReady: altChargeReadyAsset.url,
+    chargeAim: altChargeAimAsset.url,
+    chargeFire: altChargeFireAsset.url,
   },
 };
+
 
 const CHAR_CYCLES: Partial<Record<CharacterId, Partial<Record<SpriteState, string[]>>>> = {
   x3mode: {
@@ -185,8 +193,12 @@ export function getSprite(state: SpriteState, frame = 0): HTMLImageElement | nul
     state === "beam"  ? ["beam", "idle"] :
     state === "beamJump" ? ["beamJump", "beam", "jump", "idle"] :
     state === "dash"  ? ["dash", "run", "idle"] :
+    state === "chargeReady" ? ["chargeReady", "idle"] :
+    state === "chargeAim" ? ["chargeAim", "chargeReady", "idle"] :
+    state === "chargeFire" ? ["chargeFire", "dash", "run", "idle"] :
     state === "run"   ? ["run", "idle"] :
                         ["idle"];
+
   // Try the selected character first, then fall back to the default (stick).
   const chars: CharacterId[] = char === "stick" ? ["stick"] : [char, "stick"];
   for (const c of chars) {
