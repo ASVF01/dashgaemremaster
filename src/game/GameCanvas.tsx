@@ -753,6 +753,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
           igniteDash(r, p, dx, dy, jumpAlso);
         }
       }
+      // THE ALTERNATE — charged punch (KeyB). Hold to charge; auto-fires
+      // at 3s. Released early = cancel. Only usable by x3mode.
+      if (e.code === "KeyB" && refs.current && !e.repeat) {
+        const r = refs.current;
+        const p = r.player;
+        if (getSelectedCharacter() === "x3mode" && p.alive && p.punchCharge < 0 && p.punchFireT <= 0) {
+          unlockAudio();
+          p.punchCharge = 0;
+          p.punchHit = false;
+        }
+      }
     };
     const up = (e: KeyboardEvent) => {
       keysRef.current[e.code] = false;
