@@ -16,6 +16,7 @@ import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, 
 import weSfxUrl from "@/assets/audio/impact_aura_charge.ogg";
 import { getSettings } from "@/game/settings";
 import { getSprite, type SpriteState } from "@/game/sprites";
+import { getSelectedCharacter } from "@/game/character";
 import spookUrl from "@/assets/sprites/spook.png";
 import spookHurtUrl from "@/assets/sprites/spook_hurt.png";
 import roaringKnightUrl from "@/assets/roaring_knight.png";
@@ -234,6 +235,12 @@ interface Player {
   laserDir: 1 | -1; // direction the laser is pointed
   laserDamageTick: number; // accumulator for periodic boss damage
   laserWasHeld: boolean; // edge-detect for re-arming float per press
+  // THE ALTERNATE — charged punch. `punchCharge` counts up seconds while
+  // KeyB is held (-1 when idle). Auto-fires at 3s. `punchFireT` is the
+  // active-lunge window after the punch is thrown.
+  punchCharge: number;
+  punchFireT: number;
+  punchHit: boolean; // set true once a punch has connected this swing
 }
 
 interface Afterimage {
@@ -306,6 +313,9 @@ interface GameRefs {
   // Player beams (invboi vs boss only).
   beams: { x: number; y: number; vx: number; vy: number; life: number; maxLife: number; hit: boolean }[];
   bossParryFlash: number;
+  // THE ALTERNATE punch — screen zoom multiplier centered on the player.
+  // 1 = no zoom; grows to ~1.4 during the aim window then snaps back.
+  punchZoom: number;
 }
 
 // Boss is rendered in screen-space (top-right). World-space slashes attack the player.
@@ -479,6 +489,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
         laserDir: 1,
         laserDamageTick: 0,
         laserWasHeld: false,
+        punchCharge: -1,
+        punchFireT: 0,
+        punchHit: false,
       },
       projectiles: [],
       particles: [],
@@ -521,6 +534,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       boss: levelId === "roaring-knight" ? makeBoss() : null,
       beams: [],
       bossParryFlash: 0,
+      punchZoom: 1,
     };
     // Pre-place the invboi star if this level configures one (e.g. meet-invboi).
     if (level.invboiStart) {
@@ -667,15 +681,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
         unlockAudio();
         const r = refs.current;
         if (r.player.parryCooldown <= 0 && r.player.parrying <= 0) {
-          r.player.parrying = PARRY_WINDOW;
+          const isAlt = getSelectedCharacter() === "x3mode";
+          const win = Math.max(0.05, PARRY_WINDOW - (isAlt ? 0.1 : 0));
+          r.player.parrying = win;
           // Boss fights: shorter cooldown so the player can keep up with the
           // knight's quick attacks, but still long enough that you can't just
           // mash the button — must be a deliberate retry after the active
           // window closes.
-          const cd = r.boss ? PARRY_WINDOW + 0.18 : PARRY_COOLDOWN + PARRY_WINDOW;
+          const cd = r.boss ? win + 0.18 : PARRY_COOLDOWN + win;
           r.player.parryCooldown = cd;
           // i-frames for the entire parry active window so you can't get hit while parrying
-          if (r.player.invuln < PARRY_WINDOW) r.player.invuln = PARRY_WINDOW;
+          if (r.player.invuln < win) r.player.invuln = win;
           sfx.parryStart();
         }
       }
@@ -739,6 +755,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
           igniteDash(r, p, dx, dy, jumpAlso);
         }
       }
+      // THE ALTERNATE — charged punch (KeyB). Hold to charge; auto-fires
+      // at 3s. Released early = cancel. Only usable by x3mode.
+      if (e.code === "KeyB" && refs.current && !e.repeat) {
+        const r = refs.current;
+        const p = r.player;
+        if (getSelectedCharacter() === "x3mode" && p.alive && p.punchCharge < 0 && p.punchFireT <= 0) {
+          unlockAudio();
+          p.punchCharge = 0;
+          p.punchHit = false;
+        }
+      }
     };
     const up = (e: KeyboardEvent) => {
       keysRef.current[e.code] = false;
@@ -752,6 +779,13 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
         if (p.laserActive) {
           p.laserActive = false;
           sfx.laserStop();
+        }
+      }
+      // KeyB release — cancel charge if not fully charged.
+      if (e.code === "KeyB" && refs.current) {
+        const p = refs.current.player;
+        if (p.punchCharge >= 0 && p.punchCharge < 3) {
+          p.punchCharge = -1;
         }
       }
     };
@@ -1047,7 +1081,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
     const len = Math.hypot(dx, dy) || 1;
     const nx = dx / len, ny = dy / len;
     const along = p.vx * nx + p.vy * ny;
-    const newAlong = Math.max(along, 0) + DASH_IMPULSE + DASH_BONUS;
+    // THE ALTERNATE — dash goes farther.
+    const distMul = getSelectedCharacter() === "x3mode" ? 1.4 : 1;
+    const newAlong = Math.max(along, 0) + (DASH_IMPULSE + DASH_BONUS) * distMul;
     p.vx += (newAlong - along) * nx;
     p.vy += (newAlong - along) * ny;
     if (jumpAlso && p.onGround) {
@@ -1130,6 +1166,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
     r.time += dt;
     const p = r.player;
     const onGround = p.onGround;
+    const isAlt = getSelectedCharacter() === "x3mode";
 
     // starman cheat: keep i-frames topped up. Stars are drawn around the
     // player in render() (blinking in place) instead of spawning particles.
@@ -1139,6 +1176,135 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       if (p.dashCooldown > 0) p.dashCooldown = Math.max(0, p.dashCooldown - dt * 2.5);
       p.parryCooldown = 0;
     }
+
+    // ============ THE ALTERNATE — charged punch ============
+    // Ease the punch zoom back toward its target every frame.
+    {
+      let target = 1;
+      if (p.punchCharge >= 2 && p.punchCharge < 2.7) target = 1.4;
+      r.punchZoom += (target - r.punchZoom) * Math.min(1, dt * 6);
+      if (Math.abs(r.punchZoom - target) < 0.005) r.punchZoom = target;
+    }
+    if (p.punchCharge >= 0 && p.alive) {
+      // Freeze horizontal drift so he plants his feet.
+      p.vx *= Math.max(0, 1 - dt * 8);
+      p.punchCharge += dt;
+      // Charge line particles — rate grows with charge phase.
+      const rate = p.punchCharge < 1 ? 12 : p.punchCharge < 2 ? 28 : 50;
+      const chance = rate * dt;
+      const emit = Math.floor(chance) + (Math.random() < (chance % 1) ? 1 : 0);
+      for (let i = 0; i < emit; i++) {
+        const ang = Math.random() * Math.PI * 2;
+        const rad = 24 + Math.random() * 16;
+        const ox = Math.cos(ang) * rad;
+        const oy = Math.sin(ang) * rad * 1.2;
+        spawnParticle(r, {
+          x: p.x + p.w / 2 + ox,
+          y: p.y + p.h / 2 + oy,
+          vx: -ox * (2 + p.punchCharge),
+          vy: -oy * (2 + p.punchCharge),
+          color: "#ff6a7a",
+          size: 2 + Math.random() * 2,
+          life: 0.18 + Math.random() * 0.1,
+          kind: "smear",
+          angle: ang,
+        });
+      }
+      // Sec 2+: rumble the camera.
+      if (p.punchCharge >= 1) r.shake = Math.max(r.shake, 0.25);
+      if (p.punchCharge >= 2) r.shake = Math.max(r.shake, 0.4);
+      // Sec 3 (aim window) — invincible.
+      if (p.punchCharge >= 2) p.invuln = Math.max(p.invuln, 0.2);
+      // Auto-fire at 3s.
+      if (p.punchCharge >= 3) {
+        // FIRE!
+        p.punchCharge = -1;
+        p.punchFireT = 0.4;
+        p.invuln = Math.max(p.invuln, 0.5);
+        r.punchZoom = 1; // snap back
+        // Lunge forward.
+        p.vx = p.facing * 1200;
+        p.hStretch = 1;
+        // Punch hitbox: reaches ~140px in front of player.
+        const reach = 140;
+        const hx = p.facing > 0 ? p.x + p.w : p.x - reach;
+        const hy = p.y - 8;
+        const hw = reach;
+        const hh = p.h + 16;
+        for (const e of r.level.enemies) {
+          if (!e.alive) continue;
+          if (rectOverlap(hx, hy, hw, hh, e.x, e.y, e.w, e.h)) {
+            p.punchHit = true;
+            // FLING! Big lateral velocity + skyward pop in punch direction.
+            e.vx = p.facing * 1600;
+            e.stunTimer = 2;
+            e.hitFlash = 0.3;
+            // Non-chaser enemies also die from the punch.
+            if (e.kind !== "chaser") {
+              e.alive = false;
+              r.combo += 1;
+              r.comboTimer = 2.5;
+              r.score += 300 * Math.max(1, r.combo);
+              sfx.enemyKill();
+            }
+            // Shard debris flying in the punch direction to sell the fling.
+            for (let i = 0; i < 12; i++) {
+              spawnParticle(r, {
+                x: e.x + e.w / 2,
+                y: e.y + e.h / 2,
+                vx: p.facing * (500 + Math.random() * 600),
+                vy: -200 - Math.random() * 300,
+                color: "#f5234c",
+                size: 3 + Math.random() * 3,
+                life: 0.4 + Math.random() * 0.3,
+                kind: "shard",
+              });
+            }
+          }
+        }
+        r.shake = Math.max(r.shake, 0.9);
+        r.freezeFrames = Math.max(r.freezeFrames, 5);
+        sfx.dash();
+        // Big punch burst
+        burst(r, p.x + p.w / 2 + p.facing * 60, p.y + p.h / 2, "#ff2a3a", 22, 500);
+      }
+    }
+    // Fire follow-through — dust behind + light-red action lines.
+    if (p.punchFireT > 0) {
+      p.punchFireT -= dt;
+      p.invuln = Math.max(p.invuln, 0.1);
+      const back = -p.facing;
+      // Ground dust plumes
+      for (let i = 0; i < 3; i++) {
+        spawnParticle(r, {
+          x: p.x + p.w / 2 + back * (10 + Math.random() * 40),
+          y: p.y + p.h - Math.random() * 8,
+          vx: back * (120 + Math.random() * 220),
+          vy: -80 - Math.random() * 120,
+          color: "#c8beaa",
+          size: 4 + Math.random() * 4,
+          life: 0.4 + Math.random() * 0.3,
+          kind: "smear",
+        });
+      }
+      // Light-red action lines streaking behind
+      for (let i = 0; i < 4; i++) {
+        const oy = (Math.random() - 0.5) * p.h * 1.2;
+        spawnParticle(r, {
+          x: p.x + p.w / 2,
+          y: p.y + p.h / 2 + oy,
+          vx: back * (600 + Math.random() * 400),
+          vy: 0,
+          color: "#ff7a8a",
+          size: 2 + Math.random() * 2,
+          life: 0.18 + Math.random() * 0.12,
+          kind: "smear",
+          angle: 0,
+        });
+      }
+    }
+    // ============ END punch ============
+
 
     // input (bound).
     const b = getLiveBinds();
@@ -1153,7 +1319,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
     if (right) dir += 1;
     if (dir !== 0) p.facing = dir > 0 ? 1 : -1;
 
-    const speedMul = p.starman ? 1.5 : 1;
+    const speedMul = p.starman ? 1.5 : (isAlt ? 1.15 : 1);
     if (dir !== 0) {
       p.vx += dir * MOVE_ACCEL * speedMul * dt;
     } else {
@@ -2456,6 +2622,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
 
     const camX = Math.floor(r.cameraX);
     const camY = Math.floor(r.cameraY);
+    // THE ALTERNATE punch zoom — scale the whole world around the player's
+    // on-screen position while charging the aim.
+    if (r.punchZoom !== 1) {
+      const px = r.player.x + r.player.w / 2 - camX;
+      const py = r.player.y + r.player.h / 2 - camY;
+      ctx.translate(px, py);
+      ctx.scale(r.punchZoom, r.punchZoom);
+      ctx.translate(-px, -py);
+    }
     ctx.translate(-camX, -camY);
 
     // distant scribbled clouds / scenery
@@ -3651,6 +3826,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
     const speedNow = Math.abs(p.vx);
     const machNow = machTier(speedNow);
     const state: SpriteState =
+      p.punchFireT > 0 ? "punchFire" :
+      p.punchCharge >= 2 ? "punchAim" :
+      p.punchCharge >= 0 ? "punchReady" :
       p.hurtTimer > 0 ? "hurt" :
       p.beamTime > 0 ? (p.beamGrounded && p.onGround ? "beam" : "beamJump") :
       p.dashTime > 0 ? "dash" :

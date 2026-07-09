@@ -34,9 +34,12 @@ import altSkidAsset from "@/assets/sprites/alternate/alt_skid.png.asset.json";
 import altFallAsset from "@/assets/sprites/alternate/alt_fall.png.asset.json";
 import altDashAsset from "@/assets/sprites/alternate/alt_dash.png.asset.json";
 import altDiveAsset from "@/assets/sprites/alternate/alt_dive.png.asset.json";
+import altReadyAsset from "@/assets/sprites/alternate/alt_ready.png.asset.json";
+import altAimAsset from "@/assets/sprites/alternate/alt_aim.png.asset.json";
+import altFireAsset from "@/assets/sprites/alternate/alt_fire.png.asset.json";
 import { getSelectedCharacter, type CharacterId } from "@/game/character";
 
-export type SpriteState = "idle" | "run" | "runFast" | "jump" | "fall" | "slide" | "dive" | "dash" | "skid" | "superDash" | "hurt" | "beam" | "beamJump";
+export type SpriteState = "idle" | "run" | "runFast" | "jump" | "fall" | "slide" | "dive" | "dash" | "skid" | "superDash" | "hurt" | "beam" | "beamJump" | "punchReady" | "punchAim" | "punchFire";
 
 const URLS: Partial<Record<SpriteState, string>> = {
   idle: standUrl,
@@ -70,6 +73,9 @@ const CHAR_URLS: Partial<Record<CharacterId, Partial<Record<SpriteState, string>
     fall: altFallAsset.url,
     dash: altDashAsset.url,
     dive: altDiveAsset.url,
+    punchReady: altReadyAsset.url,
+    punchAim: altAimAsset.url,
+    punchFire: altFireAsset.url,
   },
 };
 
@@ -186,6 +192,9 @@ export function getSprite(state: SpriteState, frame = 0): HTMLImageElement | nul
     state === "beamJump" ? ["beamJump", "beam", "jump", "idle"] :
     state === "dash"  ? ["dash", "run", "idle"] :
     state === "run"   ? ["run", "idle"] :
+    state === "punchReady" ? ["punchReady", "idle"] :
+    state === "punchAim" ? ["punchAim", "punchReady", "idle"] :
+    state === "punchFire" ? ["punchFire", "punchAim", "idle"] :
                         ["idle"];
   // Try the selected character first, then fall back to the default (stick).
   const chars: CharacterId[] = char === "stick" ? ["stick"] : [char, "stick"];
