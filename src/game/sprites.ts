@@ -34,6 +34,9 @@ import altSkidAsset from "@/assets/sprites/alternate/alt_skid.png.asset.json";
 import altFallAsset from "@/assets/sprites/alternate/alt_fall.png.asset.json";
 import altDashAsset from "@/assets/sprites/alternate/alt_dash.png.asset.json";
 import altDiveAsset from "@/assets/sprites/alternate/alt_dive.png.asset.json";
+import altReadyAsset from "@/assets/sprites/alternate/alt_ready.png.asset.json";
+import altAimAsset from "@/assets/sprites/alternate/alt_aim.png.asset.json";
+import altFireAsset from "@/assets/sprites/alternate/alt_fire.png.asset.json";
 import { getSelectedCharacter, type CharacterId } from "@/game/character";
 
 export type SpriteState = "idle" | "run" | "runFast" | "jump" | "fall" | "slide" | "dive" | "dash" | "skid" | "superDash" | "hurt" | "beam" | "beamJump";
