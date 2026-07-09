@@ -312,6 +312,9 @@ interface GameRefs {
   // Player beams (invboi vs boss only).
   beams: { x: number; y: number; vx: number; vy: number; life: number; maxLife: number; hit: boolean }[];
   bossParryFlash: number;
+  // THE ALTERNATE punch — screen zoom multiplier centered on the player.
+  // 1 = no zoom; grows to ~1.4 during the aim window then snaps back.
+  punchZoom: number;
 }
 
 // Boss is rendered in screen-space (top-right). World-space slashes attack the player.
