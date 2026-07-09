@@ -39,7 +39,7 @@ import altAimAsset from "@/assets/sprites/alternate/alt_aim.png.asset.json";
 import altFireAsset from "@/assets/sprites/alternate/alt_fire.png.asset.json";
 import { getSelectedCharacter, type CharacterId } from "@/game/character";
 
-export type SpriteState = "idle" | "run" | "runFast" | "jump" | "fall" | "slide" | "dive" | "dash" | "skid" | "superDash" | "hurt" | "beam" | "beamJump";
+export type SpriteState = "idle" | "run" | "runFast" | "jump" | "fall" | "slide" | "dive" | "dash" | "skid" | "superDash" | "hurt" | "beam" | "beamJump" | "punchReady" | "punchAim" | "punchFire";
 
 const URLS: Partial<Record<SpriteState, string>> = {
   idle: standUrl,
@@ -73,6 +73,9 @@ const CHAR_URLS: Partial<Record<CharacterId, Partial<Record<SpriteState, string>
     fall: altFallAsset.url,
     dash: altDashAsset.url,
     dive: altDiveAsset.url,
+    punchReady: altReadyAsset.url,
+    punchAim: altAimAsset.url,
+    punchFire: altFireAsset.url,
   },
 };
 
