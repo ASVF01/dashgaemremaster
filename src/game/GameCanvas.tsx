@@ -234,6 +234,12 @@ interface Player {
   laserDir: 1 | -1; // direction the laser is pointed
   laserDamageTick: number; // accumulator for periodic boss damage
   laserWasHeld: boolean; // edge-detect for re-arming float per press
+  // THE ALTERNATE — charged punch. `punchCharge` counts up seconds while
+  // KeyB is held (-1 when idle). Auto-fires at 3s. `punchFireT` is the
+  // active-lunge window after the punch is thrown.
+  punchCharge: number;
+  punchFireT: number;
+  punchHit: boolean; // set true once a punch has connected this swing
 }
 
 interface Afterimage {
