@@ -728,7 +728,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
               y: p.y + p.h / 2,
               t: 0,
               facing: p.facing,
-              facing: p.facing,
+            };
             r.shake = Math.max(r.shake, 0.7);
             r.freezeFrames = Math.max(r.freezeFrames, 3);
             r.glitch = Math.max(r.glitch, 0.4);
