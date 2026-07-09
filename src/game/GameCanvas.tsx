@@ -728,18 +728,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
               y: p.y + p.h / 2,
               t: 0,
               facing: p.facing,
-      // THE ALTERNATE — charged punch (KeyB). Hold to charge; auto-fires
-      // at 3s. Released early = cancel. Only usable by x3mode.
-      if (e.code === "KeyB" && refs.current && !e.repeat) {
-        const r = refs.current;
-        const p = r.player;
-        if (getSelectedCharacter() === "x3mode" && p.alive && p.punchCharge < 0 && p.punchFireT <= 0) {
-          unlockAudio();
-          p.punchCharge = 0;
-          p.punchHit = false;
-        }
-      }
-    };
+              facing: p.facing,
             r.shake = Math.max(r.shake, 0.7);
             r.freezeFrames = Math.max(r.freezeFrames, 3);
             r.glitch = Math.max(r.glitch, 0.4);
