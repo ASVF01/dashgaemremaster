@@ -1081,7 +1081,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
     const len = Math.hypot(dx, dy) || 1;
     const nx = dx / len, ny = dy / len;
     const along = p.vx * nx + p.vy * ny;
-    const newAlong = Math.max(along, 0) + DASH_IMPULSE + DASH_BONUS;
+    // THE ALTERNATE — dash goes farther.
+    const distMul = getSelectedCharacter() === "x3mode" ? 1.4 : 1;
+    const newAlong = Math.max(along, 0) + (DASH_IMPULSE + DASH_BONUS) * distMul;
     p.vx += (newAlong - along) * nx;
     p.vy += (newAlong - along) * ny;
     if (jumpAlso && p.onGround) {
