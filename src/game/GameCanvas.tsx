@@ -1166,6 +1166,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
     r.time += dt;
     const p = r.player;
     const onGround = p.onGround;
+    const isAlt = getSelectedCharacter() === "x3mode";
 
     // starman cheat: keep i-frames topped up. Stars are drawn around the
     // player in render() (blinking in place) instead of spawning particles.
@@ -1175,6 +1176,135 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       if (p.dashCooldown > 0) p.dashCooldown = Math.max(0, p.dashCooldown - dt * 2.5);
       p.parryCooldown = 0;
     }
+
+    // ============ THE ALTERNATE — charged punch ============
+    // Ease the punch zoom back toward its target every frame.
+    {
+      let target = 1;
+      if (p.punchCharge >= 2 && p.punchCharge < 2.7) target = 1.4;
+      r.punchZoom += (target - r.punchZoom) * Math.min(1, dt * 6);
+      if (Math.abs(r.punchZoom - target) < 0.005) r.punchZoom = target;
+    }
+    if (p.punchCharge >= 0 && p.alive) {
+      // Freeze horizontal drift so he plants his feet.
+      p.vx *= Math.max(0, 1 - dt * 8);
+      p.punchCharge += dt;
+      // Charge line particles — rate grows with charge phase.
+      const rate = p.punchCharge < 1 ? 12 : p.punchCharge < 2 ? 28 : 50;
+      const chance = rate * dt;
+      const emit = Math.floor(chance) + (Math.random() < (chance % 1) ? 1 : 0);
+      for (let i = 0; i < emit; i++) {
+        const ang = Math.random() * Math.PI * 2;
+        const rad = 24 + Math.random() * 16;
+        const ox = Math.cos(ang) * rad;
+        const oy = Math.sin(ang) * rad * 1.2;
+        spawnParticle(r, {
+          x: p.x + p.w / 2 + ox,
+          y: p.y + p.h / 2 + oy,
+          vx: -ox * (2 + p.punchCharge),
+          vy: -oy * (2 + p.punchCharge),
+          color: "#ff6a7a",
+          size: 2 + Math.random() * 2,
+          life: 0.18 + Math.random() * 0.1,
+          kind: "smear",
+          angle: ang,
+        });
+      }
+      // Sec 2+: rumble the camera.
+      if (p.punchCharge >= 1) r.shake = Math.max(r.shake, 0.25);
+      if (p.punchCharge >= 2) r.shake = Math.max(r.shake, 0.4);
+      // Sec 3 (aim window) — invincible.
+      if (p.punchCharge >= 2) p.invuln = Math.max(p.invuln, 0.2);
+      // Auto-fire at 3s.
+      if (p.punchCharge >= 3) {
+        // FIRE!
+        p.punchCharge = -1;
+        p.punchFireT = 0.4;
+        p.invuln = Math.max(p.invuln, 0.5);
+        r.punchZoom = 1; // snap back
+        // Lunge forward.
+        p.vx = p.facing * 1200;
+        p.hStretch = 1;
+        // Punch hitbox: reaches ~140px in front of player.
+        const reach = 140;
+        const hx = p.facing > 0 ? p.x + p.w : p.x - reach;
+        const hy = p.y - 8;
+        const hw = reach;
+        const hh = p.h + 16;
+        for (const e of r.level.enemies) {
+          if (!e.alive) continue;
+          if (rectOverlap(hx, hy, hw, hh, e.x, e.y, e.w, e.h)) {
+            p.punchHit = true;
+            // FLING! Big lateral velocity + skyward pop in punch direction.
+            e.vx = p.facing * 1600;
+            e.stunTimer = 2;
+            e.hitFlash = 0.3;
+            // Non-chaser enemies also die from the punch.
+            if (e.kind !== "chaser") {
+              e.alive = false;
+              r.combo += 1;
+              r.comboTimer = 2.5;
+              r.score += 300 * Math.max(1, r.combo);
+              sfx.enemyKill();
+            }
+            // Shard debris flying in the punch direction to sell the fling.
+            for (let i = 0; i < 12; i++) {
+              spawnParticle(r, {
+                x: e.x + e.w / 2,
+                y: e.y + e.h / 2,
+                vx: p.facing * (500 + Math.random() * 600),
+                vy: -200 - Math.random() * 300,
+                color: "#f5234c",
+                size: 3 + Math.random() * 3,
+                life: 0.4 + Math.random() * 0.3,
+                kind: "shard",
+              });
+            }
+          }
+        }
+        r.shake = Math.max(r.shake, 0.9);
+        r.freezeFrames = Math.max(r.freezeFrames, 5);
+        sfx.dash();
+        // Big punch burst
+        burst(r, p.x + p.w / 2 + p.facing * 60, p.y + p.h / 2, "#ff2a3a", 22, 500);
+      }
+    }
+    // Fire follow-through — dust behind + light-red action lines.
+    if (p.punchFireT > 0) {
+      p.punchFireT -= dt;
+      p.invuln = Math.max(p.invuln, 0.1);
+      const back = -p.facing;
+      // Ground dust plumes
+      for (let i = 0; i < 3; i++) {
+        spawnParticle(r, {
+          x: p.x + p.w / 2 + back * (10 + Math.random() * 40),
+          y: p.y + p.h - Math.random() * 8,
+          vx: back * (120 + Math.random() * 220),
+          vy: -80 - Math.random() * 120,
+          color: "#c8beaa",
+          size: 4 + Math.random() * 4,
+          life: 0.4 + Math.random() * 0.3,
+          kind: "smear",
+        });
+      }
+      // Light-red action lines streaking behind
+      for (let i = 0; i < 4; i++) {
+        const oy = (Math.random() - 0.5) * p.h * 1.2;
+        spawnParticle(r, {
+          x: p.x + p.w / 2,
+          y: p.y + p.h / 2 + oy,
+          vx: back * (600 + Math.random() * 400),
+          vy: 0,
+          color: "#ff7a8a",
+          size: 2 + Math.random() * 2,
+          life: 0.18 + Math.random() * 0.12,
+          kind: "smear",
+          angle: 0,
+        });
+      }
+    }
+    // ============ END punch ============
+
 
     // input (bound).
     const b = getLiveBinds();
