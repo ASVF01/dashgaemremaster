@@ -2622,6 +2622,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
 
     const camX = Math.floor(r.cameraX);
     const camY = Math.floor(r.cameraY);
+    // THE ALTERNATE punch zoom — scale the whole world around the player's
+    // on-screen position while charging the aim.
+    if (r.punchZoom !== 1) {
+      const px = r.player.x + r.player.w / 2 - camX;
+      const py = r.player.y + r.player.h / 2 - camY;
+      ctx.translate(px, py);
+      ctx.scale(r.punchZoom, r.punchZoom);
+      ctx.translate(-px, -py);
+    }
     ctx.translate(-camX, -camY);
 
     // distant scribbled clouds / scenery
