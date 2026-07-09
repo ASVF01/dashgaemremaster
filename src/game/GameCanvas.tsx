@@ -3817,6 +3817,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
     const speedNow = Math.abs(p.vx);
     const machNow = machTier(speedNow);
     const state: SpriteState =
+      p.punchFireT > 0 ? "punchFire" :
+      p.punchCharge >= 2 ? "punchAim" :
+      p.punchCharge >= 0 ? "punchReady" :
       p.hurtTimer > 0 ? "hurt" :
       p.beamTime > 0 ? (p.beamGrounded && p.onGround ? "beam" : "beamJump") :
       p.dashTime > 0 ? "dash" :
