@@ -533,6 +533,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       boss: levelId === "roaring-knight" ? makeBoss() : null,
       beams: [],
       bossParryFlash: 0,
+      punchZoom: 1,
     };
     // Pre-place the invboi star if this level configures one (e.g. meet-invboi).
     if (level.invboiStart) {
