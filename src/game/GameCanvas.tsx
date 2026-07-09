@@ -779,6 +779,13 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
           sfx.laserStop();
         }
       }
+      // KeyB release — cancel charge if not fully charged.
+      if (e.code === "KeyB" && refs.current) {
+        const p = refs.current.player;
+        if (p.punchCharge >= 0 && p.punchCharge < 3) {
+          p.punchCharge = -1;
+        }
+      }
     };
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
