@@ -192,6 +192,9 @@ export function getSprite(state: SpriteState, frame = 0): HTMLImageElement | nul
     state === "beamJump" ? ["beamJump", "beam", "jump", "idle"] :
     state === "dash"  ? ["dash", "run", "idle"] :
     state === "run"   ? ["run", "idle"] :
+    state === "punchReady" ? ["punchReady", "idle"] :
+    state === "punchAim" ? ["punchAim", "punchReady", "idle"] :
+    state === "punchFire" ? ["punchFire", "punchAim", "idle"] :
                         ["idle"];
   // Try the selected character first, then fall back to the default (stick).
   const chars: CharacterId[] = char === "stick" ? ["stick"] : [char, "stick"];
