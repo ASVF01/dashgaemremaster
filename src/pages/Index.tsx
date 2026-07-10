@@ -62,6 +62,8 @@ const Index = () => {
   const marathonStartRef = useRef<number | null>(null);
   const [marathonFinalMs, setMarathonFinalMs] = useState<number | null>(null);
   const [binds] = useKeybinds();
+  const charState = useCharacter();
+  const isAltSelected = charState.selected === "x3mode";
   const [muted, setMuted] = useState(false);
   const [hasJrbBadge, setHasJrbBadge] = useState(false);
   const [badgeFace, setBadgeFace] = useState<":3" | "X3">(":3");
