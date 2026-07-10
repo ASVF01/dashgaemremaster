@@ -241,6 +241,7 @@ interface Player {
   punchCharge: number;
   punchFireT: number;
   punchHit: boolean; // set true once a punch has connected this swing
+  punchTapFire: boolean; // release-fire path uses a shorter lunge
 }
 
 interface Afterimage {
@@ -492,6 +493,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
         punchCharge: -1,
         punchFireT: 0,
         punchHit: false,
+        punchTapFire: false,
       },
       projectiles: [],
       particles: [],
