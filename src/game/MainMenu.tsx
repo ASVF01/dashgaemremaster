@@ -1605,8 +1605,10 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   const [infoOpen, setInfoOpen] = useState(false);
   const [shakingId, setShakingId] = useState<string | null>(null);
   const selected = WIP_CHARACTERS.find((c) => c.id === picked) ?? WIP_CHARACTERS[0];
+  const isNotYet = (id: string) => id === "dasher" || id === "shadow";
   const isCharLocked = (id: string) =>
-    (id === "stick" || id === "dasher" || id === "shadow" || id === "x3mode")
+    isNotYet(id) ? true :
+    (id === "stick" || id === "x3mode")
       ? !charState.unlocked[id as CharacterId]
       : false;
 
