@@ -242,6 +242,8 @@ interface Player {
   punchFireT: number;
   punchHit: boolean; // set true once a punch has connected this swing
   punchTapFire: boolean; // release-fire path uses a shorter lunge
+  punchHeldFire: boolean; // fire came from full-charge (held) — big lunge, long hitbox
+
 }
 
 interface Afterimage {
