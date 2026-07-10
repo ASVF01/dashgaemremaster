@@ -785,7 +785,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       if (e.code === "KeyB" && refs.current) {
         const p = refs.current.player;
         if (p.punchCharge >= 0 && p.punchCharge < 3) {
-          p.punchCharge = -1;
+          // Tap-fire: release early triggers a shorter lunge punch.
+          p.punchTapFire = true;
+          p.punchCharge = 3;
         }
       }
     };
