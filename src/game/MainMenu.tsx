@@ -1187,7 +1187,7 @@ function PlaylistCard({
 import ragingCrittersImg from "@/assets/bestiary/raging-critters.png";
 import chargedOutletsAsset from "@/assets/bestiary/charged_out_outlets.png.asset.json";
 import bestiaryBgm from "@/assets/audio/bgm_champion_map.mp3";
-import gachaBgmAsset from "@/assets/audio/bgm_map5.ogg.asset.json";
+import gachaBgmAsset from "@/assets/audio/bgm_map3.mp3.asset.json";
 const gachaBgm = gachaBgmAsset.url;
 import thePlayerArt from "@/assets/characters/the_player.png";
 import thePlayerPreviewAsset from "@/assets/characters/the_player_preview.png.asset.json";

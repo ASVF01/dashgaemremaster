@@ -241,6 +241,7 @@ interface Player {
   punchCharge: number;
   punchFireT: number;
   punchHit: boolean; // set true once a punch has connected this swing
+  punchTapFire: boolean; // release-fire path uses a shorter lunge
 }
 
 interface Afterimage {
@@ -492,6 +493,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
         punchCharge: -1,
         punchFireT: 0,
         punchHit: false,
+        punchTapFire: false,
       },
       projectiles: [],
       particles: [],
@@ -785,7 +787,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       if (e.code === "KeyB" && refs.current) {
         const p = refs.current.player;
         if (p.punchCharge >= 0 && p.punchCharge < 3) {
-          p.punchCharge = -1;
+          // Tap-fire: release early triggers a shorter lunge punch.
+          p.punchTapFire = true;
+          p.punchCharge = 3;
         }
       }
     };
@@ -1218,15 +1222,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       // Auto-fire at 3s.
       if (p.punchCharge >= 3) {
         // FIRE!
+        const tap = p.punchTapFire;
+        p.punchTapFire = false;
         p.punchCharge = -1;
-        p.punchFireT = 0.4;
-        p.invuln = Math.max(p.invuln, 0.5);
+        p.punchFireT = tap ? 0.22 : 0.4;
+        p.invuln = Math.max(p.invuln, tap ? 0.15 : 0.5);
         r.punchZoom = 1; // snap back
-        // Lunge forward.
-        p.vx = p.facing * 1200;
+        // Lunge forward — tap is a short jab, full charge is a big lunge.
+        p.vx = p.facing * (tap ? 520 : 1200);
         p.hStretch = 1;
-        // Punch hitbox: reaches ~140px in front of player.
-        const reach = 140;
+        // Punch hitbox: shorter reach on a tap.
+        const reach = tap ? 70 : 140;
         const hx = p.facing > 0 ? p.x + p.w : p.x - reach;
         const hy = p.y - 8;
         const hw = reach;
