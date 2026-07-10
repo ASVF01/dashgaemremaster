@@ -115,6 +115,10 @@ const Index = () => {
     setMuted(isBgmMuted());
     try { setHasJrbBadge(localStorage.getItem("badge_jrb") === "1"); } catch { /* noop */ }
     try {
+      const f = localStorage.getItem("badge_face");
+      if (f === "X3" || f === ":3") setBadgeFace(f);
+    } catch { /* noop */ }
+    try {
       // Default to dark unless explicitly turned off.
       const stored = localStorage.getItem("dark_mode");
       const d = stored == null ? true : stored === "1";
