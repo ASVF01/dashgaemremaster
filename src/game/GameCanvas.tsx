@@ -1247,7 +1247,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
     if (p.punchFireT > 0) {
       p.punchFireT -= dt;
       p.invuln = Math.max(p.invuln, 0.1);
-      const held = p.punchFireT > 0.22 || (!p.punchTapFire && p.punchFireT > 0);
+      const held = p.punchHeldFire;
+      if (p.punchFireT <= 0) p.punchHeldFire = false;
       const reach = held ? 220 : 90;
       const hx = p.facing > 0 ? p.x + p.w : p.x - reach;
       const hy = p.y - 12;
