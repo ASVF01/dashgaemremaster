@@ -1225,60 +1225,58 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
         const tap = p.punchTapFire;
         p.punchTapFire = false;
         p.punchCharge = -1;
-        p.punchFireT = tap ? 0.22 : 0.4;
-        p.invuln = Math.max(p.invuln, tap ? 0.15 : 0.5);
+        p.punchFireT = tap ? 0.22 : 0.79;
+        p.invuln = Math.max(p.invuln, tap ? 0.15 : 0.85);
         r.punchZoom = 1; // snap back
-        // Lunge forward — tap is a short jab, full charge is a big lunge.
-        p.vx = p.facing * (tap ? 520 : 1200);
+        // Lunge forward — tap is a mid jab, full charge is a huge lunge.
+        p.vx = p.facing * (tap ? 900 : 2200);
         p.hStretch = 1;
-        // Punch hitbox: shorter reach on a tap.
-        const reach = tap ? 70 : 140;
-        const hx = p.facing > 0 ? p.x + p.w : p.x - reach;
-        const hy = p.y - 8;
-        const hw = reach;
-        const hh = p.h + 16;
-        for (const e of r.level.enemies) {
-          if (!e.alive) continue;
-          if (rectOverlap(hx, hy, hw, hh, e.x, e.y, e.w, e.h)) {
-            p.punchHit = true;
-            // FLING! Big lateral velocity + skyward pop in punch direction.
-            e.vx = p.facing * 1600;
-            e.stunTimer = 2;
-            e.hitFlash = 0.3;
-            // Non-chaser enemies also die from the punch.
-            if (e.kind !== "chaser") {
-              e.alive = false;
-              r.combo += 1;
-              r.comboTimer = 2.5;
-              r.score += 300 * Math.max(1, r.combo);
-              sfx.enemyKill();
-            }
-            // Shard debris flying in the punch direction to sell the fling.
-            for (let i = 0; i < 12; i++) {
-              spawnParticle(r, {
-                x: e.x + e.w / 2,
-                y: e.y + e.h / 2,
-                vx: p.facing * (500 + Math.random() * 600),
-                vy: -200 - Math.random() * 300,
-                color: "#f5234c",
-                size: 3 + Math.random() * 3,
-                life: 0.4 + Math.random() * 0.3,
-                kind: "shard",
-              });
-            }
-          }
-        }
+        p.punchHit = false;
         r.shake = Math.max(r.shake, 0.9);
         r.freezeFrames = Math.max(r.freezeFrames, 5);
         sfx.dash();
-        // Big punch burst
         burst(r, p.x + p.w / 2 + p.facing * 60, p.y + p.h / 2, "#ff2a3a", 22, 500);
       }
     }
-    // Fire follow-through — dust behind + light-red action lines.
+    // Fire follow-through — dust behind + light-red action lines + continuous hitbox.
     if (p.punchFireT > 0) {
       p.punchFireT -= dt;
       p.invuln = Math.max(p.invuln, 0.1);
+      const held = p.punchFireT > 0.22 || (!p.punchTapFire && p.punchFireT > 0);
+      const reach = held ? 220 : 90;
+      const hx = p.facing > 0 ? p.x + p.w : p.x - reach;
+      const hy = p.y - 12;
+      const hw = reach;
+      const hh = p.h + 24;
+      for (const e of r.level.enemies) {
+        if (!e.alive) continue;
+        if ((e.stunTimer ?? 0) > 0) continue; // already punched this swing
+        if (rectOverlap(hx, hy, hw, hh, e.x, e.y, e.w, e.h)) {
+          p.punchHit = true;
+          e.vx = p.facing * (held ? 2200 : 1400);
+          e.stunTimer = 2;
+          e.hitFlash = 0.3;
+          if (e.kind !== "chaser") {
+            e.alive = false;
+            r.combo += 1;
+            r.comboTimer = 2.5;
+            r.score += 300 * Math.max(1, r.combo);
+            sfx.enemyKill();
+          }
+          for (let i = 0; i < 12; i++) {
+            spawnParticle(r, {
+              x: e.x + e.w / 2,
+              y: e.y + e.h / 2,
+              vx: p.facing * (500 + Math.random() * 600),
+              vy: -200 - Math.random() * 300,
+              color: "#f5234c",
+              size: 3 + Math.random() * 3,
+              life: 0.4 + Math.random() * 0.3,
+              kind: "shard",
+            });
+          }
+        }
+      }
       const back = -p.facing;
       // Ground dust plumes
       for (let i = 0; i < 3; i++) {
