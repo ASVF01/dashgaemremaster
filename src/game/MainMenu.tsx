@@ -971,11 +971,11 @@ const UPDATES: UpdateEntry[] = [
   {
     version: "v1.4",
     date: "2026-06-07",
-    title: "Character Select Glow-Up",
+    title: "The MASSIVE update",
     image: massiveUpdateAsset.url,
     changes: [
-      "Added Characters and a proper character selection",
-      "Revamped bestiary's ui",
+      "Added [ THE ALTERNATE ] and a proper character selection",
+      "Revamped Bestiary's UI",
     ],
   },
   {
