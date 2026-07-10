@@ -525,6 +525,24 @@ function KnightVisual() {
 function TutorialTab({ onStartTutorial, altTutorialPrompt = false, onPlayAsAlternate }: { onStartTutorial: () => void; altTutorialPrompt?: boolean; onPlayAsAlternate?: () => void }) {
   return (
     <div className="grid md:grid-cols-2 gap-5">
+      {altTutorialPrompt && onPlayAsAlternate && (
+        <div className="md:col-span-2 scribble-border bg-ink text-paper p-4 -rotate-1 flex flex-col sm:flex-row items-center gap-4 animate-jitter-soft">
+          <div className="flex-1">
+            <div className="font-marker text-2xl text-[hsl(var(--accent))] mb-1">SOMETHING'S DIFFERENT…</div>
+            <p className="font-scribble text-lg text-paper/85 leading-snug">
+              your mark twitched. run the tutorial again — this time as <b>THE ALTERNATE</b>. new moveset. new punch. one hit and you're dust.
+            </p>
+          </div>
+          <button
+            onClick={onPlayAsAlternate}
+            onMouseEnter={() => sfx.menuHover()}
+            className="scribble-border bg-[hsl(var(--accent))] text-accent-foreground font-marker text-2xl px-6 py-3 hover:rotate-2 transition-transform shrink-0"
+          >
+            RE-DO IT →
+          </button>
+        </div>
+      )}
+
       <Card title="THE BASICS">
         <ul className="font-scribble text-xl text-ink/85 space-y-1.5">
           <li>● <b>RUN</b> with ← / → (or A / D)</li>
