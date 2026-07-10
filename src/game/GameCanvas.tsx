@@ -1236,6 +1236,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
         p.vx = p.facing * (tap ? 900 : 2200);
         p.hStretch = 1;
         p.punchHit = false;
+        p.punchHeldFire = !tap;
         r.shake = Math.max(r.shake, 0.9);
         r.freezeFrames = Math.max(r.freezeFrames, 5);
         sfx.dash();
