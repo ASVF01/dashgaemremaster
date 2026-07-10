@@ -597,7 +597,14 @@ const Index = () => {
 
           {screen === "menu" && introPhase === "done" && (
             <Overlay>
-              <MainMenu onPlay={startLevel} />
+              <MainMenu
+                onPlay={startLevel}
+                altTutorialPrompt={hasJrbBadge && badgeFace === "X3"}
+                onPlayAsAlternate={() => {
+                  selectCharacter("x3mode");
+                  startLevel("tutorial");
+                }}
+              />
             </Overlay>
           )}
 
