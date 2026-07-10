@@ -522,7 +522,7 @@ function KnightVisual() {
 
 
 // ---------------- TUTORIAL TAB ----------------
-function TutorialTab({ onStartTutorial }: { onStartTutorial: () => void }) {
+function TutorialTab({ onStartTutorial, altTutorialPrompt = false, onPlayAsAlternate }: { onStartTutorial: () => void; altTutorialPrompt?: boolean; onPlayAsAlternate?: () => void }) {
   return (
     <div className="grid md:grid-cols-2 gap-5">
       <Card title="THE BASICS">
