@@ -18,9 +18,11 @@ export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" |
 
 interface Props {
   onPlay: (id: LevelId) => void;
+  altTutorialPrompt?: boolean;
+  onPlayAsAlternate?: () => void;
 }
 
-export default function MainMenu({ onPlay }: Props) {
+export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAlternate }: Props) {
   const [tab, setTab] = useState<MenuTab>("play");
   const [charSelectOpen, setCharSelectOpen] = useState(false);
   const [bestiaryOpen, setBestiaryOpen] = useState(false);
