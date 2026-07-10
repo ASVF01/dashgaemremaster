@@ -84,7 +84,7 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
         {/* Body */}
         <div className="flex-1">
           {tab === "play"     && <PlayTab onPlay={handlePlay} />}
-          {tab === "tutorial" && <TutorialTab onStartTutorial={() => handlePlay("tutorial")} />}
+          {tab === "tutorial" && <TutorialTab onStartTutorial={() => handlePlay("tutorial")} altTutorialPrompt={altTutorialPrompt} onPlayAsAlternate={onPlayAsAlternate} />}
           {tab === "keybinds" && <KeybindsTab />}
           {tab === "settings" && <SettingsTab />}
           {tab === "extras"   && <ExtrasTab onPlay={handlePlay} />}
