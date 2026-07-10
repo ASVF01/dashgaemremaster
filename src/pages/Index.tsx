@@ -524,7 +524,7 @@ const Index = () => {
           />
           {screen === "playing" && !invboiIntroOpen && !chaseIntroOpen && <Hud hud={hud} />}
           {screen === "playing" && levelId === "tutorial" && marathonStep == null && !invboiIntroOpen && !chaseIntroOpen && (
-            <TutorialPrompt progress={hud.progress} alt={badgeFace === "X3"} />
+            <TutorialPrompt progress={hud.progress} alt={isAltSelected} />
           )}
           {screen === "playing" && marathonStep != null && !invboiIntroOpen && !chaseIntroOpen && (
             <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-20">
