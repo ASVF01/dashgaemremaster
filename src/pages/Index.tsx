@@ -760,8 +760,21 @@ const TUTORIAL_STEPS: { from: number; title: string; body: string; key?: string 
   { from: 0.92, title: "FINAL — REACH THE FLAG", body: "you got this bro. go go go →", key: "→" },
 ];
 
-function TutorialPrompt({ progress }: { progress: number }) {
-  const step = TUTORIAL_STEPS.slice().reverse().find((s) => progress >= s.from) ?? TUTORIAL_STEPS[0];
+const ALT_TUTORIAL_STEPS: { from: number; title: string; body: string; key?: string }[] = [
+  { from: 0.00, title: "THE ALTERNATE — RUN",     body: "you move a little faster than the player. get used to the pep in your step.", key: "→ / D" },
+  { from: 0.12, title: "SAME JUMP, HARDER LIFE",  body: "one hit and you're SHATTERED. don't get cocky.", key: "SPACE" },
+  { from: 0.22, title: "SLIDE — UNCHANGED",       body: "still slides. still fast under low ceilings.", key: "↓ / S" },
+  { from: 0.34, title: "STOMP — UNCHANGED",       body: "heads still work. use them if you can't punch.", key: "SPACE → land" },
+  { from: 0.46, title: "PARRY — TIGHTER",         body: "your parry window is a hair shorter. read the shot earlier.", key: "J" },
+  { from: 0.58, title: "DASH — FARTHER",          body: "your dash covers way more ground. abuse it.", key: "K" },
+  { from: 0.68, title: "★ NEW — CHARGED PUNCH ★", body: "TAP B for a quick jab. HOLD B for 3s: red lines gather, camera shakes, then zoom — release the LUNGE PUNCH. you're invincible during the aim + fire.", key: "B (hold)" },
+  { from: 0.82, title: "PUNCH ANYTHING",          body: "hit enemies with the punch to fling them across the map. held punches kill on contact.", key: "B" },
+  { from: 0.92, title: "FINAL — REACH THE FLAG",  body: "one life, one shot. don't die. →", key: "→" },
+];
+
+function TutorialPrompt({ progress, alt = false }: { progress: number; alt?: boolean }) {
+  const steps = alt ? ALT_TUTORIAL_STEPS : TUTORIAL_STEPS;
+  const step = steps.slice().reverse().find((s) => progress >= s.from) ?? steps[0];
   return (
     <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-20 w-[min(92%,640px)]">
       <div className="scribble-border bg-paper/95 px-5 py-3 -rotate-1 text-center">
