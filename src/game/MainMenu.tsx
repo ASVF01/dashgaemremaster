@@ -1835,14 +1835,25 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                       )}
                       {locked && (
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <span
-                            className={[
-                              "font-marker text-6xl sm:text-7xl text-white drop-shadow-[2px_2px_0_rgba(0,0,0,0.9)]",
-                              shakingId === c.id ? "animate-jitter" : "",
-                            ].join(" ")}
-                          >
-                            🔒
-                          </span>
+                          {isNotYet(c.id) ? (
+                            <span
+                              className={[
+                                "font-marker text-2xl sm:text-3xl md:text-4xl text-white drop-shadow-[2px_2px_0_rgba(0,0,0,0.9)] tracking-[0.4em] -rotate-6 select-none",
+                                shakingId === c.id ? "animate-jitter" : "",
+                              ].join(" ")}
+                            >
+                              N O T&nbsp;&nbsp;Y E T .
+                            </span>
+                          ) : (
+                            <span
+                              className={[
+                                "font-marker text-6xl sm:text-7xl text-white drop-shadow-[2px_2px_0_rgba(0,0,0,0.9)]",
+                                shakingId === c.id ? "animate-jitter" : "",
+                              ].join(" ")}
+                            >
+                              🔒
+                            </span>
+                          )}
                         </div>
                       )}
                     </button>
