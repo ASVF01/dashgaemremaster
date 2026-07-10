@@ -443,7 +443,12 @@ const Index = () => {
               onClick={() => {
                 unlockAudio();
                 sfx.meow();
-                setBadgeFace((f) => (f === ":3" ? "X3" : ":3"));
+                setBadgeFace((f) => {
+                  const next: ":3" | "X3" = f === ":3" ? "X3" : ":3";
+                  try { localStorage.setItem("badge_face", next); } catch { /* noop */ }
+                  if (next === "X3") unlockCharacter("x3mode");
+                  return next;
+                });
               }}
               className="scribble-border bg-[hsl(var(--accent))] text-accent-foreground font-marker text-xs sm:text-sm md:text-base px-1.5 sm:px-2 py-0.5 sm:py-1 rotate-3 inline-block animate-jitter select-none hover:rotate-6 active:scale-95 transition-transform cursor-pointer"
             >
