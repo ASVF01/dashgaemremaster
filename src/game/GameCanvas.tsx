@@ -469,7 +469,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
         parrying: 0,
         parryCooldown: 0,
         invuln: 0,
-        hp: 3,
+        hp: getSelectedCharacter() === "x3mode" ? 1 : 3,
         hitFlash: 0,
         hurtTimer: 0,
         hurtAfterTimer: 0,
