@@ -437,6 +437,19 @@ export const sfx = {
     tone({ freq: 400, to: 60, dur: 0.5, type: "sawtooth", vol: 0.35 });
     noise(0.4, 0.25, 100, 2000, 0.05);
   },
+  glassShatter() {
+    // hard impact + bright shard rain
+    tone({ freq: 220, to: 40, dur: 0.16, type: "square", vol: 0.55, attack: 0.001, release: 0.10 });
+    noise(0.02, 0.7, 200, 1200); // punchy thump transient
+    // shard sparkle — several short high-pitched pings staggered
+    for (let i = 0; i < 8; i++) {
+      const f = 2600 + Math.random() * 4200;
+      const d = 0.04 + i * 0.02;
+      tone({ freq: f, to: f * 0.6, dur: 0.09, type: "triangle", vol: 0.14, attack: 0.001, release: 0.07, delay: d });
+    }
+    noise(0.35, 0.22, 3500, 12000, 0.02); // shimmery shard cloud
+    noise(0.55, 0.14, 60, 400, 0.05); // low rumble tail
+  },
   mach() {
     if (!shimmerReplaces()) {
       tone({ freq: 200, to: 1200, dur: 0.18, type: "square", vol: 0.22 });

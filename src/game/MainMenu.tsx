@@ -18,9 +18,11 @@ export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" |
 
 interface Props {
   onPlay: (id: LevelId) => void;
+  altTutorialPrompt?: boolean;
+  onPlayAsAlternate?: () => void;
 }
 
-export default function MainMenu({ onPlay }: Props) {
+export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAlternate }: Props) {
   const [tab, setTab] = useState<MenuTab>("play");
   const [charSelectOpen, setCharSelectOpen] = useState(false);
   const [bestiaryOpen, setBestiaryOpen] = useState(false);
@@ -82,7 +84,7 @@ export default function MainMenu({ onPlay }: Props) {
         {/* Body */}
         <div className="flex-1">
           {tab === "play"     && <PlayTab onPlay={handlePlay} />}
-          {tab === "tutorial" && <TutorialTab onStartTutorial={() => handlePlay("tutorial")} />}
+          {tab === "tutorial" && <TutorialTab onStartTutorial={() => handlePlay("tutorial")} altTutorialPrompt={altTutorialPrompt} onPlayAsAlternate={onPlayAsAlternate} />}
           {tab === "keybinds" && <KeybindsTab />}
           {tab === "settings" && <SettingsTab />}
           {tab === "extras"   && <ExtrasTab onPlay={handlePlay} />}
@@ -520,9 +522,27 @@ function KnightVisual() {
 
 
 // ---------------- TUTORIAL TAB ----------------
-function TutorialTab({ onStartTutorial }: { onStartTutorial: () => void }) {
+function TutorialTab({ onStartTutorial, altTutorialPrompt = false, onPlayAsAlternate }: { onStartTutorial: () => void; altTutorialPrompt?: boolean; onPlayAsAlternate?: () => void }) {
   return (
     <div className="grid md:grid-cols-2 gap-5">
+      {altTutorialPrompt && onPlayAsAlternate && (
+        <div className="md:col-span-2 scribble-border bg-ink text-paper p-4 -rotate-1 flex flex-col sm:flex-row items-center gap-4 animate-jitter-soft">
+          <div className="flex-1">
+            <div className="font-marker text-2xl text-[hsl(var(--accent))] mb-1">SOMETHING'S DIFFERENT…</div>
+            <p className="font-scribble text-lg text-paper/85 leading-snug">
+              your mark twitched. run the tutorial again — this time as <b>THE ALTERNATE</b>. new moveset. new punch. one hit and you're dust.
+            </p>
+          </div>
+          <button
+            onClick={onPlayAsAlternate}
+            onMouseEnter={() => sfx.menuHover()}
+            className="scribble-border bg-[hsl(var(--accent))] text-accent-foreground font-marker text-2xl px-6 py-3 hover:rotate-2 transition-transform shrink-0"
+          >
+            RE-DO IT →
+          </button>
+        </div>
+      )}
+
       <Card title="THE BASICS">
         <ul className="font-scribble text-xl text-ink/85 space-y-1.5">
           <li>● <b>RUN</b> with ← / → (or A / D)</li>
@@ -1605,8 +1625,10 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   const [infoOpen, setInfoOpen] = useState(false);
   const [shakingId, setShakingId] = useState<string | null>(null);
   const selected = WIP_CHARACTERS.find((c) => c.id === picked) ?? WIP_CHARACTERS[0];
+  const isNotYet = (id: string) => id === "dasher" || id === "shadow";
   const isCharLocked = (id: string) =>
-    (id === "stick" || id === "dasher" || id === "shadow" || id === "x3mode")
+    isNotYet(id) ? true :
+    (id === "stick" || id === "x3mode")
       ? !charState.unlocked[id as CharacterId]
       : false;
 
@@ -1626,24 +1648,19 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
     window.setTimeout(onClose, 600);
   };
 
-  // ESC to leave (or close info panel if it's open). Debug: `3` unlocks THE ALTERNATE.
+  // ESC to leave (or close info panel if it's open).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.code === "Escape") {
         e.preventDefault();
         if (infoOpen) setInfoOpen(false);
         else handleClose();
-      } else if (e.key === "3" && !e.repeat) {
-        if (!charState.unlocked.x3mode) {
-          unlockCharacter("x3mode");
-          sfx.keyJingle();
-        }
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [closing, infoOpen, charState.unlocked.x3mode]);
+  }, [closing, infoOpen]);
 
   // Page nav (only one page for now — arrows are decorative/disabled).
   const PAGE = 1;
@@ -1838,14 +1855,25 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                       )}
                       {locked && (
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <span
-                            className={[
-                              "font-marker text-6xl sm:text-7xl text-white drop-shadow-[2px_2px_0_rgba(0,0,0,0.9)]",
-                              shakingId === c.id ? "animate-jitter" : "",
-                            ].join(" ")}
-                          >
-                            🔒
-                          </span>
+                          {isNotYet(c.id) ? (
+                            <span
+                              className={[
+                                "font-marker text-2xl sm:text-3xl md:text-4xl text-white drop-shadow-[2px_2px_0_rgba(0,0,0,0.9)] tracking-[0.4em] -rotate-6 select-none",
+                                shakingId === c.id ? "animate-jitter" : "",
+                              ].join(" ")}
+                            >
+                              N O T&nbsp;&nbsp;Y E T .
+                            </span>
+                          ) : (
+                            <span
+                              className={[
+                                "font-marker text-6xl sm:text-7xl text-white drop-shadow-[2px_2px_0_rgba(0,0,0,0.9)]",
+                                shakingId === c.id ? "animate-jitter" : "",
+                              ].join(" ")}
+                            >
+                              🔒
+                            </span>
+                          )}
                         </div>
                       )}
                     </button>

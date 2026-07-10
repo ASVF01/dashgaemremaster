@@ -13,6 +13,7 @@ import cutsceneBossDeath from "@/assets/video/boss_death_cutscene.mp4";
 import introCardImg from "@/assets/intro_card.png";
 import introBeginUrl from "@/assets/audio/intro_begin.ogg";
 import { sfx, unlockAudio, setSfxVolume, silenceAllSfx, setMuted as setSfxMuted } from "@/game/sfx";
+import { selectCharacter, unlockCharacter, useCharacter } from "@/game/character";
 import { getSettings } from "@/game/settings";
 import { recordLevelResult } from "@/game/levelStats";
 
@@ -61,6 +62,8 @@ const Index = () => {
   const marathonStartRef = useRef<number | null>(null);
   const [marathonFinalMs, setMarathonFinalMs] = useState<number | null>(null);
   const [binds] = useKeybinds();
+  const charState = useCharacter();
+  const isAltSelected = charState.selected === "x3mode";
   const [muted, setMuted] = useState(false);
   const [hasJrbBadge, setHasJrbBadge] = useState(false);
   const [badgeFace, setBadgeFace] = useState<":3" | "X3">(":3");
@@ -113,6 +116,10 @@ const Index = () => {
     initBgmMutedFromStorage();
     setMuted(isBgmMuted());
     try { setHasJrbBadge(localStorage.getItem("badge_jrb") === "1"); } catch { /* noop */ }
+    try {
+      const f = localStorage.getItem("badge_face");
+      if (f === "X3" || f === ":3") setBadgeFace(f);
+    } catch { /* noop */ }
     try {
       // Default to dark unless explicitly turned off.
       const stored = localStorage.getItem("dark_mode");
@@ -438,7 +445,12 @@ const Index = () => {
               onClick={() => {
                 unlockAudio();
                 sfx.meow();
-                setBadgeFace((f) => (f === ":3" ? "X3" : ":3"));
+                setBadgeFace((f) => {
+                  const next: ":3" | "X3" = f === ":3" ? "X3" : ":3";
+                  try { localStorage.setItem("badge_face", next); } catch { /* noop */ }
+                  if (next === "X3") unlockCharacter("x3mode");
+                  return next;
+                });
               }}
               className="scribble-border bg-[hsl(var(--accent))] text-accent-foreground font-marker text-xs sm:text-sm md:text-base px-1.5 sm:px-2 py-0.5 sm:py-1 rotate-3 inline-block animate-jitter select-none hover:rotate-6 active:scale-95 transition-transform cursor-pointer"
             >
@@ -512,7 +524,7 @@ const Index = () => {
           />
           {screen === "playing" && !invboiIntroOpen && !chaseIntroOpen && <Hud hud={hud} />}
           {screen === "playing" && levelId === "tutorial" && marathonStep == null && !invboiIntroOpen && !chaseIntroOpen && (
-            <TutorialPrompt progress={hud.progress} />
+            <TutorialPrompt progress={hud.progress} alt={isAltSelected} />
           )}
           {screen === "playing" && marathonStep != null && !invboiIntroOpen && !chaseIntroOpen && (
             <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-20">
@@ -587,7 +599,14 @@ const Index = () => {
 
           {screen === "menu" && introPhase === "done" && (
             <Overlay>
-              <MainMenu onPlay={startLevel} />
+              <MainMenu
+                onPlay={startLevel}
+                altTutorialPrompt={hasJrbBadge && badgeFace === "X3"}
+                onPlayAsAlternate={() => {
+                  selectCharacter("x3mode");
+                  startLevel("tutorial");
+                }}
+              />
             </Overlay>
           )}
 
@@ -741,8 +760,21 @@ const TUTORIAL_STEPS: { from: number; title: string; body: string; key?: string 
   { from: 0.92, title: "FINAL — REACH THE FLAG", body: "you got this bro. go go go →", key: "→" },
 ];
 
-function TutorialPrompt({ progress }: { progress: number }) {
-  const step = TUTORIAL_STEPS.slice().reverse().find((s) => progress >= s.from) ?? TUTORIAL_STEPS[0];
+const ALT_TUTORIAL_STEPS: { from: number; title: string; body: string; key?: string }[] = [
+  { from: 0.00, title: "THE ALTERNATE — RUN",     body: "you move a little faster than the player. get used to the pep in your step.", key: "→ / D" },
+  { from: 0.12, title: "SAME JUMP, HARDER LIFE",  body: "one hit and you're SHATTERED. don't get cocky.", key: "SPACE" },
+  { from: 0.22, title: "SLIDE — UNCHANGED",       body: "still slides. still fast under low ceilings.", key: "↓ / S" },
+  { from: 0.34, title: "STOMP — UNCHANGED",       body: "heads still work. use them if you can't punch.", key: "SPACE → land" },
+  { from: 0.46, title: "PARRY — TIGHTER",         body: "your parry window is a hair shorter. read the shot earlier.", key: "J" },
+  { from: 0.58, title: "DASH — FARTHER",          body: "your dash covers way more ground. abuse it.", key: "K" },
+  { from: 0.68, title: "★ NEW — CHARGED PUNCH ★", body: "TAP B for a quick jab. HOLD B for 3s: red lines gather, camera shakes, then zoom — release the LUNGE PUNCH. you're invincible during the aim + fire.", key: "B (hold)" },
+  { from: 0.82, title: "PUNCH ANYTHING",          body: "hit enemies with the punch to fling them across the map. held punches kill on contact.", key: "B" },
+  { from: 0.92, title: "FINAL — REACH THE FLAG",  body: "one life, one shot. don't die. →", key: "→" },
+];
+
+function TutorialPrompt({ progress, alt = false }: { progress: number; alt?: boolean }) {
+  const steps = alt ? ALT_TUTORIAL_STEPS : TUTORIAL_STEPS;
+  const step = steps.slice().reverse().find((s) => progress >= s.from) ?? steps[0];
   return (
     <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-20 w-[min(92%,640px)]">
       <div className="scribble-border bg-paper/95 px-5 py-3 -rotate-1 text-center">
