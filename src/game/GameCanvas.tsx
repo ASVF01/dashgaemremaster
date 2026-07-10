@@ -859,10 +859,40 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       if (!r.player.alive && !r.finished) {
         r.finished = true;
         r.finishTime = performance.now() - r.startedAt;
+        if (getSelectedCharacter() === "x3mode") {
+          // Big red particle explosion with moving debris + glass shatter stinger.
+          const cx = r.player.x + r.player.w / 2;
+          const cy = r.player.y + r.player.h / 2;
+          for (let i = 0; i < 60; i++) {
+            const a = Math.random() * Math.PI * 2;
+            const spd = 260 + Math.random() * 640;
+            spawnParticle(r, {
+              x: cx, y: cy,
+              vx: Math.cos(a) * spd,
+              vy: Math.sin(a) * spd - 120,
+              color: Math.random() < 0.5 ? "#ff2a3a" : "#f5234c",
+              size: 3 + Math.random() * 5,
+              life: 0.7 + Math.random() * 0.6,
+              kind: "shard",
+            });
+          }
+          for (let i = 0; i < 24; i++) {
+            const a = Math.random() * Math.PI * 2;
+            spawnParticle(r, {
+              x: cx, y: cy,
+              vx: Math.cos(a) * (120 + Math.random() * 320),
+              vy: Math.sin(a) * (120 + Math.random() * 320),
+              color: "#ff7a8a",
+              size: 6 + Math.random() * 6,
+              life: 0.5 + Math.random() * 0.4,
+              kind: "smear",
+            });
+          }
+          r.shake = Math.max(r.shake, 1.2);
+          r.freezeFrames = Math.max(r.freezeFrames, 8);
+          sfx.glassShatter();
+        }
         sfx.die();
-        // Keep BGM playing at full volume on the death overlay — no duck.
-        // (Boss-level deaths are handled by Index, which stops BGM and
-        // plays the death cutscene separately.)
         onDeath();
       }
       if (r.finished && r.player.alive && r.finishTime === 0) {
