@@ -1626,24 +1626,19 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
     window.setTimeout(onClose, 600);
   };
 
-  // ESC to leave (or close info panel if it's open). Debug: `3` unlocks THE ALTERNATE.
+  // ESC to leave (or close info panel if it's open).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.code === "Escape") {
         e.preventDefault();
         if (infoOpen) setInfoOpen(false);
         else handleClose();
-      } else if (e.key === "3" && !e.repeat) {
-        if (!charState.unlocked.x3mode) {
-          unlockCharacter("x3mode");
-          sfx.keyJingle();
-        }
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [closing, infoOpen, charState.unlocked.x3mode]);
+  }, [closing, infoOpen]);
 
   // Page nav (only one page for now — arrows are decorative/disabled).
   const PAGE = 1;
