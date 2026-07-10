@@ -13,6 +13,7 @@ import cutsceneBossDeath from "@/assets/video/boss_death_cutscene.mp4";
 import introCardImg from "@/assets/intro_card.png";
 import introBeginUrl from "@/assets/audio/intro_begin.ogg";
 import { sfx, unlockAudio, setSfxVolume, silenceAllSfx, setMuted as setSfxMuted } from "@/game/sfx";
+import { selectCharacter, unlockCharacter } from "@/game/character";
 import { getSettings } from "@/game/settings";
 import { recordLevelResult } from "@/game/levelStats";
 
