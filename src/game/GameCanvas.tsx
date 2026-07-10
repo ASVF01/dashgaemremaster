@@ -496,6 +496,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
         punchFireT: 0,
         punchHit: false,
         punchTapFire: false,
+        punchHeldFire: false,
+
       },
       projectiles: [],
       particles: [],
