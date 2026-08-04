@@ -907,7 +907,13 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       }
     };
     raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      if (deathTimeoutRef.current !== null) {
+        clearTimeout(deathTimeoutRef.current);
+        deathTimeoutRef.current = null;
+      }
+    };
   }, [size.w, size.h, paused, onHud, onDeath, onFinish]);
 
   return (
