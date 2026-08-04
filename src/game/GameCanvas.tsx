@@ -913,6 +913,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
           r.shake = Math.max(r.shake, 1.2);
           r.freezeFrames = Math.max(r.freezeFrames, 8);
           r.deathFxT = 1.5;
+          // The body is gone — hide the sprite and wipe its afterimage trail.
+          r.hidePlayer = true;
+          r.afterimages = [];
           sfx.glassShatter();
         }
         sfx.die();
