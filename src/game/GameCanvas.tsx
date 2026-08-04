@@ -3025,14 +3025,16 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
     drawGoal(ctx, r.level.goal.x, r.level.goal.y, r.level.goal.w, r.level.goal.h, r.time);
 
     // afterimages — draw before player so player sits on top
-    for (const ai of r.afterimages) {
-      const t = ai.life / ai.maxLife; // 1 → 0
-      drawAfterimage(ctx, ai, t);
-    }
+    if (!r.hidePlayer) {
+      for (const ai of r.afterimages) {
+        const t = ai.life / ai.maxLife; // 1 → 0
+        drawAfterimage(ctx, ai, t);
+      }
 
-    // player
-    drawPlayer(ctx, r);
-    if (r.player.starman && !r.player.somSom) drawStarmanStars(ctx, r);
+      // player
+      drawPlayer(ctx, r);
+      if (r.player.starman && !r.player.somSom) drawStarmanStars(ctx, r);
+    }
 
 
     // super dash burst VFX
