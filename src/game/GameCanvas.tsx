@@ -894,7 +894,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
           sfx.glassShatter();
         }
         sfx.die();
-        onDeath();
+        if (isAlt) {
+          // Let the explosion FX fully play out, then a 0.2s beat before the death screen.
+          deathTimeoutRef.current = window.setTimeout(() => onDeath(), 1500);
+        } else {
+          onDeath();
+        }
       }
       if (r.finished && r.player.alive && r.finishTime === 0) {
         // shouldn't happen; finish handled in update
