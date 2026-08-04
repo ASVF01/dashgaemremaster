@@ -388,6 +388,7 @@ export interface HudState {
 
 export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, paused, keepAudio = false, startAsInvboi = false, resetKey, levelId = "scribble-1" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const deathTimeoutRef = useRef<number | null>(null);
   const refs = useRef<GameRefs | null>(null);
   const keysRef = useRef<Keys>({});
   const levelIdRef = useRef<LevelId>(levelId);
@@ -859,7 +860,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       if (!r.player.alive && !r.finished) {
         r.finished = true;
         r.finishTime = performance.now() - r.startedAt;
-        if (getSelectedCharacter() === "x3mode") {
+        const isAlt = getSelectedCharacter() === "x3mode";
+        if (isAlt) {
           // Big red particle explosion with moving debris + glass shatter stinger.
           const cx = r.player.x + r.player.w / 2;
           const cy = r.player.y + r.player.h / 2;
@@ -893,14 +895,25 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
           sfx.glassShatter();
         }
         sfx.die();
-        onDeath();
+        if (isAlt) {
+          // Let the explosion FX fully play out, then a 0.2s beat before the death screen.
+          deathTimeoutRef.current = window.setTimeout(() => onDeath(), 1500);
+        } else {
+          onDeath();
+        }
       }
       if (r.finished && r.player.alive && r.finishTime === 0) {
         // shouldn't happen; finish handled in update
       }
     };
     raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      if (deathTimeoutRef.current !== null) {
+        clearTimeout(deathTimeoutRef.current);
+        deathTimeoutRef.current = null;
+      }
+    };
   }, [size.w, size.h, paused, onHud, onDeath, onFinish]);
 
   return (
