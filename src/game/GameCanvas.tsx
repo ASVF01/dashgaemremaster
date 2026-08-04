@@ -273,6 +273,8 @@ interface GameRefs {
   cameraY: number;
   shake: number;
   freezeFrames: number;
+  /** Seconds remaining of post-death FX playback (particles keep moving). */
+  deathFxT: number;
   freezeTime: number; // hard hitstop in seconds (skips update entirely)
   bossExplosions: { x: number; y: number; t: number; dur: number }[];
   time: number;
