@@ -859,7 +859,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       if (!r.player.alive && !r.finished) {
         r.finished = true;
         r.finishTime = performance.now() - r.startedAt;
-        if (getSelectedCharacter() === "x3mode") {
+        const isAlt = getSelectedCharacter() === "x3mode";
+        if (isAlt) {
           // Big red particle explosion with moving debris + glass shatter stinger.
           const cx = r.player.x + r.player.w / 2;
           const cy = r.player.y + r.player.h / 2;
