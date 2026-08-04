@@ -512,6 +512,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       cameraY: 0,
       shake: 0,
       freezeFrames: 0,
+      deathFxT: 0,
       freezeTime: 0,
       bossExplosions: [],
       time: 0,
