@@ -275,6 +275,8 @@ interface GameRefs {
   freezeFrames: number;
   /** Seconds remaining of post-death FX playback (particles keep moving). */
   deathFxT: number;
+  /** When true the player sprite + its afterimages are not drawn (post-death). */
+  hidePlayer: boolean;
   freezeTime: number; // hard hitstop in seconds (skips update entirely)
   bossExplosions: { x: number; y: number; t: number; dur: number }[];
   time: number;
@@ -513,6 +515,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       shake: 0,
       freezeFrames: 0,
       deathFxT: 0,
+      hidePlayer: false,
       freezeTime: 0,
       bossExplosions: [],
       time: 0,
@@ -910,6 +913,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
           r.shake = Math.max(r.shake, 1.2);
           r.freezeFrames = Math.max(r.freezeFrames, 8);
           r.deathFxT = 1.5;
+          // The body is gone — hide the sprite and wipe its afterimage trail.
+          r.hidePlayer = true;
+          r.afterimages = [];
           sfx.glassShatter();
         }
         sfx.die();
@@ -3022,14 +3028,16 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
     drawGoal(ctx, r.level.goal.x, r.level.goal.y, r.level.goal.w, r.level.goal.h, r.time);
 
     // afterimages — draw before player so player sits on top
-    for (const ai of r.afterimages) {
-      const t = ai.life / ai.maxLife; // 1 → 0
-      drawAfterimage(ctx, ai, t);
-    }
+    if (!r.hidePlayer) {
+      for (const ai of r.afterimages) {
+        const t = ai.life / ai.maxLife; // 1 → 0
+        drawAfterimage(ctx, ai, t);
+      }
 
-    // player
-    drawPlayer(ctx, r);
-    if (r.player.starman && !r.player.somSom) drawStarmanStars(ctx, r);
+      // player
+      drawPlayer(ctx, r);
+      if (r.player.starman && !r.player.somSom) drawStarmanStars(ctx, r);
+    }
 
 
     // super dash burst VFX
