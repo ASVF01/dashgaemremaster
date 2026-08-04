@@ -388,6 +388,7 @@ export interface HudState {
 
 export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, paused, keepAudio = false, startAsInvboi = false, resetKey, levelId = "scribble-1" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const deathTimeoutRef = useRef<number | null>(null);
   const refs = useRef<GameRefs | null>(null);
   const keysRef = useRef<Keys>({});
   const levelIdRef = useRef<LevelId>(levelId);
