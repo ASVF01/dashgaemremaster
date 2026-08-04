@@ -273,6 +273,8 @@ interface GameRefs {
   cameraY: number;
   shake: number;
   freezeFrames: number;
+  /** Seconds remaining of post-death FX playback (particles keep moving). */
+  deathFxT: number;
   freezeTime: number; // hard hitstop in seconds (skips update entirely)
   bossExplosions: { x: number; y: number; t: number; dur: number }[];
   time: number;
@@ -510,6 +512,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       cameraY: 0,
       shake: 0,
       freezeFrames: 0,
+      deathFxT: 0,
       freezeTime: 0,
       bossExplosions: [],
       time: 0,
@@ -828,6 +831,20 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
         } else {
           update(r, dt, keysRef.current);
         }
+      } else if (!paused && r.deathFxT > 0) {
+        // Player is dead but the death FX is still playing: keep particles,
+        // camera shake and the freeze counter ticking so the explosion animates.
+        r.deathFxT = Math.max(0, r.deathFxT - dt);
+        if (r.freezeFrames > 0) r.freezeFrames--;
+        if (r.shake > 0) r.shake = Math.max(0, r.shake - dt * 3);
+        for (const pa of r.particles) {
+          pa.life -= dt;
+          pa.vy += 600 * dt * (pa.kind === "smear" ? 0 : 1);
+          pa.x += pa.vx * dt;
+          pa.y += pa.vy * dt;
+          if (pa.angle !== undefined) pa.angle += dt * 8;
+        }
+        r.particles = r.particles.filter((x) => x.life > 0);
       }
       if (paused && t - lastPausedRender < 250) return;
       if (paused) lastPausedRender = t;
@@ -892,6 +909,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
           }
           r.shake = Math.max(r.shake, 1.2);
           r.freezeFrames = Math.max(r.freezeFrames, 8);
+          r.deathFxT = 1.5;
           sfx.glassShatter();
         }
         sfx.die();
