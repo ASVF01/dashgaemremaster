@@ -909,6 +909,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
           }
           r.shake = Math.max(r.shake, 1.2);
           r.freezeFrames = Math.max(r.freezeFrames, 8);
+          r.deathFxT = 1.5;
           sfx.glassShatter();
         }
         sfx.die();
