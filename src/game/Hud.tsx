@@ -1,28 +1,20 @@
 import type { HudState } from "@/game/GameCanvas";
+import { getSelectedCharacter } from "@/game/character";
+import { AlternateHpBar, BaseHpBar } from "@/game/HpBar";
 
 export default function Hud({ hud }: { hud: HudState }) {
   const seconds = (hud.timeMs / 1000).toFixed(2);
   const sm = !!hud.starman;
   const showParryCd = !sm && hud.parryCooldown > 0.05;
   const showDashCd = !sm && hud.dashCooldown > 0.05;
+  const isAlt = getSelectedCharacter() === "x3mode";
 
   return (
     <div className="hud-touch-pad pointer-events-none absolute inset-0 p-2 sm:p-4">
       {/* top row */}
       <div className="flex items-start justify-between gap-2 sm:gap-4 flex-wrap">
         {/* HP */}
-        <div className="flex items-center gap-1.5 sm:gap-2 scribble-border bg-paper px-2 sm:px-3 py-1 sm:py-2">
-          <span className="font-marker text-ink text-sm sm:text-lg">HP</span>
-          <div className="flex gap-1">
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className={`w-3.5 h-3.5 sm:w-5 sm:h-5 border-2 border-ink ${i < hud.hp ? "bg-[hsl(var(--accent))]" : "bg-paper"}`}
-                style={{ transform: `rotate(${(i - 1) * 6}deg)` }}
-              />
-            ))}
-          </div>
-        </div>
+        {isAlt ? <AlternateHpBar hp={hud.hp} /> : <BaseHpBar hp={hud.hp} maxHp={3} />}
 
         {/* TIMER + LEVEL PROGRESS stacked */}
         <div className="flex flex-col items-center gap-1">
