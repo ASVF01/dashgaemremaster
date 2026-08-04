@@ -275,6 +275,8 @@ interface GameRefs {
   freezeFrames: number;
   /** Seconds remaining of post-death FX playback (particles keep moving). */
   deathFxT: number;
+  /** When true the player sprite + its afterimages are not drawn (post-death). */
+  hidePlayer: boolean;
   freezeTime: number; // hard hitstop in seconds (skips update entirely)
   bossExplosions: { x: number; y: number; t: number; dur: number }[];
   time: number;
