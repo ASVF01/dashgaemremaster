@@ -831,6 +831,20 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
         } else {
           update(r, dt, keysRef.current);
         }
+      } else if (!paused && r.deathFxT > 0) {
+        // Player is dead but the death FX is still playing: keep particles,
+        // camera shake and the freeze counter ticking so the explosion animates.
+        r.deathFxT = Math.max(0, r.deathFxT - dt);
+        if (r.freezeFrames > 0) r.freezeFrames--;
+        if (r.shake > 0) r.shake = Math.max(0, r.shake - dt * 3);
+        for (const pa of r.particles) {
+          pa.life -= dt;
+          pa.vy += 600 * dt * (pa.kind === "smear" ? 0 : 1);
+          pa.x += pa.vx * dt;
+          pa.y += pa.vy * dt;
+          if (pa.angle !== undefined) pa.angle += dt * 8;
+        }
+        r.particles = r.particles.filter((x) => x.life > 0);
       }
       if (paused && t - lastPausedRender < 250) return;
       if (paused) lastPausedRender = t;
