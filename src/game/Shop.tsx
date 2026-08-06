@@ -1,48 +1,28 @@
 import { useEffect, useState } from "react";
 import { sfx } from "@/game/sfx";
+import CheatMenu from "@/game/CheatMenu";
 import {
   ABILITIES, BEAM_SKINS, MAX_ABILITY_SLOTS,
-  activeBeamSkin, addTokens, buy, equipBeamSkin, getShop, hasAbility, isOwned,
+  activeBeamSkin, buy, equipBeamSkin, getShop, hasAbility, isOwned,
   subscribeShop, toggleAbility,
 } from "@/game/shop";
 
-type ShopTab = "beams" | "abilities" | "more";
-
-const CHEAT_CODE = "nicole";
+type ShopTab = "beams" | "abilities" | "cheats" | "more";
 
 export default function Shop({ onClose }: { onClose: () => void }) {
   const [, force] = useState(0);
   const [tab, setTab] = useState<ShopTab>("beams");
   const [note, setNote] = useState<string | null>(null);
-  const [cheatOn, setCheatOn] = useState(false);
 
   useEffect(() => subscribeShop(() => force((n) => n + 1)), []);
 
   useEffect(() => {
-    let typed = "";
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") { onClose(); return; }
-
-      if (!cheatOn && e.key.length === 1 && /[a-z]/i.test(e.key)) {
-        typed = (typed + e.key.toLowerCase()).slice(-CHEAT_CODE.length);
-        if (typed === CHEAT_CODE) {
-          typed = "";
-          setCheatOn(true);
-          sfx.cheatChime();
-          setNote("CHEAT ARMED — PRESS +");
-        }
-        return;
-      }
-
-      if (cheatOn && (e.key === "+" || e.key === "Add" || e.code === "NumpadAdd")) {
-        addTokens(1000);
-        sfx.menuConfirm();
-        setNote("+1000 T (CHEAT)");
-      }
+      if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, cheatOn]);
+  }, [onClose]);
 
   useEffect(() => {
     if (!note) return;
@@ -89,6 +69,7 @@ export default function Shop({ onClose }: { onClose: () => void }) {
       <div className="flex gap-2 px-5 pt-4 flex-wrap">
         <ShopTabBtn active={tab === "beams"} onClick={() => setTab("beams")}>BEAM SKINS</ShopTabBtn>
         <ShopTabBtn active={tab === "abilities"} onClick={() => setTab("abilities")}>SV ABILITIES</ShopTabBtn>
+        <ShopTabBtn active={tab === "cheats"} onClick={() => setTab("cheats")}>CHEATS</ShopTabBtn>
         <ShopTabBtn active={tab === "more"} onClick={() => setTab("more")}>MORE...</ShopTabBtn>
       </div>
 
@@ -204,6 +185,8 @@ export default function Shop({ onClose }: { onClose: () => void }) {
             </div>
           </>
         )}
+
+        {tab === "cheats" && <CheatMenu />}
 
         {tab === "more" && (
           <div className="scribble-border bg-[#1e0020] p-8 text-center">
