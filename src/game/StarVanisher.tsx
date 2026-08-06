@@ -837,6 +837,9 @@ export default function StarVanisher() {
   const endBoss = (st: State) => {
     st.boss = null;
     st.phase = "aim";
+    st.bossCharging = false;
+    st.bossCharge = 0;
+    stopChargeHum();
     stopBossBgm();
     if (!isBgmMuted() && !hud.over) {
       const a = bgmRef.current;
@@ -1117,6 +1120,42 @@ export default function StarVanisher() {
       ctx.globalAlpha = 1;
 
       if (st.boss) drawBoss(ctx, st, time);
+
+      // charge indicator at the crosshair while the click is held
+      if (st.phase === "boss" && st.bossCharging) {
+        const f = st.bossCharge / CHARGE_TIME;
+        const full = f >= 1;
+        ctx.save();
+        ctx.translate(st.aimX, st.aimY);
+        ctx.rotate(time * (2 + f * 8));
+        ctx.lineWidth = 5 + f * 5;
+        ctx.strokeStyle = full ? "#ffffff" : "#ff3a5e";
+        ctx.globalAlpha = full ? 0.75 + Math.sin(time * 30) * 0.25 : 0.9;
+        ctx.beginPath();
+        ctx.arc(0, 0, 26 + f * 24, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * f);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        for (let i = 0; i < Math.round(f * 10); i++) {
+          const a = (i / 10) * Math.PI * 2 + time * 6;
+          const rr = 62 - f * 26;
+          ctx.fillStyle = full ? "#ffffff" : "#ffb03a";
+          ctx.beginPath();
+          ctx.arc(Math.cos(a) * rr, Math.sin(a) * rr, 3 + f * 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+        if (full) {
+          ctx.save();
+          ctx.textAlign = "center";
+          ctx.font = "italic 800 26px Oxanium, system-ui, sans-serif";
+          ctx.lineWidth = 7;
+          ctx.strokeStyle = "rgba(25,0,10,0.85)";
+          ctx.fillStyle = "#ffffff";
+          ctx.strokeText("RELEASE!!", st.aimX, st.aimY - 70);
+          ctx.fillText("RELEASE!!", st.aimX, st.aimY - 70);
+          ctx.restore();
+        }
+      }
 
       const s = st.star;
       if (s) {
