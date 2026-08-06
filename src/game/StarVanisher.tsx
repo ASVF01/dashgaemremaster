@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { sfx, unlockAudio } from "@/game/sfx";
 import beamAsset from "@/assets/audio/beam.mp3.asset.json";
 import exploseAsset from "@/assets/audio/explose1.mp3.asset.json";
+import explose2Asset from "@/assets/audio/explose2.mp3.asset.json";
+import countupAsset from "@/assets/audio/countup.mp3.asset.json";
 
 // simple one-shot sample player (overlapping playback via cloned nodes)
 function makeSample(url: string, volume: number) {
