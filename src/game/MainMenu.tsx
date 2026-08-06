@@ -119,15 +119,26 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
   );
 }
 
-function TabBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function SvTabBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
       onClick={onClick}
       onMouseEnter={() => { if (!active) sfx.menuHover(); }}
       className={[
-        "scribble-border font-marker text-2xl px-5 py-2 transition-transform hover:-rotate-2",
-        active ? "bg-ink text-paper" : "bg-paper text-ink hover:bg-[hsl(var(--accent))/0.2]",
+        "scribble-border px-5 py-2 transition-transform hover:scale-105 hover:-rotate-1 sv-font",
+        active ? "brightness-110 ring-2 ring-white" : "brightness-100",
       ].join(" ")}
+      style={{
+        background: "linear-gradient(180deg, #3b8cff 0%, #2b7bff 50%, #1a5fd8 100%)",
+        color: "#000",
+        WebkitTextStroke: "1.5px #fff",
+        transform: "skewX(-8deg)",
+        boxShadow: active
+          ? "0 0 18px rgba(43,123,255,0.85), 4px 4px 0 #000"
+          : "0 0 12px rgba(43,123,255,0.55), 4px 4px 0 #000",
+        textShadow: "0 2px 0 rgba(255,255,255,0.35)",
+        fontSize: "1.4rem",
+      }}
     >
       {children}
     </button>
