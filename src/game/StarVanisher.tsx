@@ -198,9 +198,9 @@ export default function StarVanisher() {
   useEffect(() => {
     if (!hud.over) { setFailStage(0); setShowFailPct(false); return; }
     setFailStage(1);
-    const pct = window.setTimeout(() => setShowFailPct(true), 1200);
+    const pct = window.setTimeout(() => setShowFailPct(true), 120);
     const t1 = window.setTimeout(() => setFailStage(2), 1500);
-    const t2 = window.setTimeout(() => setFailStage(3), 1500 + 2500);
+    const t2 = window.setTimeout(() => setFailStage(3), 1500 + 1200);
     return () => { window.clearTimeout(pct); window.clearTimeout(t1); window.clearTimeout(t2); };
   }, [hud.over]);
 
@@ -650,13 +650,7 @@ export default function StarVanisher() {
             {failStage < 2 && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
                 <div
-                  className="font-bungee text-6xl text-[#ff2d5e] transition-transform duration-500 ease-out"
-                  style={{ transform: failStage >= 1 ? "translateY(0)" : "translateY(120%)" }}
-                >
-                  MISS
-                </div>
-                <div
-                  className="font-bungee text-4xl text-white transition-transform duration-700 ease-out delay-150"
+                  className="font-bungee text-4xl text-white transition-transform duration-700 ease-out"
                   style={{ transform: showFailPct ? "translateY(0)" : "translateY(200%)" }}
                 >
                   {hud.lastPct.toFixed(1)}%
