@@ -15,7 +15,8 @@ type Cheat = {
 
 const CHEATS: Cheat[] = [
   { code: "nicole", label: "MTSIN", hint: "+1000 T per press", trigger: "+" },
-  { code: "deadeye", label: "V-LOCK", hint: "every shot is a guaranteed JUST", trigger: "ENTER (toggle)" },
+  { code: "vanisher", label: "V-LOCK", hint: "every shot is a guaranteed JUST", trigger: "ENTER (toggle)" },
+
 ];
 
 export default function CheatMenu() {
@@ -49,7 +50,7 @@ export default function CheatMenu() {
         if (found) {
           if (!armed.includes(found.code)) setArmed((a) => [...a, found.code]);
           sfx.cheatChime();
-          if (found.code === "deadeye") {
+          if (found.code === "vanisher") {
             const on = toggleCheat("perfectAim");
             setLine(`V-LOCK ${on ? "ON" : "OFF"} — GUARANTEED JUST`);
           } else {
@@ -133,7 +134,7 @@ export default function CheatMenu() {
           {CHEATS.map((c) => (
             <div key={c.code}>
               {armed.includes(c.code)
-                ? c.code === "deadeye"
+                ? c.code === "vanisher"
                   ? `${c.label} :: ${c.hint} [${isCheatOn("perfectAim") ? "ON" : "OFF"}]`
                   : `${c.label} :: ${c.hint} (PRESS ${c.trigger})`
                 : "?????? :: LOCKED"}
