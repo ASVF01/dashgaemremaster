@@ -578,11 +578,14 @@ export default function StarVanisher() {
               </div>
             )}
 
-            {failStage >= 2 && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-6">
+            {failStage >= 1 && (
+              <div
+                className="absolute inset-0 flex flex-col items-center justify-center gap-6 transition-opacity duration-200"
+                style={{ opacity: failStage >= 2 ? 1 : 0 }}
+              >
                 <div
                   className="font-bungee text-7xl text-black transition-transform duration-500 ease-out"
-                  style={{ transform: failStage >= 2 ? "translateY(0)" : "translateY(-200%)" }}
+                  style={{ transform: failStage >= 2 ? "translateY(0)" : "translateY(-300%)" }}
                 >
                   FAIL
                 </div>
