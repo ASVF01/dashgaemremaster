@@ -1231,9 +1231,10 @@ type UpdateEntry = {
   version: string;
   date: string;
   title: string;
-  changes: string[];
+  changes: ReactNode[];
   image?: string;
 };
+
 
 
 
