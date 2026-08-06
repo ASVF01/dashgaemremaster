@@ -359,7 +359,8 @@ export default function StarVanisher() {
             }
           }
         } else if (st.t > 0.94) {
-          newRound(st);
+          if (st.pendingMiss) finishMiss(st);
+          else newRound(st);
         }
       } else if (st.phase === "result") {
         const gap = Math.max(0.22, 0.5 - st.combo * 0.02);
