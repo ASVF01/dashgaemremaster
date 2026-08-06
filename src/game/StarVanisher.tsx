@@ -298,7 +298,6 @@ function drawBoss(ctx: CanvasRenderingContext2D, st: State, time: number) {
     const bh = 22 * (0.5 + k);
     ctx.save();
     ctx.translate(40, st.beamY);
-    ctx.rotate(Math.atan2(st.beamY - st.beamY, 1) * 0);
     ctx.globalAlpha = 0.35 + k * 0.65;
     const len = Math.max(0, st.beamX - 40);
     const grad = ctx.createLinearGradient(0, 0, len, 0);
