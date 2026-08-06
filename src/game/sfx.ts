@@ -577,6 +577,17 @@ export const sfx = {
     }
     noise(0.18, 0.05, 4000, 12000);
   },
+  cheatChime() {
+    // secret-code confirm: rising 3-note sparkle
+    const notes = [660, 880, 1320];
+    notes.forEach((f, i) => {
+      tone({ freq: f, to: f * 1.01, dur: 0.16, type: "triangle", vol: 0.16,
+             attack: 0.002, release: 0.12, delay: i * 0.07 });
+      tone({ freq: f * 2, dur: 0.10, type: "sine", vol: 0.06,
+             attack: 0.002, release: 0.08, delay: i * 0.07 });
+    });
+    noise(0.10, 0.04, 5000, 13000, 0.14);
+  },
 };
 
 // ---------- looping "shine" sound for the invboi (starman) state ----------
