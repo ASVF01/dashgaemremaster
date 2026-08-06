@@ -549,20 +549,56 @@ export default function StarVanisher() {
         )}
 
         {running && hud.over && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#2a0011]/85">
-            <div className="font-bungee text-4xl text-[#ff2d5e]">RUN OVER</div>
-            <div className="font-bungee text-2xl text-[#ffffff]">SCORE {hud.lastScore}</div>
-            <div className="font-marker text-sm text-[#ffd0de]">COMBO REACHED x{hud.combo}</div>
-            {hud.newBest && (
-              <div className="font-bungee text-xl text-[#ffe23a] animate-jitter">NEW HIGH SCORE!!</div>
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {/* faded black backdrop */}
+            <div
+              className="absolute inset-0 bg-black transition-opacity duration-500"
+              style={{ opacity: failStage >= 1 && failStage < 2 ? 0.7 : 0 }}
+            />
+            {/* white screen */}
+            <div
+              className="absolute inset-0 bg-white transition-opacity duration-200"
+              style={{ opacity: failStage >= 2 ? 1 : 0 }}
+            />
+
+            {failStage < 2 && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+                <div
+                  className="font-bungee text-6xl text-[#ff2d5e] transition-transform duration-500 ease-out"
+                  style={{ transform: failStage >= 1 ? "translateY(0)" : "translateY(120%)" }}
+                >
+                  MISS
+                </div>
+                <div
+                  className="font-bungee text-4xl text-white transition-transform duration-700 ease-out delay-150"
+                  style={{ transform: failStage >= 1 ? "translateY(0)" : "translateY(200%)" }}
+                >
+                  {hud.lastPct.toFixed(1)}%
+                </div>
+              </div>
             )}
-            <button
-              type="button"
-              onClick={start}
-              className="scribble-border bg-paper px-6 py-3 font-bungee text-ink hover:scale-105 transition-transform mt-2"
-            >
-              GO AGAIN
-            </button>
+
+            {failStage >= 2 && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-6">
+                <div
+                  className="font-bungee text-7xl text-black transition-transform duration-500 ease-out"
+                  style={{ transform: failStage >= 2 ? "translateY(0)" : "translateY(-200%)" }}
+                >
+                  FAIL
+                </div>
+                <button
+                  type="button"
+                  onClick={start}
+                  className="pointer-events-auto scribble-border bg-paper px-6 py-3 font-bungee text-ink transition-all duration-500 ease-out hover:scale-105"
+                  style={{
+                    transform: failStage >= 3 ? "translateY(0)" : "translateY(300%)",
+                    opacity: failStage >= 3 ? 1 : 0,
+                  }}
+                >
+                  Retry?
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
