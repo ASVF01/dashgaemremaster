@@ -175,12 +175,14 @@ export default function StarVanisher() {
 
   // fail sequence timeline
   useEffect(() => {
-    if (!hud.over) { setFailStage(0); return; }
+    if (!hud.over) { setFailStage(0); setShowFailPct(false); return; }
     setFailStage(1);
+    const pct = window.setTimeout(() => setShowFailPct(true), 1200);
     const t1 = window.setTimeout(() => setFailStage(2), 1500);
     const t2 = window.setTimeout(() => setFailStage(3), 1500 + 2500);
-    return () => { window.clearTimeout(t1); window.clearTimeout(t2); };
+    return () => { window.clearTimeout(pct); window.clearTimeout(t1); window.clearTimeout(t2); };
   }, [hud.over]);
+
 
   const fire = () => {
     const st = stateRef.current;
