@@ -920,20 +920,33 @@ function ResetProgressFlow({ onClose }: { onClose: () => void }) {
       )}
 
       {phase === "boom" && (
-        <div className="absolute inset-0 overflow-hidden" style={{ animation: "rpShake 0.5s linear" }}>
-          <div className="absolute inset-0 bg-white" style={{ animation: "rpFlash 0.5s ease-out forwards" }} />
-          <div
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
-            style={{
-              width: "180vmax",
-              height: "180vmax",
-              background:
-                "radial-gradient(circle, rgba(255,255,240,1) 0%, rgba(255,214,80,0.95) 25%, rgba(255,110,20,0.9) 45%, rgba(150,20,10,0.7) 65%, rgba(0,0,0,0) 78%)",
-              animation: "rpBoom 0.5s ease-out forwards",
-            }}
-          />
+        <div className="absolute inset-0 overflow-hidden" style={{ animation: "rpShake 2.5s linear" }}>
+          {blasts.map((b, i) => (
+            <div
+              key={i}
+              className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full"
+              style={{
+                left: `${b.x}%`,
+                top: `${b.y}%`,
+                width: `${b.size}vmax`,
+                height: `${b.size}vmax`,
+                background:
+                  "radial-gradient(circle, rgba(255,255,240,1) 0%, rgba(255,214,80,0.95) 25%, rgba(255,110,20,0.9) 45%, rgba(150,20,10,0.7) 65%, rgba(0,0,0,0) 78%)",
+                animation: `rpBoom 0.9s ease-out ${b.delay}s forwards`,
+                opacity: 0,
+              }}
+            />
+          ))}
+          {blasts.map((b, i) => (
+            <div
+              key={`f${i}`}
+              className="absolute inset-0 bg-white"
+              style={{ animation: `rpFlash 0.35s ease-out ${b.delay}s forwards`, opacity: 0 }}
+            />
+          ))}
         </div>
       )}
+
 
       {(phase === "dark" || phase === "restore") && (
         <div
