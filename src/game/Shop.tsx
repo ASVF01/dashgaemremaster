@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { sfx } from "@/game/sfx";
 import {
   ABILITIES, BEAM_SKINS, MAX_ABILITY_SLOTS,
-  activeBeamSkin, buy, equipBeamSkin, getShop, hasAbility, isOwned,
+  activeBeamSkin, addTokens, buy, equipBeamSkin, getShop, hasAbility, isOwned,
   subscribeShop, toggleAbility,
 } from "@/game/shop";
 
