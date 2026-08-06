@@ -773,33 +773,35 @@ export default function StarVanisher() {
           onPointerDown={(e) => { e.preventDefault(); fire(); }}
         />
 
-        {/* jagged cinematic borders — top and bottom are exact 1:1 mirrors */}
-        <div className="absolute inset-0 pointer-events-none">
-          <svg
-            className="absolute top-0 left-0 w-full"
-            style={{ height: "11%" }}
-            viewBox="0 0 100 10"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-          >
-            <polygon
-              points="0,0 100,0 100,7.2 78,8.6 62,6.2 44,9.4 26,7.8 12,9.9 0,8.1"
-              fill="#000"
-            />
-          </svg>
-          <svg
-            className="absolute bottom-0 left-0 w-full"
-            style={{ height: "11%", transform: "scaleY(-1)" }}
-            viewBox="0 0 100 10"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-          >
-            <polygon
-              points="0,0 100,0 100,7.2 78,8.6 62,6.2 44,9.4 26,7.8 12,9.9 0,8.1"
-              fill="#000"
-            />
-          </svg>
+        {/* jagged cinematic borders — scroll left, thin so the play area stays readable */}
+        <style>{`@keyframes svBorderScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }`}</style>
+        <div className="absolute inset-0 pointer-events-none z-0">
+          <div className="absolute top-0 left-0 w-full overflow-hidden" style={{ height: "6%" }}>
+            <svg
+              className="absolute top-0 left-0 h-full"
+              style={{ width: "200%", animation: "svBorderScroll 9s linear infinite" }}
+              viewBox="0 0 200 10"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <polygon points="0,0 100,0 100,7.2 78,8.6 62,6.2 44,9.4 26,7.8 12,9.9 0,8.1" fill="#000" />
+              <polygon points="100,0 200,0 200,7.2 178,8.6 162,6.2 144,9.4 126,7.8 112,9.9 100,8.1" fill="#000" />
+            </svg>
+          </div>
+          <div className="absolute bottom-0 left-0 w-full overflow-hidden" style={{ height: "6%", transform: "scaleY(-1)" }}>
+            <svg
+              className="absolute top-0 left-0 h-full"
+              style={{ width: "200%", animation: "svBorderScroll 9s linear infinite" }}
+              viewBox="0 0 200 10"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <polygon points="0,0 100,0 100,7.2 78,8.6 62,6.2 44,9.4 26,7.8 12,9.9 0,8.1" fill="#000" />
+              <polygon points="100,0 200,0 200,7.2 178,8.6 162,6.2 144,9.4 126,7.8 112,9.9 100,8.1" fill="#000" />
+            </svg>
+          </div>
         </div>
+
 
 
         {!running && (
