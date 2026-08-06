@@ -1244,6 +1244,7 @@ const UPDATES: UpdateEntry[] = [
     title: "The MASSIVE update",
     image: massiveUpdateAsset.url,
     changes: [
+      "[this took me $25 to get finished with... 〒▽〒]",
       "Added [ THE ALTERNATE ] and a proper character selection",
       "Revamped Bestiary's UI",
       "NEW MODE! : Star Vanisher...!!",
