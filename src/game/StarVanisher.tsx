@@ -81,7 +81,7 @@ type State = {
   countTimer: number;     // time until next tick
   countDone: boolean;
   countPop: number;
-  boomed: boolean;        // explosion已triggered for this shot
+  boomed: boolean;        // explosion already triggered for this shot
 
 };
 
