@@ -8,13 +8,14 @@ import { useSettings, type Settings } from "@/game/settings";
 import { sfx, setSfxVolume, unlockAudio } from "@/game/sfx";
 import { setBgmVolume, pauseBgm, resumeBgm } from "@/game/bgm";
 import BgmPlayer from "@/game/BgmPlayer";
+import StarVanisher from "@/game/StarVanisher";
 import { SPRITE_GALLERY } from "@/game/sprites";
 import { useLevelStats, formatMs } from "@/game/levelStats";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import roaringKnightImg from "@/assets/roaring_knight_titlecard.png";
 import celestialMarathonEmblem from "@/assets/celestial-marathon-emblem.png";
 
-export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" | "updates" | "credits" | "youtube";
+export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" | "updates" | "credits" | "youtube" | "starvanisher";
 
 interface Props {
   onPlay: (id: LevelId) => void;
@@ -77,6 +78,7 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
           <TabBtn active={tab === "updates"}  onClick={() => switchTab("updates")}>UPDATES</TabBtn>
           <TabBtn active={tab === "credits"}  onClick={() => switchTab("credits")}>CREDITS</TabBtn>
           <TabBtn active={tab === "youtube"} onClick={() => switchTab("youtube")}>YOUTUBE</TabBtn>
+          <TabBtn active={tab === "starvanisher"} onClick={() => switchTab("starvanisher")}>STAR VANISHER...!!</TabBtn>
           <TabBtn active={false} onClick={openBestiary}>BESTIARY</TabBtn>
           <TabBtn active={false} onClick={openCharSelect}>CHARACTER SELECT</TabBtn>
         </nav>
@@ -91,6 +93,7 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
           {tab === "updates"  && <UpdatesTab />}
           {tab === "credits"  && <CreditsTab />}
           {tab === "youtube"  && <YouTubeTab />}
+          {tab === "starvanisher" && <StarVanisher />}
         </div>
       </div>
 
