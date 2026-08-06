@@ -510,7 +510,7 @@ function drawBoss(ctx: CanvasRenderingContext2D, st: State, time: number) {
 
 
 
-export default function StarVanisher() {
+export default function StarVanisher({ onBack }: { onBack?: () => void } = {}) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const stateRef = useRef<State | null>(null);
   const [running, setRunning] = useState(false);
@@ -1690,6 +1690,24 @@ export default function StarVanisher() {
                   }}
                 >
                   Retry?
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    bgmRef.current?.pause();
+                    stopBossBgm();
+                    stopChargeHum();
+                    resumeBgm();
+                    onBack?.();
+                  }}
+                  className="pointer-events-auto scribble-border border-2 border-black bg-paper px-6 py-3 font-bungee text-ink transition-all duration-500 ease-out hover:scale-105"
+                  style={{
+                    transform: failStage >= 3 ? "translateY(0)" : "translateY(300%)",
+                    opacity: failStage >= 3 ? 1 : 0,
+                    transitionDelay: "120ms",
+                  }}
+                >
+                  nah
                 </button>
               </div>
             )}
