@@ -1456,7 +1456,7 @@ export default function StarVanisher() {
           }}
           onPointerLeave={() => {
             const st = stateRef.current;
-            if (st?.bossCharging) { st.bossCharging = false; st.bossCharge = 0; stopChargeHum(); }
+            if (st?.bossCharging) { st.bossCharging = false; st.bossCharge = 0; st.bossMvCued = false; stopChargeHum(); }
           }}
         />
 
