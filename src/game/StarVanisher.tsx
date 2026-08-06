@@ -167,7 +167,7 @@ export default function StarVanisher() {
 
     const intensity = Math.min(2, 0.8 + st.combo * 0.08);
     sfx.superDash();
-    sfx.explode?.(intensity);
+    sfx.glassShatter();
 
     // explosion particles
     const n = 46 + Math.min(90, st.combo * 6);
