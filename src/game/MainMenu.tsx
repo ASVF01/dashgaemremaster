@@ -1294,6 +1294,20 @@ const UPDATES: UpdateEntry[] = [
 ];
 
 function UpdatesTab() {
+  const renderChange = (text: string) => {
+    const parts = text.split(/(\$25)/);
+    if (parts.length <= 1) return text;
+    return parts.map((part, idx) =>
+      part === "$25" ? (
+        <span key={idx} className="green-shimmer">
+          {part}
+        </span>
+      ) : (
+        part
+      )
+    );
+  };
+
   return (
     <div className="max-w-3xl mx-auto">
       <div className="text-center mb-4">
