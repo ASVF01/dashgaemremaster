@@ -15,6 +15,8 @@ import bgmStarVanisherAsset from "@/assets/audio/StarVanisher_duh.ogg.asset.json
 const bgmStarVanisher = bgmStarVanisherAsset.url;
 import bgmOpeningAsset from "@/assets/audio/bgm_opening.mp3.asset.json";
 const bgmOpening = bgmOpeningAsset.url;
+import bgmDangerAsset from "@/assets/audio/danger_target.ogg.asset.json";
+const bgmDanger = bgmDangerAsset.url;
 
 type Track = { id: string; title: string; src: string };
 
