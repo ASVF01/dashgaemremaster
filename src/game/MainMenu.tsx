@@ -940,7 +940,7 @@ function ResetProgressFlow({ onClose }: { onClose: () => void }) {
           {blasts.map((b, i) => (
             <div
               key={`f${i}`}
-              className="absolute inset-0 bg-white"
+              className={i === 0 ? "absolute inset-0 bg-white" : "absolute inset-0 bg-white/30"}
               style={{ animation: `rpFlash 0.35s ease-out ${b.delay}s forwards`, opacity: 0 }}
             />
           ))}
