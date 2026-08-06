@@ -96,8 +96,11 @@ type State = {
   pendingMiss: boolean;   // run ends once the count-up finishes
   reviveLeft: number;     // SECOND WIND charges left this run
   sightLeft: number;      // TRUE SIGHT targets left this run
-
+  starsDone: number;      // stars completed this run
+  bg: ColorSet;           // background palette, reshuffled every 5 stars
+  streaks: Streak[];      // speed lines flying right -> left
 };
+
 
 function rand(a: number, b: number) { return a + Math.random() * (b - a); }
 
