@@ -896,11 +896,31 @@ export default function StarVanisher() {
             {/* best score — top left */}
             <div className="absolute left-4 top-4 -rotate-2">
               <div
-                className="border-2 border-black bg-[#ffe23a] px-4 py-2"
-                style={{ boxShadow: "4px 4px 0 #000, inset 0 0 0 2px rgba(0,0,0,0.15)" }}
+                className="border-2 border-black bg-black px-4 py-2"
+                style={{ boxShadow: "4px 4px 0 rgba(0,0,0,0.6), inset 0 0 0 2px rgba(255,255,255,0.12)" }}
               >
-                <div className="font-marker text-[10px] leading-none tracking-[0.3em] text-black/70">BEST</div>
-                <div className="font-bungee text-2xl leading-none text-black">{hud.best}</div>
+                <div className="font-marker text-[10px] leading-none tracking-[0.3em] text-white/60">BEST</div>
+                <div className="font-bungee text-2xl leading-none text-black" style={{ WebkitTextStroke: "1.5px #fff" }}>
+                  {hud.best}
+                </div>
+              </div>
+            </div>
+
+            {/* stylized logo */}
+            <div className="absolute left-1/2 top-[16%] -translate-x-1/2 select-none">
+              <div
+                className="font-bungee whitespace-nowrap italic text-[clamp(28px,7vw,68px)] leading-none tracking-tight"
+                style={{
+                  transform: "skewX(-12deg)",
+                  background: "linear-gradient(180deg,#ffffff 0%,#e8f4ff 38%,#7fb7ff 52%,#ffffff 66%,#cfe6ff 100%)",
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  color: "transparent",
+                  filter:
+                    "drop-shadow(0 0 2px #000) drop-shadow(3px 3px 0 #0a1b3d) drop-shadow(-2px -2px 0 #0a1b3d) drop-shadow(0 0 18px rgba(90,170,255,0.75))",
+                }}
+              >
+                Star Vanisher...!!
               </div>
             </div>
 
@@ -908,8 +928,8 @@ export default function StarVanisher() {
             <button
               type="button"
               onClick={() => handlePlay()}
-              className="absolute bottom-4 right-4 rotate-2 border-2 border-black bg-[#ff2e63] px-8 py-3 font-bungee text-2xl tracking-wide text-white transition-transform hover:scale-110 hover:-rotate-1"
-              style={{ boxShadow: "6px 6px 0 #000, 0 0 24px rgba(255,46,99,0.55)" }}
+              className="absolute bottom-4 right-4 rotate-2 border-2 border-black bg-[#2b7bff] px-8 py-3 font-bungee text-2xl tracking-wide text-white transition-transform hover:scale-110 hover:-rotate-1"
+              style={{ boxShadow: "6px 6px 0 #000, 0 0 24px rgba(43,123,255,0.65)" }}
             >
               START
             </button>
