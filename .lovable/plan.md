@@ -1,25 +1,15 @@
-# Roaring Knight slash — long beam rework
+# Make "$25" green and shimmering like invboi
 
-Match the reference: a faint thin **red line** that streaks from the boss across the screen, passing through where the player is, then a slightly thicker **white line** in the same place that quickly thins out.
+## Goal
+In the **v1.4 MASSIVE update** entry, the "\$25" text should be styled green with a shimmer effect similar to the existing invboi/rainbow shimmer.
 
-## Changes
+## Current state
+- The update log entry is in `src/game/MainMenu.tsx` at line 1247: `"[this took me $25 to get finished with... 〒▽〒]"`.
+- The update list currently renders each change as plain text inside a `<li>`.
+- The invboi shimmer uses a moving gradient background-clip (`rainbow-text` in `src/index.css`).
 
-**`src/game/GameCanvas.tsx` — `spawnBossSlash`**
-- Replace the short diagonal-near-player slash with a beam that:
-  - Starts at the boss's world position (camera anchor + screen offset).
-  - Aims at the player's center (with tiny jitter so it's not laser-perfect).
-  - Extends ~1600px past the player so it visually crosses the entire arena.
-- Telegraph (red warning) duration stays at 0.5s; slash hitbox stays at 0.2s.
-
-**`src/game/GameCanvas.tsx` — `drawBossWorldFx` (visual tuning to match GIF)**
-- Red warning line:
-  - Thinner: ~1.5px (was 2-4px), no glow / minimal shadow.
-  - Steady alpha (~0.85) instead of pulsing/thickening — the reference is just a clean thin red line.
-- White slash:
-  - Starts at ~3px thickness (was 9px) and thins toward 0 over the 0.2s.
-  - Soft white glow only at the very start, fades fast.
-  - Keep the bright thin core for the "just got cut" snap.
-
-## Result
-
-The slash now reads as a beam-cut from the knight through the player's position, exactly like the Deltarune reference: thin red telegraph → white shing → quick thin-out. Parry / dodge mechanics stay identical.
+## Plan
+1. **Add a green shimmer CSS class** in `src/index.css` (e.g., `.green-shimmer`) that uses a shifting green gradient background-clip, mirroring the `rainbow-text` animation but with a green/cyan palette.
+2. **Wrap the "$25" substring** in the v1.4 update entry with a `<span className="green-shimmer">$25</span>` so only those characters shimmer.
+3. **Adjust the update list renderer** in `src/game/MainMenu.tsx` so the `changes` array can contain `ReactNode` elements (or JSX) in addition to strings; the current `u.changes.map((c) => <li>{c}</li>)` already supports JSX, but the `UpdateEntry` type may need its `changes` type relaxed to `ReactNode[]` or `(string | ReactNode)[]`.
+4. **Verify** in the preview that the "$25" text stands out as green and shimmers, and the rest of the update log remains unchanged.
