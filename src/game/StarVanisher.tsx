@@ -165,7 +165,9 @@ export default function StarVanisher() {
     st.target = Math.round(rand(28, 96));
     st.fieldT = 0;
     st.fieldDir = 1;
-    st.fieldSpeed = 0.62 + Math.min(1.5, st.combo * 0.075);
+    st.fieldSpeed = (0.62 + Math.min(1.5, st.combo * 0.075))
+      * (hasAbility("steady") ? 0.8 : 1)
+      * (hasAbility("greed") ? 1.15 : 1);
     st.lockedPct = 0;
     st.judgement = null;
     st.beam = 0;
@@ -188,11 +190,11 @@ export default function StarVanisher() {
       lockedPct: 0, judgement: null, combo: 0, score: 0, shake: 0, flash: 0,
       hitstop: 0, beam: 0, star: null, destroyFrac: 0, particles: [], floatNums: [],
       comboPop: 0, countVal: 0, countStep: 0, countTimer: 0, countDone: false, countPop: 0,
-      boomed: false, pendingMiss: false,
+      boomed: false, pendingMiss: false, reviveLeft: hasAbility("revive") ? 1 : 0,
     };
     newRound(st);
     stateRef.current = st;
-    setHud((h) => ({ ...h, score: 0, combo: 0, over: false, newBest: false }));
+    setHud((h) => ({ ...h, score: 0, combo: 0, over: false, newBest: false, earned: 0 }));
     setFailStage(0);
     setShowFailPct(false);
     setRunning(true);
@@ -243,7 +245,8 @@ export default function StarVanisher() {
       st.pendingMiss = true;
     } else {
       const acc = Math.max(0, 1 - diff / win.okay);
-      const gained = Math.round((j === "PERFECT" ? 1200 : 500) * (1 + acc) * (1 + st.combo * 0.22));
+      const greed = hasAbility("greed") ? 1.3 : 1;
+      const gained = Math.round((j === "PERFECT" ? 1200 : 500) * (1 + acc) * (1 + st.combo * 0.22) * greed);
       st.score += gained;
       st.combo += 1;
       st.comboPop = 1;
@@ -256,6 +259,18 @@ export default function StarVanisher() {
   };
 
   const finishMiss = (st: State) => {
+    // SECOND WIND: eat the miss, keep the run alive
+    if (st.reviveLeft > 0) {
+      st.reviveLeft -= 1;
+      st.combo = 0;
+      st.floatNums.push({
+        x: W * 0.4, y: H * 0.3, text: "SECOND WIND!", life: 1.4, color: "#8bff3a", size: 40,
+      });
+      sfx.parryHit();
+      setHud((h) => ({ ...h, combo: 0 }));
+      newRound(st);
+      return;
+    }
     sfx.fatalHit();
     st.phase = "over";
     st.t = 0;
@@ -264,7 +279,9 @@ export default function StarVanisher() {
       hsRef.current = st.score;
       try { localStorage.setItem(HS_KEY, String(st.score)); } catch { /* noop */ }
     }
-    setHud({ score: st.score, combo: st.combo, best: hsRef.current, over: true, lastScore: st.score, newBest, lastPct: st.lockedPct });
+    const earned = tokensForScore(st.score);
+    if (earned > 0) addTokens(earned);
+    setHud({ score: st.score, combo: st.combo, best: hsRef.current, over: true, lastScore: st.score, newBest, lastPct: st.lockedPct, earned });
   };
 
   const fieldCenter = (s: Star) => ({ x: s.cx - s.r * 0.55, y: s.cy });
