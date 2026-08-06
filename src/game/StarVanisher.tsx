@@ -82,6 +82,7 @@ type State = {
   countDone: boolean;
   countPop: number;
   boomed: boolean;        // explosion already triggered for this shot
+  pendingMiss: boolean;   // run ends once the count-up finishes
 
 };
 
@@ -170,6 +171,7 @@ export default function StarVanisher() {
     st.countDone = false;
     st.countPop = 0;
     st.boomed = false;
+    st.pendingMiss = false;
     st.star = makeStar(st.combo);
   };
 
@@ -181,7 +183,7 @@ export default function StarVanisher() {
       lockedPct: 0, judgement: null, combo: 0, score: 0, shake: 0, flash: 0,
       hitstop: 0, beam: 0, star: null, destroyFrac: 0, particles: [], floatNums: [],
       comboPop: 0, countVal: 0, countStep: 0, countTimer: 0, countDone: false, countPop: 0,
-      boomed: false,
+      boomed: false, pendingMiss: false,
     };
     newRound(st);
     stateRef.current = st;
