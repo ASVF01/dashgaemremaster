@@ -505,6 +505,14 @@ export default function StarVanisher() {
         st.fieldT += st.fieldDir * st.fieldSpeed * dt;
         if (st.fieldT > 1) { st.fieldT = 1; st.fieldDir = -1; }
         if (st.fieldT < 0) { st.fieldT = 0; st.fieldDir = 1; }
+        // demonstration: the game plays itself, firing right on the target
+        if (st.demo && st.star && st.t > 1.1) {
+          const s = st.star;
+          const fc = fieldCenter(s);
+          const pct = overlapPct(s.cx, s.cy, s.r, fc.x, fc.y, fieldRadius(st, s));
+          if (Math.abs(pct - st.target) <= 1.4) fire(true);
+        }
+
       } else if (st.phase === "fire") {
         if (st.t > 0.95) { st.phase = "count"; st.t = 0; st.countTimer = 0.18; }
       } else if (st.phase === "count") {
