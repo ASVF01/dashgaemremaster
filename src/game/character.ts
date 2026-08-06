@@ -57,6 +57,12 @@ export function unlockCharacter(id: CharacterId) {
   persist(); emit();
 }
 
+/** Back to the default roster + default pick. */
+export function resetCharacterProgress() {
+  current = { ...DEFAULTS, unlocked: { ...DEFAULTS.unlocked } };
+  persist(); emit();
+}
+
 export function useCharacter(): CharacterState {
   const [state, setState] = useState<CharacterState>(current);
   useEffect(() => {
