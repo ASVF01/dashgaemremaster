@@ -184,6 +184,7 @@ type State = {
   countTimer: number;     // time until next tick
   countDone: boolean;
   countPop: number;
+  countEnter: number;      // entrance animation 0..1 (does not reset on countDone)
   boomed: boolean;        // explosion already triggered for this shot
   pendingMiss: boolean;   // run ends once the count-up finishes
   reviveLeft: number;     // SECOND WIND charges left this run
@@ -640,7 +641,7 @@ export default function StarVanisher({ onBack }: { onBack?: () => void } = {}) {
       phase: "aim", t: 0, target: 50, fieldT: 0, fieldDir: 1, fieldSpeed: 0.7,
       lockedPct: 0, judgement: null, combo: 0, score: 0, shake: 0, flash: 0,
       hitstop: 0, beam: 0, star: null, destroyFrac: 0, particles: [], floatNums: [],
-      comboPop: 0, countVal: 0, countStep: 0, countTimer: 0, countDone: false, countPop: 0,
+      comboPop: 0, countVal: 0, countStep: 0, countTimer: 0, countDone: false, countPop: 0, countEnter: 0,
       boomed: false, pendingMiss: false, reviveLeft: hasAbility("revive") ? 1 : 0,
       sightLeft: hasAbility("sight") ? 10 : 0,
       starsDone: -1, bg: bg0, streaks: makeStreaks(bg0), demo,
@@ -1027,9 +1028,10 @@ export default function StarVanisher({ onBack }: { onBack?: () => void } = {}) {
       } else if (st.phase === "boss") {
         updateBoss(st, dt);
       } else if (st.phase === "fire") {
-        if (st.t > 0.95) { st.phase = "count"; st.t = 0; st.countTimer = 0.18; }
+        if (st.t > 0.95) { st.phase = "count"; st.t = 0; st.countTimer = 0.18; st.countEnter = 0; }
       } else if (st.phase === "count") {
         st.countPop = Math.max(0, st.countPop - dt * 4);
+        st.countEnter = Math.min(1, st.countEnter + dt * 3.2);
         const total = Math.floor(st.lockedPct) + 1;
         if (!st.countDone) {
           st.countTimer -= dt;
@@ -1296,7 +1298,7 @@ export default function StarVanisher({ onBack }: { onBack?: () => void } = {}) {
       // counting percentage — centered on screen, rises from below
       if (st.phase === "count" && s) {
         const pop = 1 + st.countPop * (st.countDone ? 0.55 : 0.18);
-        const rise = 1 - Math.pow(1 - Math.min(1, st.t * 3.2), 3);
+        const rise = 1 - Math.pow(1 - Math.min(1, st.countEnter), 3);
         ctx.save();
         ctx.translate(W * 0.5, H * 0.5 + (1 - rise) * H);
         ctx.scale(pop, pop);
