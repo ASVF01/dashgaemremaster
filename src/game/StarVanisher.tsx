@@ -629,6 +629,11 @@ export default function StarVanisher() {
         <p className="font-marker text-xs text-ink/70 mt-1">
           One click. Vanish exactly as much of the star as they ask. Miss and the run is over.
         </p>
+        <p className="font-marker text-xs text-ink/60 mt-1">
+          Balance <span className="font-bungee text-ink">{getShop().tokens} T</span> · beam{" "}
+          <span className="font-bungee text-ink">{activeBeamSkin().name}</span>
+          {getShop().abilities.length > 0 && <> · {getShop().abilities.length} ability equipped</>}
+        </p>
       </div>
 
       <div
