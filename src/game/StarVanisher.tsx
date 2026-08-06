@@ -77,6 +77,7 @@ type Boss = {
   timeLeft: number;
   hitFlash: number;
   dying: number;
+  wave: number;
 };
 
 type Particle = {
@@ -552,7 +553,7 @@ export default function StarVanisher() {
       sightLeft: hasAbility("sight") ? 10 : 0,
       starsDone: -1, bg: bg0, streaks: makeStreaks(bg0), demo,
       demoTryTimer: 0,
-      boss: null, bossIntro: 0, aimX: W * 0.5, aimY: H * 0.5, beamX: W * 0.5, beamY: H * 0.5,
+      boss: null, bossIntro: 0, bossOnly, bossWave: 0, aimX: W * 0.5, aimY: H * 0.5, beamX: W * 0.5, beamY: H * 0.5,
     };
 
     newRound(st);
