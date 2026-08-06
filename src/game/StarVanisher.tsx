@@ -1161,6 +1161,26 @@ export default function StarVanisher() {
           ctx.strokeText("RELEASE!!", st.aimX, st.aimY - 70);
           ctx.fillText("RELEASE!!", st.aimX, st.aimY - 70);
           ctx.restore();
+
+          // little shimmer star where the mouse is positioned
+          const pulse = (Math.sin(time * 12) + 1) / 2;
+          ctx.save();
+          ctx.translate(st.aimX, st.aimY);
+          ctx.rotate(time * 10);
+          ctx.scale(0.6 + 0.7 * pulse, 0.6 + 0.7 * pulse);
+          ctx.globalAlpha = 0.7 + 0.3 * pulse;
+          ctx.shadowColor = "#ffe23a";
+          ctx.shadowBlur = 10 + pulse * 12;
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          for (let i = 0; i < 10; i++) {
+            const a = (i / 5) * Math.PI - Math.PI / 2;
+            const r = i % 2 === 0 ? 14 : 6;
+            ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
         }
       }
 
