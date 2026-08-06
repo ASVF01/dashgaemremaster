@@ -130,7 +130,8 @@ export default function StarVanisher() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const stateRef = useRef<State | null>(null);
   const [running, setRunning] = useState(false);
-  const [hud, setHud] = useState({ score: 0, combo: 0, best: 0, over: false, lastScore: 0, newBest: false });
+  const [hud, setHud] = useState({ score: 0, combo: 0, best: 0, over: false, lastScore: 0, newBest: false, lastPct: 0 });
+  const [failStage, setFailStage] = useState(0); // 0 none, 1 miss+pct rise, 2 white+FAIL, 3 retry
   const hsRef = useRef(0);
 
   useEffect(() => {
@@ -165,8 +166,18 @@ export default function StarVanisher() {
     newRound(st);
     stateRef.current = st;
     setHud((h) => ({ ...h, score: 0, combo: 0, over: false, newBest: false }));
+    setFailStage(0);
     setRunning(true);
   };
+
+  // fail sequence timeline
+  useEffect(() => {
+    if (!hud.over) { setFailStage(0); return; }
+    setFailStage(1);
+    const t1 = window.setTimeout(() => setFailStage(2), 1500);
+    const t2 = window.setTimeout(() => setFailStage(3), 1500 + 2500);
+    return () => { window.clearTimeout(t1); window.clearTimeout(t2); };
+  }, [hud.over]);
 
   const fire = () => {
     const st = stateRef.current;
@@ -216,10 +227,12 @@ export default function StarVanisher() {
       });
     }
 
-    st.floatNums.push({
-      x: s.cx, y: s.cy - s.r - 20, text: `${pct.toFixed(1)}%`,
-      life: 1.1, color: j === "MISS" ? "#ff2d5e" : "#ffb03a", size: 74,
-    });
+    if (j !== "MISS") {
+      st.floatNums.push({
+        x: s.cx, y: s.cy - s.r - 20, text: `${pct.toFixed(1)}%`,
+        life: 1.1, color: "#ffb03a", size: 74,
+      });
+    }
 
     if (j === "MISS") {
       sfx.fatalHit();
@@ -229,7 +242,7 @@ export default function StarVanisher() {
         hsRef.current = st.score;
         try { localStorage.setItem(HS_KEY, String(st.score)); } catch { /* noop */ }
       }
-      setHud({ score: st.score, combo: st.combo, best: hsRef.current, over: true, lastScore: st.score, newBest });
+      setHud({ score: st.score, combo: st.combo, best: hsRef.current, over: true, lastScore: st.score, newBest, lastPct: pct });
     } else {
       const acc = Math.max(0, 1 - diff / win.okay);
       const gained = Math.round((j === "PERFECT" ? 1200 : 500) * (1 + acc) * (1 + st.combo * 0.22));
@@ -428,7 +441,7 @@ export default function StarVanisher() {
       ctx.globalAlpha = 1;
 
       // judgement text
-      if (st.judgement && (st.phase === "fire" || st.phase === "result" || st.phase === "over")) {
+      if (st.judgement && (st.phase === "fire" || st.phase === "result")) {
         const j = st.judgement;
         const pop = Math.min(1, st.t * 6);
         ctx.save();
@@ -536,20 +549,59 @@ export default function StarVanisher() {
         )}
 
         {running && hud.over && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#2a0011]/85">
-            <div className="font-bungee text-4xl text-[#ff2d5e]">RUN OVER</div>
-            <div className="font-bungee text-2xl text-[#ffffff]">SCORE {hud.lastScore}</div>
-            <div className="font-marker text-sm text-[#ffd0de]">COMBO REACHED x{hud.combo}</div>
-            {hud.newBest && (
-              <div className="font-bungee text-xl text-[#ffe23a] animate-jitter">NEW HIGH SCORE!!</div>
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {/* faded black backdrop */}
+            <div
+              className="absolute inset-0 bg-black transition-opacity duration-500"
+              style={{ opacity: failStage >= 1 && failStage < 2 ? 0.7 : 0 }}
+            />
+            {/* white screen */}
+            <div
+              className="absolute inset-0 bg-white transition-opacity duration-200"
+              style={{ opacity: failStage >= 2 ? 1 : 0 }}
+            />
+
+            {failStage < 2 && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+                <div
+                  className="font-bungee text-6xl text-[#ff2d5e] transition-transform duration-500 ease-out"
+                  style={{ transform: failStage >= 1 ? "translateY(0)" : "translateY(120%)" }}
+                >
+                  MISS
+                </div>
+                <div
+                  className="font-bungee text-4xl text-white transition-transform duration-700 ease-out delay-150"
+                  style={{ transform: failStage >= 1 ? "translateY(0)" : "translateY(200%)" }}
+                >
+                  {hud.lastPct.toFixed(1)}%
+                </div>
+              </div>
             )}
-            <button
-              type="button"
-              onClick={start}
-              className="scribble-border bg-paper px-6 py-3 font-bungee text-ink hover:scale-105 transition-transform mt-2"
-            >
-              GO AGAIN
-            </button>
+
+            {failStage >= 1 && (
+              <div
+                className="absolute inset-0 flex flex-col items-center justify-center gap-6 transition-opacity duration-200"
+                style={{ opacity: failStage >= 2 ? 1 : 0 }}
+              >
+                <div
+                  className="font-bungee text-7xl text-black transition-transform duration-500 ease-out"
+                  style={{ transform: failStage >= 2 ? "translateY(0)" : "translateY(-300%)" }}
+                >
+                  FAIL
+                </div>
+                <button
+                  type="button"
+                  onClick={start}
+                  className="pointer-events-auto scribble-border bg-paper px-6 py-3 font-bungee text-ink transition-all duration-500 ease-out hover:scale-105"
+                  style={{
+                    transform: failStage >= 3 ? "translateY(0)" : "translateY(300%)",
+                    opacity: failStage >= 3 ? 1 : 0,
+                  }}
+                >
+                  Retry?
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
