@@ -117,6 +117,7 @@ type State = {
   bg: ColorSet;           // background palette, reshuffled every 5 stars
   streaks: Streak[];      // speed lines flying right -> left
   demo: boolean;          // tutorial demonstration: the game plays itself
+  demoTryTimer: number;   // seconds after count-up done before "Try it yourself!" flashes
 };
 
 
@@ -311,6 +312,7 @@ export default function StarVanisher() {
       boomed: false, pendingMiss: false, reviveLeft: hasAbility("revive") ? 1 : 0,
       sightLeft: hasAbility("sight") ? 10 : 0,
       starsDone: -1, bg: bg0, streaks: makeStreaks(bg0), demo,
+      demoTryTimer: 0,
     };
 
     newRound(st);
@@ -436,14 +438,8 @@ export default function StarVanisher() {
     if (!s) return;
     st.boomed = true;
     if (st.demo) {
-      // 0.5s after the target is destroyed, flash "Try it yourself!" for 1.5s
-      clearTutTimers();
-      tutTimers.current.push(window.setTimeout(() => setShowTryIt(true), 500));
-      tutTimers.current.push(window.setTimeout(() => {
-        setShowTryIt(false);
-        markTutorialDone();
-        start(false);
-      }, 500 + 1500));
+      // demo's "Try it yourself!" flash is handled after the count-up finishes
+      return;
     }
 
     st.hitstop = 0.12;
@@ -524,14 +520,15 @@ export default function StarVanisher() {
           st.countTimer -= dt;
           if (st.countTimer <= 0) {
             st.countStep += 1;
-            if (st.countStep >= total) {
-              st.countVal = st.lockedPct;
-              st.countDone = true;
-              st.countPop = 1;
-              st.t = 0;
-              st.shake = 13;
-              playExplosion2();
-            } else {
+          if (st.countStep >= total) {
+            st.countVal = st.lockedPct;
+            st.countDone = true;
+            st.countPop = 1;
+            st.t = 0;
+            st.shake = 13;
+            playExplosion2();
+            if (st.demo) st.demoTryTimer = 0.6;
+          } else {
               st.countVal = st.countStep;
               st.countPop = 0.55;
               playCountUp();
@@ -539,11 +536,25 @@ export default function StarVanisher() {
               st.countTimer = 0.024 + 0.17 * Math.pow(prog, 2.6);
             }
           }
-        } else if (st.t > 0.94) {
-          if (st.demo) { /* demo holds here until the tutorial hands over */ }
-          else if (st.pendingMiss) finishMiss(st);
-          else newRound(st);
+      } else if (st.t > 0.94) {
+        if (st.demo) {
+          // demo holds here until the tutorial hands over
+          if (st.demoTryTimer > 0) {
+            st.demoTryTimer -= dt;
+            if (st.demoTryTimer <= 0) {
+              setShowTryIt(true);
+              clearTutTimers();
+              tutTimers.current.push(window.setTimeout(() => {
+                setShowTryIt(false);
+                markTutorialDone();
+                start(false);
+              }, 1500));
+            }
+          }
         }
+        else if (st.pendingMiss) finishMiss(st);
+        else newRound(st);
+      }
 
       } else if (st.phase === "result") {
         const gap = Math.max(0.22, 0.5 - st.combo * 0.02);
