@@ -6,6 +6,8 @@ import exploseAsset from "@/assets/audio/explose1.mp3.asset.json";
 import explose2Asset from "@/assets/audio/explose2.mp3.asset.json";
 import countupAsset from "@/assets/audio/countup.mp3.asset.json";
 import runBgmAsset from "@/assets/audio/StarVanisher_duh.ogg.asset.json";
+import svTitleBg from "@/assets/sv_title_bg.jpg.asset.json";
+
 import { isBgmMuted, subscribeBgmMuted, pauseBgm, resumeBgm } from "@/game/bgm";
 
 // simple one-shot sample player (overlapping playback via cloned nodes)
@@ -832,7 +834,7 @@ export default function StarVanisher() {
   return (
     <div className="flex flex-col items-center gap-3">
       <div className="text-center">
-        <div className="font-marker text-3xl md:text-4xl text-ink -rotate-1">Star Vanisher...!!</div>
+        
         <p className="font-marker text-xs text-ink/70 mt-1">
           One click. Vanish exactly as much of the star as they ask. Miss and the run is over.
         </p>
@@ -887,18 +889,33 @@ export default function StarVanisher() {
 
 
         {!running && tutSlide === null && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#2a0011]/85">
-            <div className="font-bungee text-3xl text-[#ffe23a]">STAR VANISHER...!!</div>
-            <div className="font-marker text-sm text-[#ffd0de]">BEST {hud.best}</div>
+          <div
+            className="absolute inset-0 z-20 bg-cover bg-center"
+            style={{ backgroundImage: `url(${svTitleBg.url})` }}
+          >
+            {/* best score — top left */}
+            <div className="absolute left-4 top-4 -rotate-2">
+              <div
+                className="border-2 border-black bg-[#ffe23a] px-4 py-2"
+                style={{ boxShadow: "4px 4px 0 #000, inset 0 0 0 2px rgba(0,0,0,0.15)" }}
+              >
+                <div className="font-marker text-[10px] leading-none tracking-[0.3em] text-black/70">BEST</div>
+                <div className="font-bungee text-2xl leading-none text-black">{hud.best}</div>
+              </div>
+            </div>
+
+            {/* start — bottom right */}
             <button
               type="button"
               onClick={() => handlePlay()}
-              className="scribble-border bg-paper px-6 py-3 font-bungee text-ink hover:scale-105 transition-transform"
+              className="absolute bottom-4 right-4 rotate-2 border-2 border-black bg-[#ff2e63] px-8 py-3 font-bungee text-2xl tracking-wide text-white transition-transform hover:scale-110 hover:-rotate-1"
+              style={{ boxShadow: "6px 6px 0 #000, 0 0 24px rgba(255,46,99,0.55)" }}
             >
-              START GRINDING
+              START
             </button>
           </div>
         )}
+
 
         {/* first-time tutorial slides */}
         {tutSlide !== null && (
