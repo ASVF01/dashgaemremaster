@@ -751,7 +751,7 @@ export default function StarVanisher() {
   };
 
   // ---------------- DANGER TARGET (boss battle) ----------------
-  const startBoss = (st: State) => {
+  const startBoss = (st: State, keepMusic = false) => {
     st.star = null;
     st.phase = "boss";
     st.t = 0;
@@ -771,9 +771,11 @@ export default function StarVanisher() {
     pauseBgm();
     const run = bgmRef.current;
     if (run) { run.pause(); run.currentTime = 0; }
+    if (keepMusic) return; // wave transition — let the boss theme keep rolling
     stopBossBgm();
     if (!isBgmMuted()) playBossBgm();
   };
+
 
   const endBoss = (st: State) => {
     st.boss = null;
