@@ -50,7 +50,7 @@ export default function CheatMenu() {
         if (found) {
           if (!armed.includes(found.code)) setArmed((a) => [...a, found.code]);
           sfx.cheatChime();
-          if (found.code === "deadeye") {
+          if (found.code === "vanisher") {
             const on = toggleCheat("perfectAim");
             setLine(`V-LOCK ${on ? "ON" : "OFF"} — GUARANTEED JUST`);
           } else {
