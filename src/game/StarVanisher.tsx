@@ -779,7 +779,7 @@ export default function StarVanisher() {
           <div className="absolute top-0 left-0 w-full overflow-hidden" style={{ height: "6%" }}>
             <svg
               className="absolute top-0 left-0 h-full"
-              style={{ width: "200%", animation: "svBorderScroll 9s linear infinite" }}
+              style={{ width: "200%", animation: "svBorderScroll 4s linear infinite" }}
               viewBox="0 0 200 10"
               preserveAspectRatio="none"
               aria-hidden="true"
@@ -791,7 +791,7 @@ export default function StarVanisher() {
           <div className="absolute bottom-0 left-0 w-full overflow-hidden" style={{ height: "6%", transform: "scaleY(-1)" }}>
             <svg
               className="absolute top-0 left-0 h-full"
-              style={{ width: "200%", animation: "svBorderScroll 9s linear infinite" }}
+              style={{ width: "200%", animation: "svBorderScroll 4s linear infinite" }}
               viewBox="0 0 200 10"
               preserveAspectRatio="none"
               aria-hidden="true"
