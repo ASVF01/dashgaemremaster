@@ -181,7 +181,6 @@ export default function StarVanisher() {
     st.boomed = false;
     st.pendingMiss = false;
     st.star = makeStar(st.combo);
-    if (st.sightLeft > 0) st.sightLeft -= 1;
   };
 
   const start = () => {
@@ -227,6 +226,7 @@ export default function StarVanisher() {
     const diff = Math.abs(pct - st.target);
     const j: Judgement = diff <= win.perfect ? "PERFECT" : diff <= win.okay ? "OKAY" : "MISS";
 
+    if (st.sightLeft > 0) st.sightLeft -= 1;
     st.lockedPct = pct;
     st.judgement = j;
     st.phase = "fire";
@@ -577,7 +577,7 @@ export default function StarVanisher() {
       }
 
       // TRUE SIGHT: live destruction % readout while aiming
-      if (st.phase === "aim" && st.star && st.sightLeft >= 0 && hasAbility("sight") && st.sightLeft + 1 > 0 && st.sightLeftActive) {
+      if (st.phase === "aim" && st.star && st.sightLeft > 0) {
         const s0 = st.star;
         const live = overlapPct(s0.cx, s0.cy, s0.r, fieldCenter(s0).x, fieldCenter(s0).y, fieldRadius(st, s0));
         ctx.save();
@@ -590,8 +590,8 @@ export default function StarVanisher() {
         ctx.fillText(`${live.toFixed(1)}%`, s0.cx, s0.cy - s0.r - 34);
         ctx.font = "bold 20px Bungee, system-ui, sans-serif";
         ctx.fillStyle = "#ffffff";
-        ctx.strokeText(`TRUE SIGHT ${st.sightLeft + 1} LEFT`, s0.cx, s0.cy - s0.r - 8);
-        ctx.fillText(`TRUE SIGHT ${st.sightLeft + 1} LEFT`, s0.cx, s0.cy - s0.r - 8);
+        ctx.strokeText(`TRUE SIGHT ${st.sightLeft} LEFT`, s0.cx, s0.cy - s0.r - 8);
+        ctx.fillText(`TRUE SIGHT ${st.sightLeft} LEFT`, s0.cx, s0.cy - s0.r - 8);
         ctx.restore();
       }
 
