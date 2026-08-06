@@ -576,12 +576,13 @@ export default function StarVanisher() {
                 </div>
                 <div
                   className="font-bungee text-4xl text-white transition-transform duration-700 ease-out delay-150"
-                  style={{ transform: failStage >= 1 ? "translateY(0)" : "translateY(200%)" }}
+                  style={{ transform: showFailPct ? "translateY(0)" : "translateY(200%)" }}
                 >
                   {hud.lastPct.toFixed(1)}%
                 </div>
               </div>
             )}
+
 
             {failStage >= 1 && (
               <div
