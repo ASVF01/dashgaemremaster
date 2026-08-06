@@ -859,7 +859,23 @@ export default function StarVanisher() {
           width={W}
           height={H}
           className="w-full h-full block touch-none cursor-crosshair"
-          onPointerDown={(e) => { e.preventDefault(); fire(); }}
+          onPointerMove={(e) => {
+            const st = stateRef.current;
+            if (!st) return;
+            const r = e.currentTarget.getBoundingClientRect();
+            st.aimX = ((e.clientX - r.left) / r.width) * W;
+            st.aimY = ((e.clientY - r.top) / r.height) * H;
+          }}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            const st = stateRef.current;
+            const r = e.currentTarget.getBoundingClientRect();
+            const ax = ((e.clientX - r.left) / r.width) * W;
+            const ay = ((e.clientY - r.top) / r.height) * H;
+            if (st) { st.aimX = ax; st.aimY = ay; }
+            if (st && st.phase === "boss") bossFire(ax, ay);
+            else fire();
+          }}
         />
 
         {/* jagged cinematic borders — scroll left, thin so the play area stays readable */}
