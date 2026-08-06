@@ -8,17 +8,33 @@ import {
 
 type ShopTab = "beams" | "abilities" | "more";
 
+const CHEAT_CODE = "nicole";
+
 export default function Shop({ onClose }: { onClose: () => void }) {
   const [, force] = useState(0);
   const [tab, setTab] = useState<ShopTab>("beams");
   const [note, setNote] = useState<string | null>(null);
+  const [cheatOn, setCheatOn] = useState(false);
 
   useEffect(() => subscribeShop(() => force((n) => n + 1)), []);
 
   useEffect(() => {
+    let typed = "";
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      if (e.key === "+" || e.key === "Add" || e.code === "NumpadAdd") {
+      if (e.key === "Escape") { onClose(); return; }
+
+      if (!cheatOn && e.key.length === 1 && /[a-z]/i.test(e.key)) {
+        typed = (typed + e.key.toLowerCase()).slice(-CHEAT_CODE.length);
+        if (typed === CHEAT_CODE) {
+          typed = "";
+          setCheatOn(true);
+          sfx.cheatChime();
+          setNote("CHEAT ARMED — PRESS +");
+        }
+        return;
+      }
+
+      if (cheatOn && (e.key === "+" || e.key === "Add" || e.code === "NumpadAdd")) {
         addTokens(1000);
         sfx.menuConfirm();
         setNote("+1000 T (CHEAT)");
@@ -26,7 +42,7 @@ export default function Shop({ onClose }: { onClose: () => void }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [onClose, cheatOn]);
 
   useEffect(() => {
     if (!note) return;
