@@ -433,6 +433,17 @@ export default function StarVanisher() {
     const s = st.star;
     if (!s) return;
     st.boomed = true;
+    if (st.demo) {
+      // 0.5s after the target is destroyed, flash "Try it yourself!" for 1.5s
+      clearTutTimers();
+      tutTimers.current.push(window.setTimeout(() => setShowTryIt(true), 500));
+      tutTimers.current.push(window.setTimeout(() => {
+        setShowTryIt(false);
+        markTutorialDone();
+        start(false);
+      }, 500 + 1500));
+    }
+
     st.hitstop = 0.12;
     st.flash = 1;
     st.shake = 14 + Math.min(26, st.combo * 1.6);
