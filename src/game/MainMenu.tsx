@@ -695,6 +695,7 @@ function KeybindsTab() {
 // ---------------- SETTINGS TAB ----------------
 function SettingsTab() {
   const [settings, setSettings, resetSettings] = useSettings();
+  const [resetOpen, setResetOpen] = useState(false);
 
   // Apply audio volumes live as the user drags.
   useEffect(() => { setSfxVolume(settings.sfxVolume); }, [settings.sfxVolume]);
