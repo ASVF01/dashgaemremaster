@@ -510,7 +510,7 @@ function drawBoss(ctx: CanvasRenderingContext2D, st: State, time: number) {
 
 
 
-export default function StarVanisher() {
+export default function StarVanisher({ onBack }: { onBack?: () => void } = {}) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const stateRef = useRef<State | null>(null);
   const [running, setRunning] = useState(false);
