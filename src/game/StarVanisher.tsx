@@ -745,19 +745,21 @@ export default function StarVanisher() {
     st.aimX = W * 0.5;
     st.aimY = H * 0.5;
     playExplosion2();
-    // the boss theme takes over the run track
-    if (!isBgmMuted()) {
-      bgmRef.current?.pause();
-      playBossBgm();
-    }
+    // the boss theme takes over: kill every other track first so nothing overlaps
+    pauseBgm();
+    const run = bgmRef.current;
+    if (run) { run.pause(); run.currentTime = 0; }
+    stopBossBgm();
+    if (!isBgmMuted()) playBossBgm();
   };
 
   const endBoss = (st: State) => {
     st.boss = null;
+    st.phase = "aim";
     stopBossBgm();
     if (!isBgmMuted() && !hud.over) {
       const a = bgmRef.current;
-      if (a) { a.volume = 0.3375; void a.play().catch(() => { /* noop */ }); }
+      if (a && a.paused) { a.volume = 0.3375; a.currentTime = 0; void a.play().catch(() => { /* noop */ }); }
     }
   };
 
