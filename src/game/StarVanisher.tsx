@@ -464,22 +464,33 @@ export default function StarVanisher() {
   };
   useEffect(() => {
     const a = ensureBgm();
+    const inBoss = stateRef.current?.phase === "boss";
     if (isBgmMuted()) {
       a.pause();
+      stopBossBgm();
       return;
     }
     if (running && !hud.over) {
+      pauseBgm(); // silence menu/game music while the run plays
+      if (inBoss) {
+        // the boss theme owns the audio during a DANGER TARGET — never stack the run track on it
+        a.pause();
+        a.currentTime = 0;
+        return;
+      }
       // restart the run track at the beginning of each run / retry
       a.volume = 0.3375;
       a.currentTime = 0;
-      pauseBgm(); // silence menu/game music while the run track plays
       void a.play().catch(() => { /* blocked */ });
     } else if (running && hud.over) {
       // keep the track going on the fail screen but very quiet
+      stopBossBgm();
       a.volume = 0.10;
+      void a.play().catch(() => { /* noop */ });
     } else {
       a.pause();
       a.currentTime = 0;
+      stopBossBgm();
       resumeBgm();
     }
   }, [running, hud.over]);
