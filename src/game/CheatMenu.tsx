@@ -133,7 +133,9 @@ export default function CheatMenu() {
           {CHEATS.map((c) => (
             <div key={c.code}>
               {armed.includes(c.code)
-                ? `${c.label} :: ${c.hint} (PRESS ${c.trigger})`
+                ? c.code === "deadeye"
+                  ? `${c.label} :: ${c.hint} [${isCheatOn("perfectAim") ? "ON" : "OFF"}]`
+                  : `${c.label} :: ${c.hint} (PRESS ${c.trigger})`
                 : "?????? :: LOCKED"}
             </div>
           ))}
