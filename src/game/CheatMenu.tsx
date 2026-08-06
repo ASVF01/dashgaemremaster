@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { sfx } from "@/game/sfx";
-import { addTokens, getShop } from "@/game/shop";
+import { addTokens } from "@/game/shop";
 import { isBgmMuted, pauseBgm, resumeBgm } from "@/game/bgm";
 import bgmOpeningAsset from "@/assets/audio/bgm_opening.mp3.asset.json";
 
@@ -58,7 +58,7 @@ export default function CheatMenu() {
       if (armed.includes("nicole") && (e.key === "+" || e.key === "Add" || e.code === "NumpadAdd")) {
         addTokens(1000);
         sfx.menuConfirm();
-        setLine(`+1000 T — BAL ${getShop().tokens + 1000 > 0 ? getShop().tokens : 0}`);
+        setLine("+1000 T GRANTED.");
         return;
       }
       if (e.key.length === 1 && /[a-z0-9]/i.test(e.key)) {
