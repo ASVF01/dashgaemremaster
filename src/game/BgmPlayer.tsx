@@ -101,13 +101,14 @@ export default function BgmPlayer() {
 
           // Beat detection: bass-energy delta on lowest ~8 bins.
           // Reset from the +56% tweak, then sensitivity +20.3% and decay 2% quicker.
+          // (then sensitivity lowered 15.2%)
           let bass = 0;
           for (let i = 0; i < 8; i++) bass += data[i];
           bass /= 8 * 255;
           const delta = Math.max(0, bass - lastBassRef.current);
           lastBassRef.current = bass * 0.86 + lastBassRef.current * 0.14;
-          if (delta > 0.058) beatPulseRef.current = Math.min(1, beatPulseRef.current + delta * 2.65);
-          beatPulseRef.current = Math.max(beatPulseRef.current, Math.min(1, bass * 1.203));
+          if (delta > 0.067) beatPulseRef.current = Math.min(1, beatPulseRef.current + delta * 2.25);
+          beatPulseRef.current = Math.max(beatPulseRef.current, Math.min(1, bass * 1.02));
           beatPulseRef.current *= 0.911;
 
           // Background — paper-tinted with a subtle pulse.
