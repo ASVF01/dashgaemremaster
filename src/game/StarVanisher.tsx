@@ -197,6 +197,7 @@ type State = {
   bossIntro: number;      // intro card timer
   bossCharge: number;     // seconds the player has been holding the click (boss only)
   bossCharging: boolean;  // is the mouse held down right now
+  bossMvCued: boolean;    // MV sound has fired once the charge hit max
   bossOnly: boolean;      // DANGER TARGET mode: endless bosses, each tougher
   bossWave: number;       // how many DANGER TARGETs have shown up this run
   aimX: number; aimY: number;   // mouse aim during the boss fight
@@ -644,7 +645,7 @@ export default function StarVanisher() {
       sightLeft: hasAbility("sight") ? 10 : 0,
       starsDone: -1, bg: bg0, streaks: makeStreaks(bg0), demo,
       demoTryTimer: 0,
-      boss: null, bossIntro: 0, bossCharge: 0, bossCharging: false, bossOnly, bossWave: 0, aimX: W * 0.5, aimY: H * 0.5, beamX: W * 0.5, beamY: H * 0.5,
+      boss: null, bossIntro: 0, bossCharge: 0, bossCharging: false, bossMvCued: false, bossOnly, bossWave: 0, aimX: W * 0.5, aimY: H * 0.5, beamX: W * 0.5, beamY: H * 0.5,
     };
 
     newRound(st);
@@ -839,6 +840,7 @@ export default function StarVanisher() {
     st.phase = "aim";
     st.bossCharging = false;
     st.bossCharge = 0;
+    st.bossMvCued = false;
     stopChargeHum();
     stopBossBgm();
     if (!isBgmMuted() && !hud.over) {
@@ -854,6 +856,11 @@ export default function StarVanisher() {
     if (st.bossIntro > 0) { st.bossIntro -= dt; return; }
 
     if (st.bossCharging) st.bossCharge = Math.min(CHARGE_TIME, st.bossCharge + dt);
+    if (st.bossCharging && st.bossCharge >= CHARGE_TIME && !st.bossMvCued) {
+      unlockAudio();
+      playMegaShot();
+      st.bossMvCued = true;
+    }
 
     if (b.dying > 0) {
       b.dying -= dt;
@@ -904,7 +911,7 @@ export default function StarVanisher() {
     const b = st?.boss;
     if (!st || !b || st.phase !== "boss" || st.bossIntro > 0 || b.dying > 0) return;
     unlockAudio();
-    if (charged) playMegaShot();
+    // MV cue fires when the charge is full; the release itself uses the beam sound
     st.beam = charged ? 0.5 : 0.28;
     st.beamX = ax;
     st.beamY = ay;
@@ -1425,6 +1432,7 @@ export default function StarVanisher() {
               if (st.bossIntro <= 0 && st.boss && st.boss.dying <= 0) {
                 st.bossCharging = true;
                 st.bossCharge = 0;
+                st.bossMvCued = false;
                 unlockAudio();
                 startChargeHum();
               }
@@ -1441,13 +1449,14 @@ export default function StarVanisher() {
               const charged = st.bossCharge >= CHARGE_TIME;
               st.bossCharging = false;
               st.bossCharge = 0;
+              st.bossMvCued = false;
               stopChargeHum();
               bossFire(ax, ay, charged);
             }
           }}
           onPointerLeave={() => {
             const st = stateRef.current;
-            if (st?.bossCharging) { st.bossCharging = false; st.bossCharge = 0; stopChargeHum(); }
+            if (st?.bossCharging) { st.bossCharging = false; st.bossCharge = 0; st.bossMvCued = false; stopChargeHum(); }
           }}
         />
 
