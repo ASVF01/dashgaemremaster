@@ -758,10 +758,36 @@ function SettingsTab() {
           value={settings.bgmVolume}
           onChange={(v) => update("bgmVolume", v)}
         />
+
+        {/* DANGER ZONE */}
+        <div className="pt-4">
+          <div className="scribble-border bg-paper p-4 border-dashed">
+            <div className="grid grid-cols-12 items-center gap-3">
+              <div className="col-span-12 sm:col-span-8">
+                <div className="font-marker text-2xl text-ink leading-tight">Reset game progress</div>
+                <div className="font-scribble text-base text-ink/60">
+                  Wipes best times, tokens, shop stuff, badges and unlocks. There is no undo.
+                </div>
+              </div>
+              <div className="col-span-12 sm:col-span-4 flex sm:justify-end">
+                <button
+                  onClick={() => { sfx.menuClick(); setResetOpen(true); }}
+                  onMouseEnter={() => sfx.menuHover()}
+                  className="scribble-border bg-ink text-paper px-4 py-1.5 font-marker text-lg hover:rotate-2 transition-transform"
+                >
+                  RESET PROGRESS
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {resetOpen && <ResetProgressFlow onClose={() => setResetOpen(false)} />}
     </div>
   );
 }
+
 
 function ToggleRow({ label, desc, value, onChange }: { label: string; desc: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
