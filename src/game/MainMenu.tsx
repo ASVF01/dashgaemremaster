@@ -9,6 +9,7 @@ import { sfx, setSfxVolume, unlockAudio } from "@/game/sfx";
 import { setBgmVolume, pauseBgm, resumeBgm } from "@/game/bgm";
 import BgmPlayer from "@/game/BgmPlayer";
 import StarVanisher from "@/game/StarVanisher";
+import Shop from "@/game/Shop";
 import { SPRITE_GALLERY } from "@/game/sprites";
 import { useLevelStats, formatMs } from "@/game/levelStats";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -27,6 +28,7 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
   const [tab, setTab] = useState<MenuTab>("play");
   const [charSelectOpen, setCharSelectOpen] = useState(false);
   const [bestiaryOpen, setBestiaryOpen] = useState(false);
+  const [shopOpen, setShopOpen] = useState(false);
 
   const handlePlay = (id: LevelId) => {
     unlockAudio();
@@ -52,6 +54,14 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
     sfx.menuTab();
     setBestiaryOpen(true);
   };
+
+  const openShop = () => {
+    unlockAudio();
+    sfx.menuTab();
+    setShopOpen(true);
+  };
+
+
 
   return (
     <div className="absolute inset-0 flex items-stretch justify-center bg-paper/95 backdrop-blur-[2px] overflow-auto">
