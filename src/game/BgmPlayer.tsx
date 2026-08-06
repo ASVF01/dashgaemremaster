@@ -13,6 +13,8 @@ import bgmMap5Asset from "@/assets/audio/bgm_map5.ogg.asset.json";
 const bgmMap5 = bgmMap5Asset.url;
 import bgmStarVanisherAsset from "@/assets/audio/StarVanisher_duh.ogg.asset.json";
 const bgmStarVanisher = bgmStarVanisherAsset.url;
+import bgmOpeningAsset from "@/assets/audio/bgm_opening.mp3.asset.json";
+const bgmOpening = bgmOpeningAsset.url;
 
 type Track = { id: string; title: string; src: string };
 
@@ -27,6 +29,7 @@ const TRACKS: Track[] = [
   { id: "somsom",   title: "A Lil Som Som",             src: bgmSomSom },
   { id: "map5",    title: "Map 5 (character select)",  src: bgmMap5 },
   { id: "svduh",    title: "Star Vanisher...!! (duh)",  src: bgmStarVanisher },
+  { id: "opening",  title: "Opening (cheat menu)",      src: bgmOpening },
   { id: "knight",   title: "Black Knife (Roaring Knight)", src: bgmBlackKnife },
 ];
 
