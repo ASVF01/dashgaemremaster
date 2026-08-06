@@ -698,6 +698,12 @@ export default function StarVanisher() {
                 >
                   FAIL
                 </div>
+                <div
+                  className="font-bungee text-xl text-black/70 transition-opacity duration-500"
+                  style={{ opacity: failStage >= 3 ? 1 : 0 }}
+                >
+                  + {hud.earned} T
+                </div>
                 <button
                   type="button"
                   onClick={start}
