@@ -1695,7 +1695,22 @@ export default function StarVanisher() {
             )}
           </div>
         )}
+
+        {/* fullscreen toggle (mobile-friendly corner button) */}
+        <button
+          type="button"
+          aria-label={isFs ? "Exit fullscreen" : "Enter fullscreen"}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleFullscreen();
+          }}
+          className="absolute right-2 top-2 z-50 grid h-9 w-9 place-items-center border-2 border-black bg-black/70 text-white text-sm leading-none transition-transform hover:scale-110 active:scale-95"
+        >
+          {isFs ? "⤡" : "⛶"}
+        </button>
       </div>
+
 
       <div className="font-marker text-[11px] text-ink/60 text-center max-w-xl">
         Points here will feed the shop later. Higher combos tighten the windows, shrink the stars and
