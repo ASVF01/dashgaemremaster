@@ -229,8 +229,14 @@ export default function BgmPlayer() {
 
   return (
     <div className="scribble-border bg-paper p-5">
-      <div className="font-marker text-3xl text-ink -rotate-1 mb-3">BGM PLAYER</div>
-      <p className="font-scribble text-base text-ink/70 mb-3">
+    <div className="scribble-border bg-paper p-5 relative">
+      <div className="flex items-end justify-between gap-3 mb-3 flex-wrap">
+        <div className="font-marker text-3xl text-ink -rotate-1">BGM PLAYER</div>
+        <div className="font-scribble text-xs uppercase tracking-[0.3em] text-ink/50 border-b border-dashed border-ink/30 pb-0.5">
+          side a — {TRACKS.length} tracks
+        </div>
+      </div>
+      <p className="font-scribble text-base text-ink/70 mb-4">
         Listen to every track in the game. Pauses the game music while playing.
       </p>
 
@@ -245,34 +251,38 @@ export default function BgmPlayer() {
         onPause={() => setPlaying(false)}
       />
 
-      {/* Now playing */}
-      <div className="scribble-border bg-paper p-3 mb-3 flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <div className="font-scribble text-sm text-ink/60 uppercase">Now Playing</div>
-          <div className="font-marker text-2xl text-ink">{track.title}</div>
-        </div>
-        <div className="font-scribble text-lg text-ink/70 tabular-nums">
-          {fmt(time)} / {fmt(dur)}
-        </div>
-      </div>
-
-      {/* Visualizer */}
-      <div className="scribble-border bg-paper p-1 mb-3 relative overflow-hidden">
-        <canvas
-          ref={vizCanvasRef}
-          className="block w-full h-24 sm:h-28"
-          aria-hidden="true"
-        />
-        {!playing && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none font-marker text-xl text-ink/40">
-            ♪ press play ♪
+      {/* Deck: now playing + visualizer stacked in one slab */}
+      <div className="scribble-border bg-ink text-paper p-3 mb-4 rotate-[-0.4deg]">
+        <div className="flex items-center justify-between gap-3 flex-wrap mb-2">
+          <div className="min-w-0">
+            <div className="font-scribble text-[11px] tracking-[0.25em] text-paper/50 uppercase">
+              {playing ? "▶ now playing" : "❚❚ paused"}
+            </div>
+            <div className="font-marker text-2xl truncate">{track.title}</div>
           </div>
-        )}
+          <div className="font-scribble text-lg text-paper/80 tabular-nums border border-dashed border-paper/30 px-2 py-0.5">
+            {fmt(time)} / {fmt(dur)}
+          </div>
+        </div>
+
+        <div className="relative overflow-hidden border border-dashed border-paper/25 bg-black/40">
+          <canvas
+            ref={vizCanvasRef}
+            className="block w-full h-28 sm:h-36"
+            aria-hidden="true"
+          />
+          {!playing && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none font-marker text-xl text-paper/40">
+              ♪ press play ♪
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Seek bar */}
       <input
         type="range"
+
         min={0}
         max={dur || 0}
         step={0.01}
