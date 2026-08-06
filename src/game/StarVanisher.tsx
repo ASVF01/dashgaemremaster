@@ -7,6 +7,7 @@ import explose2Asset from "@/assets/audio/explose2.mp3.asset.json";
 import countupAsset from "@/assets/audio/countup.mp3.asset.json";
 import runBgmAsset from "@/assets/audio/StarVanisher_duh.ogg.asset.json";
 import svTitleBg from "@/assets/sv_title_bg.jpg.asset.json";
+import dangerAsset from "@/assets/audio/danger_target.ogg.asset.json";
 import { isCheatOn } from "@/game/cheats";
 
 import { isBgmMuted, subscribeBgmMuted, pauseBgm, resumeBgm } from "@/game/bgm";
@@ -62,7 +63,21 @@ const TUT_SLIDES: { title: string; body: string }[] = [
 
 
 type Judgement = "JUST" | "OKAY" | "MISS";
-type Phase = "aim" | "fire" | "count" | "result" | "over";
+type Phase = "aim" | "fire" | "count" | "result" | "over" | "boss";
+
+type BossPath = "circle" | "square" | "infinity" | "triangle";
+type BossSpot = { a: number; d: number; cd: number };
+type Boss = {
+  hp: number; maxHp: number;
+  path: BossPath;
+  t: number; speed: number;
+  x: number; y: number; r: number;
+  spots: BossSpot[];
+  spin: number;
+  timeLeft: number;
+  hitFlash: number;
+  dying: number;
+};
 
 type Particle = {
   x: number; y: number; vx: number; vy: number;
@@ -121,6 +136,10 @@ type State = {
   streaks: Streak[];      // speed lines flying right -> left
   demo: boolean;          // tutorial demonstration: the game plays itself
   demoTryTimer: number;   // seconds after count-up done before "Try it yourself!" flashes
+  boss: Boss | null;      // DANGER TARGET, appears every 40 targets
+  bossIntro: number;      // intro card timer
+  aimX: number; aimY: number;   // mouse aim during the boss fight
+  beamX: number; beamY: number; // where the last boss beam landed
 };
 
 
@@ -198,6 +217,210 @@ function starPath(ctx: CanvasRenderingContext2D, s: Star, _time?: number) {
   ctx.closePath();
 }
 
+// ---------------- DANGER TARGET ----------------
+export const SPOT_R = 20;
+const BOSS_MAX_HP = 108;
+const BOSS_TIME = 42;
+const BOSS_PATHS: BossPath[] = ["circle", "square", "infinity", "triangle"];
+
+function makeBoss(): Boss {
+  const path = BOSS_PATHS[Math.floor(Math.random() * BOSS_PATHS.length)];
+  const spots: BossSpot[] = Array.from({ length: 5 }, (_, i) => ({
+    a: (i / 5) * Math.PI * 2 + rand(-0.2, 0.2),
+    d: rand(0.72, 0.98),
+    cd: 0,
+  }));
+  const p = bossPathPos(path, 0);
+  return {
+    hp: BOSS_MAX_HP, maxHp: BOSS_MAX_HP, path, t: 0,
+    speed: 0.16 + Math.random() * 0.07,
+    x: p.x, y: p.y, r: 74, spots, spin: 0,
+    timeLeft: BOSS_TIME, hitFlash: 0, dying: 0,
+  };
+}
+
+function bossPathPos(path: BossPath, t: number) {
+  const cx = W * 0.58, cy = H * 0.5, rx = 230, ry = 130;
+  const u = ((t % 1) + 1) % 1;
+  if (path === "circle") {
+    const a = u * Math.PI * 2;
+    return { x: cx + Math.cos(a) * rx, y: cy + Math.sin(a) * ry };
+  }
+  if (path === "infinity") {
+    const a = u * Math.PI * 2;
+    return { x: cx + Math.sin(a) * rx, y: cy + Math.sin(a * 2) * ry * 0.72 };
+  }
+  const pts: number[][] = path === "square"
+    ? [[-1, -1], [1, -1], [1, 1], [-1, 1]]
+    : [[0, -1], [1, 1], [-1, 1]];
+  const n = pts.length;
+  const seg = u * n;
+  const i = Math.floor(seg) % n;
+  const f = seg - Math.floor(seg);
+  const p0 = pts[i], p1 = pts[(i + 1) % n];
+  return {
+    x: cx + (p0[0] + (p1[0] - p0[0]) * f) * rx,
+    y: cy + (p0[1] + (p1[1] - p0[1]) * f) * ry,
+  };
+}
+
+function spotPos(b: Boss, sp: BossSpot) {
+  const a = sp.a + b.spin;
+  return { x: b.x + Math.cos(a) * b.r * sp.d, y: b.y + Math.sin(a) * b.r * sp.d };
+}
+
+// boss theme (module-level so it survives re-renders)
+let bossAudio: HTMLAudioElement | null = null;
+function playBossBgm() {
+  try {
+    if (!bossAudio) {
+      bossAudio = new Audio(dangerAsset.url);
+      bossAudio.loop = true;
+    }
+    bossAudio.volume = 0.5;
+    bossAudio.currentTime = 0;
+    void bossAudio.play().catch(() => { /* blocked */ });
+  } catch { /* noop */ }
+}
+function stopBossBgm() {
+  try { bossAudio?.pause(); if (bossAudio) bossAudio.currentTime = 0; } catch { /* noop */ }
+}
+
+function drawBoss(ctx: CanvasRenderingContext2D, st: State, time: number) {
+  const b = st.boss;
+  if (!b) return;
+  const dead = b.dying > 0;
+
+  // beam from the left edge to wherever the player clicked
+  if (st.beam > 0) {
+    const sk = activeBeamSkin();
+    const k = st.beam / 0.28;
+    const bh = 22 * (0.5 + k);
+    ctx.save();
+    ctx.translate(40, st.beamY);
+    ctx.globalAlpha = 0.35 + k * 0.65;
+    const len = Math.max(0, st.beamX - 40);
+    const grad = ctx.createLinearGradient(0, 0, len, 0);
+    grad.addColorStop(0, sk.core);
+    grad.addColorStop(1, sk.edge);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, -bh / 2, len, bh);
+    ctx.fillStyle = sk.core;
+    ctx.fillRect(0, -bh / 6, len, bh / 3);
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
+  if (!dead) {
+    // body
+    ctx.save();
+    const pulse = 1 + Math.sin(time * 7) * 0.03 + b.hitFlash * 0.08;
+    ctx.translate(b.x, b.y);
+    ctx.scale(pulse, pulse);
+    ctx.beginPath();
+    ctx.arc(0, 0, b.r, 0, Math.PI * 2);
+    const g = ctx.createRadialGradient(-b.r * 0.3, -b.r * 0.35, b.r * 0.1, 0, 0, b.r * 1.2);
+    g.addColorStop(0, b.hitFlash > 0.3 ? "#ffffff" : "#ff6a6a");
+    g.addColorStop(0.55, "#c11030");
+    g.addColorStop(1, "#3a0009");
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = "#ff2d5e";
+    ctx.stroke();
+    // spikes
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2 + b.spin * 0.6;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * b.r, Math.sin(a) * b.r);
+      ctx.lineTo(Math.cos(a + 0.12) * (b.r + 20), Math.sin(a + 0.12) * (b.r + 20));
+      ctx.lineTo(Math.cos(a + 0.26) * b.r, Math.sin(a + 0.26) * b.r);
+      ctx.closePath();
+      ctx.fillStyle = "#7a0016";
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // weak spots
+    for (const sp of b.spots) {
+      const pos = spotPos(b, sp);
+      const ready = sp.cd <= 0;
+      const r = SPOT_R * (ready ? 1 + Math.sin(time * 9 + sp.a * 3) * 0.12 : 0.6);
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = ready ? "#ffe23a" : "rgba(70,20,30,0.75)";
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = ready ? "#fff8d0" : "rgba(255,255,255,0.25)";
+      ctx.stroke();
+      if (ready) {
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, r + 8 + Math.sin(time * 9) * 3, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(255,226,58,0.5)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    }
+  }
+
+  // HP bar + timer
+  const bw = 520, bh2 = 20, bx = (W - bw) / 2, by = H - 96;
+  ctx.save();
+  ctx.fillStyle = "rgba(0,0,0,0.6)";
+  ctx.fillRect(bx - 4, by - 4, bw + 8, bh2 + 8);
+  ctx.fillStyle = "#ff2d5e";
+  ctx.fillRect(bx, by, bw * (b.hp / b.maxHp), bh2);
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(bx, by, bw, bh2);
+  ctx.textAlign = "center";
+  ctx.font = "italic 800 22px Oxanium, system-ui, sans-serif";
+  ctx.lineWidth = 6;
+  ctx.strokeStyle = "rgba(25,0,10,0.85)";
+  ctx.fillStyle = "#ffffff";
+  ctx.strokeText("DANGER TARGET", W / 2, by - 12);
+  ctx.fillText("DANGER TARGET", W / 2, by - 12);
+  ctx.font = "italic 800 18px Oxanium, system-ui, sans-serif";
+  ctx.fillStyle = b.timeLeft < 10 ? "#ff2d5e" : "#ffe23a";
+  ctx.strokeText(`${Math.max(0, b.timeLeft).toFixed(1)}s`, W / 2, by + bh2 + 22);
+  ctx.fillText(`${Math.max(0, b.timeLeft).toFixed(1)}s`, W / 2, by + bh2 + 22);
+  ctx.restore();
+
+  // mouse crosshair
+  if (!dead && st.bossIntro <= 0) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,0.9)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(st.aimX, st.aimY, 16, 0, Math.PI * 2);
+    ctx.moveTo(st.aimX - 26, st.aimY); ctx.lineTo(st.aimX - 6, st.aimY);
+    ctx.moveTo(st.aimX + 6, st.aimY); ctx.lineTo(st.aimX + 26, st.aimY);
+    ctx.moveTo(st.aimX, st.aimY - 26); ctx.lineTo(st.aimX, st.aimY - 6);
+    ctx.moveTo(st.aimX, st.aimY + 6); ctx.lineTo(st.aimX, st.aimY + 26);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // intro card
+  if (st.bossIntro > 0) {
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, st.bossIntro);
+    ctx.textAlign = "center";
+    ctx.font = "italic 800 76px Oxanium, system-ui, sans-serif";
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = "#000";
+    ctx.fillStyle = Math.floor(time * 8) % 2 === 0 ? "#ff2d5e" : "#ffffff";
+    ctx.strokeText("DANGER TARGET!!", W / 2, H * 0.4);
+    ctx.fillText("DANGER TARGET!!", W / 2, H * 0.4);
+    ctx.font = "italic 800 26px Oxanium, system-ui, sans-serif";
+    ctx.fillStyle = "#ffe23a";
+    ctx.strokeText("AIM WITH THE MOUSE — SHOOT THE WEAK SPOTS", W / 2, H * 0.4 + 44);
+    ctx.fillText("AIM WITH THE MOUSE — SHOOT THE WEAK SPOTS", W / 2, H * 0.4 + 44);
+    ctx.restore();
+  }
+}
+
+
 
 
 export default function StarVanisher() {
@@ -255,13 +478,16 @@ export default function StarVanisher() {
     }
   }, [running, hud.over]);
   useEffect(() => subscribeBgmMuted((m) => {
+    const inBoss = stateRef.current?.phase === "boss";
+    if (m) stopBossBgm();
     const a = bgmRef.current;
     if (!a) return;
     if (m) { a.pause(); }
+    else if (inBoss) { pauseBgm(); playBossBgm(); }
     else if (running && !hud.over) { pauseBgm(); a.volume = 0.3375; a.currentTime = 0; void a.play().catch(() => { /* noop */ }); }
     else if (running && hud.over) { a.volume = 0.10; void a.play().catch(() => { /* noop */ }); }
   }), [running, hud.over]);
-  useEffect(() => () => { bgmRef.current?.pause(); resumeBgm(); }, []);
+  useEffect(() => () => { bgmRef.current?.pause(); stopBossBgm(); resumeBgm(); }, []);
 
 
   useEffect(() => {
@@ -296,13 +522,19 @@ export default function StarVanisher() {
       st.bg = randColorSet();
       st.streaks = makeStreaks(st.bg);
     }
+    // every 40 targets beaten, a DANGER TARGET shows up instead of a star
+    if (!st.demo && st.starsDone > 0 && st.starsDone % 40 === 0) {
+      startBoss(st);
+      return;
+    }
     st.star = makeStar(st.combo);
   };
 
-  const start = (demo = false) => {
+  const start = (demo = false, bossOnly = false) => {
     unlockAudio();
     sfx.menuConfirm();
     clearTutTimers();
+    stopBossBgm();
     setShowTryIt(false);
     setTutSlide(null);
     setTutDemo(demo);
@@ -316,6 +548,7 @@ export default function StarVanisher() {
       sightLeft: hasAbility("sight") ? 10 : 0,
       starsDone: -1, bg: bg0, streaks: makeStreaks(bg0), demo,
       demoTryTimer: 0,
+      boss: null, bossIntro: 0, aimX: W * 0.5, aimY: H * 0.5, beamX: W * 0.5, beamY: H * 0.5,
     };
 
     newRound(st);
@@ -325,8 +558,9 @@ export default function StarVanisher() {
     setFailStage(0);
     setShowFailPct(false);
     setRunning(true);
-
+    if (bossOnly) startBoss(st);
   };
+
 
   // pressing play for the very first time runs the tutorial instead
   const handlePlay = () => {
@@ -477,6 +711,152 @@ export default function StarVanisher() {
     }
   };
 
+  // ---------------- DANGER TARGET (boss battle) ----------------
+  const startBoss = (st: State) => {
+    st.star = null;
+    st.phase = "boss";
+    st.t = 0;
+    st.judgement = null;
+    st.beam = 0;
+    st.boomed = false;
+    st.destroyFrac = 0;
+    st.boss = makeBoss();
+    st.bossIntro = 1.6;
+    st.flash = 1;
+    st.shake = 20;
+    st.aimX = W * 0.5;
+    st.aimY = H * 0.5;
+    playExplosion2();
+    // the boss theme takes over the run track
+    if (!isBgmMuted()) {
+      bgmRef.current?.pause();
+      playBossBgm();
+    }
+  };
+
+  const endBoss = (st: State) => {
+    st.boss = null;
+    stopBossBgm();
+    if (!isBgmMuted() && !hud.over) {
+      const a = bgmRef.current;
+      if (a) { a.volume = 0.3375; void a.play().catch(() => { /* noop */ }); }
+    }
+  };
+
+  const updateBoss = (st: State, dt: number) => {
+    const b = st.boss;
+    if (!b) return;
+
+    if (st.bossIntro > 0) { st.bossIntro -= dt; return; }
+
+    if (b.dying > 0) {
+      b.dying -= dt;
+      // keep blowing chunks off the corpse
+      if (Math.random() < 0.5) {
+        const a = rand(0, Math.PI * 2);
+        st.particles.push({
+          x: b.x + Math.cos(a) * b.r * 0.6, y: b.y + Math.sin(a) * b.r * 0.6,
+          vx: Math.cos(a) * rand(80, 420), vy: Math.sin(a) * rand(80, 420) - 40,
+          life: rand(0.4, 1.0), maxLife: 1.0, size: rand(12, 44),
+          color: Math.random() < 0.5 ? "#ffe9a8" : "#ff5c3a", kind: "smoke",
+        });
+      }
+      if (b.dying <= 0) {
+        endBoss(st);
+        newRound(st);
+      }
+      return;
+    }
+
+    // path movement
+    b.t += dt * b.speed;
+    const p = bossPathPos(b.path, b.t);
+    b.x = p.x; b.y = p.y;
+    b.spin += dt * 0.9;
+    b.hitFlash = Math.max(0, b.hitFlash - dt * 4);
+    for (const sp of b.spots) if (sp.cd > 0) sp.cd -= dt;
+
+    // countdown — let it expire and the run is over
+    b.timeLeft -= dt;
+    if (b.timeLeft <= 0) {
+      st.judgement = "MISS";
+      st.lockedPct = 0;
+      endBoss(st);
+      finishMiss(st);
+    }
+  };
+
+  const bossFire = (ax: number, ay: number) => {
+    const st = stateRef.current;
+    const b = st?.boss;
+    if (!st || !b || st.phase !== "boss" || st.bossIntro > 0 || b.dying > 0) return;
+    unlockAudio();
+    st.beam = 0.28;
+    st.beamX = ax;
+    st.beamY = ay;
+    playBeam();
+
+    // weak spot hit test
+    let hit: BossSpot | null = null;
+    let best = 9999;
+    for (const sp of b.spots) {
+      if (sp.cd > 0) continue;
+      const pos = spotPos(b, sp);
+      const d = Math.hypot(pos.x - ax, pos.y - ay);
+      if (d <= SPOT_R + 10 && d < best) { best = d; hit = sp; }
+    }
+
+    if (hit) {
+      const pos = spotPos(b, hit);
+      hit.cd = 1.1;
+      b.hp = Math.max(0, b.hp - 12);
+      b.hitFlash = 1;
+      st.shake = 12;
+      st.hitstop = 0.06;
+      playExplosion2();
+      st.combo += 1;
+      st.comboPop = 1;
+      const gained = Math.round(900 * (1 + st.combo * 0.12));
+      st.score += gained;
+      st.floatNums.push({ x: pos.x, y: pos.y - 10, text: `+${gained}`, life: 0.8, color: "#ffe23a", size: 30 });
+      for (let i = 0; i < 22; i++) {
+        const a = rand(0, Math.PI * 2);
+        st.particles.push({
+          x: pos.x, y: pos.y, vx: Math.cos(a) * rand(60, 340), vy: Math.sin(a) * rand(60, 340),
+          life: rand(0.25, 0.7), maxLife: 0.7, size: rand(6, 22),
+          color: i % 3 === 0 ? "#fff3b0" : "#ff3a5e", kind: i % 4 === 0 ? "spark" : "smoke",
+        });
+      }
+      setHud((h) => ({ ...h, score: st.score, combo: st.combo }));
+
+      if (b.hp <= 0) {
+        // DANGER TARGET DOWN
+        b.dying = 2.2;
+        st.flash = 1;
+        st.shake = 30;
+        st.hitstop = 0.16;
+        playExplosion();
+        st.score += 100000;
+        st.floatNums.push({ x: b.x, y: b.y - 40, text: "DANGER TARGET DOWN", life: 2.0, color: "#ff3a5e", size: 40 });
+        st.floatNums.push({ x: b.x, y: b.y + 20, text: "+100000", life: 2.0, color: "#ffe23a", size: 52 });
+        for (let i = 0; i < 90; i++) {
+          const a = rand(0, Math.PI * 2);
+          st.particles.push({
+            x: b.x + Math.cos(a) * rand(0, b.r), y: b.y + Math.sin(a) * rand(0, b.r),
+            vx: Math.cos(a) * rand(80, 620), vy: Math.sin(a) * rand(80, 620),
+            life: rand(0.4, 1.2), maxLife: 1.2, size: rand(10, 52),
+            color: i % 4 === 0 ? "#ffffff" : i % 3 === 0 ? "#ffb03a" : "#ff2d5e",
+            kind: i % 5 === 0 ? "spark" : "smoke",
+          });
+        }
+        setHud((h) => ({ ...h, score: st.score, combo: st.combo }));
+      }
+    } else {
+      st.shake = 5;
+      st.floatNums.push({ x: ax, y: ay, text: "miss", life: 0.5, color: "#ffffff", size: 22 });
+    }
+  };
+
 
   // main loop
   useEffect(() => {
@@ -518,6 +898,8 @@ export default function StarVanisher() {
           if (Math.abs(pct - st.target) <= 1.4) fire(true);
         }
 
+      } else if (st.phase === "boss") {
+        updateBoss(st, dt);
       } else if (st.phase === "fire") {
         if (st.t > 0.95) { st.phase = "count"; st.t = 0; st.countTimer = 0.18; }
       } else if (st.phase === "count") {
@@ -617,6 +999,8 @@ export default function StarVanisher() {
         ctx.fillRect(sk.x, sk.y, sk.len, sk.w);
       }
       ctx.globalAlpha = 1;
+
+      if (st.boss) drawBoss(ctx, st, time);
 
       const s = st.star;
       if (s) {
@@ -787,19 +1171,23 @@ export default function StarVanisher() {
         ctx.restore();
       }
 
-      // left HUD: target call-out
+      // left HUD: target call-out (hidden while the DANGER TARGET is up)
       ctx.save();
       ctx.textAlign = "left";
-      ctx.font = "italic 800 54px Oxanium, system-ui, sans-serif";
+      if (st.phase !== "boss") {
+        ctx.font = "italic 800 54px Oxanium, system-ui, sans-serif";
+        ctx.lineWidth = 8;
+        ctx.strokeStyle = "rgba(25,0,10,0.85)";
+        ctx.fillStyle = "#ffe23a";
+        ctx.strokeText(`${st.target}%`, 34, H - 60);
+        ctx.fillText(`${st.target}%`, 34, H - 60);
+        ctx.font = "italic 800 34px Oxanium, system-ui, sans-serif";
+        ctx.fillStyle = "#ffffff";
+        ctx.strokeText("Vanish!!", 34 + ctx.measureText(`${st.target}% `).width * 0.55, H - 60);
+        ctx.fillText("Vanish!!", 34 + ctx.measureText(`${st.target}% `).width * 0.55, H - 60);
+      }
       ctx.lineWidth = 8;
       ctx.strokeStyle = "rgba(25,0,10,0.85)";
-      ctx.fillStyle = "#ffe23a";
-      ctx.strokeText(`${st.target}%`, 34, H - 60);
-      ctx.fillText(`${st.target}%`, 34, H - 60);
-      ctx.font = "italic 800 34px Oxanium, system-ui, sans-serif";
-      ctx.fillStyle = "#ffffff";
-      ctx.strokeText("Vanish!!", 34 + ctx.measureText(`${st.target}% `).width * 0.55, H - 60);
-      ctx.fillText("Vanish!!", 34 + ctx.measureText(`${st.target}% `).width * 0.55, H - 60);
 
       // combo + score
       const cp = 1 + st.comboPop * 0.5;
@@ -859,7 +1247,23 @@ export default function StarVanisher() {
           width={W}
           height={H}
           className="w-full h-full block touch-none cursor-crosshair"
-          onPointerDown={(e) => { e.preventDefault(); fire(); }}
+          onPointerMove={(e) => {
+            const st = stateRef.current;
+            if (!st) return;
+            const r = e.currentTarget.getBoundingClientRect();
+            st.aimX = ((e.clientX - r.left) / r.width) * W;
+            st.aimY = ((e.clientY - r.top) / r.height) * H;
+          }}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            const st = stateRef.current;
+            const r = e.currentTarget.getBoundingClientRect();
+            const ax = ((e.clientX - r.left) / r.width) * W;
+            const ay = ((e.clientY - r.top) / r.height) * H;
+            if (st) { st.aimX = ax; st.aimY = ay; }
+            if (st && st.phase === "boss") bossFire(ax, ay);
+            else fire();
+          }}
         />
 
         {/* jagged cinematic borders — scroll left, thin so the play area stays readable */}
@@ -928,6 +1332,16 @@ export default function StarVanisher() {
                 Star Vanisher...!!
               </div>
             </div>
+
+            {/* danger target mode — bottom left */}
+            <button
+              type="button"
+              onClick={() => { unlockAudio(); sfx.menuConfirm(); start(false, true); }}
+              className="absolute bottom-4 left-4 -rotate-2 border-2 border-black bg-[#ff1f43] px-5 py-3 font-bungee text-lg tracking-wide text-white transition-transform hover:scale-110 hover:rotate-1"
+              style={{ boxShadow: "6px 6px 0 #000, 0 0 24px rgba(255,31,67,0.7)" }}
+            >
+              DANGER TARGET MODE
+            </button>
 
             {/* start — bottom right */}
             <button
