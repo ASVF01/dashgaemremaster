@@ -618,6 +618,8 @@ export default function StarVanisher() {
       }
       ctx.globalAlpha = 1;
 
+      if (st.boss) drawBoss(ctx, st, time);
+
       const s = st.star;
       if (s) {
         // star body
