@@ -157,11 +157,24 @@ function windows(combo: number) {
   };
 }
 
+// horizontal speed lines that fly in from the right edge at random heights
+function makeStreaks(bg: ColorSet): Streak[] {
+  return Array.from({ length: 30 }, () => ({
+    x: rand(0, W + 400),
+    y: rand(6, H - 6),
+    len: rand(80, 320),
+    sp: rand(220, 760),
+    w: rand(2, 6),
+    c: Math.random() < 0.5 ? bg.light : bg.edge,
+  }));
+}
+
 function starPath(ctx: CanvasRenderingContext2D, s: Star, _time?: number) {
   ctx.beginPath();
   ctx.arc(s.cx, s.cy, s.r, 0, Math.PI * 2);
   ctx.closePath();
 }
+
 
 
 export default function StarVanisher() {
