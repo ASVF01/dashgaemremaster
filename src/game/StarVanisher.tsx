@@ -809,7 +809,8 @@ export default function StarVanisher() {
         if (st.bossOnly) {
           // DANGER TARGET mode: the next one shows up, tougher than the last
           st.boss = null;
-          startBoss(st);
+          startBoss(st, true);
+
         } else {
           endBoss(st);
           newRound(st);
