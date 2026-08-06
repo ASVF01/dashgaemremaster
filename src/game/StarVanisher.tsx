@@ -527,7 +527,7 @@ export default function StarVanisher() {
       }
 
       // judgement text
-      if (st.judgement && (st.phase === "fire" || st.phase === "count" || st.phase === "result")) {
+      if (st.judgement && ((st.phase === "count" && st.countDone) || st.phase === "result")) {
         const j = st.judgement;
         const pop = Math.min(1, st.t * 6);
         ctx.save();
