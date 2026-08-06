@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { sfx } from "@/game/sfx";
 import { addTokens } from "@/game/shop";
 import { isBgmMuted, pauseBgm, resumeBgm } from "@/game/bgm";
+import { isCheatOn, toggleCheat } from "@/game/cheats";
 import bgmOpeningAsset from "@/assets/audio/bgm_opening.mp3.asset.json";
 
 type Cheat = {
