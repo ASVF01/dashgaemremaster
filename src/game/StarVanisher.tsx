@@ -81,6 +81,8 @@ type State = {
   countTimer: number;     // time until next tick
   countDone: boolean;
   countPop: number;
+  boomed: boolean;        // explosion已triggered for this shot
+
 };
 
 function rand(a: number, b: number) { return a + Math.random() * (b - a); }
