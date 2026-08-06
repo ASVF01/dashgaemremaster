@@ -588,7 +588,17 @@ export const sfx = {
     });
     noise(0.10, 0.04, 5000, 13000, 0.14);
   },
+  /** Warbling siren — used for the "reset progress" point of no return. */
+  alarm() {
+    for (let i = 0; i < 4; i++) {
+      const d = i * 0.42;
+      tone({ freq: 520, to: 900, dur: 0.2, type: "square", vol: 0.16, attack: 0.01, release: 0.06, delay: d });
+      tone({ freq: 900, to: 520, dur: 0.2, type: "square", vol: 0.16, attack: 0.01, release: 0.06, delay: d + 0.21 });
+      tone({ freq: 260, to: 450, dur: 0.4, type: "sawtooth", vol: 0.07, attack: 0.01, release: 0.1, delay: d });
+    }
+  },
 };
+
 
 // ---------- looping "shine" sound for the invboi (starman) state ----------
 type ShineNodes = {

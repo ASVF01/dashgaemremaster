@@ -92,6 +92,12 @@ function persist() {
 
 export function getShop(): ShopState { return state; }
 
+/** Wipe tokens, purchases and equipped gear back to a fresh save. */
+export function resetShop() {
+  state = { tokens: 0, owned: [], beamSkin: "default", abilities: [] };
+  persist();
+}
+
 export function subscribeShop(fn: () => void) {
   listeners.add(fn);
   return () => { listeners.delete(fn); };

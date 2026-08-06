@@ -1,4 +1,5 @@
 import { forwardRef, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { LEVELS, type LevelId, type LevelMeta } from "@/game/level";
 import {
   ACTIONS, DEFAULT_BINDS, type ActionId, type Keybinds,
@@ -7,6 +8,8 @@ import {
 import { useSettings, type Settings } from "@/game/settings";
 import { sfx, setSfxVolume, unlockAudio } from "@/game/sfx";
 import { setBgmVolume, pauseBgm, resumeBgm } from "@/game/bgm";
+import { resetAllProgress } from "@/game/progress";
+import exploseAsset from "@/assets/audio/explose1.mp3.asset.json";
 import BgmPlayer from "@/game/BgmPlayer";
 import StarVanisher from "@/game/StarVanisher";
 import Shop from "@/game/Shop";
@@ -695,6 +698,7 @@ function KeybindsTab() {
 // ---------------- SETTINGS TAB ----------------
 function SettingsTab() {
   const [settings, setSettings, resetSettings] = useSettings();
+  const [resetOpen, setResetOpen] = useState(false);
 
   // Apply audio volumes live as the user drags.
   useEffect(() => { setSfxVolume(settings.sfxVolume); }, [settings.sfxVolume]);
@@ -758,10 +762,185 @@ function SettingsTab() {
           value={settings.bgmVolume}
           onChange={(v) => update("bgmVolume", v)}
         />
+
+        {/* DANGER ZONE */}
+        <div className="pt-4">
+          <div className="scribble-border bg-paper p-4 border-dashed">
+            <div className="grid grid-cols-12 items-center gap-3">
+              <div className="col-span-12 sm:col-span-8">
+                <div className="font-marker text-2xl text-ink leading-tight">Reset game progress</div>
+                <div className="font-scribble text-base text-ink/60">
+                  Wipes best times, tokens, shop stuff, badges and unlocks. There is no undo.
+                </div>
+              </div>
+              <div className="col-span-12 sm:col-span-4 flex sm:justify-end">
+                <button
+                  onClick={() => { sfx.menuClick(); setResetOpen(true); }}
+                  onMouseEnter={() => sfx.menuHover()}
+                  className="scribble-border bg-ink text-paper px-4 py-1.5 font-marker text-lg hover:rotate-2 transition-transform"
+                >
+                  RESET PROGRESS
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {resetOpen && <ResetProgressFlow onClose={() => setResetOpen(false)} />}
     </div>
   );
 }
+
+// ---------------- RESET PROGRESS (triple confirm + doom sequence) ----------------
+type ResetPhase = "c1" | "c2" | "c3" | "boom" | "dark" | "restore";
+
+function ResetProgressFlow({ onClose }: { onClose: () => void }) {
+  const [phase, setPhase] = useState<ResetPhase>("c1");
+  const timers = useRef<number[]>([]);
+
+  const after = (ms: number, fn: () => void) => {
+    timers.current.push(window.setTimeout(fn, ms));
+  };
+
+  useEffect(() => () => { timers.current.forEach(clearTimeout); }, []);
+
+  const nuke = () => {
+    // Explosion: sound + fullscreen flash.
+    try {
+      const a = new Audio(exploseAsset.url);
+      a.volume = 0.9;
+      void a.play();
+    } catch { /* noop */ }
+    pauseBgm();
+    resetAllProgress();
+    setPhase("boom");
+
+    // 0.5s later: fade to black + the line.
+    after(500, () => setPhase("dark"));
+    // Text holds 2s, then bring music + menu back.
+    after(500 + 2000, () => {
+      setPhase("restore");
+      resumeBgm();
+    });
+    after(500 + 2000 + 1000, () => onClose());
+  };
+
+  const yes = (next: ResetPhase) => {
+    sfx.menuConfirm();
+    if (next === "c3") sfx.alarm();
+    setPhase(next);
+  };
+
+  const cancel = () => { sfx.menuBack(); onClose(); };
+
+  const dialogs: Record<"c1" | "c2" | "c3", { title: string; body: string; yes: string }> = {
+    c1: {
+      title: "RESET EVERYTHING?",
+      body: "Best times, tokens, shop unlocks, badges, characters — all of it goes away.",
+      yes: "YES, RESET",
+    },
+    c2: {
+      title: "ARE YOU SURE?",
+      body: "Seriously. This cannot be undone. No backups. No takebacks.",
+      yes: "YES, I'M SURE",
+    },
+    c3: {
+      title: "LAST CHANCE.",
+      body: "Press it and your save is gone forever.",
+      yes: "DO IT",
+    },
+  };
+
+  const isDialog = phase === "c1" || phase === "c2" || phase === "c3";
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center">
+      <style>{`
+        @keyframes rpBoom {
+          0%   { opacity: 0; transform: scale(0.2); }
+          10%  { opacity: 1; transform: scale(0.9); }
+          40%  { opacity: 1; transform: scale(1.25); }
+          100% { opacity: 0; transform: scale(1.8); }
+        }
+        @keyframes rpFlash { 0% { opacity: 1; } 100% { opacity: 0; } }
+        @keyframes rpShake {
+          0%,100% { transform: translate(0,0); }
+          20% { transform: translate(-10px, 6px); }
+          40% { transform: translate(9px, -8px); }
+          60% { transform: translate(-7px, -5px); }
+          80% { transform: translate(6px, 7px); }
+        }
+        @keyframes rpDarkIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes rpTextIn { from { opacity: 0; letter-spacing: 0.6em; } to { opacity: 1; letter-spacing: 0.18em; } }
+        @keyframes rpFadeOut { from { opacity: 1; } to { opacity: 0; } }
+      `}</style>
+
+      {isDialog && (
+        <>
+          <div className="absolute inset-0 bg-black/70" onClick={cancel} />
+          <div className="relative scribble-border bg-paper p-6 max-w-md mx-4 rotate-[-1deg]">
+            <div className="font-marker text-4xl text-ink mb-2">{dialogs[phase].title}</div>
+            <p className="font-scribble text-lg text-ink/70 mb-5">{dialogs[phase].body}</p>
+            <div className="flex gap-3 flex-wrap">
+              <button
+                onClick={() => (phase === "c3" ? nuke() : yes(phase === "c1" ? "c2" : "c3"))}
+                onMouseEnter={() => sfx.menuHover()}
+                className={[
+                  "scribble-border px-4 py-2 font-marker text-xl transition-transform hover:-rotate-2",
+                  phase === "c3" ? "bg-[hsl(var(--accent))] text-accent-foreground animate-pulse" : "bg-ink text-paper",
+                ].join(" ")}
+              >
+                {dialogs[phase].yes}
+              </button>
+              <button
+                onClick={cancel}
+                onMouseEnter={() => sfx.menuHover()}
+                className="scribble-border bg-paper px-4 py-2 font-marker text-xl text-ink hover:rotate-2 transition-transform"
+              >
+                NO, KEEP IT
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {phase === "boom" && (
+        <div className="absolute inset-0 overflow-hidden" style={{ animation: "rpShake 0.5s linear" }}>
+          <div className="absolute inset-0 bg-white" style={{ animation: "rpFlash 0.5s ease-out forwards" }} />
+          <div
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+            style={{
+              width: "180vmax",
+              height: "180vmax",
+              background:
+                "radial-gradient(circle, rgba(255,255,240,1) 0%, rgba(255,214,80,0.95) 25%, rgba(255,110,20,0.9) 45%, rgba(150,20,10,0.7) 65%, rgba(0,0,0,0) 78%)",
+              animation: "rpBoom 0.5s ease-out forwards",
+            }}
+          />
+        </div>
+      )}
+
+      {(phase === "dark" || phase === "restore") && (
+        <div
+          className="absolute inset-0 bg-black flex items-center justify-center"
+          style={{
+            animation: phase === "restore" ? "rpFadeOut 1s ease-in forwards" : "rpDarkIn 0.6s ease-out forwards",
+          }}
+        >
+          <div
+            className="font-marker text-white text-4xl sm:text-6xl text-center px-6"
+            style={{ animation: "rpTextIn 1.2s ease-out forwards" }}
+          >
+            everything is gone now.
+          </div>
+        </div>
+      )}
+    </div>,
+    document.body,
+  );
+}
+
 
 function ToggleRow({ label, desc, value, onChange }: { label: string; desc: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
