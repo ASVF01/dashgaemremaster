@@ -1410,6 +1410,48 @@ export default function StarVanisher() {
     return () => cancelAnimationFrame(raf);
   }, [running]);
 
+  // ---- fullscreen (F key + corner button for mobile) ----
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const [isFs, setIsFs] = useState(false);
+  const [fsAnim, setFsAnim] = useState(false);
+
+  const toggleFullscreen = () => {
+    const el = stageRef.current;
+    if (!el) return;
+    if (document.fullscreenElement) {
+      void document.exitFullscreen().catch(() => { /* noop */ });
+    } else {
+      void el.requestFullscreen?.().catch(() => { /* noop */ });
+    }
+  };
+
+  useEffect(() => {
+    const onChange = () => {
+      const on = document.fullscreenElement === stageRef.current;
+      setIsFs(on);
+      if (on) {
+        setFsAnim(true);
+        window.setTimeout(() => setFsAnim(false), 500);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      if (e.key === "f" || e.key === "F") {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+    };
+    document.addEventListener("fullscreenchange", onChange);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("fullscreenchange", onChange);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, []);
+
+
+
   return (
     <div className="sv-font flex flex-col items-center gap-3">
       <div className="text-center">
@@ -1421,12 +1463,14 @@ export default function StarVanisher() {
           Balance <span className="font-bungee text-ink">{getShop().tokens} T</span> · beam{" "}
           <span className="font-bungee text-ink">{activeBeamSkin().name}</span>
           {getShop().abilities.length > 0 && <> · {getShop().abilities.length} ability equipped</>}
+          {" "}· press <span className="font-bungee text-ink">F</span> for fullscreen
         </p>
       </div>
 
       <div
-        className="relative w-full max-w-3xl scribble-border overflow-hidden bg-[#2a0011] select-none"
-        style={{ aspectRatio: `${W} / ${H}` }}
+        ref={stageRef}
+        className={`sv-stage relative w-full max-w-3xl scribble-border overflow-hidden bg-[#2a0011] select-none${fsAnim ? " sv-fs-anim" : ""}`}
+        style={isFs ? undefined : { aspectRatio: `${W} / ${H}` }}
       >
         <canvas
           ref={canvasRef}
@@ -1651,7 +1695,22 @@ export default function StarVanisher() {
             )}
           </div>
         )}
+
+        {/* fullscreen toggle (mobile-friendly corner button) */}
+        <button
+          type="button"
+          aria-label={isFs ? "Exit fullscreen" : "Enter fullscreen"}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleFullscreen();
+          }}
+          className="absolute right-2 top-2 z-50 grid h-9 w-9 place-items-center border-2 border-black bg-black/70 text-white text-sm leading-none transition-transform hover:scale-110 active:scale-95"
+        >
+          {isFs ? "⤡" : "⛶"}
+        </button>
       </div>
+
 
       <div className="font-marker text-[11px] text-ink/60 text-center max-w-xl">
         Points here will feed the shop later. Higher combos tighten the windows, shrink the stars and
