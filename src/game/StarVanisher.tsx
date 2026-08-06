@@ -84,6 +84,7 @@ type State = {
   countPop: number;
   boomed: boolean;        // explosion already triggered for this shot
   pendingMiss: boolean;   // run ends once the count-up finishes
+  reviveLeft: number;     // SECOND WIND charges left this run
 
 };
 
@@ -145,7 +146,9 @@ export default function StarVanisher() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const stateRef = useRef<State | null>(null);
   const [running, setRunning] = useState(false);
-  const [hud, setHud] = useState({ score: 0, combo: 0, best: 0, over: false, lastScore: 0, newBest: false, lastPct: 0 });
+  const [hud, setHud] = useState({ score: 0, combo: 0, best: 0, over: false, lastScore: 0, newBest: false, lastPct: 0, earned: 0 });
+  const [, forceShop] = useState(0);
+  useEffect(() => subscribeShop(() => forceShop((n) => n + 1)), []);
   const [failStage, setFailStage] = useState(0); // 0 none, 1 miss, 2 white+FAIL, 3 retry
   const [showFailPct, setShowFailPct] = useState(false);
   const hsRef = useRef(0);
