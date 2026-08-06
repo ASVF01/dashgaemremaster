@@ -207,6 +207,15 @@ export default function StarVanisher() {
   const [showFailPct, setShowFailPct] = useState(false);
   const hsRef = useRef(0);
 
+  // first-time tutorial: slides -> self-playing demo -> "Try it yourself!"
+  const [tutSlide, setTutSlide] = useState<number | null>(null); // null = no slides showing
+  const [tutDemo, setTutDemo] = useState(false);
+  const [showTryIt, setShowTryIt] = useState(false);
+  const tutTimers = useRef<number[]>([]);
+  const clearTutTimers = () => { tutTimers.current.forEach(window.clearTimeout); tutTimers.current = []; };
+  useEffect(() => clearTutTimers, []);
+
+
   // run BGM (loops for the whole run, stops on game over / unmount)
   const bgmRef = useRef<HTMLAudioElement | null>(null);
   const ensureBgm = () => {
