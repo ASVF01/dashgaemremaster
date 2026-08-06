@@ -40,6 +40,23 @@ const playCountUp = makeSample(countupAsset.url, 0.55);
 const W = 960;
 const H = 540;
 const HS_KEY = "dashgaem_starvanisher_hs_v1";
+const TUT_KEY = "dashgaem_starvanisher_tut_v1";
+
+const TUT_SLIDES: { title: string; body: string }[] = [
+  {
+    title: "THE ASK",
+    body: "Bottom-left tells you how much of the star must be vanished. Hit that % as closely as you can.",
+  },
+  {
+    title: "THE VANISH FIELD",
+    body: "The green field pulses bigger and smaller over the star. Whatever it covers is what gets destroyed.",
+  },
+  {
+    title: "ONE CLICK",
+    body: "Click / tap once to fire the beam. PERFECT and OKAY keep the run alive and build your combo — a MISS ends it.",
+  },
+];
+
 
 type Judgement = "PERFECT" | "OKAY" | "MISS";
 type Phase = "aim" | "fire" | "count" | "result" | "over";
