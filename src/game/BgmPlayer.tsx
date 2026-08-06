@@ -99,14 +99,17 @@ export default function BgmPlayer() {
           const data = new Uint8Array(an.frequencyBinCount);
           an.getByteFrequencyData(data);
 
-          // Beat detection: simple bass-energy delta on lowest ~6 bins.
+          // Beat detection: bass-energy delta on lowest ~8 bins (56% more sensitive).
           let bass = 0;
-          for (let i = 0; i < 6; i++) bass += data[i];
-          bass /= 6 * 255;
+          for (let i = 0; i < 8; i++) bass += data[i];
+          bass /= 8 * 255;
           const delta = Math.max(0, bass - lastBassRef.current);
           lastBassRef.current = bass * 0.86 + lastBassRef.current * 0.14;
-          if (delta > 0.07) beatPulseRef.current = Math.min(1, beatPulseRef.current + delta * 2.2);
-          beatPulseRef.current *= 0.92;
+          // threshold /1.56, gain *1.56, slower decay so the ring shows up more
+          if (delta > 0.045) beatPulseRef.current = Math.min(1, beatPulseRef.current + delta * 3.43);
+          // also let raw bass energy feed the pulse so it's never fully flat
+          beatPulseRef.current = Math.max(beatPulseRef.current, Math.min(1, bass * 1.56));
+          beatPulseRef.current *= 0.945;
 
           // Background — paper-tinted with a subtle pulse.
           ctx.clearRect(0, 0, W, H);
@@ -134,17 +137,18 @@ export default function BgmPlayer() {
             ctx.fillRect(x + 1, y, Math.max(1, bw - 2), bh);
           }
 
-          // Beat ring overlay
-          if (pulse > 0.05) {
+          // Beat ring overlay — shows far more often now
+          if (pulse > 0.02) {
             ctx.save();
-            ctx.globalAlpha = pulse * 0.6;
+            ctx.globalAlpha = Math.min(0.95, pulse * 0.94);
             ctx.strokeStyle = `rgb(255,${Math.round(60 + pulse * 120)},80)`;
-            ctx.lineWidth = 2 + pulse * 6;
+            ctx.lineWidth = 2 + pulse * 9;
             ctx.beginPath();
-            ctx.arc(W / 2, H / 2, Math.min(W, H) * (0.18 + pulse * 0.18), 0, Math.PI * 2);
+            ctx.arc(W / 2, H / 2, Math.min(W, H) * (0.16 + pulse * 0.28), 0, Math.PI * 2);
             ctx.stroke();
             ctx.restore();
           }
+
         }
       }
       rafRef.current = requestAnimationFrame(draw);
