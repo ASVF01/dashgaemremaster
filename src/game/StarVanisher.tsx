@@ -162,9 +162,10 @@ export default function StarVanisher() {
     if (!bgmRef.current) {
       const a = new Audio(runBgmAsset.url);
       a.loop = true;
-      a.volume = 0.45;
+      a.volume = 0.3375;
       bgmRef.current = a;
     }
+
 
     return bgmRef.current;
   };
