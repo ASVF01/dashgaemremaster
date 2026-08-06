@@ -45,6 +45,7 @@ export const ABILITIES: Ability[] = [
   { id: "greed", name: "GREED", price: 1400, desc: "+30% score, but the field pulses 15% faster." },
   { id: "revive", name: "SECOND WIND", price: 2200, desc: "Survive your first MISS of a run, once per run." },
   { id: "payday", name: "PAYDAY", price: 1800, desc: "+50% tokens earned from every run." },
+  { id: "sight", name: "TRUE SIGHT", price: 2400, desc: "See the live destruction % while aiming — first 10 targets of a run only." },
 ];
 
 export type ShopState = {

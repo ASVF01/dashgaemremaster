@@ -85,6 +85,7 @@ type State = {
   boomed: boolean;        // explosion already triggered for this shot
   pendingMiss: boolean;   // run ends once the count-up finishes
   reviveLeft: number;     // SECOND WIND charges left this run
+  sightLeft: number;      // TRUE SIGHT targets left this run
 
 };
 
@@ -191,6 +192,7 @@ export default function StarVanisher() {
       hitstop: 0, beam: 0, star: null, destroyFrac: 0, particles: [], floatNums: [],
       comboPop: 0, countVal: 0, countStep: 0, countTimer: 0, countDone: false, countPop: 0,
       boomed: false, pendingMiss: false, reviveLeft: hasAbility("revive") ? 1 : 0,
+      sightLeft: hasAbility("sight") ? 10 : 0,
     };
     newRound(st);
     stateRef.current = st;
@@ -224,6 +226,7 @@ export default function StarVanisher() {
     const diff = Math.abs(pct - st.target);
     const j: Judgement = diff <= win.perfect ? "PERFECT" : diff <= win.okay ? "OKAY" : "MISS";
 
+    if (st.sightLeft > 0) st.sightLeft -= 1;
     st.lockedPct = pct;
     st.judgement = j;
     st.phase = "fire";
@@ -570,6 +573,25 @@ export default function StarVanisher() {
           ctx.strokeText(`${st.lockedPct.toFixed(1)}%`, 0, 56);
           ctx.fillText(`${st.lockedPct.toFixed(1)}%`, 0, 56);
         }
+        ctx.restore();
+      }
+
+      // TRUE SIGHT: live destruction % readout while aiming
+      if (st.phase === "aim" && st.star && st.sightLeft > 0) {
+        const s0 = st.star;
+        const live = overlapPct(s0.cx, s0.cy, s0.r, fieldCenter(s0).x, fieldCenter(s0).y, fieldRadius(st, s0));
+        ctx.save();
+        ctx.textAlign = "center";
+        ctx.font = "bold 40px Bungee, system-ui, sans-serif";
+        ctx.lineWidth = 8;
+        ctx.strokeStyle = "rgba(25,0,10,0.85)";
+        ctx.fillStyle = Math.abs(live - st.target) <= windows(st.combo).perfect ? "#ffe23a" : "#8ef0ff";
+        ctx.strokeText(`${live.toFixed(1)}%`, s0.cx, s0.cy - s0.r - 34);
+        ctx.fillText(`${live.toFixed(1)}%`, s0.cx, s0.cy - s0.r - 34);
+        ctx.font = "bold 20px Bungee, system-ui, sans-serif";
+        ctx.fillStyle = "#ffffff";
+        ctx.strokeText(`TRUE SIGHT ${st.sightLeft} LEFT`, s0.cx, s0.cy - s0.r - 8);
+        ctx.fillText(`TRUE SIGHT ${st.sightLeft} LEFT`, s0.cx, s0.cy - s0.r - 8);
         ctx.restore();
       }
 
