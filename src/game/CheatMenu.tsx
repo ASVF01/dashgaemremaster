@@ -15,6 +15,7 @@ type Cheat = {
 
 const CHEATS: Cheat[] = [
   { code: "nicole", label: "MTSIN", hint: "+1000 T per press", trigger: "+" },
+  { code: "deadeye", label: "V-LOCK", hint: "every shot is a guaranteed JUST", trigger: "ENTER (toggle)" },
 ];
 
 export default function CheatMenu() {
