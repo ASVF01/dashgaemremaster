@@ -58,6 +58,8 @@ export default function BgmPlayer() {
   const rafRef = useRef<number | null>(null);
   const beatPulseRef = useRef(0);
   const lastBassRef = useRef(0);
+  const snarePulseRef = useRef(0);
+  const lastSnareRef = useRef(0);
 
   // Lazily build the audio graph on the first play (needs a user gesture).
   const ensureAnalyser = () => {
