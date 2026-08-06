@@ -536,11 +536,25 @@ export default function StarVanisher() {
               st.countTimer = 0.024 + 0.17 * Math.pow(prog, 2.6);
             }
           }
-        } else if (st.t > 0.94) {
-          if (st.demo) { /* demo holds here until the tutorial hands over */ }
-          else if (st.pendingMiss) finishMiss(st);
-          else newRound(st);
+      } else if (st.t > 0.94) {
+        if (st.demo) {
+          // demo holds here until the tutorial hands over
+          if (st.demoTryTimer > 0) {
+            st.demoTryTimer -= dt;
+            if (st.demoTryTimer <= 0) {
+              setShowTryIt(true);
+              clearTutTimers();
+              tutTimers.current.push(window.setTimeout(() => {
+                setShowTryIt(false);
+                markTutorialDone();
+                start(false);
+              }, 1500));
+            }
+          }
         }
+        else if (st.pendingMiss) finishMiss(st);
+        else newRound(st);
+      }
 
       } else if (st.phase === "result") {
         const gap = Math.max(0.22, 0.5 - st.combo * 0.02);
