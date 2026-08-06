@@ -39,7 +39,7 @@ const H = 540;
 const HS_KEY = "dashgaem_starvanisher_hs_v1";
 
 type Judgement = "PERFECT" | "OKAY" | "MISS";
-type Phase = "aim" | "fire" | "result" | "over";
+type Phase = "aim" | "fire" | "count" | "result" | "over";
 
 type Particle = {
   x: number; y: number; vx: number; vy: number;
