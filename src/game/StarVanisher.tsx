@@ -520,14 +520,15 @@ export default function StarVanisher() {
           st.countTimer -= dt;
           if (st.countTimer <= 0) {
             st.countStep += 1;
-            if (st.countStep >= total) {
-              st.countVal = st.lockedPct;
-              st.countDone = true;
-              st.countPop = 1;
-              st.t = 0;
-              st.shake = 13;
-              playExplosion2();
-            } else {
+          if (st.countStep >= total) {
+            st.countVal = st.lockedPct;
+            st.countDone = true;
+            st.countPop = 1;
+            st.t = 0;
+            st.shake = 13;
+            playExplosion2();
+            if (st.demo) st.demoTryTimer = 0.6;
+          } else {
               st.countVal = st.countStep;
               st.countPop = 0.55;
               playCountUp();
