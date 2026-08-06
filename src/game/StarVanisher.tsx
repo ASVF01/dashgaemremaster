@@ -53,12 +53,12 @@ const TUT_SLIDES: { title: string; body: string }[] = [
   },
   {
     title: "ONE CLICK",
-    body: "Click / tap once to fire the beam. PERFECT and OKAY keep the run alive and build your combo — a MISS ends it.",
+    body: "Click / tap once to fire the beam. JUST and OKAY keep the run alive and build your combo — a MISS ends it.",
   },
 ];
 
 
-type Judgement = "PERFECT" | "OKAY" | "MISS";
+type Judgement = "JUST" | "OKAY" | "MISS";
 type Phase = "aim" | "fire" | "count" | "result" | "over";
 
 type Particle = {
@@ -361,7 +361,7 @@ export default function StarVanisher() {
     const pct = overlapPct(s.cx, s.cy, s.r, fc.x, fc.y, fr);
     const win = windows(st.combo);
     const diff = Math.abs(pct - st.target);
-    const j: Judgement = diff <= win.perfect ? "PERFECT" : diff <= win.okay ? "OKAY" : "MISS";
+    const j: Judgement = diff <= win.perfect ? "JUST" : diff <= win.okay ? "OKAY" : "MISS";
 
     if (st.sightLeft > 0) st.sightLeft -= 1;
     st.lockedPct = pct;
@@ -386,7 +386,7 @@ export default function StarVanisher() {
     } else {
       const acc = Math.max(0, 1 - diff / win.okay);
       const greed = hasAbility("greed") ? 1.3 : 1;
-      const gained = Math.round((j === "PERFECT" ? 1200 : 500) * (1 + acc) * (1 + st.combo * 0.22) * greed);
+      const gained = Math.round((j === "JUST" ? 1200 : 500) * (1 + acc) * (1 + st.combo * 0.22) * greed);
       st.score += gained;
       st.combo += 1;
       st.comboPop = 1;
@@ -738,7 +738,7 @@ export default function StarVanisher() {
         ctx.textAlign = "center";
         ctx.lineWidth = 9;
         ctx.strokeStyle = "rgba(25,0,10,0.85)";
-        ctx.fillStyle = j === "PERFECT" ? "#ffe23a" : j === "OKAY" ? "#8ef0ff" : "#ff2d5e";
+        ctx.fillStyle = j === "JUST" ? "#a855f7" : j === "OKAY" ? "#8ef0ff" : "#ff2d5e";
         ctx.strokeText(j, 0, 0);
         ctx.fillText(j, 0, 0);
         if (j === "MISS" && Math.floor(time * 8) % 2 === 0) {
@@ -759,7 +759,7 @@ export default function StarVanisher() {
         ctx.font = "bold 40px Bungee, system-ui, sans-serif";
         ctx.lineWidth = 8;
         ctx.strokeStyle = "rgba(25,0,10,0.85)";
-        ctx.fillStyle = Math.abs(live - st.target) <= windows(st.combo).perfect ? "#ffe23a" : "#8ef0ff";
+        ctx.fillStyle = Math.abs(live - st.target) <= windows(st.combo).perfect ? "#a855f7" : "#8ef0ff";
         ctx.strokeText(`${live.toFixed(1)}%`, s0.cx, s0.cy - s0.r - 34);
         ctx.fillText(`${live.toFixed(1)}%`, s0.cx, s0.cy - s0.r - 34);
         ctx.font = "bold 20px Bungee, system-ui, sans-serif";

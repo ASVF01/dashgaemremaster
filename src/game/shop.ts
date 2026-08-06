@@ -41,7 +41,7 @@ export const BEAM_SKINS: BeamSkin[] = [
 
 export const ABILITIES: Ability[] = [
   { id: "steady", name: "STEADY HAND", price: 700, desc: "The vanish field pulses 20% slower. Easier reads." },
-  { id: "wide", name: "WIDE EYE", price: 1000, desc: "PERFECT and OKAY windows are 25% more forgiving." },
+  { id: "wide", name: "WIDE EYE", price: 1000, desc: "JUST and OKAY windows are 25% more forgiving." },
   { id: "greed", name: "GREED", price: 1400, desc: "+30% score, but the field pulses 15% faster." },
   { id: "revive", name: "SECOND WIND", price: 2200, desc: "Survive your first MISS of a run, once per run." },
   { id: "payday", name: "PAYDAY", price: 1800, desc: "+50% tokens earned from every run." },
