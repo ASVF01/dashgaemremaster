@@ -295,9 +295,13 @@ export default function StarVanisher() {
     st.star = makeStar(st.combo);
   };
 
-  const start = () => {
+  const start = (demo = false) => {
     unlockAudio();
     sfx.menuConfirm();
+    clearTutTimers();
+    setShowTryIt(false);
+    setTutSlide(null);
+    setTutDemo(demo);
     const bg0 = randColorSet();
     const st: State = {
       phase: "aim", t: 0, target: 50, fieldT: 0, fieldDir: 1, fieldSpeed: 0.7,
@@ -306,10 +310,11 @@ export default function StarVanisher() {
       comboPop: 0, countVal: 0, countStep: 0, countTimer: 0, countDone: false, countPop: 0,
       boomed: false, pendingMiss: false, reviveLeft: hasAbility("revive") ? 1 : 0,
       sightLeft: hasAbility("sight") ? 10 : 0,
-      starsDone: -1, bg: bg0, streaks: makeStreaks(bg0),
+      starsDone: -1, bg: bg0, streaks: makeStreaks(bg0), demo,
     };
 
     newRound(st);
+    if (demo) st.target = 55; // a clean, easy-to-read ask for the demonstration
     stateRef.current = st;
     setHud((h) => ({ ...h, score: 0, combo: 0, over: false, newBest: false, earned: 0 }));
     setFailStage(0);
@@ -317,6 +322,21 @@ export default function StarVanisher() {
     setRunning(true);
 
   };
+
+  // pressing play for the very first time runs the tutorial instead
+  const handlePlay = () => {
+    let seen = false;
+    try { seen = localStorage.getItem(TUT_KEY) === "1"; } catch { /* noop */ }
+    if (seen) { start(false); return; }
+    unlockAudio();
+    sfx.menuConfirm();
+    setTutSlide(0);
+  };
+
+  const markTutorialDone = () => {
+    try { localStorage.setItem(TUT_KEY, "1"); } catch { /* noop */ }
+  };
+
 
   // fail sequence timeline
   useEffect(() => {
