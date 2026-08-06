@@ -1449,6 +1449,7 @@ export default function StarVanisher() {
               const charged = st.bossCharge >= CHARGE_TIME;
               st.bossCharging = false;
               st.bossCharge = 0;
+              st.bossMvCued = false;
               stopChargeHum();
               bossFire(ax, ay, charged);
             }
