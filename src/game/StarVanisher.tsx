@@ -6,7 +6,7 @@ import exploseAsset from "@/assets/audio/explose1.mp3.asset.json";
 import explose2Asset from "@/assets/audio/explose2.mp3.asset.json";
 import countupAsset from "@/assets/audio/countup.mp3.asset.json";
 import runBgmAsset from "@/assets/audio/StarVanisher_duh.ogg.asset.json";
-import { isBgmMuted, subscribeBgmMuted } from "@/game/bgm";
+import { isBgmMuted, subscribeBgmMuted, pauseBgm, resumeBgm } from "@/game/bgm";
 
 // simple one-shot sample player (overlapping playback via cloned nodes)
 function makeSample(url: string, volume: number) {
@@ -170,19 +170,21 @@ export default function StarVanisher() {
   useEffect(() => {
     const a = ensureBgm();
     if (running && !hud.over && !isBgmMuted()) {
+      pauseBgm(); // silence menu/game music while the run track plays
       void a.play().catch(() => { /* blocked */ });
     } else {
       a.pause();
       if (!running) a.currentTime = 0;
+      resumeBgm();
     }
   }, [running, hud.over]);
   useEffect(() => subscribeBgmMuted((m) => {
     const a = bgmRef.current;
     if (!a) return;
-    if (m) a.pause();
-    else if (running && !hud.over) void a.play().catch(() => { /* noop */ });
+    if (m) { a.pause(); }
+    else if (running && !hud.over) { pauseBgm(); void a.play().catch(() => { /* noop */ }); }
   }), [running, hud.over]);
-  useEffect(() => () => { bgmRef.current?.pause(); }, []);
+  useEffect(() => () => { bgmRef.current?.pause(); resumeBgm(); }, []);
 
   useEffect(() => {
     const raw = Number(localStorage.getItem(HS_KEY) ?? 0);
