@@ -983,7 +983,7 @@ export default function StarVanisher() {
                 </div>
                 <button
                   type="button"
-                  onClick={start}
+                  onClick={() => start(false)}
                   className="pointer-events-auto scribble-border bg-paper px-6 py-3 font-bungee text-ink transition-all duration-500 ease-out hover:scale-105"
                   style={{
                     transform: failStage >= 3 ? "translateY(0)" : "translateY(300%)",
