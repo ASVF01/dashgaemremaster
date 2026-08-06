@@ -1011,6 +1011,8 @@ const UPDATES: UpdateEntry[] = [
     changes: [
       "Added [ THE ALTERNATE ] and a proper character selection",
       "Revamped Bestiary's UI",
+      "NEW MODE! : Star Vanisher...!!",
+      "Added the shop, will be used for STAR VANISHER for now, but expect it to be used for later purposes..",
     ],
   },
   {
