@@ -364,7 +364,7 @@ function drawBoss(ctx: CanvasRenderingContext2D, st: State, time: number) {
   }
 
   // HP bar + timer
-  const bw = 520, bh2 = 20, bx = (W - bw) / 2, by = H - 62;
+  const bw = 520, bh2 = 20, bx = (W - bw) / 2, by = H - 96;
   ctx.save();
   ctx.fillStyle = "rgba(0,0,0,0.6)";
   ctx.fillRect(bx - 4, by - 4, bw + 8, bh2 + 8);
