@@ -138,6 +138,8 @@ type State = {
   demoTryTimer: number;   // seconds after count-up done before "Try it yourself!" flashes
   boss: Boss | null;      // DANGER TARGET, appears every 40 targets
   bossIntro: number;      // intro card timer
+  bossOnly: boolean;      // DANGER TARGET mode: endless bosses, each tougher
+  bossWave: number;       // how many DANGER TARGETs have shown up this run
   aimX: number; aimY: number;   // mouse aim during the boss fight
   beamX: number; beamY: number; // where the last boss beam landed
 };
