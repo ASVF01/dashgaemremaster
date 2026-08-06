@@ -894,12 +894,13 @@ export default function StarVanisher() {
     }
   };
 
-  const bossFire = (ax: number, ay: number) => {
+  const bossFire = (ax: number, ay: number, charged = false) => {
     const st = stateRef.current;
     const b = st?.boss;
     if (!st || !b || st.phase !== "boss" || st.bossIntro > 0 || b.dying > 0) return;
     unlockAudio();
-    st.beam = 0.28;
+    if (charged) playMegaShot();
+    st.beam = charged ? 0.5 : 0.28;
     st.beamX = ax;
     st.beamY = ay;
     playBeam();
@@ -917,21 +918,26 @@ export default function StarVanisher() {
     if (hit) {
       const pos = spotPos(b, hit);
       hit.cd = 1.1;
-      b.hp = Math.max(0, b.hp - 12);
+      b.hp = Math.max(0, b.hp - (charged ? 42 : 12));
       b.hitFlash = 1;
-      st.shake = 12;
-      st.hitstop = 0.06;
+      st.shake = charged ? 26 : 12;
+      st.hitstop = charged ? 0.14 : 0.06;
+      if (charged) {
+        st.flash = 0.8;
+        st.floatNums.push({ x: pos.x, y: pos.y - 54, text: "CHARGED!!", life: 1.0, color: "#ff3a5e", size: 40 });
+      }
       playExplosion2();
       st.combo += 1;
       st.comboPop = 1;
-      const gained = Math.round(900 * (1 + st.combo * 0.12));
+      const gained = Math.round((charged ? 3200 : 900) * (1 + st.combo * 0.12));
       st.score += gained;
       st.floatNums.push({ x: pos.x, y: pos.y - 10, text: `+${gained}`, life: 0.8, color: "#ffe23a", size: 30 });
-      for (let i = 0; i < 22; i++) {
+      for (let i = 0; i < (charged ? 70 : 22); i++) {
         const a = rand(0, Math.PI * 2);
+        const pw = charged ? 2.1 : 1;
         st.particles.push({
-          x: pos.x, y: pos.y, vx: Math.cos(a) * rand(60, 340), vy: Math.sin(a) * rand(60, 340),
-          life: rand(0.25, 0.7), maxLife: 0.7, size: rand(6, 22),
+          x: pos.x, y: pos.y, vx: Math.cos(a) * rand(60, 340) * pw, vy: Math.sin(a) * rand(60, 340) * pw,
+          life: rand(0.25, 0.7), maxLife: 0.7, size: rand(6, 22) * (charged ? 1.5 : 1),
           color: i % 3 === 0 ? "#fff3b0" : "#ff3a5e", kind: i % 4 === 0 ? "spark" : "smoke",
         });
       }
