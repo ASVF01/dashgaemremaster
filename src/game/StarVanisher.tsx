@@ -583,7 +583,7 @@ export default function StarVanisher() {
     else if (running && !hud.over) { pauseBgm(); a.volume = 0.3375; a.currentTime = 0; void a.play().catch(() => { /* noop */ }); }
     else if (running && hud.over) { a.volume = 0.10; void a.play().catch(() => { /* noop */ }); }
   }), [running, hud.over]);
-  useEffect(() => () => { bgmRef.current?.pause(); stopBossBgm(); resumeBgm(); }, []);
+  useEffect(() => () => { bgmRef.current?.pause(); stopBossBgm(); stopChargeHum(); resumeBgm(); }, []);
 
 
   useEffect(() => {
@@ -849,6 +849,8 @@ export default function StarVanisher() {
     if (!b) return;
 
     if (st.bossIntro > 0) { st.bossIntro -= dt; return; }
+
+    if (st.bossCharging) st.bossCharge = Math.min(CHARGE_TIME, st.bossCharge + dt);
 
     if (b.dying > 0) {
       b.dying -= dt;
@@ -1379,8 +1381,34 @@ export default function StarVanisher() {
             const ax = ((e.clientX - r.left) / r.width) * W;
             const ay = ((e.clientY - r.top) / r.height) * H;
             if (st) { st.aimX = ax; st.aimY = ay; }
-            if (st && st.phase === "boss") bossFire(ax, ay);
-            else fire();
+            if (st && st.phase === "boss") {
+              // hold to charge — released in onPointerUp
+              if (st.bossIntro <= 0 && st.boss && st.boss.dying <= 0) {
+                st.bossCharging = true;
+                st.bossCharge = 0;
+                unlockAudio();
+                startChargeHum();
+              }
+            } else fire();
+          }}
+          onPointerUp={(e) => {
+            const st = stateRef.current;
+            if (!st) return;
+            const r = e.currentTarget.getBoundingClientRect();
+            const ax = ((e.clientX - r.left) / r.width) * W;
+            const ay = ((e.clientY - r.top) / r.height) * H;
+            st.aimX = ax; st.aimY = ay;
+            if (st.phase === "boss" && st.bossCharging) {
+              const charged = st.bossCharge >= CHARGE_TIME;
+              st.bossCharging = false;
+              st.bossCharge = 0;
+              stopChargeHum();
+              bossFire(ax, ay, charged);
+            }
+          }}
+          onPointerLeave={() => {
+            const st = stateRef.current;
+            if (st?.bossCharging) { st.bossCharging = false; st.bossCharge = 0; stopChargeHum(); }
           }}
         />
 
