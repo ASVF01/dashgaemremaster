@@ -1307,7 +1307,7 @@ export default function StarVanisher({ onBack }: { onBack?: () => void } = {}) {
         ctx.lineWidth = 9;
         ctx.strokeStyle = "rgba(30,0,12,0.8)";
         ctx.fillStyle = st.countDone ? "#ffe23a" : "#ffb03a";
-        const txt = st.countDone ? `${st.countVal.toFixed(1)}%` : `${Math.floor(st.countVal)}%`;
+        const txt = `${Math.floor(st.countVal)}%`;
         ctx.strokeText(txt, 0, 0);
         ctx.fillText(txt, 0, 0);
         ctx.restore();
@@ -1331,8 +1331,8 @@ export default function StarVanisher({ onBack }: { onBack?: () => void } = {}) {
         if (j === "MISS" && Math.floor(time * 8) % 2 === 0) {
           ctx.font = "italic 800 42px Oxanium, system-ui, sans-serif";
           ctx.fillStyle = "#ffffff";
-          ctx.strokeText(`${st.lockedPct.toFixed(1)}%`, 0, 56);
-          ctx.fillText(`${st.lockedPct.toFixed(1)}%`, 0, 56);
+          ctx.strokeText(`${Math.floor(st.lockedPct)}%`, 0, 56);
+          ctx.fillText(`${Math.floor(st.lockedPct)}%`, 0, 56);
         }
         ctx.restore();
       }
@@ -1347,8 +1347,8 @@ export default function StarVanisher({ onBack }: { onBack?: () => void } = {}) {
         ctx.lineWidth = 8;
         ctx.strokeStyle = "rgba(25,0,10,0.85)";
         ctx.fillStyle = Math.abs(live - st.target) <= windows(st.combo).perfect ? "#a855f7" : "#8ef0ff";
-        ctx.strokeText(`${live.toFixed(1)}%`, s0.cx, s0.cy - s0.r - 34);
-        ctx.fillText(`${live.toFixed(1)}%`, s0.cx, s0.cy - s0.r - 34);
+        ctx.strokeText(`${Math.floor(live)}%`, s0.cx, s0.cy - s0.r - 34);
+        ctx.fillText(`${Math.floor(live)}%`, s0.cx, s0.cy - s0.r - 34);
         ctx.font = "italic 800 20px Oxanium, system-ui, sans-serif";
         ctx.fillStyle = "#ffffff";
         ctx.strokeText(`TRUE SIGHT ${st.sightLeft} LEFT`, s0.cx, s0.cy - s0.r - 8);
@@ -1660,7 +1660,7 @@ export default function StarVanisher({ onBack }: { onBack?: () => void } = {}) {
                   className="font-bungee text-4xl text-white transition-transform duration-700 ease-out"
                   style={{ transform: showFailPct ? "translateY(0)" : "translateY(200%)" }}
                 >
-                  {hud.lastPct.toFixed(1)}%
+                  {Math.floor(hud.lastPct)}%
                 </div>
               </div>
             )}
