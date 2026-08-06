@@ -1193,6 +1193,9 @@ export default function StarVanisher() {
         ctx.restore();
       }
 
+      // jagged cinematic borders — drawn here so all HUD/UI sits on top of them
+      drawBorders(ctx, W, H, time);
+
       // left HUD: target call-out (hidden while the DANGER TARGET is up)
       ctx.save();
       ctx.textAlign = "left";
@@ -1201,13 +1204,14 @@ export default function StarVanisher() {
         ctx.lineWidth = 8;
         ctx.strokeStyle = "rgba(25,0,10,0.85)";
         ctx.fillStyle = "#ffe23a";
-        ctx.strokeText(`${st.target}%`, 34, H - 60);
-        ctx.fillText(`${st.target}%`, 34, H - 60);
+        ctx.strokeText(`${st.target}%`, 34, H - 76);
+        ctx.fillText(`${st.target}%`, 34, H - 76);
         ctx.font = "italic 800 34px Oxanium, system-ui, sans-serif";
         ctx.fillStyle = "#ffffff";
-        ctx.strokeText("Vanish!!", 34 + ctx.measureText(`${st.target}% `).width * 0.55, H - 60);
-        ctx.fillText("Vanish!!", 34 + ctx.measureText(`${st.target}% `).width * 0.55, H - 60);
+        ctx.strokeText("Vanish!!", 38, H - 36);
+        ctx.fillText("Vanish!!", 38, H - 36);
       }
+
       ctx.lineWidth = 8;
       ctx.strokeStyle = "rgba(25,0,10,0.85)";
 
