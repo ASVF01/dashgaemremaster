@@ -245,12 +245,19 @@ export default function StarVanisher() {
     st.countPop = 0;
     st.boomed = false;
     st.pendingMiss = false;
+    st.starsDone += 1;
+    // every 5 stars completed the whole background shifts to a new random colour
+    if (st.starsDone > 0 && st.starsDone % 5 === 0) {
+      st.bg = randColorSet();
+      st.streaks = makeStreaks(st.bg);
+    }
     st.star = makeStar(st.combo);
   };
 
   const start = () => {
     unlockAudio();
     sfx.menuConfirm();
+    const bg0 = randColorSet();
     const st: State = {
       phase: "aim", t: 0, target: 50, fieldT: 0, fieldDir: 1, fieldSpeed: 0.7,
       lockedPct: 0, judgement: null, combo: 0, score: 0, shake: 0, flash: 0,
@@ -258,7 +265,9 @@ export default function StarVanisher() {
       comboPop: 0, countVal: 0, countStep: 0, countTimer: 0, countDone: false, countPop: 0,
       boomed: false, pendingMiss: false, reviveLeft: hasAbility("revive") ? 1 : 0,
       sightLeft: hasAbility("sight") ? 10 : 0,
+      starsDone: -1, bg: bg0, streaks: makeStreaks(bg0),
     };
+
     newRound(st);
     stateRef.current = st;
     setHud((h) => ({ ...h, score: 0, combo: 0, over: false, newBest: false, earned: 0 }));
