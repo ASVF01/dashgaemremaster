@@ -296,10 +296,15 @@ export default function StarVanisher() {
       st.bg = randColorSet();
       st.streaks = makeStreaks(st.bg);
     }
+    // every 40 targets beaten, a DANGER TARGET shows up instead of a star
+    if (!st.demo && st.starsDone > 0 && st.starsDone % 40 === 0) {
+      startBoss(st);
+      return;
+    }
     st.star = makeStar(st.combo);
   };
 
-  const start = (demo = false) => {
+  const start = (demo = false, bossOnly = false) => {
     unlockAudio();
     sfx.menuConfirm();
     clearTutTimers();
@@ -316,6 +321,7 @@ export default function StarVanisher() {
       sightLeft: hasAbility("sight") ? 10 : 0,
       starsDone: -1, bg: bg0, streaks: makeStreaks(bg0), demo,
       demoTryTimer: 0,
+      boss: null, bossIntro: 0, aimX: W * 0.5, aimY: H * 0.5, beamX: W * 0.5, beamY: H * 0.5,
     };
 
     newRound(st);
@@ -325,8 +331,9 @@ export default function StarVanisher() {
     setFailStage(0);
     setShowFailPct(false);
     setRunning(true);
-
+    if (bossOnly) startBoss(st);
   };
+
 
   // pressing play for the very first time runs the tutorial instead
   const handlePlay = () => {
