@@ -1694,7 +1694,10 @@ export default function StarVanisher({ onBack }: { onBack?: () => void } = {}) {
                 <button
                   type="button"
                   onClick={() => {
-                    cleanup();
+                    bgmRef.current?.pause();
+                    stopBossBgm();
+                    stopChargeHum();
+                    resumeBgm();
                     onBack?.();
                   }}
                   className="pointer-events-auto scribble-border border-2 border-black bg-paper px-6 py-3 font-bungee text-ink transition-all duration-500 ease-out hover:scale-105"
