@@ -92,7 +92,7 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
           <TabBtn active={tab === "updates"}  onClick={() => switchTab("updates")}>UPDATES</TabBtn>
           <TabBtn active={tab === "credits"}  onClick={() => switchTab("credits")}>CREDITS</TabBtn>
           <TabBtn active={tab === "youtube"} onClick={() => switchTab("youtube")}>YOUTUBE</TabBtn>
-          <TabBtn active={tab === "starvanisher"} onClick={() => switchTab("starvanisher")}>STAR VANISHER...!!</TabBtn>
+          <SvTabBtn active={tab === "starvanisher"} onClick={() => switchTab("starvanisher")}>STAR VANISHER...!!</SvTabBtn>
           <TabBtn active={false} onClick={openShop}>SHOP</TabBtn>
           <TabBtn active={false} onClick={openBestiary}>BESTIARY</TabBtn>
           <TabBtn active={false} onClick={openCharSelect}>CHARACTER SELECT</TabBtn>
