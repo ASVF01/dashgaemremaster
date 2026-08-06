@@ -197,6 +197,7 @@ type State = {
   bossIntro: number;      // intro card timer
   bossCharge: number;     // seconds the player has been holding the click (boss only)
   bossCharging: boolean;  // is the mouse held down right now
+  bossMvCued: boolean;    // MV sound has fired once the charge hit max
   bossOnly: boolean;      // DANGER TARGET mode: endless bosses, each tougher
   bossWave: number;       // how many DANGER TARGETs have shown up this run
   aimX: number; aimY: number;   // mouse aim during the boss fight
