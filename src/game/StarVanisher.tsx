@@ -495,24 +495,37 @@ export default function StarVanisher() {
       for (const f of st.floatNums) { f.life -= dt; f.y -= 26 * dt; }
       st.floatNums = st.floatNums.filter((f) => f.life > 0);
 
+      // slow star spin + horizontal streaks flying leftwards
+      if (st.star) st.star.spin += st.star.spinSpeed * dt;
+      for (const sk of st.streaks) {
+        sk.x -= sk.sp * dt;
+        if (sk.x + sk.len < -20) {
+          sk.x = W + rand(20, 380);
+          sk.y = rand(6, H - 6);
+          sk.len = rand(80, 320);
+          sk.sp = rand(220, 760);
+          sk.w = rand(2, 6);
+          sk.c = Math.random() < 0.5 ? st.bg.light : st.bg.edge;
+        }
+      }
+
       // ---- draw ----
       ctx.save();
       const sh = st.shake;
       ctx.translate(rand(-sh, sh) * 0.5, rand(-sh, sh) * 0.5);
 
-      // background: speed-streak void
+      // background: randomised colour void
       const g = ctx.createLinearGradient(0, 0, 0, H);
-      g.addColorStop(0, "#3b0018");
-      g.addColorStop(0.5, "#7a0026");
-      g.addColorStop(1, "#2a0011");
+      g.addColorStop(0, st.bg.dark);
+      g.addColorStop(0.5, st.bg.mid);
+      g.addColorStop(1, st.bg.dark);
       ctx.fillStyle = g;
       ctx.fillRect(-40, -40, W + 80, H + 80);
 
-      ctx.globalAlpha = 0.22;
-      for (let i = 0; i < 26; i++) {
-        const y = ((i * 61 + time * (120 + i * 9)) % (H + 60)) - 30;
-        ctx.fillStyle = i % 2 ? "#ff87ad" : "#ffd0de";
-        ctx.fillRect(0, y, W, 2 + (i % 3));
+      ctx.globalAlpha = 0.26;
+      for (const sk of st.streaks) {
+        ctx.fillStyle = sk.c;
+        ctx.fillRect(sk.x, sk.y, sk.len, sk.w);
       }
       ctx.globalAlpha = 1;
 
@@ -521,22 +534,24 @@ export default function StarVanisher() {
         // star body
         ctx.save();
         const alive = 1 - (st.phase === "aim" ? 0 : st.destroyFrac * (st.lockedPct / 100));
-        starPath(ctx, s, time);
+        starPath(ctx, s);
         ctx.clip();
         const sg = ctx.createRadialGradient(s.cx - s.r * 0.3, s.cy - s.r * 0.35, s.r * 0.1, s.cx, s.cy, s.r * 1.2);
-        sg.addColorStop(0, "#ff8fb4");
-        sg.addColorStop(0.6, "#e8114f");
-        sg.addColorStop(1, "#5c0020");
+        sg.addColorStop(0, s.colors.light);
+        sg.addColorStop(0.6, s.colors.mid);
+        sg.addColorStop(1, s.colors.dark);
         ctx.fillStyle = sg;
         ctx.fillRect(s.cx - s.r * 1.4, s.cy - s.r * 1.4, s.r * 2.8, s.r * 2.8);
-        // craters
+        // craters (rotate with the star so the spin reads)
         for (const c of s.craters) {
+          const a = c.a + s.spin;
           ctx.beginPath();
-          ctx.arc(s.cx + Math.cos(c.a) * s.r * c.d, s.cy + Math.sin(c.a) * s.r * c.d, s.r * c.r, 0, Math.PI * 2);
-          ctx.strokeStyle = "rgba(80,0,25,0.55)";
+          ctx.arc(s.cx + Math.cos(a) * s.r * c.d, s.cy + Math.sin(a) * s.r * c.d, s.r * c.r, 0, Math.PI * 2);
+          ctx.strokeStyle = "rgba(0,0,0,0.4)";
           ctx.lineWidth = 4;
           ctx.stroke();
         }
+
         // vanished slice punched out
         if (st.phase !== "aim") {
           const fc = fieldCenter(s);
