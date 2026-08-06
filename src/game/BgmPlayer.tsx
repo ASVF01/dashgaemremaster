@@ -32,6 +32,7 @@ const TRACKS: Track[] = [
   { id: "map5",    title: "Map 5 (character select)",  src: bgmMap5 },
   { id: "svduh",    title: "Star Vanisher...!! (duh)",  src: bgmStarVanisher },
   { id: "opening",  title: "Opening (cheat menu)",      src: bgmOpening },
+  { id: "danger",   title: "DANGER TARGET!!",           src: bgmDanger },
   { id: "knight",   title: "Black Knife (Roaring Knight)", src: bgmBlackKnife },
 ];
 
