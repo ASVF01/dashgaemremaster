@@ -99,17 +99,16 @@ export default function BgmPlayer() {
           const data = new Uint8Array(an.frequencyBinCount);
           an.getByteFrequencyData(data);
 
-          // Beat detection: bass-energy delta on lowest ~8 bins (56% more sensitive).
+          // Beat detection: bass-energy delta on lowest ~8 bins.
+          // Reset from the +56% tweak, then sensitivity +20.3% and decay 2% quicker.
           let bass = 0;
           for (let i = 0; i < 8; i++) bass += data[i];
           bass /= 8 * 255;
           const delta = Math.max(0, bass - lastBassRef.current);
           lastBassRef.current = bass * 0.86 + lastBassRef.current * 0.14;
-          // threshold /1.56, gain *1.56, slower decay so the ring shows up more
-          if (delta > 0.045) beatPulseRef.current = Math.min(1, beatPulseRef.current + delta * 3.43);
-          // also let raw bass energy feed the pulse so it's never fully flat
-          beatPulseRef.current = Math.max(beatPulseRef.current, Math.min(1, bass * 1.56));
-          beatPulseRef.current *= 0.945;
+          if (delta > 0.058) beatPulseRef.current = Math.min(1, beatPulseRef.current + delta * 2.65);
+          beatPulseRef.current = Math.max(beatPulseRef.current, Math.min(1, bass * 1.203));
+          beatPulseRef.current *= 0.911;
 
           // Background — paper-tinted with a subtle pulse.
           ctx.clearRect(0, 0, W, H);
