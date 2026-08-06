@@ -911,7 +911,7 @@ export default function StarVanisher() {
     const b = st?.boss;
     if (!st || !b || st.phase !== "boss" || st.bossIntro > 0 || b.dying > 0) return;
     unlockAudio();
-    if (charged) playMegaShot();
+    // MV cue fires when the charge is full; the release itself uses the beam sound
     st.beam = charged ? 0.5 : 0.28;
     st.beamX = ax;
     st.beamY = ay;
