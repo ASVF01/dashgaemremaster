@@ -856,6 +856,11 @@ export default function StarVanisher() {
     if (st.bossIntro > 0) { st.bossIntro -= dt; return; }
 
     if (st.bossCharging) st.bossCharge = Math.min(CHARGE_TIME, st.bossCharge + dt);
+    if (st.bossCharging && st.bossCharge >= CHARGE_TIME && !st.bossMvCued) {
+      unlockAudio();
+      playMegaShot();
+      st.bossMvCued = true;
+    }
 
     if (b.dying > 0) {
       b.dying -= dt;
