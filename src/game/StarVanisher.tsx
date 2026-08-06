@@ -171,12 +171,22 @@ export default function StarVanisher() {
   };
   useEffect(() => {
     const a = ensureBgm();
-    if (running && !hud.over && !isBgmMuted()) {
+    if (isBgmMuted()) {
+      a.pause();
+      return;
+    }
+    if (running && !hud.over) {
+      // restart the run track at the beginning of each run / retry
+      a.volume = 0.3375;
+      a.currentTime = 0;
       pauseBgm(); // silence menu/game music while the run track plays
       void a.play().catch(() => { /* blocked */ });
+    } else if (running && hud.over) {
+      // keep the track going on the fail screen but very quiet
+      a.volume = 0.10;
     } else {
       a.pause();
-      if (!running) a.currentTime = 0;
+      a.currentTime = 0;
       resumeBgm();
     }
   }, [running, hud.over]);
@@ -184,9 +194,11 @@ export default function StarVanisher() {
     const a = bgmRef.current;
     if (!a) return;
     if (m) { a.pause(); }
-    else if (running && !hud.over) { pauseBgm(); void a.play().catch(() => { /* noop */ }); }
+    else if (running && !hud.over) { pauseBgm(); a.volume = 0.3375; a.currentTime = 0; void a.play().catch(() => { /* noop */ }); }
+    else if (running && hud.over) { a.volume = 0.10; void a.play().catch(() => { /* noop */ }); }
   }), [running, hud.over]);
   useEffect(() => () => { bgmRef.current?.pause(); resumeBgm(); }, []);
+
 
   useEffect(() => {
     const raw = Number(localStorage.getItem(HS_KEY) ?? 0);
