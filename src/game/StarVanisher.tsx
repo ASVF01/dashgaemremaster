@@ -563,8 +563,9 @@ export default function StarVanisher() {
         }
         ctx.restore();
         ctx.globalAlpha = alive > 0 ? 1 : 0.4;
-        starPath(ctx, s, time);
-        ctx.strokeStyle = "#ffd3e2";
+        starPath(ctx, s);
+        ctx.strokeStyle = s.colors.edge;
+
         ctx.lineWidth = 3;
         ctx.stroke();
         ctx.globalAlpha = 1;
