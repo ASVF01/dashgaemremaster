@@ -119,6 +119,21 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
   );
 }
 
+function TabBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => { if (!active) sfx.menuHover(); }}
+      className={[
+        "scribble-border font-marker text-2xl px-5 py-2 transition-transform hover:-rotate-2",
+        active ? "bg-ink text-paper" : "bg-paper text-ink hover:bg-[hsl(var(--accent))/0.2]",
+      ].join(" ")}
+    >
+      {children}
+    </button>
+  );
+}
+
 function SvTabBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
