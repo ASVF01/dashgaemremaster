@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { sfx, unlockAudio } from "@/game/sfx";
+import { activeBeamSkin, addTokens, getShop, hasAbility, subscribeShop, tokensForScore } from "@/game/shop";
 import beamAsset from "@/assets/audio/beam.mp3.asset.json";
 import exploseAsset from "@/assets/audio/explose1.mp3.asset.json";
 import explose2Asset from "@/assets/audio/explose2.mp3.asset.json";
@@ -120,9 +121,10 @@ function overlapPct(sx: number, sy: number, sr: number, fx: number, fy: number, 
 
 function windows(combo: number) {
   const tighten = Math.min(0.62, combo * 0.045);
+  const forgive = hasAbility("wide") ? 1.25 : 1;
   return {
-    perfect: 3.2 * (1 - tighten),
-    okay: 8.5 * (1 - tighten),
+    perfect: 3.2 * (1 - tighten) * forgive,
+    okay: 8.5 * (1 - tighten) * forgive,
   };
 }
 
