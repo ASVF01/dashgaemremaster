@@ -77,6 +77,7 @@ type Boss = {
   timeLeft: number;
   hitFlash: number;
   dying: number;
+  wave: number;
 };
 
 type Particle = {
@@ -138,6 +139,8 @@ type State = {
   demoTryTimer: number;   // seconds after count-up done before "Try it yourself!" flashes
   boss: Boss | null;      // DANGER TARGET, appears every 40 targets
   bossIntro: number;      // intro card timer
+  bossOnly: boolean;      // DANGER TARGET mode: endless bosses, each tougher
+  bossWave: number;       // how many DANGER TARGETs have shown up this run
   aimX: number; aimY: number;   // mouse aim during the boss fight
   beamX: number; beamY: number; // where the last boss beam landed
 };
@@ -223,7 +226,7 @@ const BOSS_MAX_HP = 108;
 const BOSS_TIME = 42;
 const BOSS_PATHS: BossPath[] = ["circle", "square", "infinity", "triangle"];
 
-function makeBoss(): Boss {
+function makeBoss(wave = 0): Boss {
   const path = BOSS_PATHS[Math.floor(Math.random() * BOSS_PATHS.length)];
   const spots: BossSpot[] = Array.from({ length: 5 }, (_, i) => ({
     a: (i / 5) * Math.PI * 2 + rand(-0.2, 0.2),
@@ -231,11 +234,13 @@ function makeBoss(): Boss {
     cd: 0,
   }));
   const p = bossPathPos(path, 0);
+  const hp = Math.round(BOSS_MAX_HP * (1 + wave * 0.55));
   return {
-    hp: BOSS_MAX_HP, maxHp: BOSS_MAX_HP, path, t: 0,
-    speed: 0.16 + Math.random() * 0.07,
+    hp, maxHp: hp, path, t: 0,
+    speed: (0.16 + Math.random() * 0.07) * (1 + wave * 0.12),
     x: p.x, y: p.y, r: 74, spots, spin: 0,
-    timeLeft: BOSS_TIME, hitFlash: 0, dying: 0,
+    timeLeft: BOSS_TIME + wave * 6, hitFlash: 0, dying: 0,
+    wave,
   };
 }
 
@@ -378,8 +383,9 @@ function drawBoss(ctx: CanvasRenderingContext2D, st: State, time: number) {
   ctx.lineWidth = 6;
   ctx.strokeStyle = "rgba(25,0,10,0.85)";
   ctx.fillStyle = "#ffffff";
-  ctx.strokeText("DANGER TARGET", W / 2, by - 12);
-  ctx.fillText("DANGER TARGET", W / 2, by - 12);
+  const label = b.wave > 0 ? `DANGER TARGET  ·  WAVE ${b.wave + 1}` : "DANGER TARGET";
+  ctx.strokeText(label, W / 2, by - 12);
+  ctx.fillText(label, W / 2, by - 12);
   ctx.font = "italic 800 18px Oxanium, system-ui, sans-serif";
   ctx.fillStyle = b.timeLeft < 10 ? "#ff2d5e" : "#ffe23a";
   ctx.strokeText(`${Math.max(0, b.timeLeft).toFixed(1)}s`, W / 2, by + bh2 + 22);
@@ -548,7 +554,7 @@ export default function StarVanisher() {
       sightLeft: hasAbility("sight") ? 10 : 0,
       starsDone: -1, bg: bg0, streaks: makeStreaks(bg0), demo,
       demoTryTimer: 0,
-      boss: null, bossIntro: 0, aimX: W * 0.5, aimY: H * 0.5, beamX: W * 0.5, beamY: H * 0.5,
+      boss: null, bossIntro: 0, bossOnly, bossWave: 0, aimX: W * 0.5, aimY: H * 0.5, beamX: W * 0.5, beamY: H * 0.5,
     };
 
     newRound(st);
@@ -720,7 +726,8 @@ export default function StarVanisher() {
     st.beam = 0;
     st.boomed = false;
     st.destroyFrac = 0;
-    st.boss = makeBoss();
+    st.boss = makeBoss(st.bossWave);
+    st.bossWave += 1;
     st.bossIntro = 1.6;
     st.flash = 1;
     st.shake = 20;
@@ -762,8 +769,14 @@ export default function StarVanisher() {
         });
       }
       if (b.dying <= 0) {
-        endBoss(st);
-        newRound(st);
+        if (st.bossOnly) {
+          // DANGER TARGET mode: the next one shows up, tougher than the last
+          st.boss = null;
+          startBoss(st);
+        } else {
+          endBoss(st);
+          newRound(st);
+        }
       }
       return;
     }
@@ -1340,7 +1353,7 @@ export default function StarVanisher() {
               className="absolute bottom-4 left-4 -rotate-2 border-2 border-black bg-[#ff1f43] px-5 py-3 font-bungee text-lg tracking-wide text-white transition-transform hover:scale-110 hover:rotate-1"
               style={{ boxShadow: "6px 6px 0 #000, 0 0 24px rgba(255,31,67,0.7)" }}
             >
-              DANGER TARGET MODE
+              DANGER TARGET
             </button>
 
             {/* start — bottom right */}
