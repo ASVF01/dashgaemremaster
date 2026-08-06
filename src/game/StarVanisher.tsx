@@ -5,6 +5,7 @@ import beamAsset from "@/assets/audio/beam.mp3.asset.json";
 import exploseAsset from "@/assets/audio/explose1.mp3.asset.json";
 import explose2Asset from "@/assets/audio/explose2.mp3.asset.json";
 import countupAsset from "@/assets/audio/countup.mp3.asset.json";
+import mvAsset from "@/assets/audio/MV.ogg.asset.json";
 import runBgmAsset from "@/assets/audio/StarVanisher_duh.ogg.asset.json";
 import svTitleBg from "@/assets/sv_title_bg.jpg.asset.json";
 import dangerAsset from "@/assets/audio/danger_target.ogg.asset.json";
@@ -35,6 +36,60 @@ const playBeam = makeSample(beamAsset.url, 0.75);
 const playExplosion = makeSample(exploseAsset.url, 0.85);
 const playExplosion2 = makeSample(explose2Asset.url, 0.9);
 const playCountUp = makeSample(countupAsset.url, 0.55);
+const playMegaShot = makeSample(mvAsset.url, 0.95);
+
+// ---- charge hum: procedural WebAudio drone that grows more aggressive over 3s ----
+const CHARGE_TIME = 3;
+let chargeCtx: AudioContext | null = null;
+let chargeNodes: { osc: OscillatorNode; osc2: OscillatorNode; gain: GainNode; filt: BiquadFilterNode } | null = null;
+function startChargeHum() {
+  try {
+    stopChargeHum();
+    const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!chargeCtx) chargeCtx = new AC();
+    const c = chargeCtx;
+    void c.resume();
+    const t = c.currentTime;
+    const osc = c.createOscillator();
+    const osc2 = c.createOscillator();
+    const gain = c.createGain();
+    const filt = c.createBiquadFilter();
+    osc.type = "sawtooth";
+    osc2.type = "square";
+    osc.frequency.setValueAtTime(70, t);
+    osc.frequency.exponentialRampToValueAtTime(520, t + CHARGE_TIME);
+    osc2.frequency.setValueAtTime(104, t);
+    osc2.frequency.exponentialRampToValueAtTime(790, t + CHARGE_TIME);
+    filt.type = "lowpass";
+    filt.frequency.setValueAtTime(420, t);
+    filt.frequency.exponentialRampToValueAtTime(6200, t + CHARGE_TIME);
+    filt.Q.value = 7;
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.06, t + 0.25);
+    gain.gain.exponentialRampToValueAtTime(0.26, t + CHARGE_TIME);
+    osc.connect(filt);
+    osc2.connect(filt);
+    filt.connect(gain);
+    gain.connect(c.destination);
+    osc.start(t);
+    osc2.start(t);
+    chargeNodes = { osc, osc2, gain, filt };
+  } catch { /* noop */ }
+}
+function stopChargeHum() {
+  try {
+    const n = chargeNodes;
+    chargeNodes = null;
+    if (!n || !chargeCtx) return;
+    const t = chargeCtx.currentTime;
+    n.gain.gain.cancelScheduledValues(t);
+    n.gain.gain.setValueAtTime(Math.max(0.0001, n.gain.gain.value), t);
+    n.gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+    n.osc.stop(t + 0.1);
+    n.osc2.stop(t + 0.1);
+  } catch { /* noop */ }
+}
+
 
 
 // STAR VANISHER...!! — one-click point grinding mini game.
@@ -140,6 +195,8 @@ type State = {
   demoTryTimer: number;   // seconds after count-up done before "Try it yourself!" flashes
   boss: Boss | null;      // DANGER TARGET, appears every 40 targets
   bossIntro: number;      // intro card timer
+  bossCharge: number;     // seconds the player has been holding the click (boss only)
+  bossCharging: boolean;  // is the mouse held down right now
   bossOnly: boolean;      // DANGER TARGET mode: endless bosses, each tougher
   bossWave: number;       // how many DANGER TARGETs have shown up this run
   aimX: number; aimY: number;   // mouse aim during the boss fight
@@ -526,7 +583,7 @@ export default function StarVanisher() {
     else if (running && !hud.over) { pauseBgm(); a.volume = 0.3375; a.currentTime = 0; void a.play().catch(() => { /* noop */ }); }
     else if (running && hud.over) { a.volume = 0.10; void a.play().catch(() => { /* noop */ }); }
   }), [running, hud.over]);
-  useEffect(() => () => { bgmRef.current?.pause(); stopBossBgm(); resumeBgm(); }, []);
+  useEffect(() => () => { bgmRef.current?.pause(); stopBossBgm(); stopChargeHum(); resumeBgm(); }, []);
 
 
   useEffect(() => {
@@ -587,7 +644,7 @@ export default function StarVanisher() {
       sightLeft: hasAbility("sight") ? 10 : 0,
       starsDone: -1, bg: bg0, streaks: makeStreaks(bg0), demo,
       demoTryTimer: 0,
-      boss: null, bossIntro: 0, bossOnly, bossWave: 0, aimX: W * 0.5, aimY: H * 0.5, beamX: W * 0.5, beamY: H * 0.5,
+      boss: null, bossIntro: 0, bossCharge: 0, bossCharging: false, bossOnly, bossWave: 0, aimX: W * 0.5, aimY: H * 0.5, beamX: W * 0.5, beamY: H * 0.5,
     };
 
     newRound(st);
@@ -780,6 +837,9 @@ export default function StarVanisher() {
   const endBoss = (st: State) => {
     st.boss = null;
     st.phase = "aim";
+    st.bossCharging = false;
+    st.bossCharge = 0;
+    stopChargeHum();
     stopBossBgm();
     if (!isBgmMuted() && !hud.over) {
       const a = bgmRef.current;
@@ -792,6 +852,8 @@ export default function StarVanisher() {
     if (!b) return;
 
     if (st.bossIntro > 0) { st.bossIntro -= dt; return; }
+
+    if (st.bossCharging) st.bossCharge = Math.min(CHARGE_TIME, st.bossCharge + dt);
 
     if (b.dying > 0) {
       b.dying -= dt;
@@ -837,12 +899,13 @@ export default function StarVanisher() {
     }
   };
 
-  const bossFire = (ax: number, ay: number) => {
+  const bossFire = (ax: number, ay: number, charged = false) => {
     const st = stateRef.current;
     const b = st?.boss;
     if (!st || !b || st.phase !== "boss" || st.bossIntro > 0 || b.dying > 0) return;
     unlockAudio();
-    st.beam = 0.28;
+    if (charged) playMegaShot();
+    st.beam = charged ? 0.5 : 0.28;
     st.beamX = ax;
     st.beamY = ay;
     playBeam();
@@ -860,21 +923,26 @@ export default function StarVanisher() {
     if (hit) {
       const pos = spotPos(b, hit);
       hit.cd = 1.1;
-      b.hp = Math.max(0, b.hp - 12);
+      b.hp = Math.max(0, b.hp - (charged ? 42 : 12));
       b.hitFlash = 1;
-      st.shake = 12;
-      st.hitstop = 0.06;
+      st.shake = charged ? 26 : 12;
+      st.hitstop = charged ? 0.14 : 0.06;
+      if (charged) {
+        st.flash = 0.8;
+        st.floatNums.push({ x: pos.x, y: pos.y - 54, text: "CHARGED!!", life: 1.0, color: "#ff3a5e", size: 40 });
+      }
       playExplosion2();
       st.combo += 1;
       st.comboPop = 1;
-      const gained = Math.round(900 * (1 + st.combo * 0.12));
+      const gained = Math.round((charged ? 3200 : 900) * (1 + st.combo * 0.12));
       st.score += gained;
       st.floatNums.push({ x: pos.x, y: pos.y - 10, text: `+${gained}`, life: 0.8, color: "#ffe23a", size: 30 });
-      for (let i = 0; i < 22; i++) {
+      for (let i = 0; i < (charged ? 70 : 22); i++) {
         const a = rand(0, Math.PI * 2);
+        const pw = charged ? 2.1 : 1;
         st.particles.push({
-          x: pos.x, y: pos.y, vx: Math.cos(a) * rand(60, 340), vy: Math.sin(a) * rand(60, 340),
-          life: rand(0.25, 0.7), maxLife: 0.7, size: rand(6, 22),
+          x: pos.x, y: pos.y, vx: Math.cos(a) * rand(60, 340) * pw, vy: Math.sin(a) * rand(60, 340) * pw,
+          life: rand(0.25, 0.7), maxLife: 0.7, size: rand(6, 22) * (charged ? 1.5 : 1),
           color: i % 3 === 0 ? "#fff3b0" : "#ff3a5e", kind: i % 4 === 0 ? "spark" : "smoke",
         });
       }
@@ -1052,6 +1120,42 @@ export default function StarVanisher() {
       ctx.globalAlpha = 1;
 
       if (st.boss) drawBoss(ctx, st, time);
+
+      // charge indicator at the crosshair while the click is held
+      if (st.phase === "boss" && st.bossCharging) {
+        const f = st.bossCharge / CHARGE_TIME;
+        const full = f >= 1;
+        ctx.save();
+        ctx.translate(st.aimX, st.aimY);
+        ctx.rotate(time * (2 + f * 8));
+        ctx.lineWidth = 5 + f * 5;
+        ctx.strokeStyle = full ? "#ffffff" : "#ff3a5e";
+        ctx.globalAlpha = full ? 0.75 + Math.sin(time * 30) * 0.25 : 0.9;
+        ctx.beginPath();
+        ctx.arc(0, 0, 26 + f * 24, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * f);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        for (let i = 0; i < Math.round(f * 10); i++) {
+          const a = (i / 10) * Math.PI * 2 + time * 6;
+          const rr = 62 - f * 26;
+          ctx.fillStyle = full ? "#ffffff" : "#ffb03a";
+          ctx.beginPath();
+          ctx.arc(Math.cos(a) * rr, Math.sin(a) * rr, 3 + f * 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+        if (full) {
+          ctx.save();
+          ctx.textAlign = "center";
+          ctx.font = "italic 800 26px Oxanium, system-ui, sans-serif";
+          ctx.lineWidth = 7;
+          ctx.strokeStyle = "rgba(25,0,10,0.85)";
+          ctx.fillStyle = "#ffffff";
+          ctx.strokeText("RELEASE!!", st.aimX, st.aimY - 70);
+          ctx.fillText("RELEASE!!", st.aimX, st.aimY - 70);
+          ctx.restore();
+        }
+      }
 
       const s = st.star;
       if (s) {
@@ -1316,8 +1420,34 @@ export default function StarVanisher() {
             const ax = ((e.clientX - r.left) / r.width) * W;
             const ay = ((e.clientY - r.top) / r.height) * H;
             if (st) { st.aimX = ax; st.aimY = ay; }
-            if (st && st.phase === "boss") bossFire(ax, ay);
-            else fire();
+            if (st && st.phase === "boss") {
+              // hold to charge — released in onPointerUp
+              if (st.bossIntro <= 0 && st.boss && st.boss.dying <= 0) {
+                st.bossCharging = true;
+                st.bossCharge = 0;
+                unlockAudio();
+                startChargeHum();
+              }
+            } else fire();
+          }}
+          onPointerUp={(e) => {
+            const st = stateRef.current;
+            if (!st) return;
+            const r = e.currentTarget.getBoundingClientRect();
+            const ax = ((e.clientX - r.left) / r.width) * W;
+            const ay = ((e.clientY - r.top) / r.height) * H;
+            st.aimX = ax; st.aimY = ay;
+            if (st.phase === "boss" && st.bossCharging) {
+              const charged = st.bossCharge >= CHARGE_TIME;
+              st.bossCharging = false;
+              st.bossCharge = 0;
+              stopChargeHum();
+              bossFire(ax, ay, charged);
+            }
+          }}
+          onPointerLeave={() => {
+            const st = stateRef.current;
+            if (st?.bossCharging) { st.bossCharging = false; st.bossCharge = 0; stopChargeHum(); }
           }}
         />
 

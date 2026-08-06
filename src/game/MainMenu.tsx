@@ -6,6 +6,7 @@ import {
   keyLabel, useKeybinds,
 } from "@/game/keybinds";
 import { useSettings, type Settings } from "@/game/settings";
+import mvAsset from "@/assets/audio/MV.ogg.asset.json";
 import { sfx, setSfxVolume, unlockAudio } from "@/game/sfx";
 import { setBgmVolume, pauseBgm, resumeBgm } from "@/game/bgm";
 import { resetAllProgress } from "@/game/progress";
@@ -1056,6 +1057,7 @@ const SFX_LIST: { id: string; label: string; play: () => void }[] = [
   { id: "bossHurt",   label: "BOSS HURT",   play: () => sfx.bossHurt() },
   { id: "bossDefeat", label: "BOSS DEFEAT", play: () => sfx.bossDefeat() },
   { id: "alarm",      label: "ALARM",       play: () => sfx.alarm() },
+  { id: "megaVanish", label: "MEGA VANISH", play: () => { const a = new Audio(mvAsset.url); a.volume = 0.95; void a.play().catch(() => { /* noop */ }); } },
 ];
 
 const SFX_LOOPS: { id: string; label: string; start: () => void; stop: () => void }[] = [
