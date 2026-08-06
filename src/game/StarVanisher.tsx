@@ -773,6 +773,35 @@ export default function StarVanisher() {
           onPointerDown={(e) => { e.preventDefault(); fire(); }}
         />
 
+        {/* jagged cinematic borders — top and bottom are exact 1:1 mirrors */}
+        <div className="absolute inset-0 pointer-events-none">
+          <svg
+            className="absolute top-0 left-0 w-full"
+            style={{ height: "11%" }}
+            viewBox="0 0 100 10"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <polygon
+              points="0,0 100,0 100,7.2 78,8.6 62,6.2 44,9.4 26,7.8 12,9.9 0,8.1"
+              fill="#000"
+            />
+          </svg>
+          <svg
+            className="absolute bottom-0 left-0 w-full"
+            style={{ height: "11%", transform: "scaleY(-1)" }}
+            viewBox="0 0 100 10"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <polygon
+              points="0,0 100,0 100,7.2 78,8.6 62,6.2 44,9.4 26,7.8 12,9.9 0,8.1"
+              fill="#000"
+            />
+          </svg>
+        </div>
+
+
         {!running && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#2a0011]/85">
             <div className="font-bungee text-3xl text-[#ffe23a]">STAR VANISHER...!!</div>
