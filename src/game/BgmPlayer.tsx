@@ -228,8 +228,8 @@ export default function BgmPlayer() {
   };
 
   return (
-    <div className="scribble-border bg-paper p-5">
     <div className="scribble-border bg-paper p-5 relative">
+
       <div className="flex items-end justify-between gap-3 mb-3 flex-wrap">
         <div className="font-marker text-3xl text-ink -rotate-1">BGM PLAYER</div>
         <div className="font-scribble text-xs uppercase tracking-[0.3em] text-ink/50 border-b border-dashed border-ink/30 pb-0.5">
