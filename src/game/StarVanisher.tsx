@@ -131,7 +131,8 @@ export default function StarVanisher() {
   const stateRef = useRef<State | null>(null);
   const [running, setRunning] = useState(false);
   const [hud, setHud] = useState({ score: 0, combo: 0, best: 0, over: false, lastScore: 0, newBest: false, lastPct: 0 });
-  const [failStage, setFailStage] = useState(0); // 0 none, 1 miss+pct rise, 2 white+FAIL, 3 retry
+  const [failStage, setFailStage] = useState(0); // 0 none, 1 miss, 2 white+FAIL, 3 retry
+  const [showFailPct, setShowFailPct] = useState(false);
   const hsRef = useRef(0);
 
   useEffect(() => {
@@ -167,17 +168,21 @@ export default function StarVanisher() {
     stateRef.current = st;
     setHud((h) => ({ ...h, score: 0, combo: 0, over: false, newBest: false }));
     setFailStage(0);
+    setShowFailPct(false);
     setRunning(true);
+
   };
 
   // fail sequence timeline
   useEffect(() => {
-    if (!hud.over) { setFailStage(0); return; }
+    if (!hud.over) { setFailStage(0); setShowFailPct(false); return; }
     setFailStage(1);
+    const pct = window.setTimeout(() => setShowFailPct(true), 1200);
     const t1 = window.setTimeout(() => setFailStage(2), 1500);
     const t2 = window.setTimeout(() => setFailStage(3), 1500 + 2500);
-    return () => { window.clearTimeout(t1); window.clearTimeout(t2); };
+    return () => { window.clearTimeout(pct); window.clearTimeout(t1); window.clearTimeout(t2); };
   }, [hud.over]);
+
 
   const fire = () => {
     const st = stateRef.current;
@@ -571,12 +576,13 @@ export default function StarVanisher() {
                 </div>
                 <div
                   className="font-bungee text-4xl text-white transition-transform duration-700 ease-out delay-150"
-                  style={{ transform: failStage >= 1 ? "translateY(0)" : "translateY(200%)" }}
+                  style={{ transform: showFailPct ? "translateY(0)" : "translateY(200%)" }}
                 >
                   {hud.lastPct.toFixed(1)}%
                 </div>
               </div>
             )}
+
 
             {failStage >= 1 && (
               <div
