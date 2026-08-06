@@ -51,12 +51,20 @@ type Particle = {
   angle?: number;
 };
 
+type ColorSet = { light: string; mid: string; dark: string; edge: string };
+
 type Star = {
   cx: number; cy: number; r: number;
   seed: number;
   wobble: number;      // shape complexity
   craters: { a: number; d: number; r: number }[];
+  colors: ColorSet;
+  spin: number;        // current rotation (radians)
+  spinSpeed: number;   // slow spin
 };
+
+type Streak = { x: number; y: number; len: number; sp: number; w: number; c: string };
+
 
 type State = {
   phase: Phase;
