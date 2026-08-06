@@ -113,9 +113,20 @@ export default function BgmPlayer() {
           beatPulseRef.current = Math.max(beatPulseRef.current, Math.min(1, bass * 1.02));
           beatPulseRef.current *= 0.911;
 
+          // Snare detection: snap energy in mid/high bins (roughly 2.5kHz-11kHz).
+          let snare = 0;
+          for (let i = 16; i < 64; i++) snare += data[i];
+          snare /= (64 - 16) * 255;
+          const snareDelta = Math.max(0, snare - lastSnareRef.current);
+          lastSnareRef.current = snare * 0.82 + lastSnareRef.current * 0.18;
+          if (snareDelta > 0.095) snarePulseRef.current = Math.min(1, snarePulseRef.current + snareDelta * 2.6);
+          snarePulseRef.current = Math.max(snarePulseRef.current, Math.min(1, snare * 0.85));
+          snarePulseRef.current *= 0.88;
+
           // Background — paper-tinted with a subtle pulse.
           ctx.clearRect(0, 0, W, H);
           const pulse = beatPulseRef.current;
+          const snarePulse = snarePulseRef.current;
           ctx.fillStyle = `rgba(20,20,20,${0.04 + pulse * 0.18})`;
           ctx.fillRect(0, 0, W, H);
 
@@ -148,6 +159,18 @@ export default function BgmPlayer() {
             ctx.beginPath();
             ctx.arc(W / 2, H / 2, Math.min(W, H) * (0.16 + pulse * 0.28), 0, Math.PI * 2);
             ctx.stroke();
+            ctx.restore();
+          }
+
+          // Snare beat square — pops on every snare hit
+          if (snarePulse > 0.02) {
+            ctx.save();
+            ctx.globalAlpha = Math.min(0.95, snarePulse * 0.94);
+            ctx.strokeStyle = `rgb(80,${Math.round(140 + snarePulse * 115)},255)`;
+            ctx.lineWidth = 2 + snarePulse * 8;
+            const size = Math.min(W, H) * (0.12 + snarePulse * 0.32);
+            const half = size / 2;
+            ctx.strokeRect(W / 2 - half, H / 2 - half, size, size);
             ctx.restore();
           }
 
