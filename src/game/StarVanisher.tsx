@@ -666,7 +666,7 @@ export default function StarVanisher() {
           ctx.lineWidth = 3;
           ctx.stroke();
           ctx.fillStyle = "rgba(240,255,210,0.95)";
-          ctx.font = "bold 26px Bungee, system-ui, sans-serif";
+          ctx.font = "italic 800 26px Oxanium, system-ui, sans-serif";
           ctx.textAlign = "center";
           ctx.fillText("TARGET", fc.x, fc.y + 9);
         }
@@ -714,7 +714,7 @@ export default function StarVanisher() {
       for (const f of st.floatNums) {
         ctx.globalAlpha = Math.min(1, f.life * 1.6);
         ctx.fillStyle = f.color;
-        ctx.font = `bold ${f.size}px Bungee, system-ui, sans-serif`;
+        ctx.font = `italic 800 ${f.size}px Oxanium, system-ui, sans-serif`;
         ctx.lineWidth = 6;
         ctx.strokeStyle = "rgba(30,0,12,0.75)";
         ctx.strokeText(f.text, f.x, f.y);
@@ -729,7 +729,7 @@ export default function StarVanisher() {
         ctx.translate(s.cx, s.cy - s.r - 24);
         ctx.scale(pop, pop);
         ctx.textAlign = "center";
-        ctx.font = "bold 74px Bungee, system-ui, sans-serif";
+        ctx.font = "italic 800 74px Oxanium, system-ui, sans-serif";
         ctx.lineWidth = 9;
         ctx.strokeStyle = "rgba(30,0,12,0.8)";
         ctx.fillStyle = st.countDone ? "#ffe23a" : "#ffb03a";
@@ -747,7 +747,7 @@ export default function StarVanisher() {
         ctx.translate(W * 0.34, H * 0.32);
         ctx.scale(1 + (1 - pop) * 0.4, 1 + (1 - pop) * 0.4);
         ctx.rotate(-0.05);
-        ctx.font = "bold 78px Bungee, system-ui, sans-serif";
+        ctx.font = "italic 800 78px Oxanium, system-ui, sans-serif";
         ctx.textAlign = "center";
         ctx.lineWidth = 9;
         ctx.strokeStyle = "rgba(25,0,10,0.85)";
@@ -755,7 +755,7 @@ export default function StarVanisher() {
         ctx.strokeText(j, 0, 0);
         ctx.fillText(j, 0, 0);
         if (j === "MISS" && Math.floor(time * 8) % 2 === 0) {
-          ctx.font = "bold 42px Bungee, system-ui, sans-serif";
+          ctx.font = "italic 800 42px Oxanium, system-ui, sans-serif";
           ctx.fillStyle = "#ffffff";
           ctx.strokeText(`${st.lockedPct.toFixed(1)}%`, 0, 56);
           ctx.fillText(`${st.lockedPct.toFixed(1)}%`, 0, 56);
@@ -769,13 +769,13 @@ export default function StarVanisher() {
         const live = overlapPct(s0.cx, s0.cy, s0.r, fieldCenter(s0).x, fieldCenter(s0).y, fieldRadius(st, s0));
         ctx.save();
         ctx.textAlign = "center";
-        ctx.font = "bold 40px Bungee, system-ui, sans-serif";
+        ctx.font = "italic 800 40px Oxanium, system-ui, sans-serif";
         ctx.lineWidth = 8;
         ctx.strokeStyle = "rgba(25,0,10,0.85)";
         ctx.fillStyle = Math.abs(live - st.target) <= windows(st.combo).perfect ? "#a855f7" : "#8ef0ff";
         ctx.strokeText(`${live.toFixed(1)}%`, s0.cx, s0.cy - s0.r - 34);
         ctx.fillText(`${live.toFixed(1)}%`, s0.cx, s0.cy - s0.r - 34);
-        ctx.font = "bold 20px Bungee, system-ui, sans-serif";
+        ctx.font = "italic 800 20px Oxanium, system-ui, sans-serif";
         ctx.fillStyle = "#ffffff";
         ctx.strokeText(`TRUE SIGHT ${st.sightLeft} LEFT`, s0.cx, s0.cy - s0.r - 8);
         ctx.fillText(`TRUE SIGHT ${st.sightLeft} LEFT`, s0.cx, s0.cy - s0.r - 8);
@@ -785,24 +785,24 @@ export default function StarVanisher() {
       // left HUD: target call-out
       ctx.save();
       ctx.textAlign = "left";
-      ctx.font = "bold 54px Bungee, system-ui, sans-serif";
+      ctx.font = "italic 800 54px Oxanium, system-ui, sans-serif";
       ctx.lineWidth = 8;
       ctx.strokeStyle = "rgba(25,0,10,0.85)";
       ctx.fillStyle = "#ffe23a";
       ctx.strokeText(`${st.target}%`, 34, H - 60);
       ctx.fillText(`${st.target}%`, 34, H - 60);
-      ctx.font = "bold 34px Bungee, system-ui, sans-serif";
+      ctx.font = "italic 800 34px Oxanium, system-ui, sans-serif";
       ctx.fillStyle = "#ffffff";
       ctx.strokeText("Vanish!!", 34 + ctx.measureText(`${st.target}% `).width * 0.55, H - 60);
       ctx.fillText("Vanish!!", 34 + ctx.measureText(`${st.target}% `).width * 0.55, H - 60);
 
       // combo + score
       const cp = 1 + st.comboPop * 0.5;
-      ctx.font = `bold ${Math.round(30 * cp)}px Bungee, system-ui, sans-serif`;
+      ctx.font = `italic 800 ${Math.round(30 * cp)}px Oxanium, system-ui, sans-serif`;
       ctx.fillStyle = "#ffffff";
       ctx.strokeText(`x${st.combo}`, 34, 52);
       ctx.fillText(`x${st.combo}`, 34, 52);
-      ctx.font = "bold 24px Bungee, system-ui, sans-serif";
+      ctx.font = "italic 800 24px Oxanium, system-ui, sans-serif";
       ctx.fillStyle = "#ffd0de";
       ctx.strokeText(`${st.score}`, 34, 84);
       ctx.fillText(`${st.score}`, 34, 84);
@@ -812,7 +812,7 @@ export default function StarVanisher() {
       ctx.fillText(`BEST ${hsRef.current}`, W - 30, 52);
       if (st.phase === "aim") {
         ctx.textAlign = "center";
-        ctx.font = "bold 20px Bungee, system-ui, sans-serif";
+        ctx.font = "italic 800 20px Oxanium, system-ui, sans-serif";
         ctx.fillStyle = "rgba(255,255,255,0.85)";
         ctx.fillText("CLICK / TAP TO FIRE", W / 2, H - 22);
       }
