@@ -438,14 +438,8 @@ export default function StarVanisher() {
     if (!s) return;
     st.boomed = true;
     if (st.demo) {
-      // 0.5s after the target is destroyed, flash "Try it yourself!" for 1.5s
-      clearTutTimers();
-      tutTimers.current.push(window.setTimeout(() => setShowTryIt(true), 500));
-      tutTimers.current.push(window.setTimeout(() => {
-        setShowTryIt(false);
-        markTutorialDone();
-        start(false);
-      }, 500 + 1500));
+      // demo's "Try it yourself!" flash is handled after the count-up finishes
+      return;
     }
 
     st.hitstop = 0.12;
