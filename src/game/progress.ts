@@ -18,6 +18,7 @@ const PROGRESS_KEYS = [
   "badge_jrb",
   "badge_face",
   "dark_mode",
+  "sv_cheats_v1",
 ];
 
 /** Clears saves, best times, tokens, badges, unlocks and settings. */
