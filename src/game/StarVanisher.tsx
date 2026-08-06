@@ -288,6 +288,32 @@ function stopBossBgm() {
   try { bossAudio?.stop(); } catch { /* noop */ }
 }
 
+// jagged black cinematic borders that scroll left, painted straight onto the canvas
+function drawBorders(ctx: CanvasRenderingContext2D, W: number, H: number, time: number) {
+  const bh = H * 0.06;
+  const pts = [0, 7.2, 8.6, 6.2, 9.4, 7.8, 9.9, 8.1];
+  const seg = W; // one tile spans the screen width
+  const off = -((time * (seg / 4)) % seg); // 4s per tile, matching the old CSS scroll
+  const tile = (x0: number, flip: boolean) => {
+    const y = (v: number) => (flip ? H - (v / 10) * bh : (v / 10) * bh);
+    ctx.beginPath();
+    ctx.moveTo(x0, flip ? H : 0);
+    ctx.lineTo(x0 + seg, flip ? H : 0);
+    const xs = [1, 0.78, 0.62, 0.44, 0.26, 0.12, 0];
+    const vs = [pts[1], pts[2], pts[3], pts[4], pts[5], pts[6], pts[7]];
+    for (let i = 0; i < xs.length; i++) ctx.lineTo(x0 + seg * xs[i], y(vs[i]));
+    ctx.closePath();
+    ctx.fill();
+  };
+  ctx.save();
+  ctx.fillStyle = "#000";
+  for (let i = -1; i <= 1; i++) {
+    tile(off + i * seg, false);
+    tile(off + i * seg, true);
+  }
+  ctx.restore();
+}
+
 function drawBoss(ctx: CanvasRenderingContext2D, st: State, time: number) {
   const b = st.boss;
   if (!b) return;
