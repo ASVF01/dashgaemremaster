@@ -234,27 +234,32 @@ export default function StarVanisher() {
 
 
     if (j === "MISS") {
-      sfx.fatalHit();
-      st.phase = "over";
-      const newBest = st.score > hsRef.current;
-      if (newBest) {
-        hsRef.current = st.score;
-        try { localStorage.setItem(HS_KEY, String(st.score)); } catch { /* noop */ }
-      }
-      setHud({ score: st.score, combo: st.combo, best: hsRef.current, over: true, lastScore: st.score, newBest, lastPct: pct });
+      // hold the run open: the MISS reveal happens after the count-up
+      st.pendingMiss = true;
     } else {
       const acc = Math.max(0, 1 - diff / win.okay);
       const gained = Math.round((j === "PERFECT" ? 1200 : 500) * (1 + acc) * (1 + st.combo * 0.22));
       st.score += gained;
       st.combo += 1;
       st.comboPop = 1;
-      sfx.enemyKill();
       st.floatNums.push({
         x: s.cx, y: s.cy + 40, text: `+${gained}`,
         life: 0.9, color: "#7dffb0", size: 34,
       });
       setHud((h) => ({ ...h, score: st.score, combo: st.combo }));
     }
+  };
+
+  const finishMiss = (st: State) => {
+    sfx.fatalHit();
+    st.phase = "over";
+    st.t = 0;
+    const newBest = st.score > hsRef.current;
+    if (newBest) {
+      hsRef.current = st.score;
+      try { localStorage.setItem(HS_KEY, String(st.score)); } catch { /* noop */ }
+    }
+    setHud({ score: st.score, combo: st.combo, best: hsRef.current, over: true, lastScore: st.score, newBest, lastPct: st.lockedPct });
   };
 
   const fieldCenter = (s: Star) => ({ x: s.cx - s.r * 0.55, y: s.cy });
