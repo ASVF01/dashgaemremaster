@@ -1,5 +1,29 @@
 import { useEffect, useRef, useState } from "react";
 import { sfx, unlockAudio } from "@/game/sfx";
+import beamAsset from "@/assets/audio/beam.mp3.asset.json";
+import exploseAsset from "@/assets/audio/explose1.mp3.asset.json";
+
+// simple one-shot sample player (overlapping playback via cloned nodes)
+function makeSample(url: string, volume: number) {
+  let base: HTMLAudioElement | null = null;
+  return () => {
+    try {
+      if (!base) {
+        base = new Audio(url);
+        base.preload = "auto";
+        base.volume = volume;
+      }
+      const node = base.cloneNode(true) as HTMLAudioElement;
+      node.volume = volume;
+      node.currentTime = 0;
+      void node.play().catch(() => { /* noop */ });
+    } catch { /* noop */ }
+  };
+}
+
+const playBeam = makeSample(beamAsset.url, 0.75);
+const playExplosion = makeSample(exploseAsset.url, 0.85);
+
 
 // STAR VANISHER...!! — one-click point grinding mini game.
 // The player must vanish exactly the requested percentage of the star:
