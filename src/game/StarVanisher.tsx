@@ -25,6 +25,8 @@ function makeSample(url: string, volume: number) {
 
 const playBeam = makeSample(beamAsset.url, 0.75);
 const playExplosion = makeSample(exploseAsset.url, 0.85);
+const playExplosion2 = makeSample(explose2Asset.url, 0.9);
+const playCountUp = makeSample(countupAsset.url, 0.55);
 
 
 // STAR VANISHER...!! — one-click point grinding mini game.
