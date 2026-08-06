@@ -518,6 +518,8 @@ export default function StarVanisher() {
           if (Math.abs(pct - st.target) <= 1.4) fire(true);
         }
 
+      } else if (st.phase === "boss") {
+        updateBoss(st, dt);
       } else if (st.phase === "fire") {
         if (st.t > 0.95) { st.phase = "count"; st.t = 0; st.countTimer = 0.18; }
       } else if (st.phase === "count") {
