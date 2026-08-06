@@ -16,7 +16,14 @@ export default function Shop({ onClose }: { onClose: () => void }) {
   useEffect(() => subscribeShop(() => force((n) => n + 1)), []);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "+" || e.key === "Add" || e.code === "NumpadAdd") {
+        addTokens(1000);
+        sfx.menuConfirm();
+        setNote("+1000 T (CHEAT)");
+      }
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
