@@ -540,9 +540,11 @@ export default function StarVanisher() {
             }
           }
         } else if (st.t > 0.94) {
-          if (st.pendingMiss) finishMiss(st);
+          if (st.demo) { /* demo holds here until the tutorial hands over */ }
+          else if (st.pendingMiss) finishMiss(st);
           else newRound(st);
         }
+
       } else if (st.phase === "result") {
         const gap = Math.max(0.22, 0.5 - st.combo * 0.02);
         if (st.t > gap) newRound(st);
