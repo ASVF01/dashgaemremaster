@@ -166,8 +166,18 @@ export default function StarVanisher() {
     newRound(st);
     stateRef.current = st;
     setHud((h) => ({ ...h, score: 0, combo: 0, over: false, newBest: false }));
+    setFailStage(0);
     setRunning(true);
   };
+
+  // fail sequence timeline
+  useEffect(() => {
+    if (!hud.over) { setFailStage(0); return; }
+    setFailStage(1);
+    const t1 = window.setTimeout(() => setFailStage(2), 1500);
+    const t2 = window.setTimeout(() => setFailStage(3), 1500 + 2500);
+    return () => { window.clearTimeout(t1); window.clearTimeout(t2); };
+  }, [hud.over]);
 
   const fire = () => {
     const st = stateRef.current;
@@ -431,7 +441,7 @@ export default function StarVanisher() {
       ctx.globalAlpha = 1;
 
       // judgement text
-      if (st.judgement && (st.phase === "fire" || st.phase === "result" || st.phase === "over")) {
+      if (st.judgement && (st.phase === "fire" || st.phase === "result")) {
         const j = st.judgement;
         const pop = Math.min(1, st.t * 6);
         ctx.save();
