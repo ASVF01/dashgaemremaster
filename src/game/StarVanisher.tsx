@@ -383,8 +383,9 @@ function drawBoss(ctx: CanvasRenderingContext2D, st: State, time: number) {
   ctx.lineWidth = 6;
   ctx.strokeStyle = "rgba(25,0,10,0.85)";
   ctx.fillStyle = "#ffffff";
-  ctx.strokeText("DANGER TARGET", W / 2, by - 12);
-  ctx.fillText("DANGER TARGET", W / 2, by - 12);
+  const label = b.wave > 0 ? `DANGER TARGET  ·  WAVE ${b.wave + 1}` : "DANGER TARGET";
+  ctx.strokeText(label, W / 2, by - 12);
+  ctx.fillText(label, W / 2, by - 12);
   ctx.font = "italic 800 18px Oxanium, system-ui, sans-serif";
   ctx.fillStyle = b.timeLeft < 10 ? "#ff2d5e" : "#ffe23a";
   ctx.strokeText(`${Math.max(0, b.timeLeft).toFixed(1)}s`, W / 2, by + bh2 + 22);
