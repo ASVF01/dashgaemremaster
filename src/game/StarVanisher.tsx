@@ -875,19 +875,69 @@ export default function StarVanisher() {
 
 
 
-        {!running && (
+        {!running && tutSlide === null && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#2a0011]/85">
             <div className="font-bungee text-3xl text-[#ffe23a]">STAR VANISHER...!!</div>
             <div className="font-marker text-sm text-[#ffd0de]">BEST {hud.best}</div>
             <button
               type="button"
-              onClick={start}
+              onClick={() => handlePlay()}
               className="scribble-border bg-paper px-6 py-3 font-bungee text-ink hover:scale-105 transition-transform"
             >
               START GRINDING
             </button>
           </div>
         )}
+
+        {/* first-time tutorial slides */}
+        {tutSlide !== null && (
+          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-4 bg-[#2a0011]/95 px-8 text-center">
+            <div className="font-marker text-xs tracking-widest text-[#ffd0de]/70">
+              HOW TO PLAY · {tutSlide + 1}/{TUT_SLIDES.length}
+            </div>
+            <div className="font-bungee text-2xl text-[#ffe23a] animate-fade-in">{TUT_SLIDES[tutSlide].title}</div>
+            <p className="font-marker max-w-xl text-sm text-white/90 animate-fade-in">{TUT_SLIDES[tutSlide].body}</p>
+            <button
+              type="button"
+              onClick={() => {
+                sfx.menuConfirm();
+                if (tutSlide < TUT_SLIDES.length - 1) setTutSlide(tutSlide + 1);
+                else start(true);
+              }}
+              className="scribble-border bg-paper px-6 py-2 font-bungee text-ink hover:scale-105 transition-transform"
+            >
+              {tutSlide < TUT_SLIDES.length - 1 ? "NEXT" : "WATCH A DEMO"}
+            </button>
+            <button
+              type="button"
+              onClick={() => { markTutorialDone(); start(false); }}
+              className="font-marker text-xs text-white/50 underline"
+            >
+              skip tutorial
+            </button>
+          </div>
+        )}
+
+        {/* demonstration banner + "Try it yourself!" flash */}
+        {running && tutDemo && (
+          <div className="absolute inset-0 z-20 pointer-events-none">
+            <div className="absolute top-[9%] left-1/2 -translate-x-1/2 font-bungee text-sm text-[#ffe23a] drop-shadow">
+              DEMONSTRATION — watch closely
+            </div>
+            {showTryIt && (
+              <>
+                <style>{`@keyframes svTryFlash { 0%,100% { opacity: 0.15; } 50% { opacity: 1; } }`}</style>
+                <div
+                  className="absolute inset-0 flex items-center justify-center font-bungee text-4xl md:text-5xl text-white"
+                  style={{ animation: "svTryFlash 0.35s steps(1,end) infinite", textShadow: "0 0 18px rgba(255,60,120,0.9)" }}
+                >
+                  Try it yourself!
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
 
         {running && hud.over && (
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
