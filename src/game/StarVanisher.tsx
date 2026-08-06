@@ -62,7 +62,21 @@ const TUT_SLIDES: { title: string; body: string }[] = [
 
 
 type Judgement = "JUST" | "OKAY" | "MISS";
-type Phase = "aim" | "fire" | "count" | "result" | "over";
+type Phase = "aim" | "fire" | "count" | "result" | "over" | "boss";
+
+type BossPath = "circle" | "square" | "infinity" | "triangle";
+type BossSpot = { a: number; d: number; cd: number };
+type Boss = {
+  hp: number; maxHp: number;
+  path: BossPath;
+  t: number; speed: number;
+  x: number; y: number; r: number;
+  spots: BossSpot[];
+  spin: number;
+  timeLeft: number;
+  hitFlash: number;
+  dying: number;
+};
 
 type Particle = {
   x: number; y: number; vx: number; vy: number;
