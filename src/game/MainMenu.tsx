@@ -1339,7 +1339,7 @@ function UpdatesTab() {
             )}
             <ul className="font-scribble text-lg text-ink/85 space-y-1 list-disc list-inside">
               {u.changes.map((c, j) => (
-                <li key={j}>{c}</li>
+                <li key={j}>{renderChange(c)}</li>
               ))}
             </ul>
           </div>
