@@ -216,36 +216,15 @@ export default function StarVanisher() {
     st.phase = "fire";
     st.t = 0;
     st.beam = 0.32;
-    st.hitstop = 0.12;
-    st.flash = 1;
-    st.shake = 14 + Math.min(26, st.combo * 1.6);
+    st.boomed = false;
+    st.countVal = 0;
+    st.countStep = 0;
+    st.countTimer = 0;
+    st.countDone = false;
+    st.countPop = 0;
 
-    const intensity = Math.min(2, 0.8 + st.combo * 0.08);
     playBeam();
-    window.setTimeout(playExplosion, 90);
 
-
-    // explosion particles
-    const n = 46 + Math.min(90, st.combo * 6);
-    for (let i = 0; i < n; i++) {
-      const a = rand(0, Math.PI * 2);
-      const sp = rand(60, 460) * (0.7 + intensity * 0.4);
-      st.particles.push({
-        x: s.cx + Math.cos(a) * s.r * rand(0, 0.7),
-        y: s.cy + Math.sin(a) * s.r * rand(0, 0.7),
-        vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 40,
-        life: rand(0.5, 1.2), maxLife: 1.2,
-        size: rand(10, 46), color: i % 4 === 0 ? "#ffe9f2" : i % 3 === 0 ? "#ff5c8a" : "#ff9ec2",
-        kind: i % 5 === 0 ? "spark" : "smoke",
-      });
-    }
-    for (let i = 0; i < 14; i++) {
-      st.particles.push({
-        x: s.cx, y: s.cy, vx: rand(-700, -180), vy: rand(-160, 160),
-        life: rand(0.18, 0.4), maxLife: 0.4, size: rand(40, 190),
-        color: "#ffd1e2", kind: "line", angle: rand(-0.25, 0.25),
-      });
-    }
 
     if (j !== "MISS") {
       st.floatNums.push({
