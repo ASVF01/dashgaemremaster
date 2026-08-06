@@ -929,6 +929,16 @@ export default function StarVanisher() {
               </div>
             </div>
 
+            {/* danger target mode — bottom left */}
+            <button
+              type="button"
+              onClick={() => { unlockAudio(); sfx.menuConfirm(); start(false, true); }}
+              className="absolute bottom-4 left-4 -rotate-2 border-2 border-black bg-[#ff1f43] px-5 py-3 font-bungee text-lg tracking-wide text-white transition-transform hover:scale-110 hover:rotate-1"
+              style={{ boxShadow: "6px 6px 0 #000, 0 0 24px rgba(255,31,67,0.7)" }}
+            >
+              DANGER TARGET MODE
+            </button>
+
             {/* start — bottom right */}
             <button
               type="button"
