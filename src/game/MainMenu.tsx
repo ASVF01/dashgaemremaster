@@ -2141,7 +2141,9 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
               {selected.name}
             </h2>
             <p className="font-scribble text-lg text-ink/70 leading-snug mb-4 italic">
-              {selected.blurb}
+              {selected.id === "x3mode" && !isCharLocked(selected.id)
+                ? "no description for now, its in wip, more stuff will be added to this character later."
+                : selected.blurb}
             </p>
             {isCharLocked(selected.id) && (
               <p className="font-scribble text-base text-accent leading-snug mb-4 -rotate-1">
