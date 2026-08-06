@@ -51,12 +51,20 @@ type Particle = {
   angle?: number;
 };
 
+type ColorSet = { light: string; mid: string; dark: string; edge: string };
+
 type Star = {
   cx: number; cy: number; r: number;
   seed: number;
   wobble: number;      // shape complexity
   craters: { a: number; d: number; r: number }[];
+  colors: ColorSet;
+  spin: number;        // current rotation (radians)
+  spinSpeed: number;   // slow spin
 };
+
+type Streak = { x: number; y: number; len: number; sp: number; w: number; c: string };
+
 
 type State = {
   phase: Phase;
@@ -88,10 +96,23 @@ type State = {
   pendingMiss: boolean;   // run ends once the count-up finishes
   reviveLeft: number;     // SECOND WIND charges left this run
   sightLeft: number;      // TRUE SIGHT targets left this run
-
+  starsDone: number;      // stars completed this run
+  bg: ColorSet;           // background palette, reshuffled every 5 stars
+  streaks: Streak[];      // speed lines flying right -> left
 };
 
+
 function rand(a: number, b: number) { return a + Math.random() * (b - a); }
+
+// a fully random colour identity — includes greys, near-black and near-white
+function randColorSet(): ColorSet {
+  const grey = Math.random() < 0.28;
+  const h = rand(0, 360);
+  const sat = grey ? 0 : rand(45, 100);
+  const L = rand(26, 74);
+  const hsl = (l: number) => `hsl(${h.toFixed(0)} ${sat.toFixed(0)}% ${Math.max(3, Math.min(97, l)).toFixed(0)}%)`;
+  return { light: hsl(L + 28), mid: hsl(L), dark: hsl(L - 26), edge: hsl(L + 40) };
+}
 
 function makeStar(combo: number): Star {
   const r = rand(105, 150) - Math.min(25, combo * 1.2);
@@ -103,10 +124,14 @@ function makeStar(combo: number): Star {
     cy: H / 2 + rand(-30, 30),
     r,
     seed: Math.random() * 1000,
-    wobble: Math.min(0.16, 0.02 + combo * 0.006),
+    wobble: 0,
     craters,
+    colors: randColorSet(),
+    spin: rand(0, Math.PI * 2),
+    spinSpeed: rand(0.18, 0.34) * (Math.random() < 0.5 ? -1 : 1),
   };
 }
+
 
 // area of the lens where the vanish field overlaps the star, as a % of star area
 function overlapPct(sx: number, sy: number, sr: number, fx: number, fy: number, fr: number) {
@@ -132,18 +157,25 @@ function windows(combo: number) {
   };
 }
 
-function starPath(ctx: CanvasRenderingContext2D, s: Star, time: number) {
-  const segs = 46;
+// horizontal speed lines that fly in from the right edge at random heights
+function makeStreaks(bg: ColorSet): Streak[] {
+  return Array.from({ length: 30 }, () => ({
+    x: rand(0, W + 400),
+    y: rand(6, H - 6),
+    len: rand(80, 320),
+    sp: rand(220, 760),
+    w: rand(2, 6),
+    c: Math.random() < 0.5 ? bg.light : bg.edge,
+  }));
+}
+
+function starPath(ctx: CanvasRenderingContext2D, s: Star, _time?: number) {
   ctx.beginPath();
-  for (let i = 0; i <= segs; i++) {
-    const a = (i / segs) * Math.PI * 2;
-    const w = 1 + Math.sin(a * 5 + s.seed) * s.wobble + Math.sin(a * 9 - time * 1.4 + s.seed) * s.wobble * 0.6;
-    const x = s.cx + Math.cos(a) * s.r * w;
-    const y = s.cy + Math.sin(a) * s.r * w;
-    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-  }
+  ctx.arc(s.cx, s.cy, s.r, 0, Math.PI * 2);
   ctx.closePath();
 }
+
+
 
 export default function StarVanisher() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -226,12 +258,19 @@ export default function StarVanisher() {
     st.countPop = 0;
     st.boomed = false;
     st.pendingMiss = false;
+    st.starsDone += 1;
+    // every 5 stars completed the whole background shifts to a new random colour
+    if (st.starsDone > 0 && st.starsDone % 5 === 0) {
+      st.bg = randColorSet();
+      st.streaks = makeStreaks(st.bg);
+    }
     st.star = makeStar(st.combo);
   };
 
   const start = () => {
     unlockAudio();
     sfx.menuConfirm();
+    const bg0 = randColorSet();
     const st: State = {
       phase: "aim", t: 0, target: 50, fieldT: 0, fieldDir: 1, fieldSpeed: 0.7,
       lockedPct: 0, judgement: null, combo: 0, score: 0, shake: 0, flash: 0,
@@ -239,7 +278,9 @@ export default function StarVanisher() {
       comboPop: 0, countVal: 0, countStep: 0, countTimer: 0, countDone: false, countPop: 0,
       boomed: false, pendingMiss: false, reviveLeft: hasAbility("revive") ? 1 : 0,
       sightLeft: hasAbility("sight") ? 10 : 0,
+      starsDone: -1, bg: bg0, streaks: makeStreaks(bg0),
     };
+
     newRound(st);
     stateRef.current = st;
     setHud((h) => ({ ...h, score: 0, combo: 0, over: false, newBest: false, earned: 0 }));
@@ -454,24 +495,37 @@ export default function StarVanisher() {
       for (const f of st.floatNums) { f.life -= dt; f.y -= 26 * dt; }
       st.floatNums = st.floatNums.filter((f) => f.life > 0);
 
+      // slow star spin + horizontal streaks flying leftwards
+      if (st.star) st.star.spin += st.star.spinSpeed * dt;
+      for (const sk of st.streaks) {
+        sk.x -= sk.sp * dt;
+        if (sk.x + sk.len < -20) {
+          sk.x = W + rand(20, 380);
+          sk.y = rand(6, H - 6);
+          sk.len = rand(80, 320);
+          sk.sp = rand(220, 760);
+          sk.w = rand(2, 6);
+          sk.c = Math.random() < 0.5 ? st.bg.light : st.bg.edge;
+        }
+      }
+
       // ---- draw ----
       ctx.save();
       const sh = st.shake;
       ctx.translate(rand(-sh, sh) * 0.5, rand(-sh, sh) * 0.5);
 
-      // background: speed-streak void
+      // background: randomised colour void
       const g = ctx.createLinearGradient(0, 0, 0, H);
-      g.addColorStop(0, "#3b0018");
-      g.addColorStop(0.5, "#7a0026");
-      g.addColorStop(1, "#2a0011");
+      g.addColorStop(0, st.bg.dark);
+      g.addColorStop(0.5, st.bg.mid);
+      g.addColorStop(1, st.bg.dark);
       ctx.fillStyle = g;
       ctx.fillRect(-40, -40, W + 80, H + 80);
 
-      ctx.globalAlpha = 0.22;
-      for (let i = 0; i < 26; i++) {
-        const y = ((i * 61 + time * (120 + i * 9)) % (H + 60)) - 30;
-        ctx.fillStyle = i % 2 ? "#ff87ad" : "#ffd0de";
-        ctx.fillRect(0, y, W, 2 + (i % 3));
+      ctx.globalAlpha = 0.26;
+      for (const sk of st.streaks) {
+        ctx.fillStyle = sk.c;
+        ctx.fillRect(sk.x, sk.y, sk.len, sk.w);
       }
       ctx.globalAlpha = 1;
 
@@ -480,22 +534,24 @@ export default function StarVanisher() {
         // star body
         ctx.save();
         const alive = 1 - (st.phase === "aim" ? 0 : st.destroyFrac * (st.lockedPct / 100));
-        starPath(ctx, s, time);
+        starPath(ctx, s);
         ctx.clip();
         const sg = ctx.createRadialGradient(s.cx - s.r * 0.3, s.cy - s.r * 0.35, s.r * 0.1, s.cx, s.cy, s.r * 1.2);
-        sg.addColorStop(0, "#ff8fb4");
-        sg.addColorStop(0.6, "#e8114f");
-        sg.addColorStop(1, "#5c0020");
+        sg.addColorStop(0, s.colors.light);
+        sg.addColorStop(0.6, s.colors.mid);
+        sg.addColorStop(1, s.colors.dark);
         ctx.fillStyle = sg;
         ctx.fillRect(s.cx - s.r * 1.4, s.cy - s.r * 1.4, s.r * 2.8, s.r * 2.8);
-        // craters
+        // craters (rotate with the star so the spin reads)
         for (const c of s.craters) {
+          const a = c.a + s.spin;
           ctx.beginPath();
-          ctx.arc(s.cx + Math.cos(c.a) * s.r * c.d, s.cy + Math.sin(c.a) * s.r * c.d, s.r * c.r, 0, Math.PI * 2);
-          ctx.strokeStyle = "rgba(80,0,25,0.55)";
+          ctx.arc(s.cx + Math.cos(a) * s.r * c.d, s.cy + Math.sin(a) * s.r * c.d, s.r * c.r, 0, Math.PI * 2);
+          ctx.strokeStyle = "rgba(0,0,0,0.4)";
           ctx.lineWidth = 4;
           ctx.stroke();
         }
+
         // vanished slice punched out
         if (st.phase !== "aim") {
           const fc = fieldCenter(s);
@@ -507,8 +563,9 @@ export default function StarVanisher() {
         }
         ctx.restore();
         ctx.globalAlpha = alive > 0 ? 1 : 0.4;
-        starPath(ctx, s, time);
-        ctx.strokeStyle = "#ffd3e2";
+        starPath(ctx, s);
+        ctx.strokeStyle = s.colors.edge;
+
         ctx.lineWidth = 3;
         ctx.stroke();
         ctx.globalAlpha = 1;
