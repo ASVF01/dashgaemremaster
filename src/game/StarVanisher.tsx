@@ -198,6 +198,211 @@ function starPath(ctx: CanvasRenderingContext2D, s: Star, _time?: number) {
   ctx.closePath();
 }
 
+// ---------------- DANGER TARGET ----------------
+export const SPOT_R = 20;
+const BOSS_MAX_HP = 108;
+const BOSS_TIME = 42;
+const BOSS_PATHS: BossPath[] = ["circle", "square", "infinity", "triangle"];
+
+function makeBoss(): Boss {
+  const path = BOSS_PATHS[Math.floor(Math.random() * BOSS_PATHS.length)];
+  const spots: BossSpot[] = Array.from({ length: 5 }, (_, i) => ({
+    a: (i / 5) * Math.PI * 2 + rand(-0.2, 0.2),
+    d: rand(0.72, 0.98),
+    cd: 0,
+  }));
+  const p = bossPathPos(path, 0);
+  return {
+    hp: BOSS_MAX_HP, maxHp: BOSS_MAX_HP, path, t: 0,
+    speed: 0.16 + Math.random() * 0.07,
+    x: p.x, y: p.y, r: 74, spots, spin: 0,
+    timeLeft: BOSS_TIME, hitFlash: 0, dying: 0,
+  };
+}
+
+function bossPathPos(path: BossPath, t: number) {
+  const cx = W * 0.58, cy = H * 0.5, rx = 230, ry = 130;
+  const u = ((t % 1) + 1) % 1;
+  if (path === "circle") {
+    const a = u * Math.PI * 2;
+    return { x: cx + Math.cos(a) * rx, y: cy + Math.sin(a) * ry };
+  }
+  if (path === "infinity") {
+    const a = u * Math.PI * 2;
+    return { x: cx + Math.sin(a) * rx, y: cy + Math.sin(a * 2) * ry * 0.72 };
+  }
+  const pts: number[][] = path === "square"
+    ? [[-1, -1], [1, -1], [1, 1], [-1, 1]]
+    : [[0, -1], [1, 1], [-1, 1]];
+  const n = pts.length;
+  const seg = u * n;
+  const i = Math.floor(seg) % n;
+  const f = seg - Math.floor(seg);
+  const p0 = pts[i], p1 = pts[(i + 1) % n];
+  return {
+    x: cx + (p0[0] + (p1[0] - p0[0]) * f) * rx,
+    y: cy + (p0[1] + (p1[1] - p0[1]) * f) * ry,
+  };
+}
+
+function spotPos(b: Boss, sp: BossSpot) {
+  const a = sp.a + b.spin;
+  return { x: b.x + Math.cos(a) * b.r * sp.d, y: b.y + Math.sin(a) * b.r * sp.d };
+}
+
+// boss theme (module-level so it survives re-renders)
+let bossAudio: HTMLAudioElement | null = null;
+function playBossBgm() {
+  try {
+    if (!bossAudio) {
+      bossAudio = new Audio(dangerAsset.url);
+      bossAudio.loop = true;
+    }
+    bossAudio.volume = 0.5;
+    bossAudio.currentTime = 0;
+    void bossAudio.play().catch(() => { /* blocked */ });
+  } catch { /* noop */ }
+}
+function stopBossBgm() {
+  try { bossAudio?.pause(); if (bossAudio) bossAudio.currentTime = 0; } catch { /* noop */ }
+}
+
+function drawBoss(ctx: CanvasRenderingContext2D, st: State, time: number) {
+  const b = st.boss;
+  if (!b) return;
+  const dead = b.dying > 0;
+
+  // beam from the left edge to wherever the player clicked
+  if (st.beam > 0) {
+    const sk = activeBeamSkin();
+    const k = st.beam / 0.28;
+    const bh = 22 * (0.5 + k);
+    ctx.save();
+    ctx.translate(40, st.beamY);
+    ctx.rotate(Math.atan2(st.beamY - st.beamY, 1) * 0);
+    ctx.globalAlpha = 0.35 + k * 0.65;
+    const len = Math.max(0, st.beamX - 40);
+    const grad = ctx.createLinearGradient(0, 0, len, 0);
+    grad.addColorStop(0, sk.core);
+    grad.addColorStop(1, sk.edge);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, -bh / 2, len, bh);
+    ctx.fillStyle = sk.core;
+    ctx.fillRect(0, -bh / 6, len, bh / 3);
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
+  if (!dead) {
+    // body
+    ctx.save();
+    const pulse = 1 + Math.sin(time * 7) * 0.03 + b.hitFlash * 0.08;
+    ctx.translate(b.x, b.y);
+    ctx.scale(pulse, pulse);
+    ctx.beginPath();
+    ctx.arc(0, 0, b.r, 0, Math.PI * 2);
+    const g = ctx.createRadialGradient(-b.r * 0.3, -b.r * 0.35, b.r * 0.1, 0, 0, b.r * 1.2);
+    g.addColorStop(0, b.hitFlash > 0.3 ? "#ffffff" : "#ff6a6a");
+    g.addColorStop(0.55, "#c11030");
+    g.addColorStop(1, "#3a0009");
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = "#ff2d5e";
+    ctx.stroke();
+    // spikes
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2 + b.spin * 0.6;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * b.r, Math.sin(a) * b.r);
+      ctx.lineTo(Math.cos(a + 0.12) * (b.r + 20), Math.sin(a + 0.12) * (b.r + 20));
+      ctx.lineTo(Math.cos(a + 0.26) * b.r, Math.sin(a + 0.26) * b.r);
+      ctx.closePath();
+      ctx.fillStyle = "#7a0016";
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // weak spots
+    for (const sp of b.spots) {
+      const pos = spotPos(b, sp);
+      const ready = sp.cd <= 0;
+      const r = SPOT_R * (ready ? 1 + Math.sin(time * 9 + sp.a * 3) * 0.12 : 0.6);
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = ready ? "#ffe23a" : "rgba(70,20,30,0.75)";
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = ready ? "#fff8d0" : "rgba(255,255,255,0.25)";
+      ctx.stroke();
+      if (ready) {
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, r + 8 + Math.sin(time * 9) * 3, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(255,226,58,0.5)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    }
+  }
+
+  // HP bar + timer
+  const bw = 520, bh2 = 20, bx = (W - bw) / 2, by = H - 62;
+  ctx.save();
+  ctx.fillStyle = "rgba(0,0,0,0.6)";
+  ctx.fillRect(bx - 4, by - 4, bw + 8, bh2 + 8);
+  ctx.fillStyle = "#ff2d5e";
+  ctx.fillRect(bx, by, bw * (b.hp / b.maxHp), bh2);
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(bx, by, bw, bh2);
+  ctx.textAlign = "center";
+  ctx.font = "italic 800 22px Oxanium, system-ui, sans-serif";
+  ctx.lineWidth = 6;
+  ctx.strokeStyle = "rgba(25,0,10,0.85)";
+  ctx.fillStyle = "#ffffff";
+  ctx.strokeText("DANGER TARGET", W / 2, by - 12);
+  ctx.fillText("DANGER TARGET", W / 2, by - 12);
+  ctx.font = "italic 800 18px Oxanium, system-ui, sans-serif";
+  ctx.fillStyle = b.timeLeft < 10 ? "#ff2d5e" : "#ffe23a";
+  ctx.strokeText(`${Math.max(0, b.timeLeft).toFixed(1)}s`, W / 2, by + bh2 + 22);
+  ctx.fillText(`${Math.max(0, b.timeLeft).toFixed(1)}s`, W / 2, by + bh2 + 22);
+  ctx.restore();
+
+  // mouse crosshair
+  if (!dead && st.bossIntro <= 0) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,0.9)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(st.aimX, st.aimY, 16, 0, Math.PI * 2);
+    ctx.moveTo(st.aimX - 26, st.aimY); ctx.lineTo(st.aimX - 6, st.aimY);
+    ctx.moveTo(st.aimX + 6, st.aimY); ctx.lineTo(st.aimX + 26, st.aimY);
+    ctx.moveTo(st.aimX, st.aimY - 26); ctx.lineTo(st.aimX, st.aimY - 6);
+    ctx.moveTo(st.aimX, st.aimY + 6); ctx.lineTo(st.aimX, st.aimY + 26);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // intro card
+  if (st.bossIntro > 0) {
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, st.bossIntro);
+    ctx.textAlign = "center";
+    ctx.font = "italic 800 76px Oxanium, system-ui, sans-serif";
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = "#000";
+    ctx.fillStyle = Math.floor(time * 8) % 2 === 0 ? "#ff2d5e" : "#ffffff";
+    ctx.strokeText("DANGER TARGET!!", W / 2, H * 0.4);
+    ctx.fillText("DANGER TARGET!!", W / 2, H * 0.4);
+    ctx.font = "italic 800 26px Oxanium, system-ui, sans-serif";
+    ctx.fillStyle = "#ffe23a";
+    ctx.strokeText("AIM WITH THE MOUSE — SHOOT THE WEAK SPOTS", W / 2, H * 0.4 + 44);
+    ctx.fillText("AIM WITH THE MOUSE — SHOOT THE WEAK SPOTS", W / 2, H * 0.4 + 44);
+    ctx.restore();
+  }
+}
+
+
 
 
 export default function StarVanisher() {
