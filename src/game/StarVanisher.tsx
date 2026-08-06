@@ -840,6 +840,7 @@ export default function StarVanisher() {
     st.phase = "aim";
     st.bossCharging = false;
     st.bossCharge = 0;
+    st.bossMvCued = false;
     stopChargeHum();
     stopBossBgm();
     if (!isBgmMuted() && !hud.over) {
