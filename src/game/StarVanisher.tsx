@@ -349,9 +349,11 @@ export default function StarVanisher() {
   }, [hud.over]);
 
 
-  const fire = () => {
+  const fire = (auto = false) => {
     const st = stateRef.current;
     if (!st || st.phase !== "aim" || !st.star) return;
+    if (st.demo && !auto) return; // hands off during the demonstration
+
     unlockAudio();
     const s = st.star;
     const fr = fieldRadius(st, s);
