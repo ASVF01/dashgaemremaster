@@ -1432,6 +1432,7 @@ export default function StarVanisher() {
               if (st.bossIntro <= 0 && st.boss && st.boss.dying <= 0) {
                 st.bossCharging = true;
                 st.bossCharge = 0;
+                st.bossMvCued = false;
                 unlockAudio();
                 startChargeHum();
               }
