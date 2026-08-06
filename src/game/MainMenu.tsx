@@ -1055,6 +1055,7 @@ const SFX_LIST: { id: string; label: string; play: () => void }[] = [
   { id: "slashShing", label: "SLASH SHING", play: () => sfx.slashShing() },
   { id: "bossHurt",   label: "BOSS HURT",   play: () => sfx.bossHurt() },
   { id: "bossDefeat", label: "BOSS DEFEAT", play: () => sfx.bossDefeat() },
+  { id: "alarm",      label: "ALARM",       play: () => sfx.alarm() },
 ];
 
 const SFX_LOOPS: { id: string; label: string; start: () => void; stop: () => void }[] = [
