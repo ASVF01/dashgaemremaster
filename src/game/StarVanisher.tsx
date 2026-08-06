@@ -5,6 +5,7 @@ import beamAsset from "@/assets/audio/beam.mp3.asset.json";
 import exploseAsset from "@/assets/audio/explose1.mp3.asset.json";
 import explose2Asset from "@/assets/audio/explose2.mp3.asset.json";
 import countupAsset from "@/assets/audio/countup.mp3.asset.json";
+import mvAsset from "@/assets/audio/MV.ogg.asset.json";
 import runBgmAsset from "@/assets/audio/StarVanisher_duh.ogg.asset.json";
 import svTitleBg from "@/assets/sv_title_bg.jpg.asset.json";
 import dangerAsset from "@/assets/audio/danger_target.ogg.asset.json";
@@ -52,7 +53,7 @@ function startChargeHum() {
     const osc = c.createOscillator();
     const osc2 = c.createOscillator();
     const gain = c.createGain();
-    const filt = c.createFilter?.call(c) ?? c.createBiquadFilter();
+    const filt = c.createBiquadFilter();
     osc.type = "sawtooth";
     osc2.type = "square";
     osc.frequency.setValueAtTime(70, t);
