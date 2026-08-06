@@ -1410,6 +1410,48 @@ export default function StarVanisher() {
     return () => cancelAnimationFrame(raf);
   }, [running]);
 
+  // ---- fullscreen (F key + corner button for mobile) ----
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const [isFs, setIsFs] = useState(false);
+  const [fsAnim, setFsAnim] = useState(false);
+
+  const toggleFullscreen = () => {
+    const el = stageRef.current;
+    if (!el) return;
+    if (document.fullscreenElement) {
+      void document.exitFullscreen().catch(() => { /* noop */ });
+    } else {
+      void el.requestFullscreen?.().catch(() => { /* noop */ });
+    }
+  };
+
+  useEffect(() => {
+    const onChange = () => {
+      const on = document.fullscreenElement === stageRef.current;
+      setIsFs(on);
+      if (on) {
+        setFsAnim(true);
+        window.setTimeout(() => setFsAnim(false), 500);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      if (e.key === "f" || e.key === "F") {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+    };
+    document.addEventListener("fullscreenchange", onChange);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("fullscreenchange", onChange);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, []);
+
+
+
   return (
     <div className="sv-font flex flex-col items-center gap-3">
       <div className="text-center">
