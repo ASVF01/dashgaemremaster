@@ -479,9 +479,12 @@ export default function StarVanisher() {
     }
   }, [running, hud.over]);
   useEffect(() => subscribeBgmMuted((m) => {
+    const inBoss = stateRef.current?.phase === "boss";
+    if (m) stopBossBgm();
     const a = bgmRef.current;
     if (!a) return;
     if (m) { a.pause(); }
+    else if (inBoss) { pauseBgm(); playBossBgm(); }
     else if (running && !hud.over) { pauseBgm(); a.volume = 0.3375; a.currentTime = 0; void a.play().catch(() => { /* noop */ }); }
     else if (running && hud.over) { a.volume = 0.10; void a.play().catch(() => { /* noop */ }); }
   }), [running, hud.over]);
