@@ -1681,35 +1681,37 @@ export default function StarVanisher({ onBack }: { onBack?: () => void } = {}) {
                 >
                   + {hud.earned} T
                 </div>
-                <button
-                  type="button"
-                  onClick={() => start(false)}
-                  className="pointer-events-auto scribble-border bg-paper px-6 py-3 font-bungee text-ink transition-all duration-500 ease-out hover:scale-105"
-                  style={{
-                    transform: failStage >= 3 ? "translateY(0)" : "translateY(300%)",
-                    opacity: failStage >= 3 ? 1 : 0,
-                  }}
-                >
-                  Retry?
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    bgmRef.current?.pause();
-                    stopBossBgm();
-                    stopChargeHum();
-                    resumeBgm();
-                    onBack?.();
-                  }}
-                  className="pointer-events-auto scribble-border border-2 border-black bg-paper px-6 py-3 font-bungee text-ink transition-all duration-500 ease-out hover:scale-105"
-                  style={{
-                    transform: failStage >= 3 ? "translateY(0)" : "translateY(300%)",
-                    opacity: failStage >= 3 ? 1 : 0,
-                    transitionDelay: "120ms",
-                  }}
-                >
-                  nah
-                </button>
+                <div className="flex flex-row items-center justify-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => start(false)}
+                    className="pointer-events-auto scribble-border bg-paper px-6 py-3 font-bungee text-ink transition-all duration-500 ease-out hover:scale-105"
+                    style={{
+                      transform: failStage >= 3 ? "translateY(0)" : "translateY(300%)",
+                      opacity: failStage >= 3 ? 1 : 0,
+                    }}
+                  >
+                    Retry?
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      bgmRef.current?.pause();
+                      stopBossBgm();
+                      stopChargeHum();
+                      resumeBgm();
+                      onBack?.();
+                    }}
+                    className="pointer-events-auto scribble-border border-2 border-black bg-paper px-6 py-3 font-bungee text-ink transition-all duration-500 ease-out hover:scale-105"
+                    style={{
+                      transform: failStage >= 3 ? "translateY(0)" : "translateY(300%)",
+                      opacity: failStage >= 3 ? 1 : 0,
+                      transitionDelay: "120ms",
+                    }}
+                  >
+                    nah
+                  </button>
+                </div>
               </div>
             )}
           </div>
