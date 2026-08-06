@@ -7,6 +7,7 @@ import explose2Asset from "@/assets/audio/explose2.mp3.asset.json";
 import countupAsset from "@/assets/audio/countup.mp3.asset.json";
 import runBgmAsset from "@/assets/audio/StarVanisher_duh.ogg.asset.json";
 import svTitleBg from "@/assets/sv_title_bg.jpg.asset.json";
+import { isCheatOn } from "@/game/cheats";
 
 import { isBgmMuted, subscribeBgmMuted, pauseBgm, resumeBgm } from "@/game/bgm";
 
