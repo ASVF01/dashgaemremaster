@@ -501,8 +501,25 @@ export default function StarVanisher() {
       }
       ctx.globalAlpha = 1;
 
+      // counting percentage
+      if (st.phase === "count" && s) {
+        const pop = 1 + st.countPop * (st.countDone ? 0.55 : 0.18);
+        ctx.save();
+        ctx.translate(s.cx, s.cy - s.r - 24);
+        ctx.scale(pop, pop);
+        ctx.textAlign = "center";
+        ctx.font = "bold 74px Bungee, system-ui, sans-serif";
+        ctx.lineWidth = 9;
+        ctx.strokeStyle = "rgba(30,0,12,0.8)";
+        ctx.fillStyle = st.countDone ? "#ffe23a" : "#ffb03a";
+        const txt = st.countDone ? `${st.countVal.toFixed(1)}%` : `${Math.floor(st.countVal)}%`;
+        ctx.strokeText(txt, 0, 0);
+        ctx.fillText(txt, 0, 0);
+        ctx.restore();
+      }
+
       // judgement text
-      if (st.judgement && (st.phase === "fire" || st.phase === "result")) {
+      if (st.judgement && (st.phase === "fire" || st.phase === "count" || st.phase === "result")) {
         const j = st.judgement;
         const pop = Math.min(1, st.t * 6);
         ctx.save();
