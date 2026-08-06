@@ -49,7 +49,12 @@ export default function CheatMenu() {
         if (found) {
           if (!armed.includes(found.code)) setArmed((a) => [...a, found.code]);
           sfx.cheatChime();
-          setLine(`${found.label} ARMED — PRESS ${found.trigger}`);
+          if (found.code === "deadeye") {
+            const on = toggleCheat("perfectAim");
+            setLine(`V-LOCK ${on ? "ON" : "OFF"} — GUARANTEED JUST`);
+          } else {
+            setLine(`${found.label} ARMED — PRESS ${found.trigger}`);
+          }
         } else {
           sfx.menuBack();
           setLine("BAD CODE.");
