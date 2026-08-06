@@ -532,6 +532,7 @@ export default function StarVanisher() {
     unlockAudio();
     sfx.menuConfirm();
     clearTutTimers();
+    stopBossBgm();
     setShowTryIt(false);
     setTutSlide(null);
     setTutDemo(demo);
