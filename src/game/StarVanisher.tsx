@@ -288,6 +288,32 @@ function stopBossBgm() {
   try { bossAudio?.stop(); } catch { /* noop */ }
 }
 
+// jagged black cinematic borders that scroll left, painted straight onto the canvas
+function drawBorders(ctx: CanvasRenderingContext2D, W: number, H: number, time: number) {
+  const bh = H * 0.06;
+  const pts = [0, 7.2, 8.6, 6.2, 9.4, 7.8, 9.9, 8.1];
+  const seg = W; // one tile spans the screen width
+  const off = -((time * (seg / 4)) % seg); // 4s per tile, matching the old CSS scroll
+  const tile = (x0: number, flip: boolean) => {
+    const y = (v: number) => (flip ? H - (v / 10) * bh : (v / 10) * bh);
+    ctx.beginPath();
+    ctx.moveTo(x0, flip ? H : 0);
+    ctx.lineTo(x0 + seg, flip ? H : 0);
+    const xs = [1, 0.78, 0.62, 0.44, 0.26, 0.12, 0];
+    const vs = [pts[1], pts[2], pts[3], pts[4], pts[5], pts[6], pts[7]];
+    for (let i = 0; i < xs.length; i++) ctx.lineTo(x0 + seg * xs[i], y(vs[i]));
+    ctx.closePath();
+    ctx.fill();
+  };
+  ctx.save();
+  ctx.fillStyle = "#000";
+  for (let i = -1; i <= 1; i++) {
+    tile(off + i * seg, false);
+    tile(off + i * seg, true);
+  }
+  ctx.restore();
+}
+
 function drawBoss(ctx: CanvasRenderingContext2D, st: State, time: number) {
   const b = st.boss;
   if (!b) return;
@@ -1193,6 +1219,9 @@ export default function StarVanisher() {
         ctx.restore();
       }
 
+      // jagged cinematic borders — drawn here so all HUD/UI sits on top of them
+      drawBorders(ctx, W, H, time);
+
       // left HUD: target call-out (hidden while the DANGER TARGET is up)
       ctx.save();
       ctx.textAlign = "left";
@@ -1201,13 +1230,14 @@ export default function StarVanisher() {
         ctx.lineWidth = 8;
         ctx.strokeStyle = "rgba(25,0,10,0.85)";
         ctx.fillStyle = "#ffe23a";
-        ctx.strokeText(`${st.target}%`, 34, H - 60);
-        ctx.fillText(`${st.target}%`, 34, H - 60);
+        ctx.strokeText(`${st.target}%`, 34, H - 76);
+        ctx.fillText(`${st.target}%`, 34, H - 76);
         ctx.font = "italic 800 34px Oxanium, system-ui, sans-serif";
         ctx.fillStyle = "#ffffff";
-        ctx.strokeText("Vanish!!", 34 + ctx.measureText(`${st.target}% `).width * 0.55, H - 60);
-        ctx.fillText("Vanish!!", 34 + ctx.measureText(`${st.target}% `).width * 0.55, H - 60);
+        ctx.strokeText("Vanish!!", 38, H - 36);
+        ctx.fillText("Vanish!!", 38, H - 36);
       }
+
       ctx.lineWidth = 8;
       ctx.strokeStyle = "rgba(25,0,10,0.85)";
 
@@ -1288,34 +1318,8 @@ export default function StarVanisher() {
           }}
         />
 
-        {/* jagged cinematic borders — scroll left, thin so the play area stays readable */}
-        <style>{`@keyframes svBorderScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }`}</style>
-        <div className="absolute inset-0 pointer-events-none z-0">
-          <div className="absolute top-0 left-0 w-full overflow-hidden" style={{ height: "6%" }}>
-            <svg
-              className="absolute top-0 left-0 h-full"
-              style={{ width: "200%", animation: "svBorderScroll 4s linear infinite" }}
-              viewBox="0 0 200 10"
-              preserveAspectRatio="none"
-              aria-hidden="true"
-            >
-              <polygon points="0,0 100,0 100,7.2 78,8.6 62,6.2 44,9.4 26,7.8 12,9.9 0,8.1" fill="#000" />
-              <polygon points="100,0 200,0 200,7.2 178,8.6 162,6.2 144,9.4 126,7.8 112,9.9 100,8.1" fill="#000" />
-            </svg>
-          </div>
-          <div className="absolute bottom-0 left-0 w-full overflow-hidden" style={{ height: "6%", transform: "scaleY(-1)" }}>
-            <svg
-              className="absolute top-0 left-0 h-full"
-              style={{ width: "200%", animation: "svBorderScroll 4s linear infinite" }}
-              viewBox="0 0 200 10"
-              preserveAspectRatio="none"
-              aria-hidden="true"
-            >
-              <polygon points="0,0 100,0 100,7.2 78,8.6 62,6.2 44,9.4 26,7.8 12,9.9 0,8.1" fill="#000" />
-              <polygon points="100,0 200,0 200,7.2 178,8.6 162,6.2 144,9.4 126,7.8 112,9.9 100,8.1" fill="#000" />
-            </svg>
-          </div>
-        </div>
+        {/* borders are painted inside the canvas so every HUD element renders above them */}
+
 
 
 
