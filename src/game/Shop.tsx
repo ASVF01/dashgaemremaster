@@ -160,7 +160,7 @@ export default function Shop({ onClose }: { onClose: () => void }) {
                       {owned ? (
                         <button
                           type="button"
-                          onClick={() => { toggleAbility(a.id); sfx.menuMove(); }}
+                          onClick={() => { toggleAbility(a.id); sfx.menuHover(); }}
                           className="scribble-border bg-paper px-3 py-1.5 font-bungee text-xs text-ink hover:scale-105 transition-transform"
                         >
                           {on ? "UNEQUIP" : "EQUIP"}
