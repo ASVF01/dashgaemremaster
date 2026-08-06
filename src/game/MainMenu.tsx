@@ -7,6 +7,8 @@ import {
 import { useSettings, type Settings } from "@/game/settings";
 import { sfx, setSfxVolume, unlockAudio } from "@/game/sfx";
 import { setBgmVolume, pauseBgm, resumeBgm } from "@/game/bgm";
+import { resetAllProgress } from "@/game/progress";
+import exploseAsset from "@/assets/audio/explose1.mp3.asset.json";
 import BgmPlayer from "@/game/BgmPlayer";
 import StarVanisher from "@/game/StarVanisher";
 import Shop from "@/game/Shop";
@@ -805,11 +807,10 @@ function ResetProgressFlow({ onClose }: { onClose: () => void }) {
   const nuke = () => {
     // Explosion: sound + fullscreen flash.
     try {
-      const a = new Audio(exploseUrl);
+      const a = new Audio(exploseAsset.url);
       a.volume = 0.9;
       void a.play();
     } catch { /* noop */ }
-    sfx.silenceAllSfx?.();
     pauseBgm();
     resetAllProgress();
     setPhase("boom");
