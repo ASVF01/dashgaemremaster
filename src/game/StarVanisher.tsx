@@ -99,7 +99,9 @@ type State = {
   starsDone: number;      // stars completed this run
   bg: ColorSet;           // background palette, reshuffled every 5 stars
   streaks: Streak[];      // speed lines flying right -> left
+  demo: boolean;          // tutorial demonstration: the game plays itself
 };
+
 
 
 function rand(a: number, b: number) { return a + Math.random() * (b - a); }
