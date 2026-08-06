@@ -195,6 +195,8 @@ type State = {
   demoTryTimer: number;   // seconds after count-up done before "Try it yourself!" flashes
   boss: Boss | null;      // DANGER TARGET, appears every 40 targets
   bossIntro: number;      // intro card timer
+  bossCharge: number;     // seconds the player has been holding the click (boss only)
+  bossCharging: boolean;  // is the mouse held down right now
   bossOnly: boolean;      // DANGER TARGET mode: endless bosses, each tougher
   bossWave: number;       // how many DANGER TARGETs have shown up this run
   aimX: number; aimY: number;   // mouse aim during the boss fight
@@ -642,7 +644,7 @@ export default function StarVanisher() {
       sightLeft: hasAbility("sight") ? 10 : 0,
       starsDone: -1, bg: bg0, streaks: makeStreaks(bg0), demo,
       demoTryTimer: 0,
-      boss: null, bossIntro: 0, bossOnly, bossWave: 0, aimX: W * 0.5, aimY: H * 0.5, beamX: W * 0.5, beamY: H * 0.5,
+      boss: null, bossIntro: 0, bossCharge: 0, bossCharging: false, bossOnly, bossWave: 0, aimX: W * 0.5, aimY: H * 0.5, beamX: W * 0.5, beamY: H * 0.5,
     };
 
     newRound(st);
