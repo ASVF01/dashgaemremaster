@@ -225,7 +225,7 @@ const BOSS_MAX_HP = 108;
 const BOSS_TIME = 42;
 const BOSS_PATHS: BossPath[] = ["circle", "square", "infinity", "triangle"];
 
-function makeBoss(): Boss {
+function makeBoss(wave = 0): Boss {
   const path = BOSS_PATHS[Math.floor(Math.random() * BOSS_PATHS.length)];
   const spots: BossSpot[] = Array.from({ length: 5 }, (_, i) => ({
     a: (i / 5) * Math.PI * 2 + rand(-0.2, 0.2),
@@ -233,11 +233,13 @@ function makeBoss(): Boss {
     cd: 0,
   }));
   const p = bossPathPos(path, 0);
+  const hp = Math.round(BOSS_MAX_HP * (1 + wave * 0.55));
   return {
-    hp: BOSS_MAX_HP, maxHp: BOSS_MAX_HP, path, t: 0,
-    speed: 0.16 + Math.random() * 0.07,
+    hp, maxHp: hp, path, t: 0,
+    speed: (0.16 + Math.random() * 0.07) * (1 + wave * 0.12),
     x: p.x, y: p.y, r: 74, spots, spin: 0,
-    timeLeft: BOSS_TIME, hitFlash: 0, dying: 0,
+    timeLeft: BOSS_TIME + wave * 6, hitFlash: 0, dying: 0,
+    wave,
   };
 }
 
