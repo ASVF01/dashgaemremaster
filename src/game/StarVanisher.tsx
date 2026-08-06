@@ -834,7 +834,7 @@ export default function StarVanisher() {
   return (
     <div className="flex flex-col items-center gap-3">
       <div className="text-center">
-        <div className="font-marker text-3xl md:text-4xl text-ink -rotate-1">Star Vanisher...!!</div>
+        
         <p className="font-marker text-xs text-ink/70 mt-1">
           One click. Vanish exactly as much of the star as they ask. Miss and the run is over.
         </p>
