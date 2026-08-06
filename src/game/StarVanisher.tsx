@@ -8,6 +8,7 @@ import countupAsset from "@/assets/audio/countup.mp3.asset.json";
 import runBgmAsset from "@/assets/audio/StarVanisher_duh.ogg.asset.json";
 import svTitleBg from "@/assets/sv_title_bg.jpg.asset.json";
 import dangerAsset from "@/assets/audio/danger_target.ogg.asset.json";
+import { GaplessLoop } from "@/game/gapless";
 import { isCheatOn } from "@/game/cheats";
 
 import { isBgmMuted, subscribeBgmMuted, pauseBgm, resumeBgm } from "@/game/bgm";
@@ -275,20 +276,16 @@ function spotPos(b: Boss, sp: BossSpot) {
 }
 
 // boss theme (module-level so it survives re-renders)
-let bossAudio: HTMLAudioElement | null = null;
+let bossAudio: GaplessLoop | null = null;
 function playBossBgm() {
   try {
-    if (!bossAudio) {
-      bossAudio = new Audio(dangerAsset.url);
-      bossAudio.loop = true;
-    }
+    if (!bossAudio) bossAudio = new GaplessLoop(dangerAsset.url);
     bossAudio.volume = 0.5;
-    bossAudio.currentTime = 0;
     void bossAudio.play().catch(() => { /* blocked */ });
   } catch { /* noop */ }
 }
 function stopBossBgm() {
-  try { bossAudio?.pause(); if (bossAudio) bossAudio.currentTime = 0; } catch { /* noop */ }
+  try { bossAudio?.stop(); } catch { /* noop */ }
 }
 
 function drawBoss(ctx: CanvasRenderingContext2D, st: State, time: number) {
@@ -450,11 +447,10 @@ export default function StarVanisher() {
 
 
   // run BGM (loops for the whole run, stops on game over / unmount)
-  const bgmRef = useRef<HTMLAudioElement | null>(null);
+  const bgmRef = useRef<GaplessLoop | null>(null);
   const ensureBgm = () => {
     if (!bgmRef.current) {
-      const a = new Audio(runBgmAsset.url);
-      a.loop = true;
+      const a = new GaplessLoop(runBgmAsset.url);
       a.volume = 0.3375;
       bgmRef.current = a;
     }
