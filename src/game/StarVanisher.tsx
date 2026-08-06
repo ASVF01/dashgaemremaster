@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { sfx, unlockAudio } from "@/game/sfx";
+import { activeBeamSkin, addTokens, getShop, hasAbility, subscribeShop, tokensForScore } from "@/game/shop";
 import beamAsset from "@/assets/audio/beam.mp3.asset.json";
 import exploseAsset from "@/assets/audio/explose1.mp3.asset.json";
 import explose2Asset from "@/assets/audio/explose2.mp3.asset.json";
@@ -83,6 +84,7 @@ type State = {
   countPop: number;
   boomed: boolean;        // explosion already triggered for this shot
   pendingMiss: boolean;   // run ends once the count-up finishes
+  reviveLeft: number;     // SECOND WIND charges left this run
 
 };
 
@@ -120,9 +122,10 @@ function overlapPct(sx: number, sy: number, sr: number, fx: number, fy: number, 
 
 function windows(combo: number) {
   const tighten = Math.min(0.62, combo * 0.045);
+  const forgive = hasAbility("wide") ? 1.25 : 1;
   return {
-    perfect: 3.2 * (1 - tighten),
-    okay: 8.5 * (1 - tighten),
+    perfect: 3.2 * (1 - tighten) * forgive,
+    okay: 8.5 * (1 - tighten) * forgive,
   };
 }
 
@@ -143,7 +146,9 @@ export default function StarVanisher() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const stateRef = useRef<State | null>(null);
   const [running, setRunning] = useState(false);
-  const [hud, setHud] = useState({ score: 0, combo: 0, best: 0, over: false, lastScore: 0, newBest: false, lastPct: 0 });
+  const [hud, setHud] = useState({ score: 0, combo: 0, best: 0, over: false, lastScore: 0, newBest: false, lastPct: 0, earned: 0 });
+  const [, forceShop] = useState(0);
+  useEffect(() => subscribeShop(() => forceShop((n) => n + 1)), []);
   const [failStage, setFailStage] = useState(0); // 0 none, 1 miss, 2 white+FAIL, 3 retry
   const [showFailPct, setShowFailPct] = useState(false);
   const hsRef = useRef(0);
@@ -160,7 +165,9 @@ export default function StarVanisher() {
     st.target = Math.round(rand(28, 96));
     st.fieldT = 0;
     st.fieldDir = 1;
-    st.fieldSpeed = 0.62 + Math.min(1.5, st.combo * 0.075);
+    st.fieldSpeed = (0.62 + Math.min(1.5, st.combo * 0.075))
+      * (hasAbility("steady") ? 0.8 : 1)
+      * (hasAbility("greed") ? 1.15 : 1);
     st.lockedPct = 0;
     st.judgement = null;
     st.beam = 0;
@@ -183,11 +190,11 @@ export default function StarVanisher() {
       lockedPct: 0, judgement: null, combo: 0, score: 0, shake: 0, flash: 0,
       hitstop: 0, beam: 0, star: null, destroyFrac: 0, particles: [], floatNums: [],
       comboPop: 0, countVal: 0, countStep: 0, countTimer: 0, countDone: false, countPop: 0,
-      boomed: false, pendingMiss: false,
+      boomed: false, pendingMiss: false, reviveLeft: hasAbility("revive") ? 1 : 0,
     };
     newRound(st);
     stateRef.current = st;
-    setHud((h) => ({ ...h, score: 0, combo: 0, over: false, newBest: false }));
+    setHud((h) => ({ ...h, score: 0, combo: 0, over: false, newBest: false, earned: 0 }));
     setFailStage(0);
     setShowFailPct(false);
     setRunning(true);
@@ -238,7 +245,8 @@ export default function StarVanisher() {
       st.pendingMiss = true;
     } else {
       const acc = Math.max(0, 1 - diff / win.okay);
-      const gained = Math.round((j === "PERFECT" ? 1200 : 500) * (1 + acc) * (1 + st.combo * 0.22));
+      const greed = hasAbility("greed") ? 1.3 : 1;
+      const gained = Math.round((j === "PERFECT" ? 1200 : 500) * (1 + acc) * (1 + st.combo * 0.22) * greed);
       st.score += gained;
       st.combo += 1;
       st.comboPop = 1;
@@ -251,6 +259,18 @@ export default function StarVanisher() {
   };
 
   const finishMiss = (st: State) => {
+    // SECOND WIND: eat the miss, keep the run alive
+    if (st.reviveLeft > 0) {
+      st.reviveLeft -= 1;
+      st.combo = 0;
+      st.floatNums.push({
+        x: W * 0.4, y: H * 0.3, text: "SECOND WIND!", life: 1.4, color: "#8bff3a", size: 40,
+      });
+      sfx.parryHit();
+      setHud((h) => ({ ...h, combo: 0 }));
+      newRound(st);
+      return;
+    }
     sfx.fatalHit();
     st.phase = "over";
     st.t = 0;
@@ -259,7 +279,9 @@ export default function StarVanisher() {
       hsRef.current = st.score;
       try { localStorage.setItem(HS_KEY, String(st.score)); } catch { /* noop */ }
     }
-    setHud({ score: st.score, combo: st.combo, best: hsRef.current, over: true, lastScore: st.score, newBest, lastPct: st.lockedPct });
+    const earned = tokensForScore(st.score);
+    if (earned > 0) addTokens(earned);
+    setHud({ score: st.score, combo: st.combo, best: hsRef.current, over: true, lastScore: st.score, newBest, lastPct: st.lockedPct, earned });
   };
 
   const fieldCenter = (s: Star) => ({ x: s.cx - s.r * 0.55, y: s.cy });
@@ -459,17 +481,18 @@ export default function StarVanisher() {
           ctx.fillText("TARGET", fc.x, fc.y + 9);
         }
 
-        // beam
+        // beam — colours come from the equipped shop skin
         if (st.beam > 0) {
+          const sk = activeBeamSkin();
           const k = st.beam / 0.32;
           const bh = (28 + st.combo * 3) * (0.5 + k);
           ctx.globalAlpha = 0.35 + k * 0.65;
           const bg = ctx.createLinearGradient(0, 0, s.cx, 0);
-          bg.addColorStop(0, "#ffffff");
-          bg.addColorStop(1, "#ff4d86");
+          bg.addColorStop(0, sk.core);
+          bg.addColorStop(1, sk.edge);
           ctx.fillStyle = bg;
           ctx.fillRect(40, s.cy - bh / 2, s.cx - 40, bh);
-          ctx.fillStyle = "#ffffff";
+          ctx.fillStyle = sk.core;
           ctx.fillRect(40, s.cy - bh / 6, s.cx - 40, bh / 3);
           ctx.globalAlpha = 1;
         }
@@ -606,6 +629,11 @@ export default function StarVanisher() {
         <p className="font-marker text-xs text-ink/70 mt-1">
           One click. Vanish exactly as much of the star as they ask. Miss and the run is over.
         </p>
+        <p className="font-marker text-xs text-ink/60 mt-1">
+          Balance <span className="font-bungee text-ink">{getShop().tokens} T</span> · beam{" "}
+          <span className="font-bungee text-ink">{activeBeamSkin().name}</span>
+          {getShop().abilities.length > 0 && <> · {getShop().abilities.length} ability equipped</>}
+        </p>
       </div>
 
       <div
@@ -669,6 +697,12 @@ export default function StarVanisher() {
                   style={{ transform: failStage >= 2 ? "translateY(0)" : "translateY(-300%)" }}
                 >
                   FAIL
+                </div>
+                <div
+                  className="font-bungee text-xl text-black/70 transition-opacity duration-500"
+                  style={{ opacity: failStage >= 3 ? 1 : 0 }}
+                >
+                  + {hud.earned} T
                 </div>
                 <button
                   type="button"
