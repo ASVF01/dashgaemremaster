@@ -154,18 +154,12 @@ function windows(combo: number) {
   };
 }
 
-function starPath(ctx: CanvasRenderingContext2D, s: Star, time: number) {
-  const segs = 46;
+function starPath(ctx: CanvasRenderingContext2D, s: Star, _time?: number) {
   ctx.beginPath();
-  for (let i = 0; i <= segs; i++) {
-    const a = (i / segs) * Math.PI * 2;
-    const w = 1 + Math.sin(a * 5 + s.seed) * s.wobble + Math.sin(a * 9 - time * 1.4 + s.seed) * s.wobble * 0.6;
-    const x = s.cx + Math.cos(a) * s.r * w;
-    const y = s.cy + Math.sin(a) * s.r * w;
-    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-  }
+  ctx.arc(s.cx, s.cy, s.r, 0, Math.PI * 2);
   ctx.closePath();
 }
+
 
 export default function StarVanisher() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
