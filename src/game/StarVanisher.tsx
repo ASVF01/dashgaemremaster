@@ -318,17 +318,47 @@ export default function StarVanisher() {
 
       // ---- update ----
       st.t += dt;
+      if (!st.boomed && st.judgement && st.t >= 0.4 && (st.phase === "fire" || st.phase === "over")) {
+        explode(st);
+      }
+      if (st.boomed) st.destroyFrac = Math.min(1, st.destroyFrac + dt * 5);
+
       if (st.phase === "aim") {
         st.fieldT += st.fieldDir * st.fieldSpeed * dt;
         if (st.fieldT > 1) { st.fieldT = 1; st.fieldDir = -1; }
         if (st.fieldT < 0) { st.fieldT = 0; st.fieldDir = 1; }
       } else if (st.phase === "fire") {
-        st.destroyFrac = Math.min(1, st.destroyFrac + dt * 5);
-        if (st.t > 0.55) { st.phase = "result"; st.t = 0; }
+        if (st.t > 0.95) { st.phase = "count"; st.t = 0; st.countTimer = 0.18; }
+      } else if (st.phase === "count") {
+        st.countPop = Math.max(0, st.countPop - dt * 4);
+        const total = Math.floor(st.lockedPct) + 1;
+        if (!st.countDone) {
+          st.countTimer -= dt;
+          if (st.countTimer <= 0) {
+            st.countStep += 1;
+            if (st.countStep >= total) {
+              st.countVal = st.lockedPct;
+              st.countDone = true;
+              st.countPop = 1;
+              st.t = 0;
+              st.shake = 13;
+              playExplosion2();
+            } else {
+              st.countVal = st.countStep;
+              st.countPop = 0.55;
+              playCountUp();
+              const prog = st.countStep / total;
+              st.countTimer = 0.024 + 0.17 * Math.pow(prog, 2.6);
+            }
+          }
+        } else if (st.t > 0.94) {
+          newRound(st);
+        }
       } else if (st.phase === "result") {
         const gap = Math.max(0.22, 0.5 - st.combo * 0.02);
         if (st.t > gap) newRound(st);
       }
+
 
       st.beam = Math.max(0, st.beam - dt);
       st.flash = Math.max(0, st.flash - dt * 3.2);
