@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { sfx, unlockAudio } from "@/game/sfx";
 import beamAsset from "@/assets/audio/beam.mp3.asset.json";
 import exploseAsset from "@/assets/audio/explose1.mp3.asset.json";
+import explose2Asset from "@/assets/audio/explose2.mp3.asset.json";
+import countupAsset from "@/assets/audio/countup.mp3.asset.json";
 
 // simple one-shot sample player (overlapping playback via cloned nodes)
 function makeSample(url: string, volume: number) {
@@ -23,6 +25,8 @@ function makeSample(url: string, volume: number) {
 
 const playBeam = makeSample(beamAsset.url, 0.75);
 const playExplosion = makeSample(exploseAsset.url, 0.85);
+const playExplosion2 = makeSample(explose2Asset.url, 0.9);
+const playCountUp = makeSample(countupAsset.url, 0.55);
 
 
 // STAR VANISHER...!! — one-click point grinding mini game.
@@ -35,7 +39,7 @@ const H = 540;
 const HS_KEY = "dashgaem_starvanisher_hs_v1";
 
 type Judgement = "PERFECT" | "OKAY" | "MISS";
-type Phase = "aim" | "fire" | "result" | "over";
+type Phase = "aim" | "fire" | "count" | "result" | "over";
 
 type Particle = {
   x: number; y: number; vx: number; vy: number;
@@ -71,6 +75,14 @@ type State = {
   particles: Particle[];
   floatNums: { x: number; y: number; text: string; life: number; color: string; size: number }[];
   comboPop: number;
+  // percentage count-up
+  countVal: number;       // currently shown %
+  countStep: number;      // index of ticks done
+  countTimer: number;     // time until next tick
+  countDone: boolean;
+  countPop: number;
+  boomed: boolean;        // explosion already triggered for this shot
+
 };
 
 function rand(a: number, b: number) { return a + Math.random() * (b - a); }
@@ -152,6 +164,12 @@ export default function StarVanisher() {
     st.judgement = null;
     st.beam = 0;
     st.destroyFrac = 0;
+    st.countVal = 0;
+    st.countStep = 0;
+    st.countTimer = 0;
+    st.countDone = false;
+    st.countPop = 0;
+    st.boomed = false;
     st.star = makeStar(st.combo);
   };
 
@@ -162,7 +180,8 @@ export default function StarVanisher() {
       phase: "aim", t: 0, target: 50, fieldT: 0, fieldDir: 1, fieldSpeed: 0.7,
       lockedPct: 0, judgement: null, combo: 0, score: 0, shake: 0, flash: 0,
       hitstop: 0, beam: 0, star: null, destroyFrac: 0, particles: [], floatNums: [],
-      comboPop: 0,
+      comboPop: 0, countVal: 0, countStep: 0, countTimer: 0, countDone: false, countPop: 0,
+      boomed: false,
     };
     newRound(st);
     stateRef.current = st;
@@ -201,43 +220,16 @@ export default function StarVanisher() {
     st.phase = "fire";
     st.t = 0;
     st.beam = 0.32;
-    st.hitstop = 0.12;
-    st.flash = 1;
-    st.shake = 14 + Math.min(26, st.combo * 1.6);
+    st.boomed = false;
+    st.countVal = 0;
+    st.countStep = 0;
+    st.countTimer = 0;
+    st.countDone = false;
+    st.countPop = 0;
 
-    const intensity = Math.min(2, 0.8 + st.combo * 0.08);
     playBeam();
-    window.setTimeout(playExplosion, 90);
 
 
-    // explosion particles
-    const n = 46 + Math.min(90, st.combo * 6);
-    for (let i = 0; i < n; i++) {
-      const a = rand(0, Math.PI * 2);
-      const sp = rand(60, 460) * (0.7 + intensity * 0.4);
-      st.particles.push({
-        x: s.cx + Math.cos(a) * s.r * rand(0, 0.7),
-        y: s.cy + Math.sin(a) * s.r * rand(0, 0.7),
-        vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 40,
-        life: rand(0.5, 1.2), maxLife: 1.2,
-        size: rand(10, 46), color: i % 4 === 0 ? "#ffe9f2" : i % 3 === 0 ? "#ff5c8a" : "#ff9ec2",
-        kind: i % 5 === 0 ? "spark" : "smoke",
-      });
-    }
-    for (let i = 0; i < 14; i++) {
-      st.particles.push({
-        x: s.cx, y: s.cy, vx: rand(-700, -180), vy: rand(-160, 160),
-        life: rand(0.18, 0.4), maxLife: 0.4, size: rand(40, 190),
-        color: "#ffd1e2", kind: "line", angle: rand(-0.25, 0.25),
-      });
-    }
-
-    if (j !== "MISS") {
-      st.floatNums.push({
-        x: s.cx, y: s.cy - s.r - 20, text: `${pct.toFixed(1)}%`,
-        life: 1.1, color: "#ffb03a", size: 74,
-      });
-    }
 
     if (j === "MISS") {
       sfx.fatalHit();
@@ -269,6 +261,40 @@ export default function StarVanisher() {
     return s.r * (0.35 + eased * 1.35);
   };
 
+  // the explosion beat, fired 0.4s after the beam
+  const explode = (st: State) => {
+    const s = st.star;
+    if (!s) return;
+    st.boomed = true;
+    st.hitstop = 0.12;
+    st.flash = 1;
+    st.shake = 14 + Math.min(26, st.combo * 1.6);
+    playExplosion();
+
+    const intensity = Math.min(2, 0.8 + st.combo * 0.08);
+    const n = 46 + Math.min(90, st.combo * 6);
+    for (let i = 0; i < n; i++) {
+      const a = rand(0, Math.PI * 2);
+      const sp = rand(60, 460) * (0.7 + intensity * 0.4);
+      st.particles.push({
+        x: s.cx + Math.cos(a) * s.r * rand(0, 0.7),
+        y: s.cy + Math.sin(a) * s.r * rand(0, 0.7),
+        vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 40,
+        life: rand(0.5, 1.2), maxLife: 1.2,
+        size: rand(10, 46), color: i % 4 === 0 ? "#ffe9f2" : i % 3 === 0 ? "#ff5c8a" : "#ff9ec2",
+        kind: i % 5 === 0 ? "spark" : "smoke",
+      });
+    }
+    for (let i = 0; i < 14; i++) {
+      st.particles.push({
+        x: s.cx, y: s.cy, vx: rand(-700, -180), vy: rand(-160, 160),
+        life: rand(0.18, 0.4), maxLife: 0.4, size: rand(40, 190),
+        color: "#ffd1e2", kind: "line", angle: rand(-0.25, 0.25),
+      });
+    }
+  };
+
+
   // main loop
   useEffect(() => {
     if (!running) return;
@@ -292,17 +318,47 @@ export default function StarVanisher() {
 
       // ---- update ----
       st.t += dt;
+      if (!st.boomed && st.judgement && st.t >= 0.4 && (st.phase === "fire" || st.phase === "over")) {
+        explode(st);
+      }
+      if (st.boomed) st.destroyFrac = Math.min(1, st.destroyFrac + dt * 5);
+
       if (st.phase === "aim") {
         st.fieldT += st.fieldDir * st.fieldSpeed * dt;
         if (st.fieldT > 1) { st.fieldT = 1; st.fieldDir = -1; }
         if (st.fieldT < 0) { st.fieldT = 0; st.fieldDir = 1; }
       } else if (st.phase === "fire") {
-        st.destroyFrac = Math.min(1, st.destroyFrac + dt * 5);
-        if (st.t > 0.55) { st.phase = "result"; st.t = 0; }
+        if (st.t > 0.95) { st.phase = "count"; st.t = 0; st.countTimer = 0.18; }
+      } else if (st.phase === "count") {
+        st.countPop = Math.max(0, st.countPop - dt * 4);
+        const total = Math.floor(st.lockedPct) + 1;
+        if (!st.countDone) {
+          st.countTimer -= dt;
+          if (st.countTimer <= 0) {
+            st.countStep += 1;
+            if (st.countStep >= total) {
+              st.countVal = st.lockedPct;
+              st.countDone = true;
+              st.countPop = 1;
+              st.t = 0;
+              st.shake = 13;
+              playExplosion2();
+            } else {
+              st.countVal = st.countStep;
+              st.countPop = 0.55;
+              playCountUp();
+              const prog = st.countStep / total;
+              st.countTimer = 0.024 + 0.17 * Math.pow(prog, 2.6);
+            }
+          }
+        } else if (st.t > 0.94) {
+          newRound(st);
+        }
       } else if (st.phase === "result") {
         const gap = Math.max(0.22, 0.5 - st.combo * 0.02);
         if (st.t > gap) newRound(st);
       }
+
 
       st.beam = Math.max(0, st.beam - dt);
       st.flash = Math.max(0, st.flash - dt * 3.2);
@@ -445,8 +501,25 @@ export default function StarVanisher() {
       }
       ctx.globalAlpha = 1;
 
+      // counting percentage
+      if (st.phase === "count" && s) {
+        const pop = 1 + st.countPop * (st.countDone ? 0.55 : 0.18);
+        ctx.save();
+        ctx.translate(s.cx, s.cy - s.r - 24);
+        ctx.scale(pop, pop);
+        ctx.textAlign = "center";
+        ctx.font = "bold 74px Bungee, system-ui, sans-serif";
+        ctx.lineWidth = 9;
+        ctx.strokeStyle = "rgba(30,0,12,0.8)";
+        ctx.fillStyle = st.countDone ? "#ffe23a" : "#ffb03a";
+        const txt = st.countDone ? `${st.countVal.toFixed(1)}%` : `${Math.floor(st.countVal)}%`;
+        ctx.strokeText(txt, 0, 0);
+        ctx.fillText(txt, 0, 0);
+        ctx.restore();
+      }
+
       // judgement text
-      if (st.judgement && (st.phase === "fire" || st.phase === "result")) {
+      if (st.judgement && (st.phase === "fire" || st.phase === "count" || st.phase === "result")) {
         const j = st.judgement;
         const pop = Math.min(1, st.t * 6);
         ctx.save();
