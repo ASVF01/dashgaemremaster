@@ -485,7 +485,7 @@ export default function StarVanisher() {
     else if (running && !hud.over) { pauseBgm(); a.volume = 0.3375; a.currentTime = 0; void a.play().catch(() => { /* noop */ }); }
     else if (running && hud.over) { a.volume = 0.10; void a.play().catch(() => { /* noop */ }); }
   }), [running, hud.over]);
-  useEffect(() => () => { bgmRef.current?.pause(); resumeBgm(); }, []);
+  useEffect(() => () => { bgmRef.current?.pause(); stopBossBgm(); resumeBgm(); }, []);
 
 
   useEffect(() => {
