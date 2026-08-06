@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { sfx } from "@/game/sfx";
 import { addTokens } from "@/game/shop";
 import { isBgmMuted, pauseBgm, resumeBgm } from "@/game/bgm";
+import { isCheatOn, toggleCheat } from "@/game/cheats";
 import bgmOpeningAsset from "@/assets/audio/bgm_opening.mp3.asset.json";
 
 type Cheat = {
@@ -14,6 +15,7 @@ type Cheat = {
 
 const CHEATS: Cheat[] = [
   { code: "nicole", label: "MTSIN", hint: "+1000 T per press", trigger: "+" },
+  { code: "deadeye", label: "V-LOCK", hint: "every shot is a guaranteed JUST", trigger: "ENTER (toggle)" },
 ];
 
 export default function CheatMenu() {
@@ -47,7 +49,12 @@ export default function CheatMenu() {
         if (found) {
           if (!armed.includes(found.code)) setArmed((a) => [...a, found.code]);
           sfx.cheatChime();
-          setLine(`${found.label} ARMED — PRESS ${found.trigger}`);
+          if (found.code === "deadeye") {
+            const on = toggleCheat("perfectAim");
+            setLine(`V-LOCK ${on ? "ON" : "OFF"} — GUARANTEED JUST`);
+          } else {
+            setLine(`${found.label} ARMED — PRESS ${found.trigger}`);
+          }
         } else {
           sfx.menuBack();
           setLine("BAD CODE.");
@@ -126,7 +133,9 @@ export default function CheatMenu() {
           {CHEATS.map((c) => (
             <div key={c.code}>
               {armed.includes(c.code)
-                ? `${c.label} :: ${c.hint} (PRESS ${c.trigger})`
+                ? c.code === "deadeye"
+                  ? `${c.label} :: ${c.hint} [${isCheatOn("perfectAim") ? "ON" : "OFF"}]`
+                  : `${c.label} :: ${c.hint} (PRESS ${c.trigger})`
                 : "?????? :: LOCKED"}
             </div>
           ))}

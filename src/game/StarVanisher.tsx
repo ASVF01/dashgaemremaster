@@ -7,6 +7,7 @@ import explose2Asset from "@/assets/audio/explose2.mp3.asset.json";
 import countupAsset from "@/assets/audio/countup.mp3.asset.json";
 import runBgmAsset from "@/assets/audio/StarVanisher_duh.ogg.asset.json";
 import svTitleBg from "@/assets/sv_title_bg.jpg.asset.json";
+import { isCheatOn } from "@/game/cheats";
 
 import { isBgmMuted, subscribeBgmMuted, pauseBgm, resumeBgm } from "@/game/bgm";
 
@@ -362,10 +363,14 @@ export default function StarVanisher() {
     const s = st.star;
     const fr = fieldRadius(st, s);
     const fc = fieldCenter(s);
-    const pct = overlapPct(s.cx, s.cy, s.r, fc.x, fc.y, fr);
+    const rawPct = overlapPct(s.cx, s.cy, s.r, fc.x, fc.y, fr);
+    const cheatJust = isCheatOn("perfectAim");
+    const pct = cheatJust ? st.target : rawPct;
     const win = windows(st.combo);
     const diff = Math.abs(pct - st.target);
-    const j: Judgement = diff <= win.perfect ? "JUST" : diff <= win.okay ? "OKAY" : "MISS";
+    const j: Judgement = cheatJust
+      ? "JUST"
+      : diff <= win.perfect ? "JUST" : diff <= win.okay ? "OKAY" : "MISS";
 
     if (st.sightLeft > 0) st.sightLeft -= 1;
     st.lockedPct = pct;
