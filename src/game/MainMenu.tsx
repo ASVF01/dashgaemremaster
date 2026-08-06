@@ -805,25 +805,39 @@ function ResetProgressFlow({ onClose }: { onClose: () => void }) {
 
   useEffect(() => () => { timers.current.forEach(clearTimeout); }, []);
 
+  // Scattered blast positions/sizes/delays — regenerated each time the flow mounts.
+  const blasts = useRef(
+    Array.from({ length: 9 }, (_, i) => ({
+      x: 10 + Math.random() * 80,
+      y: 10 + Math.random() * 80,
+      size: 45 + Math.random() * 65,
+      delay: i === 0 ? 0 : Math.random() * 1.5,
+    })),
+  ).current;
+
   const nuke = () => {
-    // Explosion: sound + fullscreen flash.
-    try {
-      const a = new Audio(exploseAsset.url);
-      a.volume = 0.9;
-      void a.play();
-    } catch { /* noop */ }
+    // Explosion: staggered sounds + a barrage of bursts across the screen.
+    blasts.forEach((b) => {
+      after(Math.round(b.delay * 1000), () => {
+        try {
+          const a = new Audio(exploseAsset.url);
+          a.volume = 0.35 + Math.random() * 0.5;
+          void a.play();
+        } catch { /* noop */ }
+      });
+    });
     pauseBgm();
     resetAllProgress();
     setPhase("boom");
 
-    // 0.5s later: fade to black + the line.
-    after(500, () => setPhase("dark"));
-    // Text holds 2s, then bring music + menu back.
-    after(500 + 2000, () => {
+    // 2.5s after the explosion starts: fade to black + the line.
+    after(2500, () => setPhase("dark"));
+    // Text holds 4.2s, then bring music + menu back.
+    after(2500 + 4200, () => {
       setPhase("restore");
       resumeBgm();
     });
-    after(500 + 2000 + 1000, () => onClose());
+    after(2500 + 4200 + 1000, () => onClose());
   };
 
   const yes = (next: ResetPhase) => {
