@@ -168,7 +168,9 @@ export default function StarVanisher() {
     stateRef.current = st;
     setHud((h) => ({ ...h, score: 0, combo: 0, over: false, newBest: false }));
     setFailStage(0);
+    setShowFailPct(false);
     setRunning(true);
+
   };
 
   // fail sequence timeline
