@@ -312,6 +312,7 @@ export default function StarVanisher() {
       boomed: false, pendingMiss: false, reviveLeft: hasAbility("revive") ? 1 : 0,
       sightLeft: hasAbility("sight") ? 10 : 0,
       starsDone: -1, bg: bg0, streaks: makeStreaks(bg0), demo,
+      demoTryTimer: 0,
     };
 
     newRound(st);
