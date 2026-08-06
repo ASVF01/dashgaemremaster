@@ -117,6 +117,7 @@ type State = {
   bg: ColorSet;           // background palette, reshuffled every 5 stars
   streaks: Streak[];      // speed lines flying right -> left
   demo: boolean;          // tutorial demonstration: the game plays itself
+  demoTryTimer: number;   // seconds after count-up done before "Try it yourself!" flashes
 };
 
 
