@@ -1,4 +1,5 @@
 import { forwardRef, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { LEVELS, type LevelId, type LevelMeta } from "@/game/level";
 import {
   ACTIONS, DEFAULT_BINDS, type ActionId, type Keybinds,
@@ -853,7 +854,7 @@ function ResetProgressFlow({ onClose }: { onClose: () => void }) {
 
   const isDialog = phase === "c1" || phase === "c2" || phase === "c3";
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
       <style>{`
         @keyframes rpBoom {
