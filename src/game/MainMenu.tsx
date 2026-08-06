@@ -935,7 +935,8 @@ function ResetProgressFlow({ onClose }: { onClose: () => void }) {
           </div>
         </div>
       )}
-    </div>
+    </div>,
+    document.body,
   );
 }
 
