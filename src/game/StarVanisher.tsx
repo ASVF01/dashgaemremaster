@@ -75,6 +75,12 @@ type State = {
   particles: Particle[];
   floatNums: { x: number; y: number; text: string; life: number; color: string; size: number }[];
   comboPop: number;
+  // percentage count-up
+  countVal: number;       // currently shown %
+  countStep: number;      // index of ticks done
+  countTimer: number;     // time until next tick
+  countDone: boolean;
+  countPop: number;
 };
 
 function rand(a: number, b: number) { return a + Math.random() * (b - a); }
