@@ -787,19 +787,23 @@ export default function StarVanisher() {
         ctx.restore();
       }
 
-      // left HUD: target call-out
+      // left HUD: target call-out (hidden while the DANGER TARGET is up)
       ctx.save();
       ctx.textAlign = "left";
-      ctx.font = "italic 800 54px Oxanium, system-ui, sans-serif";
+      if (st.phase !== "boss") {
+        ctx.font = "italic 800 54px Oxanium, system-ui, sans-serif";
+        ctx.lineWidth = 8;
+        ctx.strokeStyle = "rgba(25,0,10,0.85)";
+        ctx.fillStyle = "#ffe23a";
+        ctx.strokeText(`${st.target}%`, 34, H - 60);
+        ctx.fillText(`${st.target}%`, 34, H - 60);
+        ctx.font = "italic 800 34px Oxanium, system-ui, sans-serif";
+        ctx.fillStyle = "#ffffff";
+        ctx.strokeText("Vanish!!", 34 + ctx.measureText(`${st.target}% `).width * 0.55, H - 60);
+        ctx.fillText("Vanish!!", 34 + ctx.measureText(`${st.target}% `).width * 0.55, H - 60);
+      }
       ctx.lineWidth = 8;
       ctx.strokeStyle = "rgba(25,0,10,0.85)";
-      ctx.fillStyle = "#ffe23a";
-      ctx.strokeText(`${st.target}%`, 34, H - 60);
-      ctx.fillText(`${st.target}%`, 34, H - 60);
-      ctx.font = "italic 800 34px Oxanium, system-ui, sans-serif";
-      ctx.fillStyle = "#ffffff";
-      ctx.strokeText("Vanish!!", 34 + ctx.measureText(`${st.target}% `).width * 0.55, H - 60);
-      ctx.fillText("Vanish!!", 34 + ctx.measureText(`${st.target}% `).width * 0.55, H - 60);
 
       // combo + score
       const cp = 1 + st.comboPop * 0.5;
