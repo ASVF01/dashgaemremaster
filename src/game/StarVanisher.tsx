@@ -101,6 +101,16 @@ type State = {
 
 function rand(a: number, b: number) { return a + Math.random() * (b - a); }
 
+// a fully random colour identity — includes greys, near-black and near-white
+function randColorSet(): ColorSet {
+  const grey = Math.random() < 0.28;
+  const h = rand(0, 360);
+  const sat = grey ? 0 : rand(45, 100);
+  const L = rand(26, 74);
+  const hsl = (l: number) => `hsl(${h.toFixed(0)} ${sat.toFixed(0)}% ${Math.max(3, Math.min(97, l)).toFixed(0)}%)`;
+  return { light: hsl(L + 28), mid: hsl(L), dark: hsl(L - 26), edge: hsl(L + 40) };
+}
+
 function makeStar(combo: number): Star {
   const r = rand(105, 150) - Math.min(25, combo * 1.2);
   const craters = Array.from({ length: Math.floor(rand(4, 9)) }, () => ({
@@ -111,10 +121,14 @@ function makeStar(combo: number): Star {
     cy: H / 2 + rand(-30, 30),
     r,
     seed: Math.random() * 1000,
-    wobble: Math.min(0.16, 0.02 + combo * 0.006),
+    wobble: 0,
     craters,
+    colors: randColorSet(),
+    spin: rand(0, Math.PI * 2),
+    spinSpeed: rand(0.18, 0.34) * (Math.random() < 0.5 ? -1 : 1),
   };
 }
+
 
 // area of the lens where the vanish field overlaps the star, as a % of star area
 function overlapPct(sx: number, sy: number, sr: number, fx: number, fy: number, fr: number) {
