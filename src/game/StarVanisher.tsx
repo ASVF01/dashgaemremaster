@@ -1421,12 +1421,14 @@ export default function StarVanisher() {
           Balance <span className="font-bungee text-ink">{getShop().tokens} T</span> · beam{" "}
           <span className="font-bungee text-ink">{activeBeamSkin().name}</span>
           {getShop().abilities.length > 0 && <> · {getShop().abilities.length} ability equipped</>}
+          {" "}· press <span className="font-bungee text-ink">F</span> for fullscreen
         </p>
       </div>
 
       <div
-        className="relative w-full max-w-3xl scribble-border overflow-hidden bg-[#2a0011] select-none"
-        style={{ aspectRatio: `${W} / ${H}` }}
+        ref={stageRef}
+        className={`sv-stage relative w-full max-w-3xl scribble-border overflow-hidden bg-[#2a0011] select-none${fsAnim ? " sv-fs-anim" : ""}`}
+        style={isFs ? undefined : { aspectRatio: `${W} / ${H}` }}
       >
         <canvas
           ref={canvasRef}
