@@ -187,6 +187,13 @@
   .font-bungee { font-family: 'Bungee', cursive; }
   .font-scribble { font-family: 'Caveat', cursive; }
 
+  /* Star Vanisher uses Oxanium ExtraBold Italic everywhere */
+  .sv-font, .sv-font * {
+    font-family: 'Oxanium', sans-serif !important;
+    font-weight: 800 !important;
+    font-style: italic !important;
+  }
+
   /* On mobile, override the fancy fonts with the pixel font so the whole
      UI matches the default. Targets phones/tablets in any orientation. */
   @media (max-width: 900px), (pointer: coarse) {
