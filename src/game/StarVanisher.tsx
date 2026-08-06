@@ -35,6 +35,60 @@ const playBeam = makeSample(beamAsset.url, 0.75);
 const playExplosion = makeSample(exploseAsset.url, 0.85);
 const playExplosion2 = makeSample(explose2Asset.url, 0.9);
 const playCountUp = makeSample(countupAsset.url, 0.55);
+const playMegaShot = makeSample(mvAsset.url, 0.95);
+
+// ---- charge hum: procedural WebAudio drone that grows more aggressive over 3s ----
+const CHARGE_TIME = 3;
+let chargeCtx: AudioContext | null = null;
+let chargeNodes: { osc: OscillatorNode; osc2: OscillatorNode; gain: GainNode; filt: BiquadFilterNode } | null = null;
+function startChargeHum() {
+  try {
+    stopChargeHum();
+    const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!chargeCtx) chargeCtx = new AC();
+    const c = chargeCtx;
+    void c.resume();
+    const t = c.currentTime;
+    const osc = c.createOscillator();
+    const osc2 = c.createOscillator();
+    const gain = c.createGain();
+    const filt = c.createFilter?.call(c) ?? c.createBiquadFilter();
+    osc.type = "sawtooth";
+    osc2.type = "square";
+    osc.frequency.setValueAtTime(70, t);
+    osc.frequency.exponentialRampToValueAtTime(520, t + CHARGE_TIME);
+    osc2.frequency.setValueAtTime(104, t);
+    osc2.frequency.exponentialRampToValueAtTime(790, t + CHARGE_TIME);
+    filt.type = "lowpass";
+    filt.frequency.setValueAtTime(420, t);
+    filt.frequency.exponentialRampToValueAtTime(6200, t + CHARGE_TIME);
+    filt.Q.value = 7;
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.06, t + 0.25);
+    gain.gain.exponentialRampToValueAtTime(0.26, t + CHARGE_TIME);
+    osc.connect(filt);
+    osc2.connect(filt);
+    filt.connect(gain);
+    gain.connect(c.destination);
+    osc.start(t);
+    osc2.start(t);
+    chargeNodes = { osc, osc2, gain, filt };
+  } catch { /* noop */ }
+}
+function stopChargeHum() {
+  try {
+    const n = chargeNodes;
+    chargeNodes = null;
+    if (!n || !chargeCtx) return;
+    const t = chargeCtx.currentTime;
+    n.gain.gain.cancelScheduledValues(t);
+    n.gain.gain.setValueAtTime(Math.max(0.0001, n.gain.gain.value), t);
+    n.gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+    n.osc.stop(t + 0.1);
+    n.osc2.stop(t + 0.1);
+  } catch { /* noop */ }
+}
+
 
 
 // STAR VANISHER...!! — one-click point grinding mini game.
