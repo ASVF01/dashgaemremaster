@@ -477,6 +477,152 @@ export default function StarVanisher() {
     }
   };
 
+  // ---------------- DANGER TARGET (boss battle) ----------------
+  const startBoss = (st: State) => {
+    st.star = null;
+    st.phase = "boss";
+    st.t = 0;
+    st.judgement = null;
+    st.beam = 0;
+    st.boomed = false;
+    st.destroyFrac = 0;
+    st.boss = makeBoss();
+    st.bossIntro = 1.6;
+    st.flash = 1;
+    st.shake = 20;
+    st.aimX = W * 0.5;
+    st.aimY = H * 0.5;
+    playExplosion2();
+    // the boss theme takes over the run track
+    if (!isBgmMuted()) {
+      bgmRef.current?.pause();
+      playBossBgm();
+    }
+  };
+
+  const endBoss = (st: State) => {
+    st.boss = null;
+    stopBossBgm();
+    if (!isBgmMuted() && !hud.over) {
+      const a = bgmRef.current;
+      if (a) { a.volume = 0.3375; void a.play().catch(() => { /* noop */ }); }
+    }
+  };
+
+  const updateBoss = (st: State, dt: number) => {
+    const b = st.boss;
+    if (!b) return;
+
+    if (st.bossIntro > 0) { st.bossIntro -= dt; return; }
+
+    if (b.dying > 0) {
+      b.dying -= dt;
+      // keep blowing chunks off the corpse
+      if (Math.random() < 0.5) {
+        const a = rand(0, Math.PI * 2);
+        st.particles.push({
+          x: b.x + Math.cos(a) * b.r * 0.6, y: b.y + Math.sin(a) * b.r * 0.6,
+          vx: Math.cos(a) * rand(80, 420), vy: Math.sin(a) * rand(80, 420) - 40,
+          life: rand(0.4, 1.0), maxLife: 1.0, size: rand(12, 44),
+          color: Math.random() < 0.5 ? "#ffe9a8" : "#ff5c3a", kind: "smoke",
+        });
+      }
+      if (b.dying <= 0) {
+        endBoss(st);
+        newRound(st);
+      }
+      return;
+    }
+
+    // path movement
+    b.t += dt * b.speed;
+    const p = bossPathPos(b.path, b.t);
+    b.x = p.x; b.y = p.y;
+    b.spin += dt * 0.9;
+    b.hitFlash = Math.max(0, b.hitFlash - dt * 4);
+    for (const sp of b.spots) if (sp.cd > 0) sp.cd -= dt;
+
+    // countdown — let it expire and the run is over
+    b.timeLeft -= dt;
+    if (b.timeLeft <= 0) {
+      st.judgement = "MISS";
+      st.lockedPct = 0;
+      endBoss(st);
+      finishMiss(st);
+    }
+  };
+
+  const bossFire = (ax: number, ay: number) => {
+    const st = stateRef.current;
+    const b = st?.boss;
+    if (!st || !b || st.phase !== "boss" || st.bossIntro > 0 || b.dying > 0) return;
+    unlockAudio();
+    st.beam = 0.28;
+    st.beamX = ax;
+    st.beamY = ay;
+    playBeam();
+
+    // weak spot hit test
+    let hit: BossSpot | null = null;
+    let best = 9999;
+    for (const sp of b.spots) {
+      if (sp.cd > 0) continue;
+      const pos = spotPos(b, sp);
+      const d = Math.hypot(pos.x - ax, pos.y - ay);
+      if (d <= SPOT_R + 10 && d < best) { best = d; hit = sp; }
+    }
+
+    if (hit) {
+      const pos = spotPos(b, hit);
+      hit.cd = 1.1;
+      b.hp = Math.max(0, b.hp - 12);
+      b.hitFlash = 1;
+      st.shake = 12;
+      st.hitstop = 0.06;
+      playExplosion2();
+      st.combo += 1;
+      st.comboPop = 1;
+      const gained = Math.round(900 * (1 + st.combo * 0.12));
+      st.score += gained;
+      st.floatNums.push({ x: pos.x, y: pos.y - 10, text: `+${gained}`, life: 0.8, color: "#ffe23a", size: 30 });
+      for (let i = 0; i < 22; i++) {
+        const a = rand(0, Math.PI * 2);
+        st.particles.push({
+          x: pos.x, y: pos.y, vx: Math.cos(a) * rand(60, 340), vy: Math.sin(a) * rand(60, 340),
+          life: rand(0.25, 0.7), maxLife: 0.7, size: rand(6, 22),
+          color: i % 3 === 0 ? "#fff3b0" : "#ff3a5e", kind: i % 4 === 0 ? "spark" : "smoke",
+        });
+      }
+      setHud((h) => ({ ...h, score: st.score, combo: st.combo }));
+
+      if (b.hp <= 0) {
+        // DANGER TARGET DOWN
+        b.dying = 2.2;
+        st.flash = 1;
+        st.shake = 30;
+        st.hitstop = 0.16;
+        playExplosion();
+        st.score += 100000;
+        st.floatNums.push({ x: b.x, y: b.y - 40, text: "DANGER TARGET DOWN", life: 2.0, color: "#ff3a5e", size: 40 });
+        st.floatNums.push({ x: b.x, y: b.y + 20, text: "+100000", life: 2.0, color: "#ffe23a", size: 52 });
+        for (let i = 0; i < 90; i++) {
+          const a = rand(0, Math.PI * 2);
+          st.particles.push({
+            x: b.x + Math.cos(a) * rand(0, b.r), y: b.y + Math.sin(a) * rand(0, b.r),
+            vx: Math.cos(a) * rand(80, 620), vy: Math.sin(a) * rand(80, 620),
+            life: rand(0.4, 1.2), maxLife: 1.2, size: rand(10, 52),
+            color: i % 4 === 0 ? "#ffffff" : i % 3 === 0 ? "#ffb03a" : "#ff2d5e",
+            kind: i % 5 === 0 ? "spark" : "smoke",
+          });
+        }
+        setHud((h) => ({ ...h, score: st.score, combo: st.combo }));
+      }
+    } else {
+      st.shake = 5;
+      st.floatNums.push({ x: ax, y: ay, text: "miss", life: 0.5, color: "#ffffff", size: 22 });
+    }
+  };
+
 
   // main loop
   useEffect(() => {
