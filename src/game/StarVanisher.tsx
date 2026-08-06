@@ -481,17 +481,18 @@ export default function StarVanisher() {
           ctx.fillText("TARGET", fc.x, fc.y + 9);
         }
 
-        // beam
+        // beam — colours come from the equipped shop skin
         if (st.beam > 0) {
+          const sk = activeBeamSkin();
           const k = st.beam / 0.32;
           const bh = (28 + st.combo * 3) * (0.5 + k);
           ctx.globalAlpha = 0.35 + k * 0.65;
           const bg = ctx.createLinearGradient(0, 0, s.cx, 0);
-          bg.addColorStop(0, "#ffffff");
-          bg.addColorStop(1, "#ff4d86");
+          bg.addColorStop(0, sk.core);
+          bg.addColorStop(1, sk.edge);
           ctx.fillStyle = bg;
           ctx.fillRect(40, s.cy - bh / 2, s.cx - 40, bh);
-          ctx.fillStyle = "#ffffff";
+          ctx.fillStyle = sk.core;
           ctx.fillRect(40, s.cy - bh / 6, s.cx - 40, bh / 3);
           ctx.globalAlpha = 1;
         }
