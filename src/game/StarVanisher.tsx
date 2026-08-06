@@ -832,7 +832,7 @@ export default function StarVanisher() {
   }, [running]);
 
   return (
-    <div className="flex flex-col items-center gap-3">
+    <div className="sv-font flex flex-col items-center gap-3">
       <div className="text-center">
         
         <p className="font-marker text-xs text-ink/70 mt-1">
