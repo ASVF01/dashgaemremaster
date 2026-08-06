@@ -226,12 +226,6 @@ export default function StarVanisher() {
     playBeam();
 
 
-    if (j !== "MISS") {
-      st.floatNums.push({
-        x: s.cx, y: s.cy - s.r - 20, text: `${pct.toFixed(1)}%`,
-        life: 1.1, color: "#ffb03a", size: 74,
-      });
-    }
 
     if (j === "MISS") {
       sfx.fatalHit();
