@@ -1293,11 +1293,12 @@ export default function StarVanisher({ onBack }: { onBack?: () => void } = {}) {
       }
       ctx.globalAlpha = 1;
 
-      // counting percentage
+      // counting percentage — centered on screen, rises from below
       if (st.phase === "count" && s) {
         const pop = 1 + st.countPop * (st.countDone ? 0.55 : 0.18);
+        const rise = 1 - Math.pow(1 - Math.min(1, st.t * 3.2), 3);
         ctx.save();
-        ctx.translate(s.cx, s.cy - s.r - 24);
+        ctx.translate(W * 0.5, H * 0.5 + (1 - rise) * H);
         ctx.scale(pop, pop);
         ctx.textAlign = "center";
         ctx.font = "italic 800 74px Oxanium, system-ui, sans-serif";
