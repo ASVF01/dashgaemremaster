@@ -99,14 +99,17 @@ export default function BgmPlayer() {
           const data = new Uint8Array(an.frequencyBinCount);
           an.getByteFrequencyData(data);
 
-          // Beat detection: simple bass-energy delta on lowest ~6 bins.
+          // Beat detection: bass-energy delta on lowest ~8 bins (56% more sensitive).
           let bass = 0;
-          for (let i = 0; i < 6; i++) bass += data[i];
-          bass /= 6 * 255;
+          for (let i = 0; i < 8; i++) bass += data[i];
+          bass /= 8 * 255;
           const delta = Math.max(0, bass - lastBassRef.current);
           lastBassRef.current = bass * 0.86 + lastBassRef.current * 0.14;
-          if (delta > 0.07) beatPulseRef.current = Math.min(1, beatPulseRef.current + delta * 2.2);
-          beatPulseRef.current *= 0.92;
+          // threshold /1.56, gain *1.56, slower decay so the ring shows up more
+          if (delta > 0.045) beatPulseRef.current = Math.min(1, beatPulseRef.current + delta * 3.43);
+          // also let raw bass energy feed the pulse so it's never fully flat
+          beatPulseRef.current = Math.max(beatPulseRef.current, Math.min(1, bass * 1.56));
+          beatPulseRef.current *= 0.945;
 
           // Background — paper-tinted with a subtle pulse.
           ctx.clearRect(0, 0, W, H);
@@ -134,17 +137,18 @@ export default function BgmPlayer() {
             ctx.fillRect(x + 1, y, Math.max(1, bw - 2), bh);
           }
 
-          // Beat ring overlay
-          if (pulse > 0.05) {
+          // Beat ring overlay — shows far more often now
+          if (pulse > 0.02) {
             ctx.save();
-            ctx.globalAlpha = pulse * 0.6;
+            ctx.globalAlpha = Math.min(0.95, pulse * 0.94);
             ctx.strokeStyle = `rgb(255,${Math.round(60 + pulse * 120)},80)`;
-            ctx.lineWidth = 2 + pulse * 6;
+            ctx.lineWidth = 2 + pulse * 9;
             ctx.beginPath();
-            ctx.arc(W / 2, H / 2, Math.min(W, H) * (0.18 + pulse * 0.18), 0, Math.PI * 2);
+            ctx.arc(W / 2, H / 2, Math.min(W, H) * (0.16 + pulse * 0.28), 0, Math.PI * 2);
             ctx.stroke();
             ctx.restore();
           }
+
         }
       }
       rafRef.current = requestAnimationFrame(draw);
@@ -224,9 +228,15 @@ export default function BgmPlayer() {
   };
 
   return (
-    <div className="scribble-border bg-paper p-5">
-      <div className="font-marker text-3xl text-ink -rotate-1 mb-3">BGM PLAYER</div>
-      <p className="font-scribble text-base text-ink/70 mb-3">
+    <div className="scribble-border bg-paper p-5 relative">
+
+      <div className="flex items-end justify-between gap-3 mb-3 flex-wrap">
+        <div className="font-marker text-3xl text-ink -rotate-1">BGM PLAYER</div>
+        <div className="font-scribble text-xs uppercase tracking-[0.3em] text-ink/50 border-b border-dashed border-ink/30 pb-0.5">
+          side a — {TRACKS.length} tracks
+        </div>
+      </div>
+      <p className="font-scribble text-base text-ink/70 mb-4">
         Listen to every track in the game. Pauses the game music while playing.
       </p>
 
@@ -241,34 +251,38 @@ export default function BgmPlayer() {
         onPause={() => setPlaying(false)}
       />
 
-      {/* Now playing */}
-      <div className="scribble-border bg-paper p-3 mb-3 flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <div className="font-scribble text-sm text-ink/60 uppercase">Now Playing</div>
-          <div className="font-marker text-2xl text-ink">{track.title}</div>
-        </div>
-        <div className="font-scribble text-lg text-ink/70 tabular-nums">
-          {fmt(time)} / {fmt(dur)}
-        </div>
-      </div>
-
-      {/* Visualizer */}
-      <div className="scribble-border bg-paper p-1 mb-3 relative overflow-hidden">
-        <canvas
-          ref={vizCanvasRef}
-          className="block w-full h-24 sm:h-28"
-          aria-hidden="true"
-        />
-        {!playing && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none font-marker text-xl text-ink/40">
-            ♪ press play ♪
+      {/* Deck: now playing + visualizer stacked in one slab */}
+      <div className="scribble-border bg-ink text-paper p-3 mb-4 rotate-[-0.4deg]">
+        <div className="flex items-center justify-between gap-3 flex-wrap mb-2">
+          <div className="min-w-0">
+            <div className="font-scribble text-[11px] tracking-[0.25em] text-paper/50 uppercase">
+              {playing ? "▶ now playing" : "❚❚ paused"}
+            </div>
+            <div className="font-marker text-2xl truncate">{track.title}</div>
           </div>
-        )}
+          <div className="font-scribble text-lg text-paper/80 tabular-nums border border-dashed border-paper/30 px-2 py-0.5">
+            {fmt(time)} / {fmt(dur)}
+          </div>
+        </div>
+
+        <div className="relative overflow-hidden border border-dashed border-paper/25 bg-black/40">
+          <canvas
+            ref={vizCanvasRef}
+            className="block w-full h-28 sm:h-36"
+            aria-hidden="true"
+          />
+          {!playing && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none font-marker text-xl text-paper/40">
+              ♪ press play ♪
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Seek bar */}
       <input
         type="range"
+
         min={0}
         max={dur || 0}
         step={0.01}
