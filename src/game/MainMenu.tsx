@@ -1294,20 +1294,6 @@ const UPDATES: UpdateEntry[] = [
 ];
 
 function UpdatesTab() {
-  const renderChange = (text: string) => {
-    const parts = text.split(/(\$25)/);
-    if (parts.length <= 1) return text;
-    return parts.map((part, idx) =>
-      part === "$25" ? (
-        <span key={idx} className="green-shimmer">
-          {part}
-        </span>
-      ) : (
-        part
-      )
-    );
-  };
-
   return (
     <div className="max-w-3xl mx-auto">
       <div className="text-center mb-4">
@@ -1339,7 +1325,7 @@ function UpdatesTab() {
             )}
             <ul className="font-scribble text-lg text-ink/85 space-y-1 list-disc list-inside">
               {u.changes.map((c, j) => (
-                <li key={j}>{renderChange(c)}</li>
+                <li key={j}>{c}</li>
               ))}
             </ul>
           </div>
