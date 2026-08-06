@@ -216,10 +216,12 @@ export default function StarVanisher() {
       });
     }
 
-    st.floatNums.push({
-      x: s.cx, y: s.cy - s.r - 20, text: `${pct.toFixed(1)}%`,
-      life: 1.1, color: j === "MISS" ? "#ff2d5e" : "#ffb03a", size: 74,
-    });
+    if (j !== "MISS") {
+      st.floatNums.push({
+        x: s.cx, y: s.cy - s.r - 20, text: `${pct.toFixed(1)}%`,
+        life: 1.1, color: "#ffb03a", size: 74,
+      });
+    }
 
     if (j === "MISS") {
       sfx.fatalHit();
@@ -229,7 +231,7 @@ export default function StarVanisher() {
         hsRef.current = st.score;
         try { localStorage.setItem(HS_KEY, String(st.score)); } catch { /* noop */ }
       }
-      setHud({ score: st.score, combo: st.combo, best: hsRef.current, over: true, lastScore: st.score, newBest });
+      setHud({ score: st.score, combo: st.combo, best: hsRef.current, over: true, lastScore: st.score, newBest, lastPct: pct });
     } else {
       const acc = Math.max(0, 1 - diff / win.okay);
       const gained = Math.round((j === "PERFECT" ? 1200 : 500) * (1 + acc) * (1 + st.combo * 0.22));
