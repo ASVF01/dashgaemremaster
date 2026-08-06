@@ -41,21 +41,21 @@ export default function Shop({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#120014] text-paper overflow-hidden">
+    <div className="fixed inset-0 z-50 flex flex-col bg-[#120014] text-[#f6efe6] overflow-hidden">
       {/* header */}
       <div className="flex items-center justify-between gap-4 border-b-4 border-[#ffe23a]/70 px-5 py-4">
         <div className="flex items-baseline gap-3">
           <h1 className="font-bungee text-3xl md:text-4xl text-[#ffe23a] -rotate-1">THE SHOP</h1>
-          <span className="font-marker text-xs text-paper/60 hidden sm:inline">spend it or stare at it</span>
+          <span className="font-marker text-xs text-[#f6efe6]/60 hidden sm:inline">spend it or stare at it</span>
         </div>
         <div className="flex items-center gap-4">
           <div className="scribble-border bg-[#1e0020] px-4 py-2 font-bungee text-xl text-[#ffe23a]">
-            {shop.tokens} <span className="text-paper">T</span>
+            {shop.tokens} <span className="text-[#f6efe6]">T</span>
           </div>
           <button
             type="button"
             onClick={() => { sfx.menuBack(); onClose(); }}
-            className="scribble-border bg-paper px-4 py-2 font-bungee text-ink hover:scale-105 transition-transform"
+            className="scribble-border bg-[#f6efe6] px-4 py-2 font-bungee text-[#1a1a1a] hover:scale-105 transition-transform"
           >
             CLOSE
           </button>
@@ -72,7 +72,7 @@ export default function Shop({ onClose }: { onClose: () => void }) {
       <div className="flex-1 overflow-y-auto px-5 py-5">
         {tab === "beams" && (
           <>
-            <p className="font-marker text-sm text-paper/70 mb-4">
+            <p className="font-marker text-sm text-[#f6efe6]/70 mb-4">
               Equipped beam: <span className="text-[#ffe23a]">{skin.name}</span> — used in Star Vanisher...!!
             </p>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
@@ -100,8 +100,8 @@ export default function Shop({ onClose }: { onClose: () => void }) {
                       />
                     </div>
                     <div>
-                      <div className="font-bungee text-lg text-paper">{s.name}</div>
-                      <p className="font-marker text-xs text-paper/70">{s.desc}</p>
+                      <div className="font-bungee text-lg text-[#f6efe6]">{s.name}</div>
+                      <p className="font-marker text-xs text-[#f6efe6]/70">{s.desc}</p>
                     </div>
                     <div className="mt-auto flex items-center justify-between gap-2">
                       <span className="font-bungee text-sm text-[#ffe23a]">
@@ -112,7 +112,7 @@ export default function Shop({ onClose }: { onClose: () => void }) {
                           type="button"
                           disabled={equipped}
                           onClick={() => { equipBeamSkin(s.id); sfx.menuConfirm(); }}
-                          className="scribble-border bg-paper px-3 py-1.5 font-bungee text-xs text-ink disabled:opacity-50 hover:scale-105 transition-transform"
+                          className="scribble-border bg-[#f6efe6] px-3 py-1.5 font-bungee text-xs text-[#1a1a1a] disabled:opacity-50 hover:scale-105 transition-transform"
                         >
                           {equipped ? "EQUIPPED" : "EQUIP"}
                         </button>
@@ -120,7 +120,7 @@ export default function Shop({ onClose }: { onClose: () => void }) {
                         <button
                           type="button"
                           onClick={() => tryBuy(s.id, s.price, s.name)}
-                          className="scribble-border bg-[#ffe23a] px-3 py-1.5 font-bungee text-xs text-ink hover:scale-105 transition-transform"
+                          className="scribble-border bg-[#ffe23a] px-3 py-1.5 font-bungee text-xs text-[#1a1a1a] hover:scale-105 transition-transform"
                         >
                           BUY
                         </button>
@@ -135,7 +135,7 @@ export default function Shop({ onClose }: { onClose: () => void }) {
 
         {tab === "abilities" && (
           <>
-            <p className="font-marker text-sm text-paper/70 mb-4">
+            <p className="font-marker text-sm text-[#f6efe6]/70 mb-4">
               Star Vanisher abilities — equip up to {MAX_ABILITY_SLOTS} at a time.
               Active: <span className="text-[#ffe23a]">{shop.abilities.length}/{MAX_ABILITY_SLOTS}</span>
             </p>
@@ -150,8 +150,8 @@ export default function Shop({ onClose }: { onClose: () => void }) {
                     style={{ borderColor: on ? "#8bff3a" : undefined }}
                   >
                     <div>
-                      <div className="font-bungee text-lg text-paper">{a.name}</div>
-                      <p className="font-marker text-xs text-paper/70 mt-1">{a.desc}</p>
+                      <div className="font-bungee text-lg text-[#f6efe6]">{a.name}</div>
+                      <p className="font-marker text-xs text-[#f6efe6]/70 mt-1">{a.desc}</p>
                     </div>
                     <div className="mt-auto flex items-center justify-between gap-2">
                       <span className="font-bungee text-sm text-[#ffe23a]">
@@ -161,7 +161,7 @@ export default function Shop({ onClose }: { onClose: () => void }) {
                         <button
                           type="button"
                           onClick={() => { toggleAbility(a.id); sfx.menuHover(); }}
-                          className="scribble-border bg-paper px-3 py-1.5 font-bungee text-xs text-ink hover:scale-105 transition-transform"
+                          className="scribble-border bg-[#f6efe6] px-3 py-1.5 font-bungee text-xs text-[#1a1a1a] hover:scale-105 transition-transform"
                         >
                           {on ? "UNEQUIP" : "EQUIP"}
                         </button>
@@ -169,7 +169,7 @@ export default function Shop({ onClose }: { onClose: () => void }) {
                         <button
                           type="button"
                           onClick={() => tryBuy(a.id, a.price, a.name)}
-                          className="scribble-border bg-[#ffe23a] px-3 py-1.5 font-bungee text-xs text-ink hover:scale-105 transition-transform"
+                          className="scribble-border bg-[#ffe23a] px-3 py-1.5 font-bungee text-xs text-[#1a1a1a] hover:scale-105 transition-transform"
                         >
                           BUY
                         </button>
@@ -185,19 +185,19 @@ export default function Shop({ onClose }: { onClose: () => void }) {
         {tab === "more" && (
           <div className="scribble-border bg-[#1e0020] p-8 text-center">
             <div className="font-bungee text-2xl text-[#ffe23a]">C O M I N G   S O O N .</div>
-            <p className="font-marker text-sm text-paper/70 mt-3">
+            <p className="font-marker text-sm text-[#f6efe6]/70 mt-3">
               Character skins, trails, taunts and whatever else gets cooked up. Keep grinding tokens.
             </p>
           </div>
         )}
       </div>
 
-      <div className="border-t-4 border-[#ffe23a]/40 px-5 py-3 font-marker text-xs text-paper/60">
+      <div className="border-t-4 border-[#ffe23a]/40 px-5 py-3 font-marker text-xs text-[#f6efe6]/60">
         Tokens (T) come from Star Vanisher...!! runs — 100 points = 1 T.
       </div>
 
       {note && (
-        <div className="pointer-events-none absolute left-1/2 top-24 -translate-x-1/2 scribble-border bg-paper px-4 py-2 font-bungee text-sm text-ink">
+        <div className="pointer-events-none absolute left-1/2 top-24 -translate-x-1/2 scribble-border bg-[#f6efe6] px-4 py-2 font-bungee text-sm text-[#1a1a1a]">
           {note}
         </div>
       )}
@@ -211,7 +211,7 @@ function ShopTabBtn({ active, onClick, children }: { active: boolean; onClick: (
       type="button"
       onClick={onClick}
       className={`scribble-border px-4 py-2 font-bungee text-xs transition-transform hover:scale-105 ${
-        active ? "bg-[#ffe23a] text-ink" : "bg-[#1e0020] text-paper/80"
+        active ? "bg-[#ffe23a] text-[#1a1a1a]" : "bg-[#1e0020] text-[#f6efe6]/80"
       }`}
     >
       {children}
