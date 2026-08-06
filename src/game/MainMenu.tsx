@@ -1245,12 +1245,15 @@ const UPDATES: UpdateEntry[] = [
     title: "The MASSIVE update",
     image: massiveUpdateAsset.url,
     changes: [
-      "[this took me $25 to get finished with... 〒▽〒]",
+      <>
+        [this took me <span className="green-shimmer">$25</span> to get finished with... 〒▽〒]
+      </>,
       "Added [ THE ALTERNATE ] and a proper character selection",
       "Revamped Bestiary's UI",
       "NEW MODE! : Star Vanisher...!!",
       "Added the shop, will be used for STAR VANISHER for now, but expect it to be used for later purposes..",
     ],
+
   },
   {
     version: "v1.3",
