@@ -82,6 +82,7 @@ type State = {
   countDone: boolean;
   countPop: number;
   boomed: boolean;        // explosion already triggered for this shot
+  pendingMiss: boolean;   // run ends once the count-up finishes
 
 };
 
@@ -170,6 +171,7 @@ export default function StarVanisher() {
     st.countDone = false;
     st.countPop = 0;
     st.boomed = false;
+    st.pendingMiss = false;
     st.star = makeStar(st.combo);
   };
 
@@ -181,7 +183,7 @@ export default function StarVanisher() {
       lockedPct: 0, judgement: null, combo: 0, score: 0, shake: 0, flash: 0,
       hitstop: 0, beam: 0, star: null, destroyFrac: 0, particles: [], floatNums: [],
       comboPop: 0, countVal: 0, countStep: 0, countTimer: 0, countDone: false, countPop: 0,
-      boomed: false,
+      boomed: false, pendingMiss: false,
     };
     newRound(st);
     stateRef.current = st;
@@ -232,27 +234,32 @@ export default function StarVanisher() {
 
 
     if (j === "MISS") {
-      sfx.fatalHit();
-      st.phase = "over";
-      const newBest = st.score > hsRef.current;
-      if (newBest) {
-        hsRef.current = st.score;
-        try { localStorage.setItem(HS_KEY, String(st.score)); } catch { /* noop */ }
-      }
-      setHud({ score: st.score, combo: st.combo, best: hsRef.current, over: true, lastScore: st.score, newBest, lastPct: pct });
+      // hold the run open: the MISS reveal happens after the count-up
+      st.pendingMiss = true;
     } else {
       const acc = Math.max(0, 1 - diff / win.okay);
       const gained = Math.round((j === "PERFECT" ? 1200 : 500) * (1 + acc) * (1 + st.combo * 0.22));
       st.score += gained;
       st.combo += 1;
       st.comboPop = 1;
-      sfx.enemyKill();
       st.floatNums.push({
         x: s.cx, y: s.cy + 40, text: `+${gained}`,
         life: 0.9, color: "#7dffb0", size: 34,
       });
       setHud((h) => ({ ...h, score: st.score, combo: st.combo }));
     }
+  };
+
+  const finishMiss = (st: State) => {
+    sfx.fatalHit();
+    st.phase = "over";
+    st.t = 0;
+    const newBest = st.score > hsRef.current;
+    if (newBest) {
+      hsRef.current = st.score;
+      try { localStorage.setItem(HS_KEY, String(st.score)); } catch { /* noop */ }
+    }
+    setHud({ score: st.score, combo: st.combo, best: hsRef.current, over: true, lastScore: st.score, newBest, lastPct: st.lockedPct });
   };
 
   const fieldCenter = (s: Star) => ({ x: s.cx - s.r * 0.55, y: s.cy });
@@ -352,7 +359,8 @@ export default function StarVanisher() {
             }
           }
         } else if (st.t > 0.94) {
-          newRound(st);
+          if (st.pendingMiss) finishMiss(st);
+          else newRound(st);
         }
       } else if (st.phase === "result") {
         const gap = Math.max(0.22, 0.5 - st.combo * 0.02);
@@ -519,7 +527,7 @@ export default function StarVanisher() {
       }
 
       // judgement text
-      if (st.judgement && (st.phase === "fire" || st.phase === "count" || st.phase === "result")) {
+      if (st.judgement && ((st.phase === "count" && st.countDone) || st.phase === "result")) {
         const j = st.judgement;
         const pop = Math.min(1, st.t * 6);
         ctx.save();
