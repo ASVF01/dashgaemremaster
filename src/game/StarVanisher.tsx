@@ -135,6 +135,10 @@ type State = {
   streaks: Streak[];      // speed lines flying right -> left
   demo: boolean;          // tutorial demonstration: the game plays itself
   demoTryTimer: number;   // seconds after count-up done before "Try it yourself!" flashes
+  boss: Boss | null;      // DANGER TARGET, appears every 40 targets
+  bossIntro: number;      // intro card timer
+  aimX: number; aimY: number;   // mouse aim during the boss fight
+  beamX: number; beamY: number; // where the last boss beam landed
 };
 
 
