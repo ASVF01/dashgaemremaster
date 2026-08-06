@@ -40,6 +40,23 @@ const playCountUp = makeSample(countupAsset.url, 0.55);
 const W = 960;
 const H = 540;
 const HS_KEY = "dashgaem_starvanisher_hs_v1";
+const TUT_KEY = "dashgaem_starvanisher_tut_v1";
+
+const TUT_SLIDES: { title: string; body: string }[] = [
+  {
+    title: "THE ASK",
+    body: "Bottom-left tells you how much of the star must be vanished. Hit that % as closely as you can.",
+  },
+  {
+    title: "THE VANISH FIELD",
+    body: "The green field pulses bigger and smaller over the star. Whatever it covers is what gets destroyed.",
+  },
+  {
+    title: "ONE CLICK",
+    body: "Click / tap once to fire the beam. PERFECT and OKAY keep the run alive and build your combo — a MISS ends it.",
+  },
+];
+
 
 type Judgement = "PERFECT" | "OKAY" | "MISS";
 type Phase = "aim" | "fire" | "count" | "result" | "over";
@@ -99,7 +116,9 @@ type State = {
   starsDone: number;      // stars completed this run
   bg: ColorSet;           // background palette, reshuffled every 5 stars
   streaks: Streak[];      // speed lines flying right -> left
+  demo: boolean;          // tutorial demonstration: the game plays itself
 };
+
 
 
 function rand(a: number, b: number) { return a + Math.random() * (b - a); }
@@ -188,6 +207,15 @@ export default function StarVanisher() {
   const [showFailPct, setShowFailPct] = useState(false);
   const hsRef = useRef(0);
 
+  // first-time tutorial: slides -> self-playing demo -> "Try it yourself!"
+  const [tutSlide, setTutSlide] = useState<number | null>(null); // null = no slides showing
+  const [tutDemo, setTutDemo] = useState(false);
+  const [showTryIt, setShowTryIt] = useState(false);
+  const tutTimers = useRef<number[]>([]);
+  const clearTutTimers = () => { tutTimers.current.forEach(window.clearTimeout); tutTimers.current = []; };
+  useEffect(() => clearTutTimers, []);
+
+
   // run BGM (loops for the whole run, stops on game over / unmount)
   const bgmRef = useRef<HTMLAudioElement | null>(null);
   const ensureBgm = () => {
@@ -267,9 +295,13 @@ export default function StarVanisher() {
     st.star = makeStar(st.combo);
   };
 
-  const start = () => {
+  const start = (demo = false) => {
     unlockAudio();
     sfx.menuConfirm();
+    clearTutTimers();
+    setShowTryIt(false);
+    setTutSlide(null);
+    setTutDemo(demo);
     const bg0 = randColorSet();
     const st: State = {
       phase: "aim", t: 0, target: 50, fieldT: 0, fieldDir: 1, fieldSpeed: 0.7,
@@ -278,10 +310,11 @@ export default function StarVanisher() {
       comboPop: 0, countVal: 0, countStep: 0, countTimer: 0, countDone: false, countPop: 0,
       boomed: false, pendingMiss: false, reviveLeft: hasAbility("revive") ? 1 : 0,
       sightLeft: hasAbility("sight") ? 10 : 0,
-      starsDone: -1, bg: bg0, streaks: makeStreaks(bg0),
+      starsDone: -1, bg: bg0, streaks: makeStreaks(bg0), demo,
     };
 
     newRound(st);
+    if (demo) st.target = 55; // a clean, easy-to-read ask for the demonstration
     stateRef.current = st;
     setHud((h) => ({ ...h, score: 0, combo: 0, over: false, newBest: false, earned: 0 }));
     setFailStage(0);
@@ -289,6 +322,21 @@ export default function StarVanisher() {
     setRunning(true);
 
   };
+
+  // pressing play for the very first time runs the tutorial instead
+  const handlePlay = () => {
+    let seen = false;
+    try { seen = localStorage.getItem(TUT_KEY) === "1"; } catch { /* noop */ }
+    if (seen) { start(false); return; }
+    unlockAudio();
+    sfx.menuConfirm();
+    setTutSlide(0);
+  };
+
+  const markTutorialDone = () => {
+    try { localStorage.setItem(TUT_KEY, "1"); } catch { /* noop */ }
+  };
+
 
   // fail sequence timeline
   useEffect(() => {
@@ -301,9 +349,11 @@ export default function StarVanisher() {
   }, [hud.over]);
 
 
-  const fire = () => {
+  const fire = (auto = false) => {
     const st = stateRef.current;
     if (!st || st.phase !== "aim" || !st.star) return;
+    if (st.demo && !auto) return; // hands off during the demonstration
+
     unlockAudio();
     const s = st.star;
     const fr = fieldRadius(st, s);
@@ -385,6 +435,17 @@ export default function StarVanisher() {
     const s = st.star;
     if (!s) return;
     st.boomed = true;
+    if (st.demo) {
+      // 0.5s after the target is destroyed, flash "Try it yourself!" for 1.5s
+      clearTutTimers();
+      tutTimers.current.push(window.setTimeout(() => setShowTryIt(true), 500));
+      tutTimers.current.push(window.setTimeout(() => {
+        setShowTryIt(false);
+        markTutorialDone();
+        start(false);
+      }, 500 + 1500));
+    }
+
     st.hitstop = 0.12;
     st.flash = 1;
     st.shake = 14 + Math.min(26, st.combo * 1.6);
@@ -446,6 +507,14 @@ export default function StarVanisher() {
         st.fieldT += st.fieldDir * st.fieldSpeed * dt;
         if (st.fieldT > 1) { st.fieldT = 1; st.fieldDir = -1; }
         if (st.fieldT < 0) { st.fieldT = 0; st.fieldDir = 1; }
+        // demonstration: the game plays itself, firing right on the target
+        if (st.demo && st.star && st.t > 1.1) {
+          const s = st.star;
+          const fc = fieldCenter(s);
+          const pct = overlapPct(s.cx, s.cy, s.r, fc.x, fc.y, fieldRadius(st, s));
+          if (Math.abs(pct - st.target) <= 1.4) fire(true);
+        }
+
       } else if (st.phase === "fire") {
         if (st.t > 0.95) { st.phase = "count"; st.t = 0; st.countTimer = 0.18; }
       } else if (st.phase === "count") {
@@ -471,9 +540,11 @@ export default function StarVanisher() {
             }
           }
         } else if (st.t > 0.94) {
-          if (st.pendingMiss) finishMiss(st);
+          if (st.demo) { /* demo holds here until the tutorial hands over */ }
+          else if (st.pendingMiss) finishMiss(st);
           else newRound(st);
         }
+
       } else if (st.phase === "result") {
         const gap = Math.max(0.22, 0.5 - st.combo * 0.02);
         if (st.t > gap) newRound(st);
@@ -804,19 +875,69 @@ export default function StarVanisher() {
 
 
 
-        {!running && (
+        {!running && tutSlide === null && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#2a0011]/85">
             <div className="font-bungee text-3xl text-[#ffe23a]">STAR VANISHER...!!</div>
             <div className="font-marker text-sm text-[#ffd0de]">BEST {hud.best}</div>
             <button
               type="button"
-              onClick={start}
+              onClick={() => handlePlay()}
               className="scribble-border bg-paper px-6 py-3 font-bungee text-ink hover:scale-105 transition-transform"
             >
               START GRINDING
             </button>
           </div>
         )}
+
+        {/* first-time tutorial slides */}
+        {tutSlide !== null && (
+          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-4 bg-[#2a0011]/95 px-8 text-center">
+            <div className="font-marker text-xs tracking-widest text-[#ffd0de]/70">
+              HOW TO PLAY · {tutSlide + 1}/{TUT_SLIDES.length}
+            </div>
+            <div className="font-bungee text-2xl text-[#ffe23a] animate-fade-in">{TUT_SLIDES[tutSlide].title}</div>
+            <p className="font-marker max-w-xl text-sm text-white/90 animate-fade-in">{TUT_SLIDES[tutSlide].body}</p>
+            <button
+              type="button"
+              onClick={() => {
+                sfx.menuConfirm();
+                if (tutSlide < TUT_SLIDES.length - 1) setTutSlide(tutSlide + 1);
+                else start(true);
+              }}
+              className="scribble-border bg-paper px-6 py-2 font-bungee text-ink hover:scale-105 transition-transform"
+            >
+              {tutSlide < TUT_SLIDES.length - 1 ? "NEXT" : "WATCH A DEMO"}
+            </button>
+            <button
+              type="button"
+              onClick={() => { markTutorialDone(); start(false); }}
+              className="font-marker text-xs text-white/50 underline"
+            >
+              skip tutorial
+            </button>
+          </div>
+        )}
+
+        {/* demonstration banner + "Try it yourself!" flash */}
+        {running && tutDemo && (
+          <div className="absolute inset-0 z-20 pointer-events-none">
+            <div className="absolute top-[9%] left-1/2 -translate-x-1/2 font-bungee text-sm text-[#ffe23a] drop-shadow">
+              DEMONSTRATION — watch closely
+            </div>
+            {showTryIt && (
+              <>
+                <style>{`@keyframes svTryFlash { 0%,100% { opacity: 0.15; } 50% { opacity: 1; } }`}</style>
+                <div
+                  className="absolute inset-0 flex items-center justify-center font-bungee text-4xl md:text-5xl text-white"
+                  style={{ animation: "svTryFlash 0.35s steps(1,end) infinite", textShadow: "0 0 18px rgba(255,60,120,0.9)" }}
+                >
+                  Try it yourself!
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
 
         {running && hud.over && (
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -862,7 +983,7 @@ export default function StarVanisher() {
                 </div>
                 <button
                   type="button"
-                  onClick={start}
+                  onClick={() => start(false)}
                   className="pointer-events-auto scribble-border bg-paper px-6 py-3 font-bungee text-ink transition-all duration-500 ease-out hover:scale-105"
                   style={{
                     transform: failStage >= 3 ? "translateY(0)" : "translateY(300%)",
