@@ -725,7 +725,8 @@ export default function StarVanisher() {
     st.beam = 0;
     st.boomed = false;
     st.destroyFrac = 0;
-    st.boss = makeBoss();
+    st.boss = makeBoss(st.bossWave);
+    st.bossWave += 1;
     st.bossIntro = 1.6;
     st.flash = 1;
     st.shake = 20;
