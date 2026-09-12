@@ -107,6 +107,22 @@ export default function NightRooms() {
   };
   useEffect(() => () => { if (raf.current != null) cancelAnimationFrame(raf.current); }, []);
 
+  // ---- audio: silence every other sound, play the muffled night track ----
+  useEffect(() => {
+    const prevSfxMuted = isMuted();
+    const prevBgmMuted = isBgmMuted();
+    setMuted(true);
+    setBgmMuted(true);
+    stopBgm(0.3);
+    startNightBgm();
+    return () => {
+      stopNightBgm();
+      setMuted(prevSfxMuted);
+      setBgmMuted(prevBgmMuted);
+    };
+  }, []);
+
+
   const art =
     view === "office" ? officeArt.url :
     view === "door" ? doorArt.url :
