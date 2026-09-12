@@ -9,6 +9,7 @@ import keyholeArt from "@/assets/mayhem/THE_KEYHOLE.png.asset.json";
 import hallwayArt from "@/assets/mayhem/THE_HALLWAY.png.asset.json";
 import packArt from "@/assets/mayhem/storage_pack.png.asset.json";
 import packUsedArt from "@/assets/mayhem/storage_used.png.asset.json";
+import Terminal from "./Terminal";
 
 type View = "office" | "door" | "keyhole" | "hallway" | "storage" | "storageKeyhole";
 
@@ -16,10 +17,15 @@ const HOLD_MS = 3000;
 
 export default function NightRooms() {
   const [view, setView] = useState<View>("office");
+  const [terminalOpen, setTerminalOpen] = useState(false);
   const [packUsed, setPackUsed] = useState(false);
   const [hold, setHold] = useState(0); // 0..1 progress on the health pack
   const holdStart = useRef<number | null>(null);
   const raf = useRef<number | null>(null);
+  const viewRef = useRef(view);
+  viewRef.current = view;
+  const terminalOpenRef = useRef(terminalOpen);
+  terminalOpenRef.current = terminalOpen;
 
   // ---- keyboard navigation ----
   useEffect(() => {
@@ -28,7 +34,20 @@ export default function NightRooms() {
       const k = e.key.toLowerCase();
       if (!["a", "d", "w", "s", "e"].includes(k)) return;
       e.preventDefault();
+      // terminal: s toggles it; while open, navigation keys are ignored
+      if (k === "s") {
+        if (terminalOpenRef.current) {
+          setTerminalOpen(false);
+          return;
+        }
+        // only from views where s isn't a nav key
+        if (["office", "door", "hallway"].includes(viewRef.current)) {
+          setTerminalOpen(true);
+          return;
+        }
+      }
       setView((v) => {
+        if (terminalOpenRef.current) return v;
         switch (v) {
           case "office":
             if (k === "a") return "door";
@@ -96,7 +115,7 @@ export default function NightRooms() {
     packUsed ? packUsedArt.url : packArt.url;
 
   const hint =
-    view === "office" ? "[ A ] TURN TO THE DOOR" :
+    view === "office" ? "[ A ] TURN TO THE DOOR   [ S ] TERMINAL" :
     view === "door" ? "[ E ] KEYHOLE   [ W ] HALLWAY   [ D ] TURN BACK" :
     view === "keyhole" ? "[ E ] STOP LOOKING" :
     view === "hallway" ? "[ A ] STORAGE   [ D ] OFFICE" :
@@ -117,6 +136,7 @@ export default function NightRooms() {
   const lookRef = useRef<HTMLDivElement | null>(null);
   const target = useRef({ x: 0, y: 0 });
   const cur = useRef({ x: 0, y: 0 });
+  const zoomCur = useRef(1.1);
   const peek = view === "keyhole" || view === "storageKeyhole" ? 1.6 : 1;
   const peekRef = useRef(peek);
   peekRef.current = peek;
@@ -135,12 +155,19 @@ export default function NightRooms() {
       const el = lookRef.current;
       if (el) {
         const p = peekRef.current;
-        const tx = -cur.current.x * 34 * p;
-        const ty = -cur.current.y * 18 * p;
-        const rx = -cur.current.y * 1.6;
-        const ry = cur.current.x * 2.4;
+        // terminal open: zoom in toward the player's face (lower-center) and
+        // damp the head drift so the panel feels like it's in front of you
+        const zoomed = terminalOpenRef.current;
+        zoomCur.current += ((zoomed ? 2.1 : 1.1) - zoomCur.current) * 0.09;
+        const scale = zoomCur.current;
+        const damp = zoomed ? 0.35 : 1;
+        const tyOff = zoomed ? -60 : 0;
+        const tx = -cur.current.x * 34 * p * damp;
+        const ty = (-cur.current.y * 18 * p * damp) + tyOff * (scale - 1.1);
+        const rx = -cur.current.y * 1.6 * damp;
+        const ry = cur.current.x * 2.4 * damp;
         el.style.transform =
-          `scale(1.1) translate3d(${tx}px, ${ty}px, 0) rotateX(${rx}deg) rotateY(${ry}deg)`;
+          `scale(${scale}) translate3d(${tx}px, ${ty}px, 0) rotateX(${rx}deg) rotateY(${ry}deg)`;
       }
       id = requestAnimationFrame(tick);
     };
@@ -199,6 +226,8 @@ export default function NightRooms() {
         <div className="font-pixel text-[10px] tracking-[0.3em] text-white/80">{label}</div>
         <div className="font-pixel text-[9px] text-[hsl(var(--hell-muted))]">{hint}</div>
       </div>
+
+      {terminalOpen && <Terminal onClose={() => setTerminalOpen(false)} />}
     </div>
   );
 }

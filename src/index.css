@@ -260,6 +260,7 @@
   .hell-static { z-index: 1; background-image: radial-gradient(hsl(var(--hell-muted) / 0.6) 0.7px, transparent 0.7px); background-size: 7px 7px; animation: hell-static-shift 0.18s steps(2) infinite; }
   .mayhem-preview { cursor: crosshair; background: hsl(var(--hell-black)); }
   @keyframes mayhemRoomFade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes mayhemTerminalUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
   .mayhem-menu-grid {
     pointer-events: none;
