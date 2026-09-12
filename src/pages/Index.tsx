@@ -611,13 +611,20 @@ const Index = () => {
             onFinish={handleFinish}
             onDeath={handleDeath}
             onInvboiPickup={handleInvboiPickup}
-            paused={screen !== "playing" || invboiIntroOpen || chaseIntroOpen || mayhemPaused || mayhemCleared}
+            onNpcInteract={handleNpcInteract}
+            goalLocked={mayhem && levelId === "mayhem-main" && !mayhemTicket}
+            paused={screen !== "playing" || invboiIntroOpen || chaseIntroOpen || mayhemPaused || mayhemCleared || mayhemDialogue != null}
             keepAudio={screen === "dead" || screen === "win" || invboiIntroOpen || chaseIntroOpen || marathonStep != null || mayhem}
             startAsInvboi={marathonStep != null}
             resetKey={resetKey}
             levelId={levelId}
           />
           {screen === "playing" && !invboiIntroOpen && !chaseIntroOpen && !mayhemPaused && !mayhemCleared && <Hud hud={hud} />}
+          {mayhem && mayhemDialogue && MAYHEM_SCRIPTS[mayhemDialogue] && (
+            <div className="absolute inset-x-0 bottom-0 z-40 p-3 sm:p-6">
+              <DialogueBox script={MAYHEM_SCRIPTS[mayhemDialogue]} onDone={handleDialogueDone} />
+            </div>
+          )}
           {mayhem && screen === "playing" && !mayhemPaused && !mayhemCleared && (
             <button
               type="button"
