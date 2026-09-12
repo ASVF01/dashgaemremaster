@@ -17,6 +17,7 @@ const HOLD_MS = 3000;
 
 export default function NightRooms() {
   const [view, setView] = useState<View>("office");
+  const [terminalOpen, setTerminalOpen] = useState(false);
   const [packUsed, setPackUsed] = useState(false);
   const [hold, setHold] = useState(0); // 0..1 progress on the health pack
   const holdStart = useRef<number | null>(null);
@@ -29,7 +30,26 @@ export default function NightRooms() {
       const k = e.key.toLowerCase();
       if (!["a", "d", "w", "s", "e"].includes(k)) return;
       e.preventDefault();
+      // terminal: s opens it (from views where s isn't a nav key), s closes it
+      if (k === "s") {
+        let handled = true;
+        setTerminalOpen((open) => {
+          if (open) return false;
+          setView((v) => {
+            if (v === "office" || v === "door" || v === "hallway") {
+              setTerminalOpen(true);
+              return v;
+            }
+            handled = false;
+            return v;
+          });
+          return open;
+        });
+        setTimeout(() => { if (handled) return; }, 0);
+        // fall through only if terminal didn't consume it
+      }
       setView((v) => {
+        if (terminalOpenRef.current) return v;
         switch (v) {
           case "office":
             if (k === "a") return "door";
