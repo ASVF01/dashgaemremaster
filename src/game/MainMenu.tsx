@@ -8,7 +8,7 @@ import {
 import { useSettings, type Settings } from "@/game/settings";
 import mvAsset from "@/assets/audio/MV.ogg.asset.json";
 import { sfx, setSfxVolume, unlockAudio } from "@/game/sfx";
-import { setBgmVolume, pauseBgm, resumeBgm } from "@/game/bgm";
+import { setBgmVolume, pauseBgm, resumeBgm, playMenuBgm, stopBgm, playMayhemBgm } from "@/game/bgm";
 import { resetAllProgress } from "@/game/progress";
 import exploseAsset from "@/assets/audio/explose1.mp3.asset.json";
 import BgmPlayer from "@/game/BgmPlayer";
