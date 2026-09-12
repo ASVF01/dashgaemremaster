@@ -30,23 +30,17 @@ export default function NightRooms() {
       const k = e.key.toLowerCase();
       if (!["a", "d", "w", "s", "e"].includes(k)) return;
       e.preventDefault();
-      // terminal: s opens it (from views where s isn't a nav key), s closes it
+      // terminal: s toggles it; while open, navigation keys are ignored
       if (k === "s") {
-        let handled = true;
-        setTerminalOpen((open) => {
-          if (open) return false;
-          setView((v) => {
-            if (v === "office" || v === "door" || v === "hallway") {
-              setTerminalOpen(true);
-              return v;
-            }
-            handled = false;
-            return v;
-          });
-          return open;
-        });
-        setTimeout(() => { if (handled) return; }, 0);
-        // fall through only if terminal didn't consume it
+        if (terminalOpenRef.current) {
+          setTerminalOpen(false);
+          return;
+        }
+        // only from views where s isn't a nav key
+        if (["office", "door", "hallway"].includes(viewRef.current)) {
+          setTerminalOpen(true);
+          return;
+        }
       }
       setView((v) => {
         if (terminalOpenRef.current) return v;
