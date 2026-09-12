@@ -28,6 +28,9 @@ const RESTART_BGM_ON_ENTRY: ReadonlyArray<LevelId> = ["tutorial", "chase", "just
 // CELESTIAL MARATHON: every gameplay level chained back-to-back. Player
 // stays as invboi the whole time and the starman BGM keeps playing across
 // transitions (no rain re-cinematic).
+// MAYHEM tower route: the run to the tower, the lobby, then floor one.
+const MAYHEM_SEQUENCE: ReadonlyArray<LevelId> = ["mayhem-outside", "mayhem-main", "mayhem-floor-1"];
+
 const MARATHON_SEQUENCE: ReadonlyArray<LevelId> = [
   "tutorial",
   "scribble-1",
