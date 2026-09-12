@@ -54,7 +54,8 @@ function nextView(v: View, k: string): View {
 function playMoveSound(from: View, to: View) {
   if (to === "keyhole" || to === "storageKeyhole") { mayhemSfx.keyhole(); return; }
   if (from === "keyhole" || from === "storageKeyhole") { mayhemSfx.turn(); return; }
-  if (from === "hallway" || to === "hallway" || from === "storage" || to === "storage") { mayhemSfx.doorOpen(); return; }
+  if (from === "hallway" || to === "hallway" || from === "storage" || to === "storage") { mayhemSfx.roomSwitch(); return; }
+  if (from === "office" || to === "office") { mayhemSfx.walk(2); return; }
   mayhemSfx.turn();
 }
 
