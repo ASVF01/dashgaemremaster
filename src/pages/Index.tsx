@@ -492,8 +492,8 @@ const Index = () => {
         </div>
       </div>
 
-      {/* page header */}
-      <header className="px-3 sm:px-6 pt-2 sm:pt-4 pb-1 sm:pb-2 flex items-center justify-between gap-2 max-w-[1500px] mx-auto">
+      {/* page header — hidden while MAYHEM owns the screen */}
+      <header className={`px-3 sm:px-6 pt-2 sm:pt-4 pb-1 sm:pb-2 flex items-center justify-between gap-2 max-w-[1500px] mx-auto ${mayhem ? "hidden" : ""}`}>
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <h1 className="font-marker text-xl sm:text-3xl md:text-5xl text-ink leading-none truncate">
             DASH GAEM <span className="text-[hsl(var(--accent))] inline-block -rotate-2">R</span>
