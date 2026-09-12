@@ -45,6 +45,8 @@ export const LEVELS: LevelMeta[] = [
   { id: "aftermath-3", name: "FINAL DRAFT",    subtitle: "everything you've learned. one run.",      difficulty: 4, par: 75 },
   { id: "celestial-marathon", name: "CELESTIAL MARATHON", subtitle: "every level. one breath. invboi forever.", difficulty: 4, par: 9999 },
   { id: "mayhem-outside", name: "THE OUTSIDE", subtitle: "the tower is east. keep running.", difficulty: 2, par: 40, hidden: true },
+  { id: "mayhem-main",    name: "MAIN FLOOR",  subtitle: "clock in. talk to the checker.",   difficulty: 1, par: 90, hidden: true },
+  { id: "mayhem-floor-1", name: "FLOOR ONE",   subtitle: "the tower is bigger inside.",      difficulty: 2, par: 180, hidden: true },
 ];
 
 export function buildLevel(id: LevelId = "scribble-1", opts: { marathon?: boolean } = {}): Level {
