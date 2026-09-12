@@ -907,8 +907,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
           parryCooldown: r.player.starman ? 0 : Math.max(0, r.player.parryCooldown),
           dashCooldown: r.player.starman ? 0 : Math.max(0, r.player.dashCooldown),
           dashCooldownMax: DASH_COOLDOWN,
-          playerScreenX: ((r.player.x + r.player.w * 0.5 - r.cameraX - size.w * 0.5) * r.cameraZoom + size.w * 0.5) * (size.dw / size.w),
-          playerScreenY: ((r.player.y - r.cameraY - size.h * 0.5) * r.cameraZoom + size.h * 0.5) * (size.dh / size.h),
+          // Zoom is anchored on the player sprite, so the player's own
+          // on-screen position is just their offset from the camera.
+          playerScreenX: (r.player.x + r.player.w * 0.5 - r.cameraX) * (size.dw / size.w),
+          playerScreenY: (r.player.y + r.player.h * 0.5 - r.cameraY) * (size.dh / size.h),
           starman: r.player.starman,
           somSom: r.player.somSom,
         });
@@ -2767,19 +2769,20 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     const camX = Math.floor(r.cameraX);
     const camY = Math.floor(r.cameraY);
     const z = r.cameraZoom;
-    // Base camera zoom: scale around the center of the screen so the player
-    // stays in the middle of the zoomed-in view.
-    ctx.translate(w / 2, h / 2);
+    // Base camera zoom: scale around the PLAYER SPRITE's on-screen position
+    // so the world pushes in on the player themselves, not the screen center.
+    const anchorX = r.player.x + r.player.w / 2 - camX;
+    const anchorY = r.player.y + r.player.h / 2 - camY;
+    ctx.translate(anchorX, anchorY);
     ctx.scale(z, z);
-    ctx.translate(-w / 2, -h / 2);
+    ctx.translate(-anchorX, -anchorY);
     // THE ALTERNATE punch zoom — scale the whole world around the player's
-    // on-screen position while charging the aim.
+    // on-screen position while charging the aim. With the base zoom anchored
+    // on the player, their screen position stays put at (anchorX, anchorY).
     if (r.punchZoom !== 1) {
-      const px = (r.player.x + r.player.w / 2 - camX - w / 2) * z + w / 2;
-      const py = (r.player.y + r.player.h / 2 - camY - h / 2) * z + h / 2;
-      ctx.translate(px, py);
+      ctx.translate(anchorX, anchorY);
       ctx.scale(r.punchZoom, r.punchZoom);
-      ctx.translate(-px, -py);
+      ctx.translate(-anchorX, -anchorY);
     }
     ctx.translate(-camX, -camY);
 
