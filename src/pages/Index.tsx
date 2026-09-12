@@ -229,6 +229,8 @@ const Index = () => {
   // re-enter "playing" so we know to leave the BGM alone on a death-retry.
   const cameFromDeathRef = useRef(false);
   useEffect(() => {
+    // MAYHEM keeps its own music running for the whole mode.
+    if (mayhem && screen !== "menu") return;
     // MARATHON: Index owns the starman BGM and keeps it playing across
     // every sub-level. Skip ALL per-level BGM management while it's active
     // so the rain cinematic / lowpass / track-switch never re-fires.
