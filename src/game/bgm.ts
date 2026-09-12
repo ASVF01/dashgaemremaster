@@ -150,7 +150,16 @@ function scheduleSource(
   } else {
     g.gain.setValueAtTime(1, when);
   }
-  src.connect(g).connect(masterGain!);
+  if (muffleHz > 0) {
+    const lp = c.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.setValueAtTime(muffleHz, when);
+    lp.Q.value = 0.7;
+    src.connect(lp).connect(g);
+  } else {
+    src.connect(g);
+  }
+  g.connect(masterGain!);
   src.start(when);
   return { src, g };
 }
