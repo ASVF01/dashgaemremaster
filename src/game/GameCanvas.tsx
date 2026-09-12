@@ -2129,7 +2129,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
 
     // goal
     const g = r.level.goal;
-    if (rectOverlap(p.x, p.y, p.w, p.h, g.x, g.y, g.w, g.h)) {
+    if (!goalLockedRef.current && rectOverlap(p.x, p.y, p.w, p.h, g.x, g.y, g.w, g.h)) {
       r.finished = true;
       r.finishTime = performance.now() - r.startedAt;
       r.score += Math.max(0, 5000 - Math.floor(r.finishTime / 10));
