@@ -248,7 +248,11 @@ function playSrc(src: string, restart = false) {
     // fade IN over TRACK_FADE while the old one fades OUT (equal-power-ish).
     const startAt = c.currentTime + 0.02;
     if (hadPrevious) fadeOutCurrent(c, fadeDur, startAt);
-    const first = scheduleSource(c, buffer, startAt, hadPrevious);
+    // INVBOI cheat tracks: slower and lower-pitched.
+    const invboi = INVBOI_TRACKS.has(src);
+    const rate = invboi ? INVBOI_RATE : 1;
+    const detune = invboi ? INVBOI_DETUNE : 0;
+    const first = scheduleSource(c, buffer, startAt, hadPrevious, rate, detune);
     // If we're crossfading in, stretch the fade-in to match TRACK_FADE
     if (hadPrevious) {
       first.g.gain.cancelScheduledValues(startAt);
@@ -259,10 +263,10 @@ function playSrc(src: string, restart = false) {
     // to original speed over 0.5s for a tape-spinning-up effect.
     if (src === bgmJustRunBro) {
       try {
-        const rate = first.src.playbackRate;
-        rate.cancelScheduledValues(startAt);
-        rate.setValueAtTime(0.5, startAt);
-        rate.linearRampToValueAtTime(1.0, startAt + 0.5);
+        const pr = first.src.playbackRate;
+        pr.cancelScheduledValues(startAt);
+        pr.setValueAtTime(0.5, startAt);
+        pr.linearRampToValueAtTime(1.0, startAt + 0.5);
       } catch { /* noop */ }
     }
     playing = {
@@ -276,6 +280,8 @@ function playSrc(src: string, restart = false) {
       nextLoopAt: 0,
       rafId: null,
       stopped: false,
+      rate,
+      detune,
     };
     // Native loop is on the source itself; no scheduler needed.
   }).catch(() => { /* decode failed; stay silent */ });
