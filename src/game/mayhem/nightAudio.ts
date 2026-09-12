@@ -11,6 +11,7 @@ let ctx: AudioContext | null = null;
 let source: AudioBufferSourceNode | null = null;
 let master: GainNode | null = null;
 let buffer: AudioBuffer | null = null;
+let element: HTMLAudioElement | null = null;
 let token = 0;
 
 function ac(): AudioContext | null {
@@ -129,8 +130,11 @@ export function stopNightBgm(fadeMs = 300) {
   const c = ctx;
   const s = source;
   const g = master;
+  const el = element;
   source = null;
   master = null;
+  element = null;
+  if (el) { try { el.pause(); el.src = ""; } catch { /* noop */ } }
   if (!c || !s) return;
   const now = c.currentTime;
   try {
