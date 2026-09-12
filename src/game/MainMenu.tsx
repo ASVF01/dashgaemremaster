@@ -268,7 +268,14 @@ function HellPreview({ onCommence }: { onCommence?: () => void }) {
       {settingsOpen && <MayhemSettings onClose={() => setSettingsOpen(false)} />}
       {talking && (
         <div className="absolute inset-x-3 bottom-3 z-30 sm:inset-x-6 sm:bottom-6">
-          <DialogueBox script={MAYHEM_SCRIPTS.intro} onDone={() => setTalking(false)} />
+          <DialogueBox
+            script={MAYHEM_SCRIPTS.intro}
+            onDone={() => {
+              setTalking(false);
+              // Intro chatter over → drop into the mode proper (fullscreen).
+              onCommence?.();
+            }}
+          />
         </div>
       )}
     </section>
