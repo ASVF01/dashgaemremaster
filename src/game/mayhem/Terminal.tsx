@@ -76,10 +76,10 @@ export default function Terminal({ onClose }: { onClose: () => void }) {
     const onKey = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase();
       if (screen === "rcs") {
-        if (k === "y") setScreen("wait1");
-        else if (k === "n") setScreen("home");
+        if (k === "y") go("wait1");
+        else if (k === "n") go("home");
       } else if (screen === "which") {
-        if (["1", "2", "3", "4", "5"].includes(k)) setScreen("wait1");
+        if (["1", "2", "3", "4", "5"].includes(k)) go("wait1");
       }
     };
     window.addEventListener("keydown", onKey);
@@ -121,14 +121,14 @@ export default function Terminal({ onClose }: { onClose: () => void }) {
                 <button
                   type="button"
                   aria-label="Reset camera system"
-                  onClick={() => setScreen("rcs")}
+                  onClick={() => go("rcs")}
                   className="absolute border-2 border-transparent hover:border-[#39ff6a]/70"
                   style={{ left: "2%", top: "46%", width: "47%", height: "52%" }}
                 />
                 <button
                   type="button"
                   aria-label="Reset individual camera"
-                  onClick={() => setScreen("which")}
+                  onClick={() => go("which")}
                   className="absolute border-2 border-transparent hover:border-[#39ff6a]/70"
                   style={{ left: "50%", top: "46%", width: "48%", height: "52%" }}
                 />
@@ -141,14 +141,14 @@ export default function Terminal({ onClose }: { onClose: () => void }) {
                 <button
                   type="button"
                   aria-label="Yes"
-                  onClick={() => setScreen("wait1")}
+                  onClick={() => go("wait1")}
                   className="absolute border-2 border-transparent hover:border-[#39ff6a]/70"
                   style={{ left: "38%", top: "55%", width: "10%", height: "20%" }}
                 />
                 <button
                   type="button"
                   aria-label="No"
-                  onClick={() => setScreen("home")}
+                  onClick={() => go("home")}
                   className="absolute border-2 border-transparent hover:border-[#39ff6a]/70"
                   style={{ left: "50%", top: "55%", width: "10%", height: "20%" }}
                 />
@@ -163,7 +163,7 @@ export default function Terminal({ onClose }: { onClose: () => void }) {
                     key={n}
                     type="button"
                     aria-label={`Camera ${n}`}
-                    onClick={() => setScreen("wait1")}
+                    onClick={() => go("wait1")}
                     className="h-full flex-1 border border-transparent hover:border-[#39ff6a]/70"
                   />
                 ))}
