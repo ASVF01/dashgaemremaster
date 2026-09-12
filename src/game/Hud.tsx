@@ -2,7 +2,7 @@ import type { HudState } from "@/game/GameCanvas";
 import { getSelectedCharacter } from "@/game/character";
 import { AlternateHpBar, BaseHpBar } from "@/game/HpBar";
 
-export default function Hud({ hud }: { hud: HudState }) {
+export default function Hud({ hud, minimal = false }: { hud: HudState; minimal?: boolean }) {
   const seconds = (hud.timeMs / 1000).toFixed(2);
   const sm = !!hud.starman;
   const showParryCd = !sm && hud.parryCooldown > 0.05;
