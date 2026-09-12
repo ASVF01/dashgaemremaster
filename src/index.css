@@ -266,7 +266,7 @@
   .hell-tab::before { left: 5px; }
   .hell-tab::after { right: 5px; }
   .hell-tab-active { color: hsl(var(--hell-warning)); box-shadow: inset 0 0 0 2px hsl(var(--hell-black)), 0 0 14px hsl(var(--hell-warning) / 0.4), 4px 4px 0 hsl(var(--hell-black)); }
-  .hell-tab-rain { position: absolute; inset: 0; opacity: 0.32; background: repeating-linear-gradient(104deg, transparent 0 12px, hsl(var(--hell-muted) / 0.6) 13px, transparent 14px 24px); animation: hell-rain 0.9s linear infinite; will-change: background-position; }
+  .hell-tab-rain { position: absolute; inset: 0; opacity: 0.32; background: repeating-linear-gradient(104deg, transparent 0 12px, hsl(var(--hell-muted) / 0.6) 13px, transparent 14px 24px); animation: hell-rain 40s linear infinite; will-change: background-position; }
 
   .hell-preview { color: hsl(var(--hell-muted)); background: hsl(var(--hell-black)); box-shadow: inset 0 0 70px hsl(var(--hell-black)); }
   .hell-preview::after { content: ''; position: absolute; inset: 0; z-index: 18; pointer-events: none; background: repeating-linear-gradient(0deg, transparent 0 3px, hsl(var(--hell-steel) / 0.07) 4px); }
