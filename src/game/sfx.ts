@@ -597,6 +597,17 @@ export const sfx = {
       tone({ freq: 260, to: 450, dur: 0.4, type: "sawtooth", vol: 0.07, attack: 0.01, release: 0.1, delay: d });
     }
   },
+  // ---- MAYHEM dialogue ----
+  // Short dry blip per character while text types out.
+  dialogueBlip(pitch = 1) {
+    tone({ freq: 320 * pitch, to: 260 * pitch, dur: 0.035, type: "square", vol: 0.045, attack: 0.001, release: 0.02 });
+    noise(0.02, 0.03, 900, 4200);
+  },
+  // Line finished / advance.
+  dialogueAdvance() {
+    tone({ freq: 180, to: 120, dur: 0.09, type: "triangle", vol: 0.1, attack: 0.002, release: 0.05 });
+    noise(0.05, 0.05, 400, 2200);
+  },
 };
 
 

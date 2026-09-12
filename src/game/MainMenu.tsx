@@ -20,6 +20,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import roaringKnightImg from "@/assets/roaring_knight_titlecard.png";
 import celestialMarathonEmblem from "@/assets/celestial-marathon-emblem.png";
 import mayhemArtwork from "@/assets/mayhem-coming-soon.png.asset.json";
+import DialogueBox from "@/game/mayhem/DialogueBox";
+import { MAYHEM_SCRIPTS } from "@/game/mayhem/dialogue";
 
 export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" | "updates" | "credits" | "youtube" | "starvanisher" | "hell";
 
@@ -199,6 +201,7 @@ type MayhemRainStyle = CSSProperties & {
 function HellPreview() {
   const panelRef = useRef<HTMLElement | null>(null);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [talking, setTalking] = useState(false);
 
   useEffect(() => {
     unlockAudio();
@@ -255,6 +258,20 @@ function HellPreview() {
       <p className="mayhem-caption absolute bottom-4 right-4 z-20 max-w-[14rem] text-right font-pixel text-[clamp(8px,1.25vw,14px)] leading-relaxed sm:bottom-6 sm:right-7">
         NEW MODE<br />COMING SOON
       </p>
+      {!talking && (
+        <button
+          type="button"
+          onClick={() => { sfx.menuConfirm(); setTalking(true); }}
+          className="absolute bottom-4 left-4 z-30 border-2 border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))/0.8] px-4 py-2 font-pixel text-[10px] tracking-widest text-[hsl(var(--hell-warning))] transition-colors hover:bg-[hsl(var(--hell-warning))] hover:text-[hsl(var(--hell-black))] sm:bottom-6 sm:left-7"
+        >
+          LISTEN
+        </button>
+      )}
+      {talking && (
+        <div className="absolute inset-x-3 bottom-3 z-30 sm:inset-x-6 sm:bottom-6">
+          <DialogueBox script={MAYHEM_SCRIPTS.intro} onDone={() => setTalking(false)} />
+        </div>
+      )}
     </section>
   );
 }
