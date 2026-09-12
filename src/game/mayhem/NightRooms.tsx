@@ -136,6 +136,7 @@ export default function NightRooms() {
   const lookRef = useRef<HTMLDivElement | null>(null);
   const target = useRef({ x: 0, y: 0 });
   const cur = useRef({ x: 0, y: 0 });
+  const zoomCur = useRef(1.1);
   const peek = view === "keyhole" || view === "storageKeyhole" ? 1.6 : 1;
   const peekRef = useRef(peek);
   peekRef.current = peek;
@@ -157,10 +158,12 @@ export default function NightRooms() {
         // terminal open: zoom in toward the player's face (lower-center) and
         // damp the head drift so the panel feels like it's in front of you
         const zoomed = terminalOpenRef.current;
-        const scale = zoomed ? 2.1 : 1.1;
+        zoomCur.current += ((zoomed ? 2.1 : 1.1) - zoomCur.current) * 0.09;
+        const scale = zoomCur.current;
         const damp = zoomed ? 0.35 : 1;
+        const tyOff = zoomed ? -60 : 0;
         const tx = -cur.current.x * 34 * p * damp;
-        const ty = (-cur.current.y * 18 * p * damp) + (zoomed ? -60 : 0);
+        const ty = (-cur.current.y * 18 * p * damp) + tyOff * (scale - 1.1);
         const rx = -cur.current.y * 1.6 * damp;
         const ry = cur.current.x * 2.4 * damp;
         el.style.transform =
