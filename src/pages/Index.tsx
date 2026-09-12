@@ -419,6 +419,8 @@ const Index = () => {
     setInvboiIntroOpen(false); setChaseIntroOpen(false);
     setMayhemCleared(false);
     setMayhemPaused(false);
+    setMayhemDialogue(null);
+    setMayhemTicket(false);
     setMayhem(true);
     setLevelId("mayhem-outside");
     setResetKey((k) => k + 1);
@@ -427,6 +429,7 @@ const Index = () => {
   const retryMayhem = () => {
     setMayhemCleared(false);
     setMayhemPaused(false);
+    setMayhemDialogue(null);
     setResetKey((k) => k + 1);
     setScreen("playing");
   };
@@ -434,9 +437,21 @@ const Index = () => {
     setMayhem(false);
     setMayhemPaused(false);
     setMayhemCleared(false);
+    setMayhemDialogue(null);
     stopBgm(0.25);
     setScreen("menu");
   };
+  // Talking to someone in the tower. The checker's script hands over the
+  // elevator ticket, which unlocks the main-floor elevator.
+  const handleNpcInteract = useCallback((id: string) => {
+    if (id === "checker") setMayhemDialogue("checker");
+  }, []);
+  const handleDialogueDone = useCallback(() => {
+    setMayhemDialogue((cur) => {
+      if (cur === "checker") setMayhemTicket(true);
+      return null;
+    });
+  }, []);
 
   // ESC pauses / unpauses MAYHEM (its pause menu is the only way out).
   useEffect(() => {
