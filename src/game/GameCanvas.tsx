@@ -484,7 +484,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       window.removeEventListener("resize", update);
       window.removeEventListener("orientationchange", update);
     };
-  }, []);
+  }, [levelId]);
 
   // init / reset
   useEffect(() => {
