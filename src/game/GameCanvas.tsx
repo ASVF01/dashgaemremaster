@@ -271,6 +271,7 @@ interface GameRefs {
   chaserTrailTimer: number;
   cameraX: number;
   cameraY: number;
+  cameraZoom: number;
   shake: number;
   freezeFrames: number;
   /** Seconds remaining of post-death FX playback (particles keep moving). */
@@ -535,6 +536,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       chaserTrailTimer: 0,
       cameraX: 0,
       cameraY: 0,
+      cameraZoom: 1,
       shake: 0,
       freezeFrames: 0,
       deathFxT: 0,
@@ -905,8 +907,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
           parryCooldown: r.player.starman ? 0 : Math.max(0, r.player.parryCooldown),
           dashCooldown: r.player.starman ? 0 : Math.max(0, r.player.dashCooldown),
           dashCooldownMax: DASH_COOLDOWN,
-          playerScreenX: (r.player.x - r.cameraX + r.player.w * 0.5) * (size.dw / size.w),
-          playerScreenY: (r.player.y - r.cameraY) * (size.dh / size.h),
+          playerScreenX: ((r.player.x + r.player.w * 0.5 - r.cameraX - size.w * 0.5) * r.cameraZoom + size.w * 0.5) * (size.dw / size.w),
+          playerScreenY: ((r.player.y - r.cameraY - size.h * 0.5) * r.cameraZoom + size.h * 0.5) * (size.dh / size.h),
           starman: r.player.starman,
           somSom: r.player.somSom,
         });
@@ -2174,50 +2176,54 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       onFinish(r.finishTime, r.score);
     }
 
-    // Camera follow. In "just-run-bro" we keep the player centered so
-    // extreme super-dash velocity doesn't push them off-screen. Other
-    // levels use the original offset-follow with lookahead.
+    // Camera follow: zoomed-in, player-centered, with a little drift.
+    // `cameraX`/`cameraY` now describe the CENTER of the viewport in world
+    // space (well, the top-left of the unzoomed 1:1 frame), and the render
+    // scales around the screen center so the player stays in the middle.
+    const ZOOM_TARGET = 1.45;
+    r.cameraZoom += (ZOOM_TARGET - r.cameraZoom) * Math.min(1, dt * 2.5);
+    const z = r.cameraZoom;
+    const halfVisW = size.w / (z * 2);
+    const halfVisH = size.h / (z * 2);
+    const playerCenterX = p.x + p.w / 2;
+    const playerCenterY = p.y + p.h / 2;
+
     if (levelIdRef.current === "just-run-bro") {
       const speedNow = Math.abs(p.vx);
-      const playerCenterX = p.x + p.w / 2;
-      // Shift the player slightly left of center so they appear a bit
-      // to the right within the camera view.
       const shift = 80;
-      const centerCam = playerCenterX - size.w * 0.5 + shift;
-      const lockCentered = p.superDashing;
-      const targetCam = lockCentered ? centerCam : centerCam + p.facing * 40 + p.vx * 0.06;
-      const lerp = lockCentered ? 1 : Math.min(1, dt * (6 + speedNow * 0.02));
+      const targetCam = playerCenterX - size.w * 0.5 + shift + p.facing * 40 + p.vx * 0.06;
+      const lerp = p.superDashing ? 1 : Math.min(1, dt * (4 + speedNow * 0.015));
       r.cameraX += (targetCam - r.cameraX) * lerp;
+      const maxCamX = Math.max(0, r.level.width - (size.w + size.w / z) * 0.5);
       if (r.cameraX < 0) r.cameraX = 0;
-      if (r.cameraX > r.level.width - size.w) r.cameraX = r.level.width - size.w;
-      // Keep player close to the (shifted) middle — tighter margin.
-      const maxOffset = 60;
-      const desiredScreenX = size.w * 0.5 - shift;
-      const playerScreenX = playerCenterX - r.cameraX;
-      if (playerScreenX < desiredScreenX - maxOffset) r.cameraX = playerCenterX - (desiredScreenX - maxOffset);
-      if (playerScreenX > desiredScreenX + maxOffset) r.cameraX = playerCenterX - (desiredScreenX + maxOffset);
-    } else if (isMobileViewRef.current) {
-      // Mobile / touch view: keep the player centered so the whole scene
-      // around them stays visible regardless of facing or speed.
-      const playerCenterX = p.x + p.w / 2;
-      const playerCenterY = p.y + p.h / 2;
-      const targetCam = playerCenterX - size.w * 0.4;
-      r.cameraX += (targetCam - r.cameraX) * Math.min(1, dt * 10);
-      if (r.cameraX < 0) r.cameraX = 0;
-      if (r.cameraX > r.level.width - size.w) r.cameraX = r.level.width - size.w;
-      // Bring the camera down to the player's level so they stay in view
-      // vertically too on small screens.
+      if (r.cameraX > maxCamX) r.cameraX = maxCamX;
       const targetCamY = playerCenterY - size.h * 0.55;
-      r.cameraY += (targetCamY - r.cameraY) * Math.min(1, dt * 8);
-      const maxCamY = Math.max(0, r.level.height - size.h);
+      r.cameraY += (targetCamY - r.cameraY) * Math.min(1, dt * 4);
+      const maxCamY = Math.max(0, r.level.height - (size.h + size.h / z) * 0.5);
+      if (r.cameraY < 0) r.cameraY = 0;
+      if (r.cameraY > maxCamY) r.cameraY = maxCamY;
+    } else if (isMobileViewRef.current) {
+      const targetCam = playerCenterX - size.w * 0.5 + p.facing * 30;
+      r.cameraX += (targetCam - r.cameraX) * Math.min(1, dt * 5);
+      const maxCamX = Math.max(0, r.level.width - (size.w + size.w / z) * 0.5);
+      if (r.cameraX < 0) r.cameraX = 0;
+      if (r.cameraX > maxCamX) r.cameraX = maxCamX;
+      const targetCamY = playerCenterY - size.h * 0.55;
+      r.cameraY += (targetCamY - r.cameraY) * Math.min(1, dt * 4);
+      const maxCamY = Math.max(0, r.level.height - (size.h + size.h / z) * 0.5);
       if (r.cameraY < 0) r.cameraY = 0;
       if (r.cameraY > maxCamY) r.cameraY = maxCamY;
     } else {
-      const targetCam = p.x - size.w * 0.35 + p.facing * 80 + p.vx * 0.12;
-      r.cameraX += (targetCam - r.cameraX) * Math.min(1, dt * 6);
+      const targetCam = playerCenterX - size.w * 0.5 + p.facing * 80 + p.vx * 0.12;
+      r.cameraX += (targetCam - r.cameraX) * Math.min(1, dt * 4);
+      const maxCamX = Math.max(0, r.level.width - (size.w + size.w / z) * 0.5);
       if (r.cameraX < 0) r.cameraX = 0;
-      if (r.cameraX > r.level.width - size.w) r.cameraX = r.level.width - size.w;
-      r.cameraY += (0 - r.cameraY) * Math.min(1, dt * 6);
+      if (r.cameraX > maxCamX) r.cameraX = maxCamX;
+      const targetCamY = playerCenterY - size.h * 0.55 + p.vy * 0.08;
+      r.cameraY += (targetCamY - r.cameraY) * Math.min(1, dt * 4);
+      const maxCamY = Math.max(0, r.level.height - (size.h + size.h / z) * 0.5);
+      if (r.cameraY < 0) r.cameraY = 0;
+      if (r.cameraY > maxCamY) r.cameraY = maxCamY;
     }
   }
 
@@ -2754,11 +2760,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
 
     const camX = Math.floor(r.cameraX);
     const camY = Math.floor(r.cameraY);
+    const z = r.cameraZoom;
+    // Base camera zoom: scale around the center of the screen so the player
+    // stays in the middle of the zoomed-in view.
+    ctx.translate(w / 2, h / 2);
+    ctx.scale(z, z);
+    ctx.translate(-w / 2, -h / 2);
     // THE ALTERNATE punch zoom — scale the whole world around the player's
     // on-screen position while charging the aim.
     if (r.punchZoom !== 1) {
-      const px = r.player.x + r.player.w / 2 - camX;
-      const py = r.player.y + r.player.h / 2 - camY;
+      const px = (r.player.x + r.player.w / 2 - camX - w / 2) * z + w / 2;
+      const py = (r.player.y + r.player.h / 2 - camY - h / 2) * z + h / 2;
       ctx.translate(px, py);
       ctx.scale(r.punchZoom, r.punchZoom);
       ctx.translate(-px, -py);
