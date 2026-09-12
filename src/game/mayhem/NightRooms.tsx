@@ -179,7 +179,7 @@ export default function NightRooms() {
         // damp the head drift so the panel feels like it's in front of you
         const zoomed = terminalOpenRef.current;
         const keyhole = p > 1; // pressed against the door: narrow the FOV
-        const zoomT = zoomed ? 2.1 : keyhole ? 2.05 : 1.1;
+        const zoomT = zoomed ? 2.1 : keyhole ? 1.35 : 1.1;
         zoomCur.current += (zoomT - zoomCur.current) * 0.09;
         const scale = zoomCur.current;
         const damp = zoomed ? 0.35 : 1;
