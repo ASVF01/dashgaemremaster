@@ -10,6 +10,10 @@ import hallwayArt from "@/assets/mayhem/THE_HALLWAY.png.asset.json";
 import packArt from "@/assets/mayhem/storage_pack.png.asset.json";
 import packUsedArt from "@/assets/mayhem/storage_used.png.asset.json";
 import Terminal from "./Terminal";
+import { startNightBgm, stopNightBgm } from "./nightAudio";
+import { isMuted, setMuted } from "@/game/sfx";
+import { isBgmMuted, setBgmMuted, stopBgm } from "@/game/bgm";
+
 
 type View = "office" | "door" | "keyhole" | "hallway" | "storage" | "storageKeyhole";
 
@@ -106,6 +110,22 @@ export default function NightRooms() {
     raf.current = requestAnimationFrame(tick);
   };
   useEffect(() => () => { if (raf.current != null) cancelAnimationFrame(raf.current); }, []);
+
+  // ---- audio: silence every other sound, play the muffled night track ----
+  useEffect(() => {
+    const prevSfxMuted = isMuted();
+    const prevBgmMuted = isBgmMuted();
+    setMuted(true);
+    setBgmMuted(true);
+    stopBgm(0.3);
+    startNightBgm();
+    return () => {
+      stopNightBgm();
+      setMuted(prevSfxMuted);
+      setBgmMuted(prevBgmMuted);
+    };
+  }, []);
+
 
   const art =
     view === "office" ? officeArt.url :
