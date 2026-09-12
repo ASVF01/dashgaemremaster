@@ -307,8 +307,8 @@ export function playMayhemBgm(fadeMs = 1200) {
   masterGain.gain.setValueAtTime(0.0001, now);
   masterGain.gain.linearRampToValueAtTime(target, now + fadeMs / 1000);
   lowpass.frequency.cancelScheduledValues(now);
-  lowpass.frequency.setValueAtTime(400, now);
-  lowpass.frequency.linearRampToValueAtTime(1400, now + fadeMs / 1000);
+  lowpass.frequency.setValueAtTime(300, now);
+  lowpass.frequency.linearRampToValueAtTime(900, now + fadeMs / 1000);
 }
 
 // Like playMenuBgm but ramps the master gain from 0 → target over `fadeMs`.
