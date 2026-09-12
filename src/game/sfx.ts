@@ -790,19 +790,19 @@ function startSlideLoop() {
   for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
   const src = c.createBufferSource();
   src.buffer = buf; src.loop = true;
-  // Same band as the walk/run noise: hp ~280, lp ~2600 — soft, papery.
-  const hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 280;
-  const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2600;
+  // Same band as the walk/run noise normally; MAYHEM brightens it into a metal grind.
+  const hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = metalMode ? 760 : 280;
+  const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = metalMode ? 5600 : 2600;
   const out = c.createGain();
   out.gain.setValueAtTime(0.0001, t0);
   out.gain.exponentialRampToValueAtTime(slideTargetVol, t0 + 0.06);
   src.connect(hp).connect(lp).connect(out).connect(master);
   src.start(t0);
 
-  // very light low body so it doesn't feel hollow; quieter than before
+  // very light low body so it doesn't feel hollow; metal mode gets a harsher industrial grind
   const rumble = c.createOscillator();
-  rumble.type = "triangle";
-  rumble.frequency.value = 95;
+  rumble.type = metalMode ? "square" : "triangle";
+  rumble.frequency.value = metalMode ? 146 : 95;
   const rumbleGain = c.createGain();
   rumbleGain.gain.value = 0.012;
   rumble.connect(rumbleGain).connect(out);
