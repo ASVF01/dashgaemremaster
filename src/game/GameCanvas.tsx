@@ -394,7 +394,7 @@ export interface HudState {
   somSom?: boolean;
 }
 
-export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, paused, keepAudio = false, startAsInvboi = false, resetKey, levelId = "scribble-1" }: Props) {
+export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, onNpcInteract, goalLocked = false, paused, keepAudio = false, startAsInvboi = false, resetKey, levelId = "scribble-1" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const deathTimeoutRef = useRef<number | null>(null);
   const refs = useRef<GameRefs | null>(null);
@@ -403,6 +403,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
   levelIdRef.current = levelId;
   const onInvboiPickupRef = useRef<(() => void) | undefined>(onInvboiPickup);
   onInvboiPickupRef.current = onInvboiPickup;
+  const onNpcInteractRef = useRef<((id: string) => void) | undefined>(onNpcInteract);
+  onNpcInteractRef.current = onNpcInteract;
+  const goalLockedRef = useRef(goalLocked);
+  goalLockedRef.current = goalLocked;
   // True while CELESTIAL MARATHON is running. Used to keep the marathon
   // BGM playing across sub-level transitions (e.g. don't stopBgm after
   // just-run-bro because the boss level needs the same track to continue).
