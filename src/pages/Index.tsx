@@ -16,6 +16,7 @@ import { sfx, unlockAudio, setSfxVolume, silenceAllSfx, setMuted as setSfxMuted 
 import { selectCharacter, unlockCharacter, useCharacter } from "@/game/character";
 import { getSettings } from "@/game/settings";
 import { recordLevelResult } from "@/game/levelStats";
+import MayhemPause from "@/game/mayhem/MayhemPause";
 
 
 type Screen = "menu" | "loading" | "playing" | "dead" | "win" | "cutscene" | "death-cutscene";
