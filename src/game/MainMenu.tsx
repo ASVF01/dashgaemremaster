@@ -179,7 +179,7 @@ function HellTabBtn({ active, onClick, children }: { active: boolean; onClick: (
   );
 }
 
-const MAYHEM_RAIN_PARTICLES = Array.from({ length: 56 }, (_, index) => ({
+const MAYHEM_RAIN_PARTICLES = Array.from({ length: 140 }, (_, index) => ({
   left: (index * 37 + 11) % 103,
   length: 9 + ((index * 17) % 23),
   opacity: 0.24 + ((index * 13) % 44) / 100,
