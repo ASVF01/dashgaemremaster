@@ -2342,7 +2342,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     // smooth fade-in of the black backdrop
     const bgT = starmanFx ? Math.min(1, (starElapsed - 3.20) / 0.6) : 0;
     const isBossLevel = levelIdRef.current === "roaring-knight";
-    const isMayhemLevel = levelIdRef.current === "mayhem-outside";
+    const isMayhemLevel = levelIdRef.current.startsWith("mayhem");
     // paper bg (or black during starman fx, OLED black post-impact for som som,
     // the boss-level cyan-flame backdrop, or MAYHEM's pitch-black industrial night)
     if (isBossLevel) {
