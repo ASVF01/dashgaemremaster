@@ -216,7 +216,6 @@ type MayhemRainStyle = CSSProperties & {
 };
 
 function HellPreview({ onCommence }: { onCommence?: () => void }) {
-  const [talking, setTalking] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
