@@ -363,6 +363,10 @@ interface Props {
   onDeath: () => void;
   /** Fired once when the player collects the pre-placed invboi star (meet-invboi level). */
   onInvboiPickup?: () => void;
+  /** Fired when the player presses the interact key next to a level NPC. */
+  onNpcInteract?: (id: string) => void;
+  /** When true, touching the goal does nothing (e.g. locked MAYHEM elevator). */
+  goalLocked?: boolean;
   paused: boolean;
   /** When true, do not pause the BGM even if the game is paused (e.g. win/death overlays). */
   keepAudio?: boolean;
