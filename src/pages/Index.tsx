@@ -295,6 +295,13 @@ const Index = () => {
     if (levelId === "mayhem-main") playMayhemMainBgm();
   }, [mayhem, screen, levelId]);
 
+  // The slowed/low-pitched/muffled INVBOI treatment is MAYHEM-only — flag
+  // it here so normal platformer levels keep the original mix.
+  useEffect(() => {
+    setMayhemMix(mayhem);
+    return () => setMayhemMix(false);
+  }, [mayhem]);
+
   // Silence sfx ONLY during the intro card. Menu has its own click sfx.
   useEffect(() => {
     const introUp = introPhase !== "done";
