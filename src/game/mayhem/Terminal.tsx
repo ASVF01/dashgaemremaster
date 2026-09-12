@@ -77,98 +77,95 @@ export default function Terminal({ onClose }: { onClose: () => void }) {
   }, [screen]);
 
   return (
-    <div
-      className="absolute left-[7.5%] right-[7.5%] top-[7.5%] bottom-[7.5%] z-[70] rounded-lg border-4 border-[#2a2f2a] bg-black shadow-[0_0_0_9999px_rgba(0,0,0,0.55),0_20px_80px_rgba(0,0,0,0.9)]"
-      style={{ animation: "mayhemTerminalUp 420ms cubic-bezier(0.22,1,0.36,1)" }}
-    >
-      {/* screen */}
-      <div className="absolute inset-0 flex items-stretch justify-center overflow-hidden rounded-md">
-        <div className="relative h-full w-full bg-black">
-          <img
-            key={screen}
-            src={ART[screen]}
-            alt="Company panel terminal"
-            draggable={false}
-            className="h-full w-full object-fill"
-            style={{ imageRendering: "pixelated", animation: "mayhemRoomFade 120ms ease-out" }}
-          />
+    <>
+      {/* full-screen CRT backdrop — the tv effect lives in the black area around the terminal */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-[69] bg-black/55"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(0deg, rgba(0,0,0,0.22) 0px, rgba(0,0,0,0.22) 1px, transparent 1px, transparent 3px)",
+          boxShadow: "inset 0 0 160px rgba(0,0,0,0.95)",
+        }}
+      />
 
-          {/* home hotspots: two panels at the bottom */}
-          {screen === "home" && (
-            <>
-              <button
-                type="button"
-                aria-label="Reset camera system"
-                onClick={() => setScreen("rcs")}
-                className="absolute border-2 border-transparent hover:border-[#39ff6a]/70"
-                style={{ left: "2%", top: "46%", width: "47%", height: "52%" }}
-              />
-              <button
-                type="button"
-                aria-label="Reset individual camera"
-                onClick={() => setScreen("which")}
-                className="absolute border-2 border-transparent hover:border-[#39ff6a]/70"
-                style={{ left: "50%", top: "46%", width: "48%", height: "52%" }}
-              />
-            </>
-          )}
+      <div
+        className="absolute left-[7.5%] right-[7.5%] top-[7.5%] bottom-[7.5%] z-[70] rounded-lg border-4 border-[#2a2f2a] bg-black shadow-[0_20px_80px_rgba(0,0,0,0.9)]"
+        style={{ animation: "mayhemTerminalUp 420ms cubic-bezier(0.22,1,0.36,1)" }}
+      >
+        {/* screen */}
+        <div className="absolute inset-0 flex items-stretch justify-center overflow-hidden rounded-md">
+          <div className="relative h-full w-full bg-black">
+            <img
+              key={screen}
+              src={ART[screen]}
+              alt="Company panel terminal"
+              draggable={false}
+              className="h-full w-full object-fill"
+              style={{ imageRendering: "pixelated", animation: "mayhemRoomFade 120ms ease-out" }}
+            />
 
-          {/* rcs hotspots: Y / N */}
-          {screen === "rcs" && (
-            <>
-              <button
-                type="button"
-                aria-label="Yes"
-                onClick={() => setScreen("wait1")}
-                className="absolute border-2 border-transparent hover:border-[#39ff6a]/70"
-                style={{ left: "38%", top: "55%", width: "10%", height: "20%" }}
-              />
-              <button
-                type="button"
-                aria-label="No"
-                onClick={() => setScreen("home")}
-                className="absolute border-2 border-transparent hover:border-[#39ff6a]/70"
-                style={{ left: "50%", top: "55%", width: "10%", height: "20%" }}
-              />
-            </>
-          )}
-
-          {/* which camera hotspots: 1..5 */}
-          {screen === "which" && (
-            <div className="absolute" style={{ left: "37%", top: "62%", width: "26%", height: "16%", display: "flex" }}>
-              {["1", "2", "3", "4", "5"].map((n) => (
+            {/* home hotspots: two panels at the bottom */}
+            {screen === "home" && (
+              <>
                 <button
-                  key={n}
                   type="button"
-                  aria-label={`Camera ${n}`}
-                  onClick={() => setScreen("wait1")}
-                  className="h-full flex-1 border border-transparent hover:border-[#39ff6a]/70"
+                  aria-label="Reset camera system"
+                  onClick={() => setScreen("rcs")}
+                  className="absolute border-2 border-transparent hover:border-[#39ff6a]/70"
+                  style={{ left: "2%", top: "46%", width: "47%", height: "52%" }}
                 />
-              ))}
-            </div>
-          )}
+                <button
+                  type="button"
+                  aria-label="Reset individual camera"
+                  onClick={() => setScreen("which")}
+                  className="absolute border-2 border-transparent hover:border-[#39ff6a]/70"
+                  style={{ left: "50%", top: "46%", width: "48%", height: "52%" }}
+                />
+              </>
+            )}
 
-          {/* subtle scanlines + vignette for the CRT feel */}
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0"
-            style={{
-              background:
-                "repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0px, rgba(0,0,0,0.18) 1px, transparent 1px, transparent 3px)",
-              mixBlendMode: "multiply",
-            }}
-          />
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0"
-            style={{ boxShadow: "inset 0 0 120px rgba(0,0,0,0.85)" }}
-          />
+            {/* rcs hotspots: Y / N */}
+            {screen === "rcs" && (
+              <>
+                <button
+                  type="button"
+                  aria-label="Yes"
+                  onClick={() => setScreen("wait1")}
+                  className="absolute border-2 border-transparent hover:border-[#39ff6a]/70"
+                  style={{ left: "38%", top: "55%", width: "10%", height: "20%" }}
+                />
+                <button
+                  type="button"
+                  aria-label="No"
+                  onClick={() => setScreen("home")}
+                  className="absolute border-2 border-transparent hover:border-[#39ff6a]/70"
+                  style={{ left: "50%", top: "55%", width: "10%", height: "20%" }}
+                />
+              </>
+            )}
+
+            {/* which camera hotspots: 1..5 */}
+            {screen === "which" && (
+              <div className="absolute" style={{ left: "37%", top: "62%", width: "26%", height: "16%", display: "flex" }}>
+                {["1", "2", "3", "4", "5"].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    aria-label={`Camera ${n}`}
+                    onClick={() => setScreen("wait1")}
+                    className="h-full flex-1 border border-transparent hover:border-[#39ff6a]/70"
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="pointer-events-none absolute inset-x-0 top-3 text-center font-pixel text-[9px] tracking-[0.3em] text-[#39ff6a]/60">
+          [ S ] CLOSE TERMINAL
         </div>
       </div>
-
-      <div className="pointer-events-none absolute inset-x-0 top-3 text-center font-pixel text-[9px] tracking-[0.3em] text-[#39ff6a]/60">
-        [ S ] CLOSE TERMINAL
-      </div>
-    </div>
+    </>
   );
 }
