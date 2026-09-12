@@ -256,6 +256,20 @@ function HellPreview() {
       <p className="mayhem-caption absolute bottom-4 right-4 z-20 max-w-[14rem] text-right font-pixel text-[clamp(8px,1.25vw,14px)] leading-relaxed sm:bottom-6 sm:right-7">
         NEW MODE<br />COMING SOON
       </p>
+      {!talking && (
+        <button
+          type="button"
+          onClick={() => { sfx.menuConfirm(); setTalking(true); }}
+          className="absolute bottom-4 left-4 z-30 border-2 border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))/0.8] px-4 py-2 font-pixel text-[10px] tracking-widest text-[hsl(var(--hell-warning))] transition-colors hover:bg-[hsl(var(--hell-warning))] hover:text-[hsl(var(--hell-black))] sm:bottom-6 sm:left-7"
+        >
+          LISTEN
+        </button>
+      )}
+      {talking && (
+        <div className="absolute inset-x-3 bottom-3 z-30 sm:inset-x-6 sm:bottom-6">
+          <DialogueBox script={MAYHEM_SCRIPTS.intro} onDone={() => setTalking(false)} />
+        </div>
+      )}
     </section>
   );
 }
