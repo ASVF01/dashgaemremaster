@@ -130,7 +130,7 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
           {tab === "credits"  && <CreditsTab />}
           {tab === "youtube"  && <YouTubeTab />}
           {tab === "starvanisher" && <StarVanisher onBack={() => setTab("play")} />}
-          {tab === "hell" && <HellPreview />}
+          {tab === "hell" && <HellPreview onCommence={onCommenceMayhem} />}
         </div>
       </div>
 
