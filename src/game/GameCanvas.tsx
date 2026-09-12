@@ -2180,7 +2180,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     // `cameraX`/`cameraY` now describe the CENTER of the viewport in world
     // space (well, the top-left of the unzoomed 1:1 frame), and the render
     // scales around the screen center so the player stays in the middle.
-    const ZOOM_TARGET = 1.45;
+    // Zoom is MAYHEM-only — and only a gentle push-in; normal levels play
+    // at the classic 1:1 view.
+    const ZOOM_TARGET = levelIdRef.current.startsWith("mayhem") ? 1.2 : 1;
     r.cameraZoom += (ZOOM_TARGET - r.cameraZoom) * Math.min(1, dt * 2.5);
     const z = r.cameraZoom;
     const halfVisW = size.w / (z * 2);

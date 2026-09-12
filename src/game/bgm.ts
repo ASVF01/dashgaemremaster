@@ -46,10 +46,16 @@ const TRACK_FADE = 0.35;
 // INVBOI cheat tracks get a darker, slower mix: speed -15%, pitch -25%,
 // plus a heavy low-pass so it sounds like it's playing through a wall.
 // playbackRate handles the speed; detune adds the remaining pitch drop.
+// This treatment is MAYHEM-only — normal platformer levels keep the
+// original INVBOI mix.
 const INVBOI_TRACKS = new Set([bgmStarman, bgmMarathonStarman, bgmSomSom]);
 const INVBOI_RATE = 0.85;
 const INVBOI_DETUNE = -216; // cents; 0.85 * 2^(-216/1200) ≈ 0.75 (pitch -25%)
 const INVBOI_MUFFLE = 420; // Hz low-pass cutoff — super muffled
+let mayhemMix = false;
+// Called by the app shell when entering/leaving MAYHEM so the INVBOI
+// treatment only applies there.
+export function setMayhemMix(v: boolean) { mayhemMix = v; }
 
 let ctx: AudioContext | null = null;
 let masterGain: GainNode | null = null;
@@ -262,8 +268,8 @@ function playSrc(src: string, restart = false) {
     // fade IN over TRACK_FADE while the old one fades OUT (equal-power-ish).
     const startAt = c.currentTime + 0.02;
     if (hadPrevious) fadeOutCurrent(c, fadeDur, startAt);
-    // INVBOI cheat tracks: slower and lower-pitched.
-    const invboi = INVBOI_TRACKS.has(src);
+    // INVBOI cheat tracks: slower and lower-pitched (MAYHEM mode only).
+    const invboi = mayhemMix && INVBOI_TRACKS.has(src);
     const rate = invboi ? INVBOI_RATE : 1;
     const detune = invboi ? INVBOI_DETUNE : 0;
     const muffle = invboi ? INVBOI_MUFFLE : 0;
