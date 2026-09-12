@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { mayhemSfx } from "@/game/sfx";
+
 import { useSettings } from "@/game/settings";
 import { sfx, setSfxVolume } from "@/game/sfx";
 import { setBgmVolume } from "@/game/bgm";
