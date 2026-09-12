@@ -19,6 +19,7 @@ import { useLevelStats, formatMs } from "@/game/levelStats";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import roaringKnightImg from "@/assets/roaring_knight_titlecard.png";
 import celestialMarathonEmblem from "@/assets/celestial-marathon-emblem.png";
+import mayhemArtwork from "@/assets/mayhem-coming-soon.png.asset.json";
 
 export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" | "updates" | "credits" | "youtube" | "starvanisher" | "hell";
 
@@ -93,7 +94,7 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
           <TabBtn active={tab === "credits"}  onClick={() => switchTab("credits")}>CREDITS</TabBtn>
           <TabBtn active={tab === "youtube"} onClick={() => switchTab("youtube")}>YOUTUBE</TabBtn>
           <SvTabBtn active={tab === "starvanisher"} onClick={() => switchTab("starvanisher")}>STAR VANISHER...!!</SvTabBtn>
-          <HellTabBtn active={tab === "hell"} onClick={() => switchTab("hell")}>HELL</HellTabBtn>
+          <HellTabBtn active={tab === "hell"} onClick={() => switchTab("hell")}>MAYHEM</HellTabBtn>
           <TabBtn active={false} onClick={openShop}>SHOP</TabBtn>
           <TabBtn active={false} onClick={openBestiary}>BESTIARY</TabBtn>
           <TabBtn active={false} onClick={openCharSelect}>CHARACTER SELECT</TabBtn>
@@ -179,42 +180,49 @@ function HellTabBtn({ active, onClick, children }: { active: boolean; onClick: (
 }
 
 function HellPreview() {
+  const panelRef = useRef<HTMLElement | null>(null);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    unlockAudio();
+    sfx.rainStart();
+    return () => sfx.rainStop();
+  }, []);
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
+    if (event.pointerType === "touch" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const panel = panelRef.current;
+    if (!panel) return;
+    const bounds = panel.getBoundingClientRect();
+    const x = ((event.clientX - bounds.left) / bounds.width - 0.5) * -2;
+    const y = ((event.clientY - bounds.top) / bounds.height - 0.5) * -2;
+    setOffset({ x: x * 2.8, y: y * 2.8 });
+  };
+
   return (
-    <section className="hell-preview relative min-h-[440px] overflow-hidden border-2 border-[hsl(var(--hell-steel))]" aria-labelledby="hell-title">
-      <div aria-hidden="true" className="hell-static absolute inset-0" />
-      <div aria-hidden="true" className="hell-tower">
-        <span className="hell-window" />
-        {[5, 4, 3, 2, 1].map((floor) => (
-          <span key={floor} className={`hell-floor hell-floor-${floor}`}>
-            <i>{floor}</i>
-          </span>
-        ))}
-      </div>
-
-      <header className="relative z-20 px-5 pt-5 sm:px-8 sm:pt-7">
-        <p className="font-pixel text-[10px] text-[hsl(var(--hell-muted))]">FACILITY ACCESS // SIGNAL LOST</p>
-        <h2 id="hell-title" className="hell-title mt-2 font-marker text-6xl sm:text-8xl">HELL</h2>
-      </header>
-
-      <div className="hell-office relative z-10 mx-auto mt-2 h-[245px] w-[min(92%,720px)]" aria-label="Sealed facility office preview">
-        <div className="hell-door">
-          <span className="hell-door-sign">HALLWAY</span>
-          <span className="hell-keyhole" />
-          <span className="hell-eye" />
-        </div>
-        <div className="hell-desk">
-          <div className="hell-camera" />
-          <div className="hell-monitor"><span /></div>
-          <div className="hell-health"><span>HP</span><i /></div>
-        </div>
-      </div>
-
-      <footer className="relative z-20 flex flex-col items-center justify-between gap-3 border-t-2 border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black)/0.92)] px-5 py-4 sm:flex-row sm:px-8">
-        <p className="font-pixel text-xs text-[hsl(var(--hell-warning))]">SEALED — COMING SOON</p>
-        <button disabled className="cursor-not-allowed border-2 border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-panel))] px-5 py-3 font-pixel text-xs text-[hsl(var(--hell-muted))] opacity-70">
-          ENTRY LOCKED
-        </button>
-      </footer>
+    <section
+      ref={panelRef}
+      className="hell-preview mayhem-preview relative aspect-[976/440] min-h-[300px] overflow-hidden border-2 border-[hsl(var(--hell-steel))]"
+      aria-labelledby="mayhem-title"
+      onPointerMove={handlePointerMove}
+      onPointerLeave={() => setOffset({ x: 0, y: 0 })}
+    >
+      <img
+        src={mayhemArtwork.url}
+        alt="A hand-drawn figure facing a looming dark tower"
+        className="mayhem-art absolute inset-0 h-full w-full object-cover"
+        style={{ transform: `translate(${offset.x}%, ${offset.y}%) scale(1.1)` }}
+        draggable={false}
+      />
+      <div aria-hidden="true" className="mayhem-rain absolute inset-0 z-10" />
+      <div aria-hidden="true" className="hell-static absolute inset-0 z-10" />
+      <h2 id="mayhem-title" className="sr-only">MAYHEM — coming soon</h2>
+      <p className="mayhem-caption absolute left-4 top-4 z-20 max-w-[18rem] font-pixel text-[clamp(8px,1.25vw,14px)] leading-relaxed sm:left-7 sm:top-6">
+        WHERE THERE IS LIGHT THERE IS DARKNESS
+      </p>
+      <p className="mayhem-caption absolute bottom-4 right-4 z-20 max-w-[14rem] text-right font-pixel text-[clamp(8px,1.25vw,14px)] leading-relaxed sm:bottom-6 sm:right-7">
+        NEW MODE<br />COMING SOON
+      </p>
     </section>
   );
 }
