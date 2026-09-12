@@ -8,7 +8,7 @@ import {
 import { useSettings, type Settings } from "@/game/settings";
 import mvAsset from "@/assets/audio/MV.ogg.asset.json";
 import { sfx, setSfxVolume, unlockAudio } from "@/game/sfx";
-import { setBgmVolume, pauseBgm, resumeBgm } from "@/game/bgm";
+import { setBgmVolume, pauseBgm, resumeBgm, playMenuBgm, stopBgm, playMayhemBgm } from "@/game/bgm";
 import { resetAllProgress } from "@/game/progress";
 import exploseAsset from "@/assets/audio/explose1.mp3.asset.json";
 import BgmPlayer from "@/game/BgmPlayer";
@@ -36,6 +36,21 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
   const [charSelectOpen, setCharSelectOpen] = useState(false);
   const [bestiaryOpen, setBestiaryOpen] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
+  const prevTabRef = useRef<MenuTab>("play");
+
+  useEffect(() => {
+    const prev = prevTabRef.current;
+    if (tab === "hell" && prev !== "hell") {
+      unlockAudio();
+      stopBgm();
+      playMayhemBgm();
+    } else if (prev === "hell" && tab !== "hell") {
+      unlockAudio();
+      stopBgm();
+      playMenuBgm();
+    }
+    prevTabRef.current = tab;
+  }, [tab]);
 
   const handlePlay = (id: LevelId) => {
     unlockAudio();
