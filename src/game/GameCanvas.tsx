@@ -2833,6 +2833,43 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       ctx.restore();
     }
 
+    // interactable NPCs (MAYHEM) — a lanky steel-lit figure + [E] prompt
+    if (r.level.npcs) {
+      const nearId = nearbyNpc(r)?.id;
+      for (const n of r.level.npcs) {
+        if (n.x + n.w < camX - 120 || n.x > camX + w + 120) continue;
+        const cx = n.x + n.w / 2;
+        const bob = Math.sin(r.time * 1.8 + n.x) * 2;
+        ctx.save();
+        // body
+        sketchRect(ctx, n.x, n.y + bob, n.w, n.h, "#1b2128", "#9aa6ae", 2.2, 0.5);
+        // head
+        sketchCircle(ctx, cx, n.y - 14 + bob, 13, "#20272f", "#9aa6ae", 2.2, 0.5);
+        // eyes
+        ctx.fillStyle = "#ffd94a";
+        ctx.beginPath(); ctx.arc(cx - 5, n.y - 15 + bob, 2.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx + 5, n.y - 15 + bob, 2.2, 0, Math.PI * 2); ctx.fill();
+        // name plate
+        ctx.font = "bold 13px 'Oxanium', sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#8e99a2";
+        ctx.fillText(n.name, cx, n.y - 40 + bob);
+        // prompt when in range
+        if (nearId === n.id) {
+          const pulse = 0.65 + Math.sin(r.time * 6) * 0.35;
+          ctx.globalAlpha = pulse;
+          ctx.fillStyle = "#b4202d";
+          ctx.font = "bold 16px 'Oxanium', sans-serif";
+          ctx.fillText("[ E ] TALK", cx, n.y - 62 + bob);
+          ctx.globalAlpha = 1;
+        }
+        ctx.textAlign = "start";
+        ctx.restore();
+      }
+    }
+
+
+
     // hazards (spikes - scribbled triangles)
     for (const hz of r.level.hazards) {
       if (hz.x + hz.w < camX - 40 || hz.x > camX + w + 40) continue;
