@@ -19,7 +19,7 @@ import { useLevelStats, formatMs } from "@/game/levelStats";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import roaringKnightImg from "@/assets/roaring_knight_titlecard.png";
 import celestialMarathonEmblem from "@/assets/celestial-marathon-emblem.png";
-import mayhemArtwork from "@/assets/mayhem-coming-soon.png.asset.json";
+
 import DialogueBox from "@/game/mayhem/DialogueBox";
 import { MAYHEM_SCRIPTS } from "@/game/mayhem/dialogue";
 
