@@ -233,13 +233,13 @@ function HellPreview({ onCommence }: { onCommence?: () => void }) {
       <p className="mayhem-caption absolute left-4 top-4 z-20 max-w-[18rem] font-pixel text-[clamp(8px,1.25vw,14px)] leading-relaxed sm:left-7 sm:top-6">
         WHERE THERE IS LIGHT THERE IS DARKNESS
       </p>
-      {!talking && !settingsOpen && (
+      {!settingsOpen && (
         <div className="mayhem-menu absolute inset-0 z-30 flex flex-col items-center justify-center px-4">
           <div className="hell-title font-pixel text-[clamp(24px,5vw,58px)]">MAYHEM</div>
           <div className="mt-5 flex w-full max-w-sm flex-col gap-2.5">
             <button
               type="button"
-              onClick={() => { sfx.menuConfirm(); setTalking(true); }}
+              onClick={() => { sfx.menuConfirm(); onCommence?.(); }}
               onMouseEnter={() => sfx.menuHover()}
               className="mayhem-menu-button mayhem-menu-primary"
             >
