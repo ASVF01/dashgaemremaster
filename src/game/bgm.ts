@@ -383,13 +383,14 @@ export function playStarmanBgm() {
 export function getStarmanElapsed(): number | null {
   const c = ac();
   if (!c || !playing || playing.stopped) return null;
+  const r = playing.rate || 1;
   if (playing.src === bgmStarman) {
     if (starmanStartCtxTime == null) return null;
-    return c.currentTime - starmanStartCtxTime;
+    return (c.currentTime - starmanStartCtxTime) * r;
   }
   if (playing.src === bgmMarathonStarman) {
     if (marathonStartCtxTime == null) return null;
-    return c.currentTime - marathonStartCtxTime;
+    return (c.currentTime - marathonStartCtxTime) * r;
   }
   return null;
 }
