@@ -2194,34 +2194,34 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       const targetCam = playerCenterX - size.w * 0.5 + shift + p.facing * 40 + p.vx * 0.06;
       const lerp = p.superDashing ? 1 : Math.min(1, dt * (4 + speedNow * 0.015));
       r.cameraX += (targetCam - r.cameraX) * lerp;
-      const maxCamX = Math.max(0, r.level.width - (size.w + size.w / z) * 0.5);
+      const maxCamX = Math.max(0, r.level.width - size.w / z);
       if (r.cameraX < 0) r.cameraX = 0;
       if (r.cameraX > maxCamX) r.cameraX = maxCamX;
       const targetCamY = playerCenterY - size.h * 0.55;
       r.cameraY += (targetCamY - r.cameraY) * Math.min(1, dt * 4);
-      const maxCamY = Math.max(0, r.level.height - (size.h + size.h / z) * 0.5);
+      const maxCamY = Math.max(0, r.level.height - size.h / z);
       if (r.cameraY < 0) r.cameraY = 0;
       if (r.cameraY > maxCamY) r.cameraY = maxCamY;
     } else if (isMobileViewRef.current) {
       const targetCam = playerCenterX - size.w * 0.5 + p.facing * 30;
       r.cameraX += (targetCam - r.cameraX) * Math.min(1, dt * 5);
-      const maxCamX = Math.max(0, r.level.width - (size.w + size.w / z) * 0.5);
+      const maxCamX = Math.max(0, r.level.width - size.w / z);
       if (r.cameraX < 0) r.cameraX = 0;
       if (r.cameraX > maxCamX) r.cameraX = maxCamX;
       const targetCamY = playerCenterY - size.h * 0.55;
       r.cameraY += (targetCamY - r.cameraY) * Math.min(1, dt * 4);
-      const maxCamY = Math.max(0, r.level.height - (size.h + size.h / z) * 0.5);
+      const maxCamY = Math.max(0, r.level.height - size.h / z);
       if (r.cameraY < 0) r.cameraY = 0;
       if (r.cameraY > maxCamY) r.cameraY = maxCamY;
     } else {
       const targetCam = playerCenterX - size.w * 0.5 + p.facing * 80 + p.vx * 0.12;
       r.cameraX += (targetCam - r.cameraX) * Math.min(1, dt * 4);
-      const maxCamX = Math.max(0, r.level.width - (size.w + size.w / z) * 0.5);
+      const maxCamX = Math.max(0, r.level.width - size.w / z);
       if (r.cameraX < 0) r.cameraX = 0;
       if (r.cameraX > maxCamX) r.cameraX = maxCamX;
       const targetCamY = playerCenterY - size.h * 0.55 + p.vy * 0.08;
       r.cameraY += (targetCamY - r.cameraY) * Math.min(1, dt * 4);
-      const maxCamY = Math.max(0, r.level.height - (size.h + size.h / z) * 0.5);
+      const maxCamY = Math.max(0, r.level.height - size.h / z);
       if (r.cameraY < 0) r.cameraY = 0;
       if (r.cameraY > maxCamY) r.cameraY = maxCamY;
     }
