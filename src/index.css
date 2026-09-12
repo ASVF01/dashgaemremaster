@@ -52,6 +52,14 @@
     --paper: 48 30% 94%;
     --ink: 0 0% 8%;
 
+    /* HELL mode — industrial night palette */
+    --hell-black: 220 18% 3%;
+    --hell-panel: 216 12% 10%;
+    --hell-steel: 210 8% 42%;
+    --hell-muted: 205 10% 69%;
+    --hell-warning: 0 78% 52%;
+    --hell-terminal: 139 84% 45%;
+
     --sidebar-background: 48 30% 94%;
     --sidebar-foreground: 0 0% 8%;
     --sidebar-primary: 0 0% 8%;
@@ -170,6 +178,29 @@
     line-height: 1;
     will-change: transform, opacity;
   }
+
+  @keyframes hell-flicker {
+    0%, 18%, 22%, 63%, 68%, 100% { opacity: 1; }
+    20%, 65% { opacity: 0.58; }
+  }
+
+  @keyframes hell-rain {
+    from { transform: translate3d(20px, -50%, 0); }
+    to { transform: translate3d(-40px, 50%, 0); }
+  }
+
+  @keyframes hell-static-shift {
+    0%, 100% { transform: translate(0, 0); opacity: 0.08; }
+    25% { transform: translate(1px, -1px); opacity: 0.13; }
+    50% { transform: translate(-1px, 1px); opacity: 0.06; }
+    75% { transform: translate(1px, 1px); opacity: 0.1; }
+  }
+
+  @keyframes hell-eye-watch {
+    0%, 76%, 100% { opacity: 0; }
+    78%, 82% { opacity: 0.9; }
+    84% { opacity: 0.12; }
+  }
 }
 
 @layer base {
@@ -205,6 +236,59 @@
   .font-marker { font-family: 'Permanent Marker', cursive; }
   .font-bungee { font-family: 'Bungee', cursive; }
   .font-scribble { font-family: 'Caveat', cursive; }
+
+  .hell-tab {
+    color: hsl(var(--hell-muted));
+    background-color: hsl(var(--hell-panel));
+    background-image: repeating-linear-gradient(0deg, transparent 0 7px, hsl(var(--hell-steel) / 0.12) 8px);
+    box-shadow: inset 0 0 0 2px hsl(var(--hell-black)), 4px 4px 0 hsl(var(--hell-black));
+  }
+  .hell-tab::before, .hell-tab::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: hsl(var(--hell-steel));
+  }
+  .hell-tab::before { left: 5px; }
+  .hell-tab::after { right: 5px; }
+  .hell-tab-active { color: hsl(var(--hell-warning)); box-shadow: inset 0 0 0 2px hsl(var(--hell-black)), 0 0 14px hsl(var(--hell-warning) / 0.4), 4px 4px 0 hsl(var(--hell-black)); }
+  .hell-tab-rain { position: absolute; inset: -100% -20%; opacity: 0.32; background: repeating-linear-gradient(104deg, transparent 0 12px, hsl(var(--hell-muted) / 0.6) 13px, transparent 14px 24px); animation: hell-rain 1.8s linear infinite; }
+
+  .hell-preview { color: hsl(var(--hell-muted)); background: hsl(var(--hell-black)); box-shadow: inset 0 0 70px hsl(var(--hell-black)); }
+  .hell-preview::after { content: ''; position: absolute; inset: 0; z-index: 18; pointer-events: none; background: repeating-linear-gradient(0deg, transparent 0 3px, hsl(var(--hell-steel) / 0.07) 4px); }
+  .hell-static { z-index: 1; background-image: radial-gradient(hsl(var(--hell-muted) / 0.6) 0.7px, transparent 0.7px); background-size: 7px 7px; animation: hell-static-shift 0.18s steps(2) infinite; }
+  .hell-title { color: hsl(var(--hell-muted)); text-shadow: 3px 2px 0 hsl(var(--hell-black)), 0 0 18px hsl(var(--hell-warning) / 0.36); animation: hell-flicker 5.8s steps(1) infinite; }
+  .hell-tower { position: absolute; z-index: 2; right: 4%; top: 5%; width: 118px; height: 315px; border: 3px solid hsl(var(--hell-steel) / 0.35); opacity: 0.35; transform: perspective(360px) rotateY(-8deg); }
+  .hell-window { display: block; width: 30px; height: 18px; margin: 9px auto 5px; border: 2px solid hsl(var(--hell-steel)); background: hsl(var(--hell-muted) / 0.15); }
+  .hell-floor { position: relative; display: block; height: 54px; border-top: 2px solid hsl(var(--hell-steel) / 0.7); }
+  .hell-floor i { position: absolute; right: 5px; top: 5px; font: 8px 'Press Start 2P', monospace; font-style: normal; }
+  .hell-floor-5::before, .hell-floor-4::before, .hell-floor-3::before { content: ''; position: absolute; left: 9px; top: 10px; width: 5px; height: 5px; background: hsl(var(--hell-warning)); box-shadow: 0 0 8px hsl(var(--hell-warning)); }
+  .hell-office { border-bottom: 8px solid hsl(var(--hell-steel)); }
+  .hell-door { position: absolute; right: 14%; bottom: 0; width: 112px; height: 205px; border: 4px solid hsl(var(--hell-steel)); background: hsl(var(--hell-panel)); transform: rotate(1deg); }
+  .hell-door-sign { position: absolute; left: 13px; top: 22px; border: 2px solid hsl(var(--hell-steel)); padding: 8px; font: 8px 'Press Start 2P', monospace; }
+  .hell-keyhole { position: absolute; left: 14px; top: 103px; width: 12px; height: 17px; border-radius: 50% 50% 35% 35%; background: hsl(var(--hell-black)); box-shadow: 0 0 0 3px hsl(var(--hell-steel)); }
+  .hell-eye { position: absolute; left: 16px; top: 106px; width: 8px; height: 8px; border-radius: 50%; background: hsl(var(--hell-warning)); box-shadow: 0 0 12px hsl(var(--hell-warning)); animation: hell-eye-watch 7s steps(1) infinite; }
+  .hell-desk { position: absolute; left: 8%; bottom: 0; width: 55%; height: 92px; border: 4px solid hsl(var(--hell-steel)); border-radius: 45% 9% 12% 15%; background: hsl(var(--hell-panel)); }
+  .hell-camera { position: absolute; left: 12%; top: -48px; width: 42px; height: 45px; border: 3px solid hsl(var(--hell-steel)); background: hsl(var(--hell-panel)); transform: rotate(-5deg); }
+  .hell-monitor { position: absolute; left: 35%; top: -79px; width: 110px; height: 72px; border: 5px solid hsl(var(--hell-steel)); background: hsl(var(--hell-black)); }
+  .hell-monitor::after { content: ''; position: absolute; left: 42px; bottom: -24px; width: 22px; height: 20px; border-bottom: 4px solid hsl(var(--hell-steel)); border-left: 4px solid hsl(var(--hell-steel)); border-right: 4px solid hsl(var(--hell-steel)); }
+  .hell-monitor span { display: block; height: 100%; background: repeating-linear-gradient(175deg, transparent 0 8px, hsl(var(--hell-muted) / 0.28) 9px 10px); animation: hell-static-shift 0.15s steps(2) infinite; }
+  .hell-health { position: absolute; right: 7%; top: 20px; width: 72px; height: 40px; border: 3px solid hsl(var(--hell-steel)); background: hsl(var(--hell-black)); padding: 6px; font: 7px 'Press Start 2P', monospace; color: hsl(var(--hell-terminal)); }
+  .hell-health i { display: block; width: 75%; height: 5px; margin-top: 6px; background: hsl(var(--hell-terminal)); box-shadow: 0 0 7px hsl(var(--hell-terminal)); }
+
+  @media (max-width: 640px) {
+    .hell-tower { right: 1%; opacity: 0.22; }
+    .hell-door { right: 5%; }
+    .hell-desk { left: 3%; width: 66%; }
+    .hell-health { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hell-tab-rain, .hell-static, .hell-title, .hell-eye, .hell-monitor span { animation: none !important; }
+  }
 
   /* Star Vanisher uses Oxanium ExtraBold Italic everywhere */
   .sv-font, .sv-font * {

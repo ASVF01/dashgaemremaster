@@ -20,7 +20,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import roaringKnightImg from "@/assets/roaring_knight_titlecard.png";
 import celestialMarathonEmblem from "@/assets/celestial-marathon-emblem.png";
 
-export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" | "updates" | "credits" | "youtube" | "starvanisher";
+export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" | "updates" | "credits" | "youtube" | "starvanisher" | "hell";
 
 interface Props {
   onPlay: (id: LevelId) => void;
@@ -93,6 +93,7 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
           <TabBtn active={tab === "credits"}  onClick={() => switchTab("credits")}>CREDITS</TabBtn>
           <TabBtn active={tab === "youtube"} onClick={() => switchTab("youtube")}>YOUTUBE</TabBtn>
           <SvTabBtn active={tab === "starvanisher"} onClick={() => switchTab("starvanisher")}>STAR VANISHER...!!</SvTabBtn>
+          <HellTabBtn active={tab === "hell"} onClick={() => switchTab("hell")}>HELL</HellTabBtn>
           <TabBtn active={false} onClick={openShop}>SHOP</TabBtn>
           <TabBtn active={false} onClick={openBestiary}>BESTIARY</TabBtn>
           <TabBtn active={false} onClick={openCharSelect}>CHARACTER SELECT</TabBtn>
@@ -109,6 +110,7 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
           {tab === "credits"  && <CreditsTab />}
           {tab === "youtube"  && <YouTubeTab />}
           {tab === "starvanisher" && <StarVanisher onBack={() => setTab("play")} />}
+          {tab === "hell" && <HellPreview />}
         </div>
       </div>
 
@@ -157,6 +159,63 @@ function SvTabBtn({ active, onClick, children }: { active: boolean; onClick: () 
     >
       {children}
     </button>
+  );
+}
+
+function HellTabBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => { if (!active) sfx.menuHover(); }}
+      className={[
+        "hell-tab relative overflow-hidden border-2 border-[hsl(var(--hell-steel))] px-7 py-2 font-pixel text-xl transition-transform hover:-rotate-1",
+        active ? "hell-tab-active" : "",
+      ].join(" ")}
+    >
+      <span aria-hidden="true" className="hell-tab-rain" />
+      <span className="relative z-10">{children}</span>
+    </button>
+  );
+}
+
+function HellPreview() {
+  return (
+    <section className="hell-preview relative min-h-[440px] overflow-hidden border-2 border-[hsl(var(--hell-steel))]" aria-labelledby="hell-title">
+      <div aria-hidden="true" className="hell-static absolute inset-0" />
+      <div aria-hidden="true" className="hell-tower">
+        <span className="hell-window" />
+        {[5, 4, 3, 2, 1].map((floor) => (
+          <span key={floor} className={`hell-floor hell-floor-${floor}`}>
+            <i>{floor}</i>
+          </span>
+        ))}
+      </div>
+
+      <header className="relative z-20 px-5 pt-5 sm:px-8 sm:pt-7">
+        <p className="font-pixel text-[10px] text-[hsl(var(--hell-muted))]">FACILITY ACCESS // SIGNAL LOST</p>
+        <h2 id="hell-title" className="hell-title mt-2 font-marker text-6xl sm:text-8xl">HELL</h2>
+      </header>
+
+      <div className="hell-office relative z-10 mx-auto mt-2 h-[245px] w-[min(92%,720px)]" aria-label="Sealed facility office preview">
+        <div className="hell-door">
+          <span className="hell-door-sign">HALLWAY</span>
+          <span className="hell-keyhole" />
+          <span className="hell-eye" />
+        </div>
+        <div className="hell-desk">
+          <div className="hell-camera" />
+          <div className="hell-monitor"><span /></div>
+          <div className="hell-health"><span>HP</span><i /></div>
+        </div>
+      </div>
+
+      <footer className="relative z-20 flex flex-col items-center justify-between gap-3 border-t-2 border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black)/0.92)] px-5 py-4 sm:flex-row sm:px-8">
+        <p className="font-pixel text-xs text-[hsl(var(--hell-warning))]">SEALED — COMING SOON</p>
+        <button disabled className="cursor-not-allowed border-2 border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-panel))] px-5 py-3 font-pixel text-xs text-[hsl(var(--hell-muted))] opacity-70">
+          ENTRY LOCKED
+        </button>
+      </footer>
+    </section>
   );
 }
 
