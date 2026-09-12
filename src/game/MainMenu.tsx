@@ -1482,6 +1482,7 @@ function UpdatesTab() {
               ))}
             </ul>
           </div>
+          )
         ))}
         </div>
       </div>
