@@ -78,12 +78,12 @@ export default function Terminal({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="absolute inset-0 z-[70]"
+      className="absolute left-[7.5%] right-[7.5%] top-[7.5%] bottom-[7.5%] z-[70] rounded-lg border-4 border-[#2a2f2a] bg-black shadow-[0_0_0_9999px_rgba(0,0,0,0.55),0_20px_80px_rgba(0,0,0,0.9)]"
       style={{ animation: "mayhemTerminalUp 420ms cubic-bezier(0.22,1,0.36,1)" }}
     >
       {/* screen */}
-      <div className="absolute inset-x-0 bottom-0 top-0 flex items-stretch justify-center">
-        <div className="relative h-full w-full border-t-4 border-[#3a3f3a] bg-black shadow-[0_-20px_80px_rgba(0,0,0,0.9)]">
+      <div className="absolute inset-0 flex items-stretch justify-center overflow-hidden rounded-md">
+        <div className="relative h-full w-full bg-black">
           <img
             key={screen}
             src={ART[screen]}
