@@ -199,59 +199,19 @@ type MayhemRainStyle = CSSProperties & {
 };
 
 function HellPreview() {
-  const panelRef = useRef<HTMLElement | null>(null);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [talking, setTalking] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     unlockAudio();
-    sfx.rainStart();
-    return () => sfx.rainStop();
   }, []);
-
-  const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
-    if (event.pointerType === "touch" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const panel = panelRef.current;
-    if (!panel) return;
-    const bounds = panel.getBoundingClientRect();
-    const x = ((event.clientX - bounds.left) / bounds.width - 0.5) * -2;
-    const y = ((event.clientY - bounds.top) / bounds.height - 0.5) * -2;
-    setOffset({ x: x * 2.8, y: y * 2.8 });
-  };
 
   return (
     <section
-      ref={panelRef}
       className="hell-preview mayhem-preview relative aspect-[976/440] min-h-[300px] overflow-hidden border-2 border-[hsl(var(--hell-steel))]"
       aria-labelledby="mayhem-title"
-      onPointerMove={handlePointerMove}
-      onPointerLeave={() => setOffset({ x: 0, y: 0 })}
     >
       <div aria-hidden="true" className="mayhem-menu-grid absolute inset-0 z-[1]" />
-      <img
-        src={mayhemArtwork.url}
-        alt="A hand-drawn figure facing a looming dark tower"
-        className="mayhem-art absolute inset-0 h-full w-full object-cover"
-        style={{ transform: `translate(${offset.x}%, ${offset.y}%) scale(1.1)` }}
-        draggable={false}
-      />
-      <div aria-hidden="true" className="mayhem-rain-field absolute inset-0 z-10 overflow-hidden">
-        {MAYHEM_RAIN_PARTICLES.map((particle, index) => (
-          <i
-            key={index}
-            className="mayhem-raindrop"
-            style={{
-              left: `${particle.left}%`,
-              "--rain-length": `${particle.length}px`,
-              "--rain-opacity": particle.opacity,
-              "--rain-duration": `${particle.duration}s`,
-              "--rain-delay": `${particle.delay}s`,
-              "--rain-drift": `${particle.drift}px`,
-            } as MayhemRainStyle}
-          />
-        ))}
-      </div>
       <div aria-hidden="true" className="hell-static absolute inset-0 z-10" />
       <h2 id="mayhem-title" className="sr-only">MAYHEM</h2>
       <p className="mayhem-caption absolute left-4 top-4 z-20 max-w-[18rem] font-pixel text-[clamp(8px,1.25vw,14px)] leading-relaxed sm:left-7 sm:top-6">
