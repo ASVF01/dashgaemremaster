@@ -10,7 +10,7 @@ import {
 import { buildLevel, type Level, type LevelId } from "@/game/level";
 import { sketchLine, sketchRect, sketchCircle, jaggedBolt, INK } from "@/game/draw";
 import { isPressed, matchesAction, getLiveBinds } from "@/game/keybinds";
-import { sfx, unlockAudio, setCelestialMode, setThunderMode } from "@/game/sfx";
+import { sfx, unlockAudio, setCelestialMode, setThunderMode, setMetalMode } from "@/game/sfx";
 
 import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, getStarmanElapsed, playSomSomBgm, getSomSomElapsed } from "@/game/bgm";
 import weSfxUrl from "@/assets/audio/impact_aura_charge.ogg";
@@ -549,6 +549,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       bossParryFlash: 0,
       punchZoom: 1,
     };
+    // MAYHEM walks/runs on industrial metal instead of paper.
+    setMetalMode(levelId === "mayhem-outside");
     // Pre-place the invboi star if this level configures one (e.g. meet-invboi).
     if (level.invboiStart) {
       refs.current.invboiPickup = {
@@ -587,7 +589,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
   // with the menu music here. Restart on retry is also driven by the
   // parent via screen/levelId/resetKey transitions.
   useEffect(() => {
-    return () => { stopBgm(); sfx.shineStop(); sfx.rainStop(); sfx.slideStop(); sfx.laserStop(); setCelestialMode(false); setThunderMode(false); };
+    return () => { stopBgm(); sfx.shineStop(); sfx.rainStop(); sfx.slideStop(); sfx.laserStop(); setCelestialMode(false); setThunderMode(false); setMetalMode(false); };
   }, []);
 
   // BGM: pause/resume with the game's pause state — but keep playing when
@@ -2332,8 +2334,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
     // smooth fade-in of the black backdrop
     const bgT = starmanFx ? Math.min(1, (starElapsed - 3.20) / 0.6) : 0;
     const isBossLevel = levelIdRef.current === "roaring-knight";
-    // paper bg (or black during starman fx, or OLED black post-impact for som som,
-    // or the boss-level cyan-flame backdrop)
+    const isMayhemLevel = levelIdRef.current === "mayhem-outside";
+    // paper bg (or black during starman fx, OLED black post-impact for som som,
+    // the boss-level cyan-flame backdrop, or MAYHEM's pitch-black industrial night)
     if (isBossLevel) {
       // Solid black under the bg image.
       ctx.fillStyle = "#000";
@@ -2368,6 +2371,23 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
         }
         ctx.restore();
       }
+    } else if (isMayhemLevel) {
+      // True-black sky with a faint industrial haze and slow red warning glow.
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, w, h);
+      const haze = ctx.createLinearGradient(0, 0, 0, h);
+      haze.addColorStop(0, "rgba(8,10,14,0.2)");
+      haze.addColorStop(0.58, "rgba(15,18,23,0.58)");
+      haze.addColorStop(1, "rgba(0,0,0,0.9)");
+      ctx.fillStyle = haze;
+      ctx.fillRect(0, 0, w, h);
+      const pulse = 0.35 + Math.sin(r.time * 1.7) * 0.12;
+      const glow = ctx.createRadialGradient(w * 0.82, h * 0.28, 20, w * 0.82, h * 0.28, w * 0.5);
+      glow.addColorStop(0, `rgba(110,18,24,${pulse * 0.28})`);
+      glow.addColorStop(0.4, `rgba(50,10,14,${pulse * 0.16})`);
+      glow.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, w, h);
     } else {
       if (postImpact) {
         ctx.fillStyle = "#000";
@@ -2710,8 +2730,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
     }
     ctx.translate(-camX, -camY);
 
-    // distant scribbled clouds / scenery
-    drawScenery(ctx, camX, w, r.level.height);
+    // distant scribbled clouds / scenery — MAYHEM gets black industrial silhouettes
+    if (isMayhemLevel) drawMayhemScenery(ctx, camX, w, r.level.height, r.time);
+    else drawScenery(ctx, camX, w, r.level.height);
 
     // platforms
     const bossPlatforms = levelIdRef.current === "roaring-knight";
@@ -2721,12 +2742,39 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       const visX = Math.max(pl.x, camX - 40);
       const visR = Math.min(pl.x + pl.w, camX + w + 40);
       const visW = visR - visX;
-      const fill = bossPlatforms ? "#000000" : (isGround ? "#e5dfc2" : "#f7f1dc");
-      const stroke = bossPlatforms ? "#ffffff" : INK;
-      sketchRect(ctx, visX, pl.y, visW, pl.h, fill, stroke, isGround ? 3 : 2.6, isGround ? 1.6 : 1.2);
+      const fill = isMayhemLevel
+        ? (isGround ? "#15191f" : "#20262e")
+        : bossPlatforms ? "#000000" : (isGround ? "#e5dfc2" : "#f7f1dc");
+      const stroke = isMayhemLevel ? "#9aa5ad" : bossPlatforms ? "#ffffff" : INK;
+      sketchRect(ctx, visX, pl.y, visW, pl.h, fill, stroke, isGround ? 3 : 2.6, isMayhemLevel ? 0.55 : isGround ? 1.6 : 1.2);
+      if (isMayhemLevel) {
+        // Brushed top edge + panel seams/rivets make every walkable surface read as metal.
+        ctx.save();
+        ctx.strokeStyle = "rgba(220,230,235,0.55)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(visX, pl.y + 2);
+        ctx.lineTo(visR, pl.y + 2);
+        ctx.stroke();
+        ctx.strokeStyle = "rgba(0,0,0,0.55)";
+        ctx.lineWidth = 1.5;
+        for (let sx = Math.ceil(visX / 96) * 96; sx < visR; sx += 96) {
+          ctx.beginPath();
+          ctx.moveTo(sx, pl.y + 5);
+          ctx.lineTo(sx, pl.y + pl.h - 5);
+          ctx.stroke();
+        }
+        ctx.fillStyle = "rgba(180,190,198,0.55)";
+        for (let sx = Math.ceil(visX / 48) * 48; sx < visR; sx += 48) {
+          ctx.beginPath();
+          ctx.arc(sx, pl.y + Math.min(12, pl.h * 0.35), 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
       // hatching — only over the visible slice
       ctx.save();
-      ctx.strokeStyle = bossPlatforms ? "rgba(255,255,255,0.45)" : "rgba(20,20,20,0.35)";
+      ctx.strokeStyle = isMayhemLevel ? "rgba(180,190,198,0.16)" : bossPlatforms ? "rgba(255,255,255,0.45)" : "rgba(20,20,20,0.35)";
       ctx.lineWidth = 1;
       const hStart = Math.max(pl.x + 6, visX);
       const hEnd = Math.min(pl.x + pl.w - 4, visR);
@@ -2745,12 +2793,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       for (const s of r.level.signs) {
         if (s.x < camX - 200 || s.x > camX + w + 200) continue;
         // post
-        sketchLine(ctx, s.x, s.y + 60, s.x, s.y + 110, 3, INK, 1.4);
+        sketchLine(ctx, s.x, s.y + 60, s.x, s.y + 110, 3, isMayhemLevel ? "#7f8a92" : INK, isMayhemLevel ? 0.5 : 1.4);
         // board
         const bw = Math.max(140, ctx.measureText(s.text).width + 40);
-        sketchRect(ctx, s.x - bw / 2, s.y, bw, 50, "#fff8d6", INK, 2.6, 1.2);
-        ctx.fillStyle = INK;
-        ctx.font = "bold 16px 'Permanent Marker', cursive";
+        if (isMayhemLevel) {
+          sketchRect(ctx, s.x - bw / 2, s.y, bw, 50, "#101419", "#8e99a2", 2.2, 0.45);
+          ctx.fillStyle = "#b4202d";
+        } else {
+          sketchRect(ctx, s.x - bw / 2, s.y, bw, 50, "#fff8d6", INK, 2.6, 1.2);
+          ctx.fillStyle = INK;
+        }
+        ctx.font = isMayhemLevel ? "bold 15px 'Oxanium', sans-serif" : "bold 16px 'Permanent Marker', cursive";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(s.text, s.x, s.y + 25);
@@ -3025,7 +3078,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
 
     // boss world-space FX (warnings + slashes)
     if (r.boss) drawBossWorldFx(ctx, r, r.boss);
-    drawGoal(ctx, r.level.goal.x, r.level.goal.y, r.level.goal.w, r.level.goal.h, r.time);
+    if (isMayhemLevel) drawMayhemDoor(ctx, r.level.goal.x, r.level.goal.y, r.level.goal.w, r.level.goal.h, r.time);
+    else drawGoal(ctx, r.level.goal.x, r.level.goal.y, r.level.goal.w, r.level.goal.h, r.time);
 
     // afterimages — draw before player so player sits on top
     if (!r.hidePlayer) {
@@ -3658,6 +3712,55 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
     }
   }
 
+  function drawMayhemScenery(ctx: CanvasRenderingContext2D, camX: number, w: number, levelH: number, time: number) {
+    const groundY = levelH - 80;
+    ctx.save();
+
+    // Far industrial ribs against the black sky.
+    const ribStep = 420;
+    const firstRib = Math.floor((camX - 200) / ribStep) * ribStep;
+    for (let x = firstRib; x < camX + w + 300; x += ribStep) {
+      const i = Math.floor(x / ribStep);
+      const tall = 250 + (i % 4) * 44;
+      ctx.fillStyle = i % 2 ? "rgba(22,27,33,0.72)" : "rgba(15,19,24,0.82)";
+      ctx.fillRect(x, groundY - tall, 54 + (i % 3) * 18, tall);
+      ctx.strokeStyle = "rgba(108,119,128,0.18)";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x + 4, groundY - tall + 5, 46 + (i % 3) * 18, tall - 10);
+      // tiny unsafe lights, mostly dead
+      if (i % 5 === 0) {
+        const flicker = Math.sin(time * 7 + i) > 0.72 ? 1 : 0.35;
+        ctx.fillStyle = `rgba(180,32,45,${0.45 * flicker})`;
+        ctx.fillRect(x + 16, groundY - tall + 24, 8, 8);
+      }
+    }
+
+    // Overhead cable runs — slow industrial silhouettes.
+    ctx.strokeStyle = "rgba(96,106,114,0.32)";
+    ctx.lineWidth = 2;
+    const cableStep = 760;
+    const firstCable = Math.floor((camX - 300) / cableStep) * cableStep;
+    for (let x = firstCable; x < camX + w + 400; x += cableStep) {
+      ctx.beginPath();
+      ctx.moveTo(x, 96);
+      ctx.quadraticCurveTo(x + cableStep * 0.5, 170 + Math.sin(time * 0.8 + x) * 3, x + cableStep, 96);
+      ctx.stroke();
+      ctx.fillStyle = "rgba(96,106,114,0.42)";
+      ctx.fillRect(x - 4, 88, 8, 70);
+      ctx.fillRect(x + cableStep - 4, 88, 8, 70);
+    }
+
+    // Low black fog sitting over the walkway.
+    const fog = ctx.createLinearGradient(0, groundY - 130, 0, groundY + 20);
+    fog.addColorStop(0, "rgba(0,0,0,0)");
+    fog.addColorStop(0.6, "rgba(0,0,0,0.34)");
+    fog.addColorStop(1, "rgba(0,0,0,0.68)");
+    ctx.fillStyle = fog;
+    ctx.fillRect(camX - 60, groundY - 130, w + 120, 160);
+
+    ctx.restore();
+  }
+
   function drawScenery(ctx: CanvasRenderingContext2D, camX: number, w: number, levelH: number) {
     ctx.save();
     ctx.globalAlpha = 0.5;
@@ -4159,6 +4262,66 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
         ctx.fillRect(sx, sy, w, h);
       }
     }
+    ctx.restore();
+  }
+
+  function drawMayhemDoor(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, time: number) {
+    ctx.save();
+    const doorX = x - 18;
+    const doorW = w + 36;
+    const frameX = doorX - 12;
+    const frameW = doorW + 24;
+
+    // recessed tower doorway and heavy frame
+    ctx.fillStyle = "#050607";
+    ctx.fillRect(frameX - 8, y - 16, frameW + 16, h + 16);
+    sketchRect(ctx, frameX, y - 10, frameW, h + 10, "#242a31", "#a8b2ba", 3, 0.45);
+
+    // brushed metal slab
+    const metal = ctx.createLinearGradient(doorX, y, doorX + doorW, y);
+    metal.addColorStop(0, "#101419");
+    metal.addColorStop(0.5, "#303842");
+    metal.addColorStop(1, "#0b0e12");
+    sketchRect(ctx, doorX, y, doorW, h, metal, "#c4ced6", 2.4, 0.35);
+    ctx.save();
+    ctx.strokeStyle = "rgba(225,235,240,0.16)";
+    ctx.lineWidth = 1;
+    for (let yy = y + 14; yy < y + h - 8; yy += 12) {
+      ctx.beginPath();
+      ctx.moveTo(doorX + 5, yy);
+      ctx.lineTo(doorX + doorW - 5, yy + Math.sin(yy * 0.3) * 1.5);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // center seam, handle, and warning light
+    ctx.strokeStyle = "rgba(0,0,0,0.8)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(doorX + doorW / 2, y + 6);
+    ctx.lineTo(doorX + doorW / 2, y + h - 6);
+    ctx.stroke();
+    ctx.fillStyle = "#b7c1c8";
+    ctx.fillRect(doorX + doorW - 15, y + h * 0.52, 5, 22);
+    ctx.fillStyle = `rgba(190,28,42,${0.55 + Math.sin(time * 5) * 0.3})`;
+    ctx.beginPath();
+    ctx.arc(doorX + doorW / 2, y + 24, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,120,130,0.24)";
+    ctx.beginPath();
+    ctx.arc(doorX + doorW / 2, y + 24, 17 + Math.sin(time * 5) * 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // small industrial label
+    ctx.fillStyle = "#07090b";
+    ctx.fillRect(doorX + 9, y + 42, doorW - 18, 20);
+    ctx.strokeStyle = "rgba(170,180,188,0.5)";
+    ctx.strokeRect(doorX + 9, y + 42, doorW - 18, 20);
+    ctx.fillStyle = "#b4202d";
+    ctx.font = "bold 12px 'Oxanium', sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("03", doorX + doorW / 2, y + 52);
     ctx.restore();
   }
 

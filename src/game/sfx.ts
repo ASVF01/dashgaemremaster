@@ -185,6 +185,28 @@ let thunderMode = false;
 export function setThunderMode(on: boolean) { thunderMode = on; }
 export function isThunderMode() { return thunderMode; }
 
+// ---------- METAL MODE (MAYHEM's tower approach) ----------
+// Replaces the papery movement foley with hard industrial impacts/scrapes.
+let metalMode = false;
+export function setMetalMode(on: boolean) { metalMode = on; }
+export function isMetalMode() { return metalMode; }
+function metalReplaces() { return metalMode && !shimmerReplaces(); }
+
+function metalHit(base = 420, intensity = 1) {
+  const f = base * (0.92 + Math.random() * 0.16);
+  tone({ freq: f, to: f * 0.42, dur: 0.12, type: "square", vol: 0.24 * intensity, attack: 0.001, release: 0.08 });
+  tone({ freq: f * 2.37, to: f * 1.4, dur: 0.08, type: "triangle", vol: 0.12 * intensity, attack: 0.001, release: 0.05, delay: 0.006 });
+  tone({ freq: f * 0.48, to: f * 0.25, dur: 0.16, type: "sine", vol: 0.16 * intensity, attack: 0.001, release: 0.1 });
+  noise(0.055, 0.20 * intensity, 900, 6200);
+  noise(0.14, 0.08 * intensity, 2600, 11000, 0.012);
+}
+
+function metalScrape(dur = 0.2, intensity = 1) {
+  noise(dur, 0.18 * intensity, 1200, 7600);
+  tone({ freq: 1500, to: 760, dur, type: "sawtooth", vol: 0.055 * intensity, attack: 0.004, release: 0.08 });
+  tone({ freq: 290, to: 160, dur: Math.min(0.16, dur), type: "square", vol: 0.07 * intensity, attack: 0.002, release: 0.08, delay: 0.01 });
+}
+
 function thunderBoom(opts: { intensity?: number; crack?: boolean; rumbleDur?: number } = {}) {
   if (!thunderMode) return;
   const intensity = opts.intensity ?? 1;
@@ -305,7 +327,10 @@ function noise(dur: number, vol = 0.4, hp = 200, lp = 4000, delay = 0) {
 
 export const sfx = {
   jump() {
-    if (!shimmerReplaces()) {
+    if (metalReplaces()) {
+      metalHit(520, 0.62);
+      metalScrape(0.08, 0.42);
+    } else if (!shimmerReplaces()) {
       noise(0.22, 0.26, 110, 1300);                                  // long breathy puff
       noise(0.10, 0.14, 50, 520, 0.02);                              // low body
       tone({ freq: 95, to: 60, dur: 0.30, type: "sine", vol: 0.18, release: 0.18 });
@@ -314,7 +339,10 @@ export const sfx = {
     thunderBoom({ intensity: 0.85, rumbleDur: 0.6 });
   },
   land() {
-    if (!shimmerReplaces()) {
+    if (metalReplaces()) {
+      metalHit(360, 1.08);
+      metalScrape(0.1, 0.34);
+    } else if (!shimmerReplaces()) {
       // "bsh" — voiced "b" thump + airy "sh" hiss tail
       tone({ freq: 130, to: 70, dur: 0.05, type: "sine", vol: 0.42, attack: 0.002, release: 0.03 });
       noise(0.018, 0.28, 120, 900);
@@ -324,7 +352,10 @@ export const sfx = {
     thunderBoom({ intensity: 1.15, rumbleDur: 0.9 });
   },
   slide() {
-    if (!shimmerReplaces()) {
+    if (metalReplaces()) {
+      metalScrape(0.34, 0.9);
+      metalHit(680, 0.25);
+    } else if (!shimmerReplaces()) {
       // "thhh" — sustained airy noise around speech band
       noise(0.35, 0.16, 900, 5500);
     }
@@ -332,7 +363,9 @@ export const sfx = {
     thunderBoom({ intensity: 0.7, crack: false, rumbleDur: 0.8 });
   },
   slideEnd() {
-    if (!shimmerReplaces()) {
+    if (metalReplaces()) {
+      metalHit(430, 0.55);
+    } else if (!shimmerReplaces()) {
       noise(0.16, 0.14, 600, 3800);
       noise(0.1, 0.08, 200, 1500, 0.02);
       tone({ freq: 280, to: 140, dur: 0.12, type: "triangle", vol: 0.1, attack: 0.005, release: 0.08 });
@@ -341,7 +374,9 @@ export const sfx = {
     thunderBoom({ intensity: 0.7, rumbleDur: 0.5 });
   },
   step() {
-    if (!shimmerReplaces()) {
+    if (metalReplaces()) {
+      metalHit(620 + Math.random() * 100, 0.34);
+    } else if (!shimmerReplaces()) {
       // Original soft papery footstep — short filtered noise burst
       noise(0.05, 0.18, 280, 2600);
     }
@@ -354,7 +389,9 @@ export const sfx = {
     }
   },
   run() {
-    if (!shimmerReplaces()) {
+    if (metalReplaces()) {
+      metalHit(520 + Math.random() * 160, 0.42);
+    } else if (!shimmerReplaces()) {
       noise(0.06, 0.22, 280, 2800);
     }
     celestialShimmer({ base: 1900, count: 1, intensity: 0.8 });
@@ -364,7 +401,10 @@ export const sfx = {
     }
   },
   skid() {
-    if (!shimmerReplaces()) {
+    if (metalReplaces()) {
+      metalScrape(0.24, 1.1);
+      tone({ freq: 2100, to: 900, dur: 0.16, type: "square", vol: 0.07, attack: 0.002, release: 0.09 });
+    } else if (!shimmerReplaces()) {
       noise(0.18, 0.14, 500, 4500);
     }
     celestialShimmer({ base: 1700, count: 2, intensity: 0.9, spread: 0.05 });
@@ -472,7 +512,11 @@ export const sfx = {
     thunderBoom({ intensity: 1.4, rumbleDur: 1.2 });
   },
   dash() {
-    if (!shimmerReplaces()) {
+    if (metalReplaces()) {
+      metalScrape(0.16, 0.95);
+      metalHit(760, 0.62);
+      tone({ freq: 180, to: 82, dur: 0.16, type: "sine", vol: 0.18, attack: 0.001, release: 0.1 });
+    } else if (!shimmerReplaces()) {
       // sped-up swing/swipe sample, used for the normal dash
       playSample(swingSwipeUrl, { vol: 0.7, rate: 1.7 });
     }
@@ -746,19 +790,19 @@ function startSlideLoop() {
   for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
   const src = c.createBufferSource();
   src.buffer = buf; src.loop = true;
-  // Same band as the walk/run noise: hp ~280, lp ~2600 — soft, papery.
-  const hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 280;
-  const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2600;
+  // Same band as the walk/run noise normally; MAYHEM brightens it into a metal grind.
+  const hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = metalMode ? 760 : 280;
+  const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = metalMode ? 5600 : 2600;
   const out = c.createGain();
   out.gain.setValueAtTime(0.0001, t0);
   out.gain.exponentialRampToValueAtTime(slideTargetVol, t0 + 0.06);
   src.connect(hp).connect(lp).connect(out).connect(master);
   src.start(t0);
 
-  // very light low body so it doesn't feel hollow; quieter than before
+  // very light low body so it doesn't feel hollow; metal mode gets a harsher industrial grind
   const rumble = c.createOscillator();
-  rumble.type = "triangle";
-  rumble.frequency.value = 95;
+  rumble.type = metalMode ? "square" : "triangle";
+  rumble.frequency.value = metalMode ? 146 : 95;
   const rumbleGain = c.createGain();
   rumbleGain.gain.value = 0.012;
   rumble.connect(rumbleGain).connect(out);
@@ -769,7 +813,7 @@ function startSlideLoop() {
 
 function setSlideIntensity(v: number) {
   // v in [0,1] — modulates volume + brightness, kept quiet to feel like footsteps.
-  slideTargetVol = 0.025 + Math.max(0, Math.min(1, v)) * 0.09;
+  slideTargetVol = 0.025 + Math.max(0, Math.min(1, v)) * (metalMode ? 0.12 : 0.09);
   if (!slide) return;
   const c = ac(); if (!c) return;
   const t = c.currentTime;
@@ -778,7 +822,7 @@ function setSlideIntensity(v: number) {
     slide.out.gain.setValueAtTime(slide.out.gain.value, t);
     slide.out.gain.linearRampToValueAtTime(slideTargetVol, t + 0.1);
     slide.lp.frequency.cancelScheduledValues(t);
-    slide.lp.frequency.linearRampToValueAtTime(1800 + v * 1400, t + 0.1);
+    slide.lp.frequency.linearRampToValueAtTime(metalMode ? 3200 + v * 3000 : 1800 + v * 1400, t + 0.1);
   } catch { /* noop */ }
 }
 
