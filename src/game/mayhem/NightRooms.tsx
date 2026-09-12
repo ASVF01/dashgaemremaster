@@ -110,31 +110,79 @@ export default function NightRooms() {
     view === "hallway" ? "THE HALLWAY" :
     "THE STORAGE";
 
-  return (
-    <div className="absolute inset-0 z-[50] select-none overflow-hidden bg-black">
-      <img
-        key={view + (packUsed ? "-used" : "")}
-        src={art}
-        alt={label}
-        draggable={false}
-        className="absolute inset-0 h-full w-full object-cover"
-        style={{ animation: "mayhemRoomFade 180ms ease-out" }}
-      />
+  // ---- mouse look ----
+  // Cursor position (-1..1) drives a smoothed counter-drift of the room, so
+  // sweeping the mouse feels like turning your head. Keyhole views peek
+  // further because you're pressed against the door.
+  const lookRef = useRef<HTMLDivElement | null>(null);
+  const target = useRef({ x: 0, y: 0 });
+  const cur = useRef({ x: 0, y: 0 });
+  const peek = view === "keyhole" || view === "storageKeyhole" ? 1.6 : 1;
+  const peekRef = useRef(peek);
+  peekRef.current = peek;
 
-      {/* health pack hotspot — only in the storage room */}
-      {view === "storage" && !packUsed && (
-        <button
-          type="button"
-          aria-label="Use health pack"
-          onMouseDown={startHold}
-          onMouseUp={stopHold}
-          onMouseLeave={stopHold}
-          onTouchStart={(e) => { e.preventDefault(); startHold(); }}
-          onTouchEnd={stopHold}
-          className="absolute border-2 border-transparent hover:border-[hsl(var(--hell-warning))]/60"
-          style={{ left: "59%", top: "40%", width: "16%", height: "26%" }}
+  const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    target.current.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+    target.current.y = ((e.clientY - r.top) / r.height) * 2 - 1;
+  };
+
+  useEffect(() => {
+    let id = 0;
+    const tick = () => {
+      cur.current.x += (target.current.x - cur.current.x) * 0.08;
+      cur.current.y += (target.current.y - cur.current.y) * 0.08;
+      const el = lookRef.current;
+      if (el) {
+        const p = peekRef.current;
+        const tx = -cur.current.x * 34 * p;
+        const ty = -cur.current.y * 18 * p;
+        const rx = -cur.current.y * 1.6;
+        const ry = cur.current.x * 2.4;
+        el.style.transform =
+          `scale(1.1) translate3d(${tx}px, ${ty}px, 0) rotateX(${rx}deg) rotateY(${ry}deg)`;
+      }
+      id = requestAnimationFrame(tick);
+    };
+    id = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+
+  return (
+    <div
+      className="absolute inset-0 z-[50] select-none overflow-hidden bg-black"
+      style={{ perspective: "1200px" }}
+      onMouseMove={onMove}
+      onMouseLeave={() => { target.current.x = 0; target.current.y = 0; }}
+    >
+      {/* mouse-look layer: the room drifts opposite the cursor */}
+      <div ref={lookRef} className="absolute inset-0 will-change-transform">
+        <img
+          key={view + (packUsed ? "-used" : "")}
+          src={art}
+          alt={label}
+          draggable={false}
+          className="absolute inset-0 h-full w-full object-cover"
+          style={{ animation: "mayhemRoomFade 180ms ease-out" }}
         />
-      )}
+
+        {/* health pack hotspot — only in the storage room */}
+        {view === "storage" && !packUsed && (
+          <button
+            type="button"
+            aria-label="Use health pack"
+            onMouseDown={startHold}
+            onMouseUp={stopHold}
+            onMouseLeave={stopHold}
+            onTouchStart={(e) => { e.preventDefault(); startHold(); }}
+            onTouchEnd={stopHold}
+            className="absolute border-2 border-transparent hover:border-[hsl(var(--hell-warning))]/60"
+            style={{ left: "59%", top: "40%", width: "16%", height: "26%" }}
+          />
+        )}
+      </div>
+
 
       {hold > 0 && (
         <div className="pointer-events-none absolute left-1/2 bottom-24 w-56 -translate-x-1/2">
