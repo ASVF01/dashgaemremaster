@@ -721,6 +721,7 @@ const Index = () => {
                   selectCharacter("x3mode");
                   startLevel("tutorial");
                 }}
+                onCommenceMayhem={startMayhem}
               />
             </Overlay>
           )}
