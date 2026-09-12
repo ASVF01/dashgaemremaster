@@ -29,9 +29,11 @@ interface Props {
   onPlay: (id: LevelId) => void;
   altTutorialPrompt?: boolean;
   onPlayAsAlternate?: () => void;
+  /** Launches the fullscreen MAYHEM mode (the outside run into the tower). */
+  onCommenceMayhem?: () => void;
 }
 
-export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAlternate }: Props) {
+export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAlternate, onCommenceMayhem }: Props) {
   const [tab, setTab] = useState<MenuTab>("play");
   const [charSelectOpen, setCharSelectOpen] = useState(false);
   const [bestiaryOpen, setBestiaryOpen] = useState(false);
@@ -128,7 +130,7 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
           {tab === "credits"  && <CreditsTab />}
           {tab === "youtube"  && <YouTubeTab />}
           {tab === "starvanisher" && <StarVanisher onBack={() => setTab("play")} />}
-          {tab === "hell" && <HellPreview />}
+          {tab === "hell" && <HellPreview onCommence={onCommenceMayhem} />}
         </div>
       </div>
 
@@ -213,7 +215,7 @@ type MayhemRainStyle = CSSProperties & {
   "--rain-drift": string;
 };
 
-function HellPreview() {
+function HellPreview({ onCommence }: { onCommence?: () => void }) {
   const [talking, setTalking] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -266,7 +268,14 @@ function HellPreview() {
       {settingsOpen && <MayhemSettings onClose={() => setSettingsOpen(false)} />}
       {talking && (
         <div className="absolute inset-x-3 bottom-3 z-30 sm:inset-x-6 sm:bottom-6">
-          <DialogueBox script={MAYHEM_SCRIPTS.intro} onDone={() => setTalking(false)} />
+          <DialogueBox
+            script={MAYHEM_SCRIPTS.intro}
+            onDone={() => {
+              setTalking(false);
+              // Intro chatter over → drop into the mode proper (fullscreen).
+              onCommence?.();
+            }}
+          />
         </div>
       )}
     </section>
@@ -368,6 +377,7 @@ const LEVEL_THEME: Record<LevelId, LevelTheme> = {
   "aftermath-2":        { description: "Shooters in the gaps. Mind the rips. Keep your line clean.", accent: "10 60% 50%", glyph: "▣" },
   "aftermath-3":        { description: "Final draft. Everything you've learned, all in one breath.", accent: "0 70% 45%", glyph: "✗" },
   "celestial-marathon": { description: "Every level. One breath. Invboi forever. The ultimate run.", accent: "300 80% 60%", glyph: "✦" },
+  "mayhem-outside":     { description: "The approach. Dead ground, dead lights, and a tower to the east.", accent: "0 78% 52%", glyph: "▮" },
 };
 
 function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {

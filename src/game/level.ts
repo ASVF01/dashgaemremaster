@@ -16,7 +16,7 @@ export type Level = {
   invboiStart?: { x: number; y: number; facing: 1 | -1 };
 };
 
-export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "chase" | "speed-test" | "just-run-bro" | "meet-invboi" | "roaring-knight" | "aftermath-1" | "aftermath-2" | "aftermath-3" | "celestial-marathon";
+export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "chase" | "speed-test" | "just-run-bro" | "meet-invboi" | "roaring-knight" | "aftermath-1" | "aftermath-2" | "aftermath-3" | "celestial-marathon" | "mayhem-outside";
 
 export type LevelMeta = {
   id: LevelId;
@@ -41,6 +41,7 @@ export const LEVELS: LevelMeta[] = [
   { id: "aftermath-2", name: "TORN PAGES",     subtitle: "shooters in the gaps. mind the rips.",     difficulty: 4, par: 65 },
   { id: "aftermath-3", name: "FINAL DRAFT",    subtitle: "everything you've learned. one run.",      difficulty: 4, par: 75 },
   { id: "celestial-marathon", name: "CELESTIAL MARATHON", subtitle: "every level. one breath. invboi forever.", difficulty: 4, par: 9999 },
+  { id: "mayhem-outside", name: "THE OUTSIDE", subtitle: "the tower is east. keep running.", difficulty: 2, par: 40, hidden: true },
 ];
 
 export function buildLevel(id: LevelId = "scribble-1", opts: { marathon?: boolean } = {}): Level {
@@ -58,6 +59,7 @@ export function buildLevel(id: LevelId = "scribble-1", opts: { marathon?: boolea
     case "aftermath-1": lv = buildAftermath1(); break;
     case "aftermath-2": lv = buildAftermath2(); break;
     case "aftermath-3": lv = buildAftermath3(); break;
+    case "mayhem-outside": lv = buildMayhemOutside(); break;
     // Marathon is a meta-level handled by Index (chains all levels back-to-back).
     // If it ever loads as a real level, fall back to tutorial.
     case "celestial-marathon": lv = buildTutorial(); break;
@@ -878,5 +880,63 @@ function buildAftermath3(): Level {
     spawn: { x: 80, y: groundY - 80 },
     goal: { x: W - 120, y: groundY - 120, w: 50, h: 120 },
     platforms, hazards, enemies, pickups,
+  };
+}
+
+// ---------- MAYHEM: THE OUTSIDE ----------
+// The approach to the tower. A long eastward run (roughly 15 seconds at a
+// decent pace) across dead ground, ending at the tower's front door.
+// Deliberately light on threats — this is the walk-in, not a challenge.
+function buildMayhemOutside(): Level {
+  const W = 11200;
+  const H = 720;
+  const groundY = H - 80;
+
+  const platforms: Platform[] = [
+    // continuous dead ground the whole way east
+    { x: 0, y: groundY, w: W, h: 80, kind: "ground" },
+  ];
+
+  // Debris / rubble / fence posts to keep the run from feeling empty.
+  // Small steps you can run straight over or hop.
+  for (let x = 900; x < W - 1400; x += 640) {
+    const i = Math.floor(x / 640);
+    platforms.push({ x, y: groundY - 40 - (i % 3) * 14, w: 70 + (i % 4) * 26, h: 40 + (i % 3) * 14, kind: "block" });
+  }
+  // Higher ledges further off the ground for optional airtime.
+  for (let x = 1600; x < W - 1600; x += 1150) {
+    const i = Math.floor(x / 1150);
+    platforms.push({ x, y: groundY - 210 - (i % 3) * 60, w: 200, h: 22, kind: "block" });
+  }
+  // A couple of low overhangs (broken signage) to slide under.
+  for (let x = 3000; x < W - 2000; x += 2400) {
+    platforms.push({ x, y: groundY - 92, w: 340, h: 26, kind: "block" });
+  }
+
+  // The tower wall: a tall slab at the very east end. The goal sits in its
+  // doorway so touching it means you've reached the entrance.
+  platforms.push({ x: W - 260, y: 0, w: 60, h: groundY - 200, kind: "block" });
+  platforms.push({ x: W - 200, y: 0, w: 200, h: groundY - 210, kind: "block" });
+
+  const pickups: Pickup[] = [];
+  for (let x = 500; x < W - 500; x += 260) {
+    pickups.push({ x, y: groundY - 130 - ((x / 260) % 3) * 40, collected: false });
+  }
+
+  return {
+    width: W, height: H,
+    spawn: { x: 80, y: groundY - 80 },
+    goal: { x: W - 200, y: groundY - 210, w: 50, h: 210 },
+    platforms,
+    hazards: [],
+    enemies: [],
+    pickups,
+    signs: [
+      { x: 260,   y: groundY - 120, text: "the tower is east." },
+      { x: 2600,  y: groundY - 120, text: "keep running. don't look back." },
+      { x: 5600,  y: groundY - 120, text: "the lights are still on up there." },
+      { x: 8600,  y: groundY - 120, text: "she knows you're coming." },
+      { x: 10600, y: groundY - 120, text: "the door →" },
+    ],
   };
 }

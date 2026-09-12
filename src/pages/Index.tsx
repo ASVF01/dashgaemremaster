@@ -16,6 +16,7 @@ import { sfx, unlockAudio, setSfxVolume, silenceAllSfx, setMuted as setSfxMuted 
 import { selectCharacter, unlockCharacter, useCharacter } from "@/game/character";
 import { getSettings } from "@/game/settings";
 import { recordLevelResult } from "@/game/levelStats";
+import MayhemPause from "@/game/mayhem/MayhemPause";
 
 
 type Screen = "menu" | "loading" | "playing" | "dead" | "win" | "cutscene" | "death-cutscene";
@@ -61,6 +62,13 @@ const Index = () => {
   const [marathonMs, setMarathonMs] = useState(0);
   const marathonStartRef = useRef<number | null>(null);
   const [marathonFinalMs, setMarathonFinalMs] = useState<number | null>(null);
+  // MAYHEM: the mode takes over the whole screen. `mayhem` is true for the
+  // entire session; the only exit is its own pause menu.
+  const [mayhem, setMayhem] = useState(false);
+  const [mayhemPaused, setMayhemPaused] = useState(false);
+  const [mayhemCleared, setMayhemCleared] = useState(false);
+  const mayhemRef = useRef(false);
+  mayhemRef.current = mayhem;
   const [binds] = useKeybinds();
   const charState = useCharacter();
   const isAltSelected = charState.selected === "x3mode";
@@ -151,6 +159,11 @@ const Index = () => {
   const handleHud = useCallback((h: HudState) => setHud(h), []);
   const handleFinish = useCallback((t: number, s: number) => {
     setFinalTime(t); setFinalScore(s);
+    // MAYHEM: reaching the tower door ends the outside run inside the mode.
+    if (mayhemRef.current) {
+      setMayhemCleared(true);
+      return;
+    }
     // Persist personal-best for non-marathon completions only. Marathon is
     // tracked separately as a whole-run timer and we don't want partial
     // sub-level times polluting per-level bests.
@@ -188,6 +201,11 @@ const Index = () => {
     setScreen(levelId === "just-run-bro" ? "cutscene" : "win");
   }, [levelId, marathonStep]);
   const handleDeath = useCallback(() => {
+    // MAYHEM handles its own death screen inside the mode.
+    if (mayhemRef.current) {
+      setScreen("dead");
+      return;
+    }
     // Marathon: invboi can't die, but the boss death-cutscene path still
     // runs if somehow triggered. Bail back to menu cleanly.
     if (marathonStep != null) {
@@ -211,6 +229,8 @@ const Index = () => {
   // re-enter "playing" so we know to leave the BGM alone on a death-retry.
   const cameFromDeathRef = useRef(false);
   useEffect(() => {
+    // MAYHEM keeps its own music running for the whole mode.
+    if (mayhem && screen !== "menu") return;
     // MARATHON: Index owns the starman BGM and keeps it playing across
     // every sub-level. Skip ALL per-level BGM management while it's active
     // so the rain cinematic / lowpass / track-switch never re-fires.
@@ -246,7 +266,7 @@ const Index = () => {
     else if (screen === "dead") { cameFromDeathRef.current = true; return; }
     else if (screen === "win") return;
     else stopBgm(0.35);
-  }, [screen, levelId, introPhase, marathonStep]);
+  }, [screen, levelId, introPhase, marathonStep, mayhem]);
 
   // Silence sfx ONLY during the intro card. Menu has its own click sfx.
   useEffect(() => {
@@ -377,6 +397,46 @@ const Index = () => {
   };
   const handleInvboiPickup = useCallback(() => setInvboiIntroOpen(true), []);
 
+  // ---- MAYHEM mode session control ----
+  const startMayhem = () => {
+    setMarathonStep(null);
+    marathonStartRef.current = null;
+    setMarathonFinalMs(null);
+    setInvboiIntroOpen(false); setChaseIntroOpen(false);
+    setMayhemCleared(false);
+    setMayhemPaused(false);
+    setMayhem(true);
+    setLevelId("mayhem-outside");
+    setResetKey((k) => k + 1);
+    setScreen("playing");
+  };
+  const retryMayhem = () => {
+    setMayhemCleared(false);
+    setMayhemPaused(false);
+    setResetKey((k) => k + 1);
+    setScreen("playing");
+  };
+  const quitMayhem = () => {
+    setMayhem(false);
+    setMayhemPaused(false);
+    setMayhemCleared(false);
+    stopBgm(0.25);
+    setScreen("menu");
+  };
+
+  // ESC pauses / unpauses MAYHEM (its pause menu is the only way out).
+  useEffect(() => {
+    if (!mayhem) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.repeat) return;
+      e.preventDefault();
+      if (mayhemCleared || screen === "dead") return;
+      setMayhemPaused((p) => !p);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mayhem, mayhemCleared, screen]);
+
   // Award the "just run bro" badge and head back to the main menu.
   const finishCutscene = useCallback(() => {
     setHasJrbBadge(true);
@@ -432,8 +492,8 @@ const Index = () => {
         </div>
       </div>
 
-      {/* page header */}
-      <header className="px-3 sm:px-6 pt-2 sm:pt-4 pb-1 sm:pb-2 flex items-center justify-between gap-2 max-w-[1500px] mx-auto">
+      {/* page header — hidden while MAYHEM owns the screen */}
+      <header className={`px-3 sm:px-6 pt-2 sm:pt-4 pb-1 sm:pb-2 flex items-center justify-between gap-2 max-w-[1500px] mx-auto ${mayhem ? "hidden" : ""}`}>
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <h1 className="font-marker text-xl sm:text-3xl md:text-5xl text-ink leading-none truncate">
             DASH GAEM <span className="text-[hsl(var(--accent))] inline-block -rotate-2">R</span>
@@ -508,21 +568,76 @@ const Index = () => {
         </div>
       </header>
 
-      {/* game stage */}
-      <section className="relative max-w-[1500px] mx-auto px-1 sm:px-3">
-        <div className="relative">
+      {/* game stage — MAYHEM takes over the whole screen */}
+      <section
+        className={
+          mayhem
+            ? "fixed inset-0 z-[90] bg-[hsl(var(--hell-black))] flex items-center justify-center"
+            : "relative max-w-[1500px] mx-auto px-1 sm:px-3"
+        }
+      >
+        <div className={mayhem ? "relative w-full max-w-[1500px]" : "relative"}>
           <GameCanvas
             onHud={handleHud}
             onFinish={handleFinish}
             onDeath={handleDeath}
             onInvboiPickup={handleInvboiPickup}
-            paused={screen !== "playing" || invboiIntroOpen || chaseIntroOpen}
-            keepAudio={screen === "dead" || screen === "win" || invboiIntroOpen || chaseIntroOpen || marathonStep != null}
+            paused={screen !== "playing" || invboiIntroOpen || chaseIntroOpen || mayhemPaused || mayhemCleared}
+            keepAudio={screen === "dead" || screen === "win" || invboiIntroOpen || chaseIntroOpen || marathonStep != null || mayhem}
             startAsInvboi={marathonStep != null}
             resetKey={resetKey}
             levelId={levelId}
           />
-          {screen === "playing" && !invboiIntroOpen && !chaseIntroOpen && <Hud hud={hud} />}
+          {screen === "playing" && !invboiIntroOpen && !chaseIntroOpen && !mayhemPaused && !mayhemCleared && <Hud hud={hud} />}
+          {mayhem && screen === "playing" && !mayhemPaused && !mayhemCleared && (
+            <button
+              type="button"
+              onClick={() => { sfx.menuClick(); setMayhemPaused(true); }}
+              className="absolute right-3 top-3 z-30 border-2 border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))/0.85] px-3 py-1.5 font-pixel text-[10px] text-[hsl(var(--hell-muted))] hover:text-[hsl(var(--hell-warning))]"
+            >
+              MENU (ESC)
+            </button>
+          )}
+          {mayhem && mayhemPaused && (
+            <MayhemPause onResume={() => setMayhemPaused(false)} onQuit={quitMayhem} />
+          )}
+          {mayhem && mayhemCleared && (
+            <div className="absolute inset-0 z-[60] overflow-hidden">
+              <div aria-hidden="true" className="mayhem-menu-grid absolute inset-0" />
+              <div aria-hidden="true" className="hell-static absolute inset-0" />
+              <div className="mayhem-menu absolute inset-0 z-10 flex flex-col items-center justify-center px-6 text-center">
+                <div className="hell-title font-pixel text-[clamp(16px,3vw,34px)]">THE TOWER</div>
+                <p className="mt-4 max-w-md font-pixel text-[10px] leading-relaxed text-[hsl(var(--hell-muted))]">
+                  YOU REACHED THE DOOR. THE FLOORS INSIDE ARE STILL BEING BUILT.
+                </p>
+                <div className="mt-5 flex w-full max-w-sm flex-col gap-2.5">
+                  <button type="button" onClick={retryMayhem} className="mayhem-menu-button mayhem-menu-primary">
+                    RUN IT AGAIN
+                  </button>
+                  <button type="button" onClick={quitMayhem} className="mayhem-menu-button">
+                    LEAVE MAYHEM
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          {mayhem && screen === "dead" && (
+            <div className="absolute inset-0 z-[60] overflow-hidden">
+              <div aria-hidden="true" className="mayhem-menu-grid absolute inset-0" />
+              <div aria-hidden="true" className="hell-static absolute inset-0" />
+              <div className="mayhem-menu absolute inset-0 z-10 flex flex-col items-center justify-center px-6 text-center">
+                <div className="hell-title font-pixel text-[clamp(16px,3vw,34px)]">YOU DIED OUT THERE</div>
+                <div className="mt-5 flex w-full max-w-sm flex-col gap-2.5">
+                  <button type="button" onClick={retryMayhem} className="mayhem-menu-button mayhem-menu-primary">
+                    TRY AGAIN
+                  </button>
+                  <button type="button" onClick={quitMayhem} className="mayhem-menu-button">
+                    LEAVE MAYHEM
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           {screen === "playing" && levelId === "tutorial" && marathonStep == null && !invboiIntroOpen && !chaseIntroOpen && (
             <TutorialPrompt progress={hud.progress} alt={isAltSelected} />
           )}
@@ -606,6 +721,7 @@ const Index = () => {
                   selectCharacter("x3mode");
                   startLevel("tutorial");
                 }}
+                onCommenceMayhem={startMayhem}
               />
             </Overlay>
           )}
@@ -624,7 +740,7 @@ const Index = () => {
             <CutscenePlayer src={cutsceneBossDeath} onDone={finishDeathCutscene} unskippable />
           )}
 
-          {screen === "dead" && (
+          {screen === "dead" && !mayhem && (
             <Overlay>
               <div className="text-center px-6">
                 <div className="font-marker text-7xl text-[hsl(var(--accent))] mb-2 animate-wobble inline-block">OOPS!!</div>
