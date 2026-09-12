@@ -1061,6 +1061,30 @@ export const mayhemSfx = {
     nNoise(0.2, 0.16, 350, 2600, 0, 700);
     nTone({ freq: 82, to: 44, dur: 0.11, type: "sine", vol: 0.26, attack: 0.003, release: 0.1, delay: 0.14 });
   },
+  // walking between rooms — a few quick, slightly heel-heavy steps
+  footstep(vol = 0.22, delay = 0, pitch = 1) {
+    nNoise(0.045, vol * 0.5, 250, 1800, delay);
+    nTone({ freq: 96 * pitch, to: 48 * pitch, dur: 0.09, type: "sine", vol, attack: 0.002, release: 0.08, delay });
+  },
+  walk(steps = 3) {
+    for (let i = 0; i < steps; i++) {
+      const t = i * 0.22;
+      mayhemSfx.footstep(0.2 - i * 0.03, t, i % 2 === 0 ? 1 : 0.88);
+    }
+  },
+  // door closing behind you — hinge settle, latch clack, deep frame thud
+  doorClose(delay = 0) {
+    nTone({ freq: 180, to: 110, dur: 0.16, type: "sawtooth", vol: 0.04, attack: 0.02, release: 0.1, delay });
+    nNoise(0.02, 0.3, 1200, 8000, delay + 0.1);
+    nTone({ freq: 1500, dur: 0.03, type: "square", vol: 0.05, attack: 0.001, release: 0.03, delay: delay + 0.1 });
+    nTone({ freq: 58, to: 34, dur: 0.22, type: "sine", vol: 0.42, attack: 0.003, release: 0.2, delay: delay + 0.14 });
+    nNoise(0.18, 0.07, 90, 600, delay + 0.14, 240);
+  },
+  // full room transition: walk first, door closes 0.2s after the steps end
+  roomSwitch() {
+    mayhemSfx.walk(3);
+    mayhemSfx.doorClose(3 * 0.22 + 0.2);
+  },
   // leaning into the keyhole — quiet fabric shift + faint metal ring
   keyhole() {
     nNoise(0.26, 0.08, 120, 900, 0, 420);
