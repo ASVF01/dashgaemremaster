@@ -189,9 +189,11 @@
     to { transform: translate3d(-40px, 50%, 0); }
   }
 
+  /* Fixed pixel travel so every drop fully exits the panel before looping —
+     % of element height made short drops teleport mid-screen. */
   @keyframes mayhem-raindrop-fall {
-    from { transform: translate3d(0, -35%, 0) rotate(14deg); }
-    to { transform: translate3d(var(--rain-drift), 1450%, 0) rotate(14deg); }
+    from { transform: translate3d(0, -70px, 0) rotate(14deg); }
+    to { transform: translate3d(var(--rain-drift), 640px, 0) rotate(14deg); }
   }
 
   @keyframes hell-static-shift {
@@ -270,7 +272,7 @@
   .mayhem-rain-field { pointer-events: none; }
   .mayhem-raindrop {
     position: absolute;
-    top: -12%;
+    top: 0;
     width: 1px;
     height: var(--rain-length);
     opacity: var(--rain-opacity);
