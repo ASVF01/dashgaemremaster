@@ -448,7 +448,7 @@ export function getSomSomElapsed(): number | null {
   const c = ac();
   if (!c || !playing || playing.src !== bgmSomSom || playing.stopped) return null;
   if (somSomStartCtxTime == null) return null;
-  return c.currentTime - somSomStartCtxTime;
+  return (c.currentTime - somSomStartCtxTime) * (playing.rate || 1);
 }
 
 export function stopBgm(fade = 0) {
