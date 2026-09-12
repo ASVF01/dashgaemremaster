@@ -3078,7 +3078,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
 
     // boss world-space FX (warnings + slashes)
     if (r.boss) drawBossWorldFx(ctx, r, r.boss);
-    drawGoal(ctx, r.level.goal.x, r.level.goal.y, r.level.goal.w, r.level.goal.h, r.time);
+    if (isMayhemLevel) drawMayhemDoor(ctx, r.level.goal.x, r.level.goal.y, r.level.goal.w, r.level.goal.h, r.time);
+    else drawGoal(ctx, r.level.goal.x, r.level.goal.y, r.level.goal.w, r.level.goal.h, r.time);
 
     // afterimages — draw before player so player sits on top
     if (!r.hidePlayer) {
