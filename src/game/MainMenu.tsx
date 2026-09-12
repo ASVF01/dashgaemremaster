@@ -1328,16 +1328,25 @@ function CreditsTab() {
 
 type UpdateEntry = {
   version: string;
-  date: string;
+  date?: string;
   title: string;
   changes: ReactNode[];
   image?: string;
+  pinned?: boolean;
 };
 
 
 
 
 const UPDATES: UpdateEntry[] = [
+  {
+    version: "TEASER",
+    title: "Whats next?",
+    pinned: true,
+    changes: [
+      "I am proud to announce the all new mode i an developing! stay tuned for it.. what is it? aahh.. heheh. you'll figure out soon enough. ;3",
+    ],
+  },
   {
     version: "v1.4",
     date: "2026-06-07",
@@ -1415,9 +1424,14 @@ function UpdatesTab() {
             <div className="flex items-baseline justify-between flex-wrap gap-2 mb-2">
               <div className="flex items-baseline gap-3">
                 <span className="font-bungee text-xl text-[hsl(var(--accent))]">{u.version}</span>
+                {u.pinned && (
+                  <span className="font-bungee text-xs px-2 py-0.5 bg-[hsl(var(--accent))] text-paper rotate-1">
+                    PINNED
+                  </span>
+                )}
                 <span className="font-marker text-2xl text-ink">{u.title}</span>
               </div>
-              <span className="font-scribble text-sm text-ink/60">{u.date}</span>
+              {u.date && <span className="font-scribble text-sm text-ink/60">{u.date}</span>}
             </div>
             {u.image && (
               <img
