@@ -394,6 +394,21 @@ export interface HudState {
   somSom?: boolean;
 }
 
+/** Closest level NPC the player is standing next to, if any. */
+function nearbyNpc(r: GameRefs) {
+  if (!r.level.npcs) return undefined;
+  const pcx = r.player.x + r.player.w / 2;
+  const pcy = r.player.y + r.player.h / 2;
+  let best: { id: string; d: number } | undefined;
+  for (const n of r.level.npcs) {
+    const d = Math.hypot(pcx - (n.x + n.w / 2), pcy - (n.y + n.h / 2));
+    if (d < 110 && (!best || d < best.d)) best = { id: n.id, d };
+  }
+  return best;
+}
+
+
+
 export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, onNpcInteract, goalLocked = false, paused, keepAudio = false, startAsInvboi = false, resetKey, levelId = "scribble-1" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const deathTimeoutRef = useRef<number | null>(null);
