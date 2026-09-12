@@ -62,6 +62,13 @@ const Index = () => {
   const [marathonMs, setMarathonMs] = useState(0);
   const marathonStartRef = useRef<number | null>(null);
   const [marathonFinalMs, setMarathonFinalMs] = useState<number | null>(null);
+  // MAYHEM: the mode takes over the whole screen. `mayhem` is true for the
+  // entire session; the only exit is its own pause menu.
+  const [mayhem, setMayhem] = useState(false);
+  const [mayhemPaused, setMayhemPaused] = useState(false);
+  const [mayhemCleared, setMayhemCleared] = useState(false);
+  const mayhemRef = useRef(false);
+  mayhemRef.current = mayhem;
   const [binds] = useKeybinds();
   const charState = useCharacter();
   const isAltSelected = charState.selected === "x3mode";
