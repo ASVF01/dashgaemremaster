@@ -2662,10 +2662,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
         const col = (colOffset + colIdx) % cols;
         colIdx++;
         const x = (col + Math.random()) * colStep;
-        // Fall speed also interpolates with density — drizzle is calmer,
-        // peak is SUPER fast, with no instant velocity jump at the seam.
-        const vyBase = 220 + density * 680;     // 220 → 900
-        const vyJit  = 140 + density * 360;     // 140 → 500
+        // Fall speed also interpolates with density — but kept slow and
+        // floaty: the stars drift down like snow rather than pour like rain.
+        const vyBase = 34 + density * 66;       // 34 → 100
+        const vyJit  = 18 + density * 42;       // 18 → 60
         r.rainStars.push({
           x,
           y: -10 - Math.random() * 80,
