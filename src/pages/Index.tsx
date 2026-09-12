@@ -17,6 +17,7 @@ import { selectCharacter, unlockCharacter, useCharacter } from "@/game/character
 import { getSettings } from "@/game/settings";
 import { recordLevelResult } from "@/game/levelStats";
 import MayhemPause from "@/game/mayhem/MayhemPause";
+import NightRooms from "@/game/mayhem/NightRooms";
 import DialogueBox from "@/game/mayhem/DialogueBox";
 import { MAYHEM_SCRIPTS } from "@/game/mayhem/dialogue";
 
@@ -72,6 +73,8 @@ const Index = () => {
   const [mayhem, setMayhem] = useState(false);
   const [mayhemPaused, setMayhemPaused] = useState(false);
   const [mayhemCleared, setMayhemCleared] = useState(false);
+  // MAYHEM night shift: first-person room navigation after floor one.
+  const [mayhemNight, setMayhemNight] = useState(false);
   // Which MAYHEM conversation is on screen, and whether the checker has
   // handed over the elevator ticket yet (the main-floor elevator needs it).
   const [mayhemDialogue, setMayhemDialogue] = useState<string | null>(null);
@@ -177,7 +180,7 @@ const Index = () => {
         resetBgmLevelEndFx();
         return;
       }
-      setMayhemCleared(true);
+      setMayhemNight(true);
       return;
     }
     // Persist personal-best for non-marathon completions only. Marathon is
@@ -428,6 +431,7 @@ const Index = () => {
     setMarathonFinalMs(null);
     setInvboiIntroOpen(false); setChaseIntroOpen(false);
     setMayhemCleared(false);
+    setMayhemNight(false);
     setMayhemPaused(false);
     setMayhemDialogue(null);
     setMayhemTicket(false);
@@ -438,6 +442,7 @@ const Index = () => {
   };
   const retryMayhem = () => {
     setMayhemCleared(false);
+    setMayhemNight(false);
     setMayhemPaused(false);
     setMayhemDialogue(null);
     setResetKey((k) => k + 1);
@@ -445,6 +450,7 @@ const Index = () => {
   };
   const quitMayhem = () => {
     setMayhem(false);
+    setMayhemNight(false);
     setMayhemPaused(false);
     setMayhemCleared(false);
     setMayhemDialogue(null);
@@ -623,13 +629,13 @@ const Index = () => {
             onInvboiPickup={handleInvboiPickup}
             onNpcInteract={handleNpcInteract}
             goalLocked={mayhem && levelId === "mayhem-main" && !mayhemTicket}
-            paused={screen !== "playing" || invboiIntroOpen || chaseIntroOpen || mayhemPaused || mayhemCleared || mayhemDialogue != null}
+            paused={screen !== "playing" || invboiIntroOpen || chaseIntroOpen || mayhemPaused || mayhemCleared || mayhemNight || mayhemDialogue != null}
             keepAudio={screen === "dead" || screen === "win" || invboiIntroOpen || chaseIntroOpen || marathonStep != null || mayhem}
             startAsInvboi={marathonStep != null}
             resetKey={resetKey}
             levelId={levelId}
           />
-          {screen === "playing" && !invboiIntroOpen && !chaseIntroOpen && !mayhemPaused && !mayhemCleared && <Hud hud={hud} minimal={mayhem} />}
+          {screen === "playing" && !invboiIntroOpen && !chaseIntroOpen && !mayhemPaused && !mayhemCleared && !mayhemNight && <Hud hud={hud} minimal={mayhem} />}
           {mayhem && mayhemDialogue && MAYHEM_SCRIPTS[mayhemDialogue] && (
             <div className="absolute inset-x-0 bottom-0 z-40 p-3 sm:p-6">
               <DialogueBox script={MAYHEM_SCRIPTS[mayhemDialogue]} onDone={handleDialogueDone} />
@@ -647,6 +653,7 @@ const Index = () => {
           {mayhem && mayhemPaused && (
             <MayhemPause onResume={() => setMayhemPaused(false)} onQuit={quitMayhem} />
           )}
+          {mayhem && mayhemNight && <NightRooms />}
           {mayhem && mayhemCleared && (
             <div className="absolute inset-0 z-[60] overflow-hidden">
               <div aria-hidden="true" className="mayhem-menu-grid absolute inset-0" />
