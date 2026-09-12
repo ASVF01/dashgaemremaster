@@ -3712,6 +3712,55 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
     }
   }
 
+  function drawMayhemScenery(ctx: CanvasRenderingContext2D, camX: number, w: number, levelH: number, time: number) {
+    const groundY = levelH - 80;
+    ctx.save();
+
+    // Far industrial ribs against the black sky.
+    const ribStep = 420;
+    const firstRib = Math.floor((camX - 200) / ribStep) * ribStep;
+    for (let x = firstRib; x < camX + w + 300; x += ribStep) {
+      const i = Math.floor(x / ribStep);
+      const tall = 250 + (i % 4) * 44;
+      ctx.fillStyle = i % 2 ? "rgba(22,27,33,0.72)" : "rgba(15,19,24,0.82)";
+      ctx.fillRect(x, groundY - tall, 54 + (i % 3) * 18, tall);
+      ctx.strokeStyle = "rgba(108,119,128,0.18)";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x + 4, groundY - tall + 5, 46 + (i % 3) * 18, tall - 10);
+      // tiny unsafe lights, mostly dead
+      if (i % 5 === 0) {
+        const flicker = Math.sin(time * 7 + i) > 0.72 ? 1 : 0.35;
+        ctx.fillStyle = `rgba(180,32,45,${0.45 * flicker})`;
+        ctx.fillRect(x + 16, groundY - tall + 24, 8, 8);
+      }
+    }
+
+    // Overhead cable runs — slow industrial silhouettes.
+    ctx.strokeStyle = "rgba(96,106,114,0.32)";
+    ctx.lineWidth = 2;
+    const cableStep = 760;
+    const firstCable = Math.floor((camX - 300) / cableStep) * cableStep;
+    for (let x = firstCable; x < camX + w + 400; x += cableStep) {
+      ctx.beginPath();
+      ctx.moveTo(x, 96);
+      ctx.quadraticCurveTo(x + cableStep * 0.5, 170 + Math.sin(time * 0.8 + x) * 3, x + cableStep, 96);
+      ctx.stroke();
+      ctx.fillStyle = "rgba(96,106,114,0.42)";
+      ctx.fillRect(x - 4, 88, 8, 70);
+      ctx.fillRect(x + cableStep - 4, 88, 8, 70);
+    }
+
+    // Low black fog sitting over the walkway.
+    const fog = ctx.createLinearGradient(0, groundY - 130, 0, groundY + 20);
+    fog.addColorStop(0, "rgba(0,0,0,0)");
+    fog.addColorStop(0.6, "rgba(0,0,0,0.34)");
+    fog.addColorStop(1, "rgba(0,0,0,0.68)");
+    ctx.fillStyle = fog;
+    ctx.fillRect(camX - 60, groundY - 130, w + 120, 160);
+
+    ctx.restore();
+  }
+
   function drawScenery(ctx: CanvasRenderingContext2D, camX: number, w: number, levelH: number) {
     ctx.save();
     ctx.globalAlpha = 0.5;
