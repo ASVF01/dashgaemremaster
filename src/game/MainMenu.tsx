@@ -1328,16 +1328,25 @@ function CreditsTab() {
 
 type UpdateEntry = {
   version: string;
-  date: string;
+  date?: string;
   title: string;
   changes: ReactNode[];
   image?: string;
+  pinned?: boolean;
 };
 
 
 
 
 const UPDATES: UpdateEntry[] = [
+  {
+    version: "TEASER",
+    title: "Whats next?",
+    pinned: true,
+    changes: [
+      "I am proud to announce the all new mode i an developing! stay tuned for it.. what is it? aahh.. heheh. you'll figure out soon enough. ;3",
+    ],
+  },
   {
     version: "v1.4",
     date: "2026-06-07",
