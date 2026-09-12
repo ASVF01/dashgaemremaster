@@ -20,8 +20,6 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import roaringKnightImg from "@/assets/roaring_knight_titlecard.png";
 import celestialMarathonEmblem from "@/assets/celestial-marathon-emblem.png";
 
-import DialogueBox from "@/game/mayhem/DialogueBox";
-import { MAYHEM_SCRIPTS } from "@/game/mayhem/dialogue";
 
 export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" | "updates" | "credits" | "youtube" | "starvanisher" | "hell";
 
