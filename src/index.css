@@ -184,12 +184,13 @@
     20%, 65% { opacity: 0.58; }
   }
 
-  /* Seamless loop: shifting background-position by exactly one stripe
-     period (24px along the 104deg gradient axis ≈ -5.81px, 23.27px) makes
-     the end frame identical to the start frame — lines never "leave". */
+  /* Infinite downward crawl: shift by many stripe periods so the lines
+     travel a long distance before the repeating pattern realigns. The end
+     frame is still identical to the start, so it loops forever without a
+     visible jump — but now it feels like one continuous fall. */
   @keyframes hell-rain {
     from { background-position: 0 0; }
-    to { background-position: -5.81px 23.27px; }
+    to { background-position: -464.8px 1861.6px; }
   }
 
   /* Fixed pixel travel so every drop fully exits the panel before looping —
