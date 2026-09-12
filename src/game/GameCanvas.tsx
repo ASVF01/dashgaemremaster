@@ -2793,12 +2793,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       for (const s of r.level.signs) {
         if (s.x < camX - 200 || s.x > camX + w + 200) continue;
         // post
-        sketchLine(ctx, s.x, s.y + 60, s.x, s.y + 110, 3, INK, 1.4);
+        sketchLine(ctx, s.x, s.y + 60, s.x, s.y + 110, 3, isMayhemLevel ? "#7f8a92" : INK, isMayhemLevel ? 0.5 : 1.4);
         // board
         const bw = Math.max(140, ctx.measureText(s.text).width + 40);
-        sketchRect(ctx, s.x - bw / 2, s.y, bw, 50, "#fff8d6", INK, 2.6, 1.2);
-        ctx.fillStyle = INK;
-        ctx.font = "bold 16px 'Permanent Marker', cursive";
+        if (isMayhemLevel) {
+          sketchRect(ctx, s.x - bw / 2, s.y, bw, 50, "#101419", "#8e99a2", 2.2, 0.45);
+          ctx.fillStyle = "#b4202d";
+        } else {
+          sketchRect(ctx, s.x - bw / 2, s.y, bw, 50, "#fff8d6", INK, 2.6, 1.2);
+          ctx.fillStyle = INK;
+        }
+        ctx.font = isMayhemLevel ? "bold 15px 'Oxanium', sans-serif" : "bold 16px 'Permanent Marker', cursive";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(s.text, s.x, s.y + 25);
