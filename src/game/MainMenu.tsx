@@ -202,6 +202,7 @@ function HellPreview() {
   const panelRef = useRef<HTMLElement | null>(null);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [talking, setTalking] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     unlockAudio();
@@ -251,28 +252,117 @@ function HellPreview() {
         ))}
       </div>
       <div aria-hidden="true" className="hell-static absolute inset-0 z-10" />
-      <h2 id="mayhem-title" className="sr-only">MAYHEM — coming soon</h2>
+      <h2 id="mayhem-title" className="sr-only">MAYHEM</h2>
       <p className="mayhem-caption absolute left-4 top-4 z-20 max-w-[18rem] font-pixel text-[clamp(8px,1.25vw,14px)] leading-relaxed sm:left-7 sm:top-6">
         WHERE THERE IS LIGHT THERE IS DARKNESS
       </p>
-      <p className="mayhem-caption absolute bottom-4 right-4 z-20 max-w-[14rem] text-right font-pixel text-[clamp(8px,1.25vw,14px)] leading-relaxed sm:bottom-6 sm:right-7">
-        NEW MODE<br />COMING SOON
-      </p>
-      {!talking && (
-        <button
-          type="button"
-          onClick={() => { sfx.menuConfirm(); setTalking(true); }}
-          className="absolute bottom-4 left-4 z-30 border-2 border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))/0.8] px-4 py-2 font-pixel text-[10px] tracking-widest text-[hsl(var(--hell-warning))] transition-colors hover:bg-[hsl(var(--hell-warning))] hover:text-[hsl(var(--hell-black))] sm:bottom-6 sm:left-7"
-        >
-          LISTEN
-        </button>
+      {!talking && !settingsOpen && (
+        <div className="mayhem-menu absolute inset-0 z-30 flex flex-col items-center justify-center px-4">
+          <div className="hell-title font-pixel text-[clamp(24px,5vw,58px)]">MAYHEM</div>
+          <div className="mt-5 flex w-full max-w-sm flex-col gap-2.5">
+            <button
+              type="button"
+              onClick={() => { sfx.menuConfirm(); setTalking(true); }}
+              onMouseEnter={() => sfx.menuHover()}
+              className="mayhem-menu-button mayhem-menu-primary"
+            >
+              COMMENCE
+            </button>
+            <button
+              type="button"
+              onClick={() => { sfx.menuClick(); setSettingsOpen(true); }}
+              onMouseEnter={() => sfx.menuHover()}
+              className="mayhem-menu-button"
+            >
+              SETTINGS
+            </button>
+            <button
+              type="button"
+              disabled
+              title="Video link coming later"
+              className="mayhem-menu-button mayhem-menu-disabled"
+            >
+              WATCH THIS BEFORE PLAYING.
+            </button>
+          </div>
+        </div>
       )}
+      {settingsOpen && <MayhemSettings onClose={() => setSettingsOpen(false)} />}
       {talking && (
         <div className="absolute inset-x-3 bottom-3 z-30 sm:inset-x-6 sm:bottom-6">
           <DialogueBox script={MAYHEM_SCRIPTS.intro} onDone={() => setTalking(false)} />
         </div>
       )}
     </section>
+  );
+}
+
+function MayhemSettings({ onClose }: { onClose: () => void }) {
+  const [settings, setSettings] = useSettings();
+
+  useEffect(() => { setSfxVolume(settings.sfxVolume); }, [settings.sfxVolume]);
+  useEffect(() => { setBgmVolume(settings.bgmVolume * 0.5); }, [settings.bgmVolume]);
+
+  return (
+    <div className="mayhem-settings absolute inset-3 z-40 flex items-center justify-center sm:inset-8">
+      <div className="w-full max-w-lg border-2 border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))/0.94] p-4 sm:p-6">
+        <div className="mb-5 flex items-center justify-between gap-4">
+          <h3 className="hell-title font-pixel text-base sm:text-xl">SETTINGS</h3>
+          <button
+            type="button"
+            onClick={() => { sfx.menuBack(); onClose(); }}
+            className="mayhem-settings-close font-pixel"
+            aria-label="Close MAYHEM settings"
+          >
+            ×
+          </button>
+        </div>
+        <label className="mayhem-settings-row">
+          <span>SFX VOLUME</span>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.05}
+            value={settings.sfxVolume}
+            onChange={(event) => setSettings({ sfxVolume: Number(event.target.value) })}
+          />
+          <output>{Math.round(settings.sfxVolume * 100)}</output>
+        </label>
+        <label className="mayhem-settings-row">
+          <span>MUSIC VOLUME</span>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.05}
+            value={settings.bgmVolume}
+            onChange={(event) => setSettings({ bgmVolume: Number(event.target.value) })}
+          />
+          <output>{Math.round(settings.bgmVolume * 100)}</output>
+        </label>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={settings.reduceShake}
+          onClick={() => { sfx.menuClick(); setSettings({ reduceShake: !settings.reduceShake }); }}
+          className="mayhem-settings-toggle"
+        >
+          <span>REDUCE SCREEN SHAKE</span>
+          <strong>{settings.reduceShake ? "ON" : "OFF"}</strong>
+        </button>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={settings.reducedFx}
+          onClick={() => { sfx.menuClick(); setSettings({ reducedFx: !settings.reducedFx }); }}
+          className="mayhem-settings-toggle"
+        >
+          <span>REDUCED FX</span>
+          <strong>{settings.reducedFx ? "ON" : "OFF"}</strong>
+        </button>
+      </div>
+    </div>
   );
 }
 
