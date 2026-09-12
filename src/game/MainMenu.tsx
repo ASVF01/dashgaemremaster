@@ -1416,6 +1416,42 @@ function UpdatesTab() {
       </div>
       <div className="space-y-4">
         {UPDATES.map((u, i) => (
+          u.pinned ? (
+            <div
+              key={u.version}
+              className="hell-preview relative overflow-hidden border-2 border-[hsl(var(--hell-steel))] p-5 sm:p-6"
+            >
+              <div aria-hidden="true" className="mayhem-rain-field absolute inset-0 overflow-hidden">
+                {MAYHEM_RAIN_PARTICLES.slice(0, 60).map((particle, index) => (
+                  <i
+                    key={index}
+                    className="mayhem-raindrop"
+                    style={{
+                      left: `${particle.left}%`,
+                      "--rain-length": `${particle.length}px`,
+                      "--rain-opacity": particle.opacity,
+                      "--rain-duration": `${particle.duration}s`,
+                      "--rain-delay": `${particle.delay}s`,
+                      "--rain-drift": `${particle.drift}px`,
+                    } as MayhemRainStyle}
+                  />
+                ))}
+              </div>
+              <div aria-hidden="true" className="hell-static absolute inset-0" />
+              <div className="relative z-10">
+                <div className="flex items-baseline gap-3 flex-wrap mb-3">
+                  <span className="font-pixel text-[10px] text-[hsl(var(--hell-warning))]">{u.version}</span>
+                  <span className="font-pixel text-[8px] px-1.5 py-0.5 bg-[hsl(var(--hell-warning))] text-[hsl(var(--hell-black))]">
+                    PINNED
+                  </span>
+                  <span className="hell-title font-pixel text-sm sm:text-base">{u.title}</span>
+                </div>
+                <p className="mayhem-caption font-pixel text-[clamp(8px,1.2vw,13px)] leading-relaxed max-w-xl">
+                  {u.changes[0]}
+                </p>
+              </div>
+            </div>
+          ) : (
           <div
             key={u.version}
             className="scribble-border bg-paper p-4"
@@ -1446,6 +1482,7 @@ function UpdatesTab() {
               ))}
             </ul>
           </div>
+          )
         ))}
         </div>
       </div>
