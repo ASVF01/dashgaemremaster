@@ -41,6 +41,12 @@ const CROSSFADE = 0.12;
 // transitions). Long enough to feel musical, short enough to feel snappy.
 const TRACK_FADE = 0.35;
 
+// INVBOI cheat tracks get a darker, slower mix: speed -15%, pitch -25%.
+// playbackRate handles the speed; detune adds the remaining pitch drop.
+const INVBOI_TRACKS = new Set([bgmStarman, bgmMarathonStarman, bgmSomSom]);
+const INVBOI_RATE = 0.85;
+const INVBOI_DETUNE = -216; // cents; 0.85 * 2^(-216/1200) ≈ 0.75 (pitch -25%)
+
 let ctx: AudioContext | null = null;
 let masterGain: GainNode | null = null;
 let lowpass: BiquadFilterNode | null = null;
