@@ -111,30 +111,38 @@ export default function NightRooms() {
     "THE STORAGE";
 
   return (
-    <div className="absolute inset-0 z-[50] select-none overflow-hidden bg-black">
-      <img
-        key={view + (packUsed ? "-used" : "")}
-        src={art}
-        alt={label}
-        draggable={false}
-        className="absolute inset-0 h-full w-full object-cover"
-        style={{ animation: "mayhemRoomFade 180ms ease-out" }}
-      />
-
-      {/* health pack hotspot — only in the storage room */}
-      {view === "storage" && !packUsed && (
-        <button
-          type="button"
-          aria-label="Use health pack"
-          onMouseDown={startHold}
-          onMouseUp={stopHold}
-          onMouseLeave={stopHold}
-          onTouchStart={(e) => { e.preventDefault(); startHold(); }}
-          onTouchEnd={stopHold}
-          className="absolute border-2 border-transparent hover:border-[hsl(var(--hell-warning))]/60"
-          style={{ left: "59%", top: "40%", width: "16%", height: "26%" }}
+    <div
+      className="absolute inset-0 z-[50] select-none overflow-hidden bg-black"
+      onMouseMove={onMove}
+      onMouseLeave={() => { target.current.x = 0; target.current.y = 0; }}
+    >
+      {/* mouse-look layer: the room drifts opposite the cursor */}
+      <div ref={lookRef} className="absolute inset-0 will-change-transform">
+        <img
+          key={view + (packUsed ? "-used" : "")}
+          src={art}
+          alt={label}
+          draggable={false}
+          className="absolute inset-0 h-full w-full object-cover"
+          style={{ animation: "mayhemRoomFade 180ms ease-out" }}
         />
-      )}
+
+        {/* health pack hotspot — only in the storage room */}
+        {view === "storage" && !packUsed && (
+          <button
+            type="button"
+            aria-label="Use health pack"
+            onMouseDown={startHold}
+            onMouseUp={stopHold}
+            onMouseLeave={stopHold}
+            onTouchStart={(e) => { e.preventDefault(); startHold(); }}
+            onTouchEnd={stopHold}
+            className="absolute border-2 border-transparent hover:border-[hsl(var(--hell-warning))]/60"
+            style={{ left: "59%", top: "40%", width: "16%", height: "26%" }}
+          />
+        )}
+      </div>
+
 
       {hold > 0 && (
         <div className="pointer-events-none absolute left-1/2 bottom-24 w-56 -translate-x-1/2">
