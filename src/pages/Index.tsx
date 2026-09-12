@@ -159,6 +159,11 @@ const Index = () => {
   const handleHud = useCallback((h: HudState) => setHud(h), []);
   const handleFinish = useCallback((t: number, s: number) => {
     setFinalTime(t); setFinalScore(s);
+    // MAYHEM: reaching the tower door ends the outside run inside the mode.
+    if (mayhemRef.current) {
+      setMayhemCleared(true);
+      return;
+    }
     // Persist personal-best for non-marathon completions only. Marathon is
     // tracked separately as a whole-run timer and we don't want partial
     // sub-level times polluting per-level bests.
