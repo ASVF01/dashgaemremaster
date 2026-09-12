@@ -512,7 +512,11 @@ export const sfx = {
     thunderBoom({ intensity: 1.4, rumbleDur: 1.2 });
   },
   dash() {
-    if (!shimmerReplaces()) {
+    if (metalReplaces()) {
+      metalScrape(0.16, 0.95);
+      metalHit(760, 0.62);
+      tone({ freq: 180, to: 82, dur: 0.16, type: "sine", vol: 0.18, attack: 0.001, release: 0.1 });
+    } else if (!shimmerReplaces()) {
       // sped-up swing/swipe sample, used for the normal dash
       playSample(swingSwipeUrl, { vol: 0.7, rate: 1.7 });
     }
