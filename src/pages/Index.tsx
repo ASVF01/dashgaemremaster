@@ -740,7 +740,7 @@ const Index = () => {
             <CutscenePlayer src={cutsceneBossDeath} onDone={finishDeathCutscene} unskippable />
           )}
 
-          {screen === "dead" && (
+          {screen === "dead" && !mayhem && (
             <Overlay>
               <div className="text-center px-6">
                 <div className="font-marker text-7xl text-[hsl(var(--accent))] mb-2 animate-wobble inline-block">OOPS!!</div>
