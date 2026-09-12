@@ -296,6 +296,11 @@ export function playMenuBgm() {
   playSrc(bgmMenu);
 }
 
+export function playMayhemBgm() {
+  loadBuffer(bgmMayhem).catch(() => { /* ignore */ });
+  playSrc(bgmMayhem);
+}
+
 // Like playMenuBgm but ramps the master gain from 0 → target over `fadeMs`.
 // Used for the intro card so the music swells in as the card fades out.
 export function playMenuBgmFadeIn(fadeMs = 800) {
