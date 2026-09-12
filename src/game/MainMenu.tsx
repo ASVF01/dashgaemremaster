@@ -29,9 +29,11 @@ interface Props {
   onPlay: (id: LevelId) => void;
   altTutorialPrompt?: boolean;
   onPlayAsAlternate?: () => void;
+  /** Launches the fullscreen MAYHEM mode (the outside run into the tower). */
+  onCommenceMayhem?: () => void;
 }
 
-export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAlternate }: Props) {
+export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAlternate, onCommenceMayhem }: Props) {
   const [tab, setTab] = useState<MenuTab>("play");
   const [charSelectOpen, setCharSelectOpen] = useState(false);
   const [bestiaryOpen, setBestiaryOpen] = useState(false);
