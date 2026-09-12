@@ -184,12 +184,11 @@
     20%, 65% { opacity: 0.58; }
   }
 
-  /* Infinite downward grid crawl: two perpendicular stripe layers form a
-     wireframe grid, then the whole pattern drops by many periods before
-     seamlessly realigning — one continuous falling lattice. */
+  /* Infinite down-left grid crawl: the lattice drifts downward and left,
+     then realigns after many grid periods for a seamless, slower loop. */
   @keyframes hell-rain {
     from { background-position: 0 0; }
-    to { background-position: 0 1920px; }
+    to { background-position: -240px 960px; }
   }
 
   /* Fixed pixel travel so every drop fully exits the panel before looping —
