@@ -650,7 +650,7 @@ const Index = () => {
             : "relative max-w-[1500px] mx-auto px-1 sm:px-3"
         }
       >
-        <div className={mayhem ? "relative w-full max-w-[1500px]" : "relative"}>
+        <div className={mayhem ? "absolute inset-0" : "relative"}>
           <GameCanvas
             onHud={handleHud}
             onFinish={handleFinish}

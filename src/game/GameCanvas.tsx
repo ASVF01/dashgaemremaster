@@ -443,18 +443,23 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     const update = () => {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      const headerReserve = vw < 640 ? 44 : vw < 900 ? 60 : 96;
-      const bottomPad = vw < 900 ? 8 : 16;
+      // MAYHEM takes over the whole screen — no header reserve, no size cap.
+      const mayhemFull = (levelIdRef.current ?? "").startsWith("mayhem");
+      const headerReserve = mayhemFull ? 0 : vw < 640 ? 44 : vw < 900 ? 60 : 96;
+      const bottomPad = mayhemFull ? 0 : vw < 900 ? 8 : 16;
       const reserve = headerReserve + bottomPad;
-      const availW = Math.max(240, vw - 8);
+      const availW = Math.max(240, vw - (mayhemFull ? 0 : 8));
       const availH = Math.max(160, vh - reserve);
 
       // On small viewports, lock the logical render size to a fixed 1200x600
       // "world view" and CSS-scale to fit. On larger viewports, render at
-      // native resolution for crispness.
+      // native resolution for crispness. MAYHEM fills the entire viewport.
       let logicalW: number;
       let logicalH: number;
-      if (availW < 1100 || availH < 560) {
+      if (mayhemFull) {
+        logicalW = Math.min(availW, 1920);
+        logicalH = Math.min(availH, 1080);
+      } else if (availW < 1100 || availH < 560) {
         logicalW = 1200;
         logicalH = 600;
       } else {
@@ -479,7 +484,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       window.removeEventListener("resize", update);
       window.removeEventListener("orientationchange", update);
     };
-  }, []);
+  }, [levelId]);
 
   // init / reset
   useEffect(() => {
