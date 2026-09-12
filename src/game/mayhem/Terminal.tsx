@@ -2,6 +2,7 @@
 // Slides up from the bottom of the screen when the player presses S.
 // Screens are the hand-drawn sprites; interactions are invisible hotspots.
 import { useEffect, useRef, useState } from "react";
+import { mayhemSfx } from "@/game/sfx";
 import loadingArt from "@/assets/mayhem/terminal/TERMINAL_Loading.png.asset.json";
 import homeArt from "@/assets/mayhem/terminal/TERMINAL_Home_Page.png.asset.json";
 import rcsArt from "@/assets/mayhem/terminal/TERMINAL_RCS.png.asset.json";
@@ -39,6 +40,15 @@ const DONE_MS = 1200;
 export default function Terminal({ onClose }: { onClose: () => void }) {
   const [screen, setScreen] = useState<Screen>("loading");
   const timer = useRef<number | null>(null);
+
+  // selection sound + screen change
+  const go = (s: Screen) => {
+    mayhemSfx.terminalSelect();
+    setScreen(s);
+  };
+
+  // boot hum when the terminal powers on
+  useEffect(() => { mayhemSfx.terminalBoot(); }, []);
 
   const later = (fn: () => void, ms: number) => {
     if (timer.current != null) window.clearTimeout(timer.current);
