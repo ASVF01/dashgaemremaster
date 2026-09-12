@@ -134,6 +134,7 @@ function scheduleSource(
   fadeIn: boolean,
   rate = 1,
   detune = 0,
+  muffleHz = 0,
 ) {
   const src = c.createBufferSource();
   src.buffer = buffer;
