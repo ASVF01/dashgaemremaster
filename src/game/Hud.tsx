@@ -2,7 +2,7 @@ import type { HudState } from "@/game/GameCanvas";
 import { getSelectedCharacter } from "@/game/character";
 import { AlternateHpBar, BaseHpBar } from "@/game/HpBar";
 
-export default function Hud({ hud }: { hud: HudState }) {
+export default function Hud({ hud, minimal = false }: { hud: HudState; minimal?: boolean }) {
   const seconds = (hud.timeMs / 1000).toFixed(2);
   const sm = !!hud.starman;
   const showParryCd = !sm && hud.parryCooldown > 0.05;
@@ -14,9 +14,10 @@ export default function Hud({ hud }: { hud: HudState }) {
       {/* top row */}
       <div className="flex items-start justify-between gap-2 sm:gap-4 flex-wrap">
         {/* HP */}
-        {isAlt ? <AlternateHpBar hp={hud.hp} /> : <BaseHpBar hp={hud.hp} maxHp={3} />}
+        {!minimal && (isAlt ? <AlternateHpBar hp={hud.hp} /> : <BaseHpBar hp={hud.hp} maxHp={3} />)}
 
         {/* TIMER + LEVEL PROGRESS stacked */}
+        {!minimal && (
         <div className="flex flex-col items-center gap-1">
           <div className="scribble-border bg-paper px-2 sm:px-4 py-1 sm:py-2">
             <div className="font-bungee text-ink text-lg sm:text-2xl leading-none">
@@ -36,6 +37,8 @@ export default function Hud({ hud }: { hud: HudState }) {
             </div>
           </div>
         </div>
+        )}
+
 
         {/* SCORE */}
         <div className="scribble-border bg-paper px-2 sm:px-3 py-1 sm:py-2 text-right">

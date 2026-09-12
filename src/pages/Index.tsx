@@ -629,7 +629,7 @@ const Index = () => {
             resetKey={resetKey}
             levelId={levelId}
           />
-          {screen === "playing" && !invboiIntroOpen && !chaseIntroOpen && !mayhemPaused && !mayhemCleared && <Hud hud={hud} />}
+          {screen === "playing" && !invboiIntroOpen && !chaseIntroOpen && !mayhemPaused && !mayhemCleared && <Hud hud={hud} minimal={mayhem} />}
           {mayhem && mayhemDialogue && MAYHEM_SCRIPTS[mayhemDialogue] && (
             <div className="absolute inset-x-0 bottom-0 z-40 p-3 sm:p-6">
               <DialogueBox script={MAYHEM_SCRIPTS[mayhemDialogue]} onDone={handleDialogueDone} />
