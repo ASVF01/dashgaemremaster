@@ -215,7 +215,7 @@ type MayhemRainStyle = CSSProperties & {
   "--rain-drift": string;
 };
 
-function HellPreview() {
+function HellPreview({ onCommence }: { onCommence?: () => void }) {
   const [talking, setTalking] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
