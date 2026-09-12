@@ -2662,10 +2662,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
         const col = (colOffset + colIdx) % cols;
         colIdx++;
         const x = (col + Math.random()) * colStep;
-        // Fall speed also interpolates with density — drizzle is calmer,
-        // peak is SUPER fast, with no instant velocity jump at the seam.
-        const vyBase = 220 + density * 680;     // 220 → 900
-        const vyJit  = 140 + density * 360;     // 140 → 500
+        // Fall speed also interpolates with density — but kept slow and
+        // floaty: the stars drift down like snow rather than pour like rain.
+        const vyBase = 34 + density * 66;       // 34 → 100
+        const vyJit  = 18 + density * 42;       // 18 → 60
         r.rainStars.push({
           x,
           y: -10 - Math.random() * 80,
@@ -2691,9 +2691,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       ctx.globalAlpha = prevAlpha * visAlpha;
       for (let i = 0; i < stars.length; i++) {
         const s = stars[i];
-        s.y += s.vy * dtFrame;
+        // Floaty drift: gentle vertical bob layered on the slow fall, plus a
+        // wide lazy horizontal sway so they feel weightless.
+        s.y += s.vy * dtFrame + Math.sin(s.phase * 1.7 + t * 0.8) * 0.45;
         if (!starmanFx || s.y >= h + 28) continue;
-        s.x += Math.sin(s.phase + t * 1.1) * 0.35;
+        s.x += Math.sin(s.phase + t * 0.6) * 0.95;
         const img = getRainStar(s.size, s.hue + t * 80);
         const half = img.width / 2;
         ctx.drawImage(img, s.x - half, s.y - half);
