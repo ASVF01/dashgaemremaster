@@ -127,12 +127,21 @@ async function loadBuffer(src: string): Promise<AudioBuffer> {
 
 // Schedule a source to start at `when` (ctx time), playing `buffer` from offset 0,
 // fading in over CROSSFADE. Returns the source + its gain node.
-function scheduleSource(c: AudioContext, buffer: AudioBuffer, when: number, fadeIn: boolean) {
+function scheduleSource(
+  c: AudioContext,
+  buffer: AudioBuffer,
+  when: number,
+  fadeIn: boolean,
+  rate = 1,
+  detune = 0,
+) {
   const src = c.createBufferSource();
   src.buffer = buffer;
   // Use the native sample-accurate loop for in-track repeats — no crossfade,
   // no volume dip at the seam. Track-to-track transitions still crossfade.
   src.loop = true;
+  src.playbackRate.setValueAtTime(rate, when);
+  src.detune.setValueAtTime(detune, when);
   const g = c.createGain();
   if (fadeIn) {
     g.gain.setValueAtTime(0.0001, when);
