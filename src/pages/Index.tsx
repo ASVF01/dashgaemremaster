@@ -568,21 +568,76 @@ const Index = () => {
         </div>
       </header>
 
-      {/* game stage */}
-      <section className="relative max-w-[1500px] mx-auto px-1 sm:px-3">
-        <div className="relative">
+      {/* game stage — MAYHEM takes over the whole screen */}
+      <section
+        className={
+          mayhem
+            ? "fixed inset-0 z-[90] bg-[hsl(var(--hell-black))] flex items-center justify-center"
+            : "relative max-w-[1500px] mx-auto px-1 sm:px-3"
+        }
+      >
+        <div className={mayhem ? "relative w-full max-w-[1500px]" : "relative"}>
           <GameCanvas
             onHud={handleHud}
             onFinish={handleFinish}
             onDeath={handleDeath}
             onInvboiPickup={handleInvboiPickup}
-            paused={screen !== "playing" || invboiIntroOpen || chaseIntroOpen}
-            keepAudio={screen === "dead" || screen === "win" || invboiIntroOpen || chaseIntroOpen || marathonStep != null}
+            paused={screen !== "playing" || invboiIntroOpen || chaseIntroOpen || mayhemPaused || mayhemCleared}
+            keepAudio={screen === "dead" || screen === "win" || invboiIntroOpen || chaseIntroOpen || marathonStep != null || mayhem}
             startAsInvboi={marathonStep != null}
             resetKey={resetKey}
             levelId={levelId}
           />
-          {screen === "playing" && !invboiIntroOpen && !chaseIntroOpen && <Hud hud={hud} />}
+          {screen === "playing" && !invboiIntroOpen && !chaseIntroOpen && !mayhemPaused && !mayhemCleared && <Hud hud={hud} />}
+          {mayhem && screen === "playing" && !mayhemPaused && !mayhemCleared && (
+            <button
+              type="button"
+              onClick={() => { sfx.menuClick(); setMayhemPaused(true); }}
+              className="absolute right-3 top-3 z-30 border-2 border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))/0.85] px-3 py-1.5 font-pixel text-[10px] text-[hsl(var(--hell-muted))] hover:text-[hsl(var(--hell-warning))]"
+            >
+              MENU (ESC)
+            </button>
+          )}
+          {mayhem && mayhemPaused && (
+            <MayhemPause onResume={() => setMayhemPaused(false)} onQuit={quitMayhem} />
+          )}
+          {mayhem && mayhemCleared && (
+            <div className="absolute inset-0 z-[60] overflow-hidden">
+              <div aria-hidden="true" className="mayhem-menu-grid absolute inset-0" />
+              <div aria-hidden="true" className="hell-static absolute inset-0" />
+              <div className="mayhem-menu absolute inset-0 z-10 flex flex-col items-center justify-center px-6 text-center">
+                <div className="hell-title font-pixel text-[clamp(16px,3vw,34px)]">THE TOWER</div>
+                <p className="mt-4 max-w-md font-pixel text-[10px] leading-relaxed text-[hsl(var(--hell-muted))]">
+                  YOU REACHED THE DOOR. THE FLOORS INSIDE ARE STILL BEING BUILT.
+                </p>
+                <div className="mt-5 flex w-full max-w-sm flex-col gap-2.5">
+                  <button type="button" onClick={retryMayhem} className="mayhem-menu-button mayhem-menu-primary">
+                    RUN IT AGAIN
+                  </button>
+                  <button type="button" onClick={quitMayhem} className="mayhem-menu-button">
+                    LEAVE MAYHEM
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          {mayhem && screen === "dead" && (
+            <div className="absolute inset-0 z-[60] overflow-hidden">
+              <div aria-hidden="true" className="mayhem-menu-grid absolute inset-0" />
+              <div aria-hidden="true" className="hell-static absolute inset-0" />
+              <div className="mayhem-menu absolute inset-0 z-10 flex flex-col items-center justify-center px-6 text-center">
+                <div className="hell-title font-pixel text-[clamp(16px,3vw,34px)]">YOU DIED OUT THERE</div>
+                <div className="mt-5 flex w-full max-w-sm flex-col gap-2.5">
+                  <button type="button" onClick={retryMayhem} className="mayhem-menu-button mayhem-menu-primary">
+                    TRY AGAIN
+                  </button>
+                  <button type="button" onClick={quitMayhem} className="mayhem-menu-button">
+                    LEAVE MAYHEM
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           {screen === "playing" && levelId === "tutorial" && marathonStep == null && !invboiIntroOpen && !chaseIntroOpen && (
             <TutorialPrompt progress={hud.progress} alt={isAltSelected} />
           )}
