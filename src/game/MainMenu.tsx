@@ -20,8 +20,6 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import roaringKnightImg from "@/assets/roaring_knight_titlecard.png";
 import celestialMarathonEmblem from "@/assets/celestial-marathon-emblem.png";
 
-import DialogueBox from "@/game/mayhem/DialogueBox";
-import { MAYHEM_SCRIPTS } from "@/game/mayhem/dialogue";
 
 export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" | "updates" | "credits" | "youtube" | "starvanisher" | "hell";
 
@@ -216,7 +214,6 @@ type MayhemRainStyle = CSSProperties & {
 };
 
 function HellPreview({ onCommence }: { onCommence?: () => void }) {
-  const [talking, setTalking] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
@@ -234,13 +231,13 @@ function HellPreview({ onCommence }: { onCommence?: () => void }) {
       <p className="mayhem-caption absolute left-4 top-4 z-20 max-w-[18rem] font-pixel text-[clamp(8px,1.25vw,14px)] leading-relaxed sm:left-7 sm:top-6">
         WHERE THERE IS LIGHT THERE IS DARKNESS
       </p>
-      {!talking && !settingsOpen && (
+      {!settingsOpen && (
         <div className="mayhem-menu absolute inset-0 z-30 flex flex-col items-center justify-center px-4">
           <div className="hell-title font-pixel text-[clamp(24px,5vw,58px)]">MAYHEM</div>
           <div className="mt-5 flex w-full max-w-sm flex-col gap-2.5">
             <button
               type="button"
-              onClick={() => { sfx.menuConfirm(); setTalking(true); }}
+              onClick={() => { sfx.menuConfirm(); onCommence?.(); }}
               onMouseEnter={() => sfx.menuHover()}
               className="mayhem-menu-button mayhem-menu-primary"
             >
@@ -266,18 +263,6 @@ function HellPreview({ onCommence }: { onCommence?: () => void }) {
         </div>
       )}
       {settingsOpen && <MayhemSettings onClose={() => setSettingsOpen(false)} />}
-      {talking && (
-        <div className="absolute inset-x-3 bottom-3 z-30 sm:inset-x-6 sm:bottom-6">
-          <DialogueBox
-            script={MAYHEM_SCRIPTS.intro}
-            onDone={() => {
-              setTalking(false);
-              // Intro chatter over → drop into the mode proper (fullscreen).
-              onCommence?.();
-            }}
-          />
-        </div>
-      )}
     </section>
   );
 }
