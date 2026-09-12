@@ -80,44 +80,24 @@ export default function NightRooms() {
       // terminal: s toggles it; while open, navigation keys are ignored
       if (k === "s") {
         if (terminalOpenRef.current) {
+          mayhemSfx.terminalClose();
           setTerminalOpen(false);
           return;
         }
         // the terminal lives in the storage room only
         if (viewRef.current === "storage") {
+          mayhemSfx.terminalOpen();
           setTerminalOpen(true);
           return;
         }
       }
-      setView((v) => {
-        if (terminalOpenRef.current) return v;
-        switch (v) {
-          case "office":
-            if (k === "a") return "door";
-            return v;
-          case "door":
-            if (k === "e") return "keyhole";
-            if (k === "w") return "hallway";
-            if (k === "d") return "office";
-            return v;
-          case "keyhole":
-            if (k === "e" || k === "d" || k === "s") return "door";
-            return v;
-          case "hallway":
-            if (k === "a") return "storage";
-            if (k === "d") return "door";
-            return v;
-          case "storage":
-            if (k === "e") return "storageKeyhole";
-            if (k === "d" || k === "w") return "hallway";
-            return v;
-          case "storageKeyhole":
-            if (k === "e" || k === "d" || k === "s") return "storage";
-            return v;
-          default:
-            return v;
-        }
-      });
+      if (terminalOpenRef.current) return;
+      const from = viewRef.current;
+      const to = nextView(from, k);
+      if (to !== from) {
+        playMoveSound(from, to);
+        setView(to);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
