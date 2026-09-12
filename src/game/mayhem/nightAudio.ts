@@ -27,8 +27,20 @@ function ac(): AudioContext | null {
 export function startNightBgm() {
   const c = ac();
   if (!c) return;
+  stopNightBgm(0);
   const id = ++token;
-  stopNightBgm();
+
+  // If the browser blocks audio until a gesture, retry on the next input.
+  if (c.state !== "running") {
+    const kick = () => {
+      c.resume().catch(() => {});
+      window.removeEventListener("pointerdown", kick);
+      window.removeEventListener("keydown", kick);
+    };
+    window.addEventListener("pointerdown", kick);
+    window.addEventListener("keydown", kick);
+  }
+
 
   const build = (buf: AudioBuffer) => {
     if (id !== token || !c) return;
