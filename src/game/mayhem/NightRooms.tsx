@@ -44,8 +44,8 @@ export default function NightRooms() {
           setTerminalOpen(false);
           return;
         }
-        // only from views where s isn't a nav key
-        if (["office", "door", "hallway"].includes(viewRef.current)) {
+        // the terminal lives in the storage room only
+        if (viewRef.current === "storage") {
           setTerminalOpen(true);
           return;
         }
@@ -70,7 +70,7 @@ export default function NightRooms() {
             return v;
           case "storage":
             if (k === "e") return "storageKeyhole";
-            if (k === "d" || k === "w" || k === "s") return "hallway";
+            if (k === "d" || k === "w") return "hallway";
             return v;
           case "storageKeyhole":
             if (k === "e" || k === "d" || k === "s") return "storage";
@@ -135,11 +135,11 @@ export default function NightRooms() {
     packUsed ? packUsedArt.url : packArt.url;
 
   const hint =
-    view === "office" ? "[ A ] TURN TO THE DOOR   [ S ] TERMINAL" :
+    view === "office" ? "[ A ] TURN TO THE DOOR" :
     view === "door" ? "[ E ] KEYHOLE   [ W ] HALLWAY   [ D ] TURN BACK" :
     view === "keyhole" ? "[ E ] STOP LOOKING" :
     view === "hallway" ? "[ A ] STORAGE   [ D ] OFFICE" :
-    view === "storage" ? (packUsed ? "[ E ] KEYHOLE   [ D ] HALLWAY" : "HOLD THE HEALTH PACK   [ E ] KEYHOLE   [ D ] HALLWAY") :
+    view === "storage" ? (packUsed ? "[ S ] TERMINAL   [ E ] KEYHOLE   [ D ] HALLWAY" : "HOLD THE HEALTH PACK   [ S ] TERMINAL   [ E ] KEYHOLE   [ D ] HALLWAY") :
     "[ E ] STOP LOOKING";
 
   const label =
