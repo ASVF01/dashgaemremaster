@@ -2730,8 +2730,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
     }
     ctx.translate(-camX, -camY);
 
-    // distant scribbled clouds / scenery
-    drawScenery(ctx, camX, w, r.level.height);
+    // distant scribbled clouds / scenery — MAYHEM gets black industrial silhouettes
+    if (isMayhemLevel) drawMayhemScenery(ctx, camX, w, r.level.height, r.time);
+    else drawScenery(ctx, camX, w, r.level.height);
 
     // platforms
     const bossPlatforms = levelIdRef.current === "roaring-knight";
@@ -2741,12 +2742,39 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       const visX = Math.max(pl.x, camX - 40);
       const visR = Math.min(pl.x + pl.w, camX + w + 40);
       const visW = visR - visX;
-      const fill = bossPlatforms ? "#000000" : (isGround ? "#e5dfc2" : "#f7f1dc");
-      const stroke = bossPlatforms ? "#ffffff" : INK;
-      sketchRect(ctx, visX, pl.y, visW, pl.h, fill, stroke, isGround ? 3 : 2.6, isGround ? 1.6 : 1.2);
+      const fill = isMayhemLevel
+        ? (isGround ? "#15191f" : "#20262e")
+        : bossPlatforms ? "#000000" : (isGround ? "#e5dfc2" : "#f7f1dc");
+      const stroke = isMayhemLevel ? "#9aa5ad" : bossPlatforms ? "#ffffff" : INK;
+      sketchRect(ctx, visX, pl.y, visW, pl.h, fill, stroke, isGround ? 3 : 2.6, isMayhemLevel ? 0.55 : isGround ? 1.6 : 1.2);
+      if (isMayhemLevel) {
+        // Brushed top edge + panel seams/rivets make every walkable surface read as metal.
+        ctx.save();
+        ctx.strokeStyle = "rgba(220,230,235,0.55)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(visX, pl.y + 2);
+        ctx.lineTo(visR, pl.y + 2);
+        ctx.stroke();
+        ctx.strokeStyle = "rgba(0,0,0,0.55)";
+        ctx.lineWidth = 1.5;
+        for (let sx = Math.ceil(visX / 96) * 96; sx < visR; sx += 96) {
+          ctx.beginPath();
+          ctx.moveTo(sx, pl.y + 5);
+          ctx.lineTo(sx, pl.y + pl.h - 5);
+          ctx.stroke();
+        }
+        ctx.fillStyle = "rgba(180,190,198,0.55)";
+        for (let sx = Math.ceil(visX / 48) * 48; sx < visR; sx += 48) {
+          ctx.beginPath();
+          ctx.arc(sx, pl.y + Math.min(12, pl.h * 0.35), 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
       // hatching — only over the visible slice
       ctx.save();
-      ctx.strokeStyle = bossPlatforms ? "rgba(255,255,255,0.45)" : "rgba(20,20,20,0.35)";
+      ctx.strokeStyle = isMayhemLevel ? "rgba(180,190,198,0.16)" : bossPlatforms ? "rgba(255,255,255,0.45)" : "rgba(20,20,20,0.35)";
       ctx.lineWidth = 1;
       const hStart = Math.max(pl.x + 6, visX);
       const hEnd = Math.min(pl.x + pl.w - 4, visR);
