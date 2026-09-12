@@ -12,7 +12,10 @@ import bgmMarathonStarman from "@/assets/audio/bgm_marathon_starman.mp3";
 import bgmSomSom from "@/assets/audio/a_lil_som_som.mp3";
 import bgmMap1 from "@/assets/audio/bgm_map1.mp3";
 import bgmBlackKnife from "@/assets/audio/black_knife.mp3";
+import bgmMayhemAsset from "@/assets/audio/Level_Select_2.ogg.asset.json";
 import type { LevelId } from "@/game/level";
+
+const bgmMayhem = bgmMayhemAsset.url;
 
 // Tutorial keeps its own original track. Champion play is the default for
 // the rest, with chase getting the duel theme and just-run-bro its vibes.
