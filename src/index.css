@@ -189,9 +189,9 @@
     to { transform: translate3d(-40px, 50%, 0); }
   }
 
-  @keyframes mayhem-rain-fall {
-    from { background-position: 0 -180px; }
-    to { background-position: -70px 240px; }
+  @keyframes mayhem-raindrop-fall {
+    from { transform: translate3d(0, -35%, 0) rotate(14deg); }
+    to { transform: translate3d(var(--rain-drift), 1450%, 0) rotate(14deg); }
   }
 
   @keyframes hell-static-shift {
@@ -267,7 +267,17 @@
   .hell-static { z-index: 1; background-image: radial-gradient(hsl(var(--hell-muted) / 0.6) 0.7px, transparent 0.7px); background-size: 7px 7px; animation: hell-static-shift 0.18s steps(2) infinite; }
   .mayhem-preview { cursor: crosshair; background: hsl(var(--hell-black)); }
   .mayhem-art { transform-origin: center; transition: transform 180ms ease-out; user-select: none; }
-  .mayhem-rain { pointer-events: none; opacity: 0.48; background-image: repeating-linear-gradient(104deg, transparent 0 16px, hsl(var(--hell-muted) / 0.72) 17px, transparent 18px 31px); background-size: 180px 180px; animation: mayhem-rain-fall 0.72s linear infinite; }
+  .mayhem-rain-field { pointer-events: none; }
+  .mayhem-raindrop {
+    position: absolute;
+    top: -12%;
+    width: 1px;
+    height: var(--rain-length);
+    opacity: var(--rain-opacity);
+    background: linear-gradient(to bottom, transparent, hsl(var(--hell-muted) / 0.9));
+    animation: mayhem-raindrop-fall var(--rain-duration) linear var(--rain-delay) infinite;
+    will-change: transform;
+  }
   .mayhem-caption { color: hsl(var(--hell-warning)); text-shadow: 2px 2px 0 hsl(var(--hell-black)), 0 0 8px hsl(var(--hell-black)); letter-spacing: 0; }
   .hell-title { color: hsl(var(--hell-muted)); text-shadow: 3px 2px 0 hsl(var(--hell-black)), 0 0 18px hsl(var(--hell-warning) / 0.36); animation: hell-flicker 5.8s steps(1) infinite; }
   .hell-tower { position: absolute; z-index: 2; right: 4%; top: 5%; width: 118px; height: 315px; border: 3px solid hsl(var(--hell-steel) / 0.35); opacity: 0.35; transform: perspective(360px) rotateY(-8deg); }
@@ -296,7 +306,8 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .hell-tab-rain, .hell-static, .hell-title, .hell-eye, .hell-monitor span, .mayhem-rain { animation: none !important; }
+    .hell-tab-rain, .hell-static, .hell-title, .hell-eye, .hell-monitor span, .mayhem-raindrop { animation: none !important; }
+    .mayhem-rain-field { display: none; }
     .mayhem-art { transition: none !important; }
   }
 

@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useRef, useState, type ReactNode } from "react";
+import { forwardRef, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { LEVELS, type LevelId, type LevelMeta } from "@/game/level";
 import {
@@ -179,6 +179,23 @@ function HellTabBtn({ active, onClick, children }: { active: boolean; onClick: (
   );
 }
 
+const MAYHEM_RAIN_PARTICLES = Array.from({ length: 56 }, (_, index) => ({
+  left: (index * 37 + 11) % 103,
+  length: 9 + ((index * 17) % 23),
+  opacity: 0.24 + ((index * 13) % 44) / 100,
+  duration: 0.62 + ((index * 19) % 55) / 100,
+  delay: -((index * 31) % 120) / 100,
+  drift: -34 - ((index * 23) % 48),
+}));
+
+type MayhemRainStyle = CSSProperties & {
+  "--rain-length": string;
+  "--rain-opacity": number;
+  "--rain-duration": string;
+  "--rain-delay": string;
+  "--rain-drift": string;
+};
+
 function HellPreview() {
   const panelRef = useRef<HTMLElement | null>(null);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -214,7 +231,22 @@ function HellPreview() {
         style={{ transform: `translate(${offset.x}%, ${offset.y}%) scale(1.1)` }}
         draggable={false}
       />
-      <div aria-hidden="true" className="mayhem-rain absolute inset-0 z-10" />
+      <div aria-hidden="true" className="mayhem-rain-field absolute inset-0 z-10 overflow-hidden">
+        {MAYHEM_RAIN_PARTICLES.map((particle, index) => (
+          <i
+            key={index}
+            className="mayhem-raindrop"
+            style={{
+              left: `${particle.left}%`,
+              "--rain-length": `${particle.length}px`,
+              "--rain-opacity": particle.opacity,
+              "--rain-duration": `${particle.duration}s`,
+              "--rain-delay": `${particle.delay}s`,
+              "--rain-drift": `${particle.drift}px`,
+            } as MayhemRainStyle}
+          />
+        ))}
+      </div>
       <div aria-hidden="true" className="hell-static absolute inset-0 z-10" />
       <h2 id="mayhem-title" className="sr-only">MAYHEM — coming soon</h2>
       <p className="mayhem-caption absolute left-4 top-4 z-20 max-w-[18rem] font-pixel text-[clamp(8px,1.25vw,14px)] leading-relaxed sm:left-7 sm:top-6">
