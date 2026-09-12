@@ -59,6 +59,7 @@ export function buildLevel(id: LevelId = "scribble-1", opts: { marathon?: boolea
     case "aftermath-1": lv = buildAftermath1(); break;
     case "aftermath-2": lv = buildAftermath2(); break;
     case "aftermath-3": lv = buildAftermath3(); break;
+    case "mayhem-outside": lv = buildMayhemOutside(); break;
     // Marathon is a meta-level handled by Index (chains all levels back-to-back).
     // If it ever loads as a real level, fall back to tutorial.
     case "celestial-marathon": lv = buildTutorial(); break;
