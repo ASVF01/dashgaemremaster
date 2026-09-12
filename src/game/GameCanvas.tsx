@@ -4282,7 +4282,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
     metal.addColorStop(0, "#101419");
     metal.addColorStop(0.5, "#303842");
     metal.addColorStop(1, "#0b0e12");
-    sketchRect(ctx, doorX, y, doorW, h, metal as unknown as string, "#c4ced6", 2.4, 0.35);
+    sketchRect(ctx, doorX, y, doorW, h, metal, "#c4ced6", 2.4, 0.35);
     ctx.save();
     ctx.strokeStyle = "rgba(225,235,240,0.16)";
     ctx.lineWidth = 1;
