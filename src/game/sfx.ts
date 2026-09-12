@@ -813,7 +813,7 @@ function startSlideLoop() {
 
 function setSlideIntensity(v: number) {
   // v in [0,1] — modulates volume + brightness, kept quiet to feel like footsteps.
-  slideTargetVol = 0.025 + Math.max(0, Math.min(1, v)) * 0.09;
+  slideTargetVol = 0.025 + Math.max(0, Math.min(1, v)) * (metalMode ? 0.12 : 0.09);
   if (!slide) return;
   const c = ac(); if (!c) return;
   const t = c.currentTime;
@@ -822,7 +822,7 @@ function setSlideIntensity(v: number) {
     slide.out.gain.setValueAtTime(slide.out.gain.value, t);
     slide.out.gain.linearRampToValueAtTime(slideTargetVol, t + 0.1);
     slide.lp.frequency.cancelScheduledValues(t);
-    slide.lp.frequency.linearRampToValueAtTime(1800 + v * 1400, t + 0.1);
+    slide.lp.frequency.linearRampToValueAtTime(metalMode ? 3200 + v * 3000 : 1800 + v * 1400, t + 0.1);
   } catch { /* noop */ }
 }
 
