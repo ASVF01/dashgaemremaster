@@ -7,7 +7,7 @@ import FpsOverlay from "@/game/FpsOverlay";
 import MainMenu from "@/game/MainMenu";
 import { LEVELS, type LevelId } from "@/game/level";
 import { useKeybinds, keyLabel, type ActionId } from "@/game/keybinds";
-import { playMenuBgm, playMenuBgmFadeIn, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor, isSameTrackAs, setBgmVolume, bgmLevelEnd, playMarathonBgm, resetBgmLevelEndFx } from "@/game/bgm";
+import { playMenuBgm, playMenuBgmFadeIn, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor, isSameTrackAs, setBgmVolume, bgmLevelEnd, playMarathonBgm, resetBgmLevelEndFx, playMayhemMainBgm } from "@/game/bgm";
 import cutsceneJustRunBro from "@/assets/video/mcdonalds_sprite_2.mp4";
 import cutsceneBossDeath from "@/assets/video/boss_death_cutscene.mp4";
 import introCardImg from "@/assets/intro_card.png";
@@ -283,6 +283,14 @@ const Index = () => {
     else if (screen === "win") return;
     else stopBgm(0.35);
   }, [screen, levelId, introPhase, marathonStep, mayhem]);
+
+  // MAYHEM main floor theme: the main BGM effect above returns early for
+  // MAYHEM, so swap to "Insomnia Blues" ourselves when the player steps
+  // into the main floor.
+  useEffect(() => {
+    if (!mayhem || screen !== "playing") return;
+    if (levelId === "mayhem-main") playMayhemMainBgm();
+  }, [mayhem, screen, levelId]);
 
   // Silence sfx ONLY during the intro card. Menu has its own click sfx.
   useEffect(() => {

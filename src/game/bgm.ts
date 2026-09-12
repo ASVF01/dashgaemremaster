@@ -13,9 +13,11 @@ import bgmSomSom from "@/assets/audio/a_lil_som_som.mp3";
 import bgmMap1 from "@/assets/audio/bgm_map1.mp3";
 import bgmBlackKnife from "@/assets/audio/black_knife.mp3";
 import bgmMayhemAsset from "@/assets/audio/Level_Select_2.ogg.asset.json";
+import bgmInsomniaBluesAsset from "@/assets/audio/insomnia-blues.ogg.asset.json";
 import type { LevelId } from "@/game/level";
 
 const bgmMayhem = bgmMayhemAsset.url;
+const bgmMayhemMain = bgmInsomniaBluesAsset.url;
 
 // Tutorial keeps its own original track. Champion play is the default for
 // the rest, with chase getting the duel theme and just-run-bro its vibes.
@@ -346,6 +348,13 @@ export function playMayhemBgm(fadeMs = 1200) {
   lowpass.frequency.cancelScheduledValues(now);
   lowpass.frequency.setValueAtTime(300, now);
   lowpass.frequency.linearRampToValueAtTime(900, now + fadeMs / 1000);
+}
+
+// MAYHEM main floor theme — "Insomnia Blues". Plays clean (no muffle),
+// crossfading out of whatever was playing before.
+export function playMayhemMainBgm() {
+  loadBuffer(bgmMayhemMain).catch(() => { /* ignore */ });
+  playSrc(bgmMayhemMain);
 }
 
 // Like playMenuBgm but ramps the master gain from 0 → target over `fadeMs`.
