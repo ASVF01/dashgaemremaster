@@ -558,7 +558,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       punchZoom: 1,
     };
     // MAYHEM walks/runs on industrial metal instead of paper.
-    setMetalMode(levelId === "mayhem-outside");
+    setMetalMode(levelId.startsWith("mayhem"));
     // Pre-place the invboi star if this level configures one (e.g. meet-invboi).
     if (level.invboiStart) {
       refs.current.invboiPickup = {
