@@ -41,6 +41,12 @@ const CROSSFADE = 0.12;
 // transitions). Long enough to feel musical, short enough to feel snappy.
 const TRACK_FADE = 0.35;
 
+// INVBOI cheat tracks get a darker, slower mix: speed -15%, pitch -25%.
+// playbackRate handles the speed; detune adds the remaining pitch drop.
+const INVBOI_TRACKS = new Set([bgmStarman, bgmMarathonStarman, bgmSomSom]);
+const INVBOI_RATE = 0.85;
+const INVBOI_DETUNE = -216; // cents; 0.85 * 2^(-216/1200) ≈ 0.75 (pitch -25%)
+
 let ctx: AudioContext | null = null;
 let masterGain: GainNode | null = null;
 let lowpass: BiquadFilterNode | null = null;
@@ -68,6 +74,9 @@ type Playing = {
   nextLoopAt: number;
   rafId: number | null;
   stopped: boolean;
+  // playbackRate/detune applied to the source (used to sync visual timers)
+  rate: number;
+  detune: number;
 };
 
 let playing: Playing | null = null;
@@ -118,12 +127,21 @@ async function loadBuffer(src: string): Promise<AudioBuffer> {
 
 // Schedule a source to start at `when` (ctx time), playing `buffer` from offset 0,
 // fading in over CROSSFADE. Returns the source + its gain node.
-function scheduleSource(c: AudioContext, buffer: AudioBuffer, when: number, fadeIn: boolean) {
+function scheduleSource(
+  c: AudioContext,
+  buffer: AudioBuffer,
+  when: number,
+  fadeIn: boolean,
+  rate = 1,
+  detune = 0,
+) {
   const src = c.createBufferSource();
   src.buffer = buffer;
   // Use the native sample-accurate loop for in-track repeats — no crossfade,
   // no volume dip at the seam. Track-to-track transitions still crossfade.
   src.loop = true;
+  src.playbackRate.setValueAtTime(rate, when);
+  src.detune.setValueAtTime(detune, when);
   const g = c.createGain();
   if (fadeIn) {
     g.gain.setValueAtTime(0.0001, when);
@@ -230,7 +248,11 @@ function playSrc(src: string, restart = false) {
     // fade IN over TRACK_FADE while the old one fades OUT (equal-power-ish).
     const startAt = c.currentTime + 0.02;
     if (hadPrevious) fadeOutCurrent(c, fadeDur, startAt);
-    const first = scheduleSource(c, buffer, startAt, hadPrevious);
+    // INVBOI cheat tracks: slower and lower-pitched.
+    const invboi = INVBOI_TRACKS.has(src);
+    const rate = invboi ? INVBOI_RATE : 1;
+    const detune = invboi ? INVBOI_DETUNE : 0;
+    const first = scheduleSource(c, buffer, startAt, hadPrevious, rate, detune);
     // If we're crossfading in, stretch the fade-in to match TRACK_FADE
     if (hadPrevious) {
       first.g.gain.cancelScheduledValues(startAt);
@@ -241,10 +263,10 @@ function playSrc(src: string, restart = false) {
     // to original speed over 0.5s for a tape-spinning-up effect.
     if (src === bgmJustRunBro) {
       try {
-        const rate = first.src.playbackRate;
-        rate.cancelScheduledValues(startAt);
-        rate.setValueAtTime(0.5, startAt);
-        rate.linearRampToValueAtTime(1.0, startAt + 0.5);
+        const pr = first.src.playbackRate;
+        pr.cancelScheduledValues(startAt);
+        pr.setValueAtTime(0.5, startAt);
+        pr.linearRampToValueAtTime(1.0, startAt + 0.5);
       } catch { /* noop */ }
     }
     playing = {
@@ -258,6 +280,8 @@ function playSrc(src: string, restart = false) {
       nextLoopAt: 0,
       rafId: null,
       stopped: false,
+      rate,
+      detune,
     };
     // Native loop is on the source itself; no scheduler needed.
   }).catch(() => { /* decode failed; stay silent */ });
@@ -359,13 +383,14 @@ export function playStarmanBgm() {
 export function getStarmanElapsed(): number | null {
   const c = ac();
   if (!c || !playing || playing.stopped) return null;
+  const r = playing.rate || 1;
   if (playing.src === bgmStarman) {
     if (starmanStartCtxTime == null) return null;
-    return c.currentTime - starmanStartCtxTime;
+    return (c.currentTime - starmanStartCtxTime) * r;
   }
   if (playing.src === bgmMarathonStarman) {
     if (marathonStartCtxTime == null) return null;
-    return c.currentTime - marathonStartCtxTime;
+    return (c.currentTime - marathonStartCtxTime) * r;
   }
   return null;
 }
@@ -423,7 +448,7 @@ export function getSomSomElapsed(): number | null {
   const c = ac();
   if (!c || !playing || playing.src !== bgmSomSom || playing.stopped) return null;
   if (somSomStartCtxTime == null) return null;
-  return c.currentTime - somSomStartCtxTime;
+  return (c.currentTime - somSomStartCtxTime) * (playing.rate || 1);
 }
 
 export function stopBgm(fade = 0) {
