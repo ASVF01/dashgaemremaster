@@ -102,7 +102,7 @@ export default function Terminal({ onClose }: { onClose: () => void }) {
               alt="Company panel terminal"
               draggable={false}
               className="h-full w-full object-fill"
-              style={{ imageRendering: "pixelated", animation: "mayhemRoomFade 120ms ease-out" }}
+              style={{ imageRendering: "pixelated" }}
             />
 
             {/* home hotspots: two panels at the bottom */}
