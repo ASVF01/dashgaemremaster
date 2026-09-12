@@ -266,7 +266,7 @@ const Index = () => {
     else if (screen === "dead") { cameFromDeathRef.current = true; return; }
     else if (screen === "win") return;
     else stopBgm(0.35);
-  }, [screen, levelId, introPhase, marathonStep]);
+  }, [screen, levelId, introPhase, marathonStep, mayhem]);
 
   // Silence sfx ONLY during the intro card. Menu has its own click sfx.
   useEffect(() => {
