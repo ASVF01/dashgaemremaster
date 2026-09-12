@@ -199,6 +199,7 @@ type MayhemRainStyle = CSSProperties & {
 function HellPreview() {
   const panelRef = useRef<HTMLElement | null>(null);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [talking, setTalking] = useState(false);
 
   useEffect(() => {
     unlockAudio();
