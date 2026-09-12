@@ -469,6 +469,28 @@ const Index = () => {
     });
   }, []);
 
+  // Debug: "=" jumps straight into the MAYHEM night (fnaf) mode.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "=" || e.repeat) return;
+      if (mayhemRef.current) return;
+      e.preventDefault();
+      setMarathonStep(null);
+      setInvboiIntroOpen(false); setChaseIntroOpen(false);
+      setMayhemCleared(false);
+      setMayhemPaused(false);
+      setMayhemDialogue(null);
+      setMayhemTicket(false);
+      setMayhem(true);
+      setLevelId("mayhem-floor-1");
+      setResetKey((k) => k + 1);
+      setScreen("playing");
+      setMayhemNight(true);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   // ESC pauses / unpauses MAYHEM (its pause menu is the only way out).
   useEffect(() => {
     if (!mayhem) return;
