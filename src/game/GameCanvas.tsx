@@ -363,6 +363,10 @@ interface Props {
   onDeath: () => void;
   /** Fired once when the player collects the pre-placed invboi star (meet-invboi level). */
   onInvboiPickup?: () => void;
+  /** Fired when the player presses the interact key next to a level NPC. */
+  onNpcInteract?: (id: string) => void;
+  /** When true, touching the goal does nothing (e.g. locked MAYHEM elevator). */
+  goalLocked?: boolean;
   paused: boolean;
   /** When true, do not pause the BGM even if the game is paused (e.g. win/death overlays). */
   keepAudio?: boolean;
@@ -390,7 +394,22 @@ export interface HudState {
   somSom?: boolean;
 }
 
-export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, paused, keepAudio = false, startAsInvboi = false, resetKey, levelId = "scribble-1" }: Props) {
+/** Closest level NPC the player is standing next to, if any. */
+function nearbyNpc(r: GameRefs) {
+  if (!r.level.npcs) return undefined;
+  const pcx = r.player.x + r.player.w / 2;
+  const pcy = r.player.y + r.player.h / 2;
+  let best: { id: string; d: number } | undefined;
+  for (const n of r.level.npcs) {
+    const d = Math.hypot(pcx - (n.x + n.w / 2), pcy - (n.y + n.h / 2));
+    if (d < 110 && (!best || d < best.d)) best = { id: n.id, d };
+  }
+  return best;
+}
+
+
+
+export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, onNpcInteract, goalLocked = false, paused, keepAudio = false, startAsInvboi = false, resetKey, levelId = "scribble-1" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const deathTimeoutRef = useRef<number | null>(null);
   const refs = useRef<GameRefs | null>(null);
@@ -399,6 +418,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
   levelIdRef.current = levelId;
   const onInvboiPickupRef = useRef<(() => void) | undefined>(onInvboiPickup);
   onInvboiPickupRef.current = onInvboiPickup;
+  const onNpcInteractRef = useRef<((id: string) => void) | undefined>(onNpcInteract);
+  onNpcInteractRef.current = onNpcInteract;
+  const goalLockedRef = useRef(goalLocked);
+  goalLockedRef.current = goalLocked;
   // True while CELESTIAL MARATHON is running. Used to keep the marathon
   // BGM playing across sub-level transitions (e.g. don't stopBgm after
   // just-run-bro because the boss level needs the same track to continue).
@@ -550,7 +573,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       punchZoom: 1,
     };
     // MAYHEM walks/runs on industrial metal instead of paper.
-    setMetalMode(levelId === "mayhem-outside");
+    setMetalMode(levelId.startsWith("mayhem"));
     // Pre-place the invboi star if this level configures one (e.g. meet-invboi).
     if (level.invboiStart) {
       refs.current.invboiPickup = {
@@ -627,6 +650,16 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
         if (cheatBuf.endsWith("invboi")) {
           activateInvboi();
           cheatBuf = "";
+        }
+      }
+      // Press E next to a level NPC to talk to them. Takes priority over the
+      // invboi-star spawn below (MAYHEM levels are the only ones with NPCs).
+      if (e.code === "KeyE" && refs.current) {
+        const r = refs.current;
+        const near = nearbyNpc(r);
+        if (near && r.player.alive && !r.finished) {
+          onNpcInteractRef.current?.(near.id);
+          return;
         }
       }
       // Press E to spawn an invboi-star pickup in front of the player.
@@ -2111,7 +2144,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
 
     // goal
     const g = r.level.goal;
-    if (rectOverlap(p.x, p.y, p.w, p.h, g.x, g.y, g.w, g.h)) {
+    if (!goalLockedRef.current && rectOverlap(p.x, p.y, p.w, p.h, g.x, g.y, g.w, g.h)) {
       r.finished = true;
       r.finishTime = performance.now() - r.startedAt;
       r.score += Math.max(0, 5000 - Math.floor(r.finishTime / 10));
@@ -2334,7 +2367,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
     // smooth fade-in of the black backdrop
     const bgT = starmanFx ? Math.min(1, (starElapsed - 3.20) / 0.6) : 0;
     const isBossLevel = levelIdRef.current === "roaring-knight";
-    const isMayhemLevel = levelIdRef.current === "mayhem-outside";
+    const isMayhemLevel = levelIdRef.current.startsWith("mayhem");
     // paper bg (or black during starman fx, OLED black post-impact for som som,
     // the boss-level cyan-flame backdrop, or MAYHEM's pitch-black industrial night)
     if (isBossLevel) {
@@ -2814,6 +2847,43 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
       }
       ctx.restore();
     }
+
+    // interactable NPCs (MAYHEM) — a lanky steel-lit figure + [E] prompt
+    if (r.level.npcs) {
+      const nearId = nearbyNpc(r)?.id;
+      for (const n of r.level.npcs) {
+        if (n.x + n.w < camX - 120 || n.x > camX + w + 120) continue;
+        const cx = n.x + n.w / 2;
+        const bob = Math.sin(r.time * 1.8 + n.x) * 2;
+        ctx.save();
+        // body
+        sketchRect(ctx, n.x, n.y + bob, n.w, n.h, "#1b2128", "#9aa6ae", 2.2, 0.5);
+        // head
+        sketchCircle(ctx, cx, n.y - 14 + bob, 13, "#20272f", "#9aa6ae", 2.2, 0.5);
+        // eyes
+        ctx.fillStyle = "#ffd94a";
+        ctx.beginPath(); ctx.arc(cx - 5, n.y - 15 + bob, 2.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx + 5, n.y - 15 + bob, 2.2, 0, Math.PI * 2); ctx.fill();
+        // name plate
+        ctx.font = "bold 13px 'Oxanium', sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#8e99a2";
+        ctx.fillText(n.name, cx, n.y - 40 + bob);
+        // prompt when in range
+        if (nearId === n.id) {
+          const pulse = 0.65 + Math.sin(r.time * 6) * 0.35;
+          ctx.globalAlpha = pulse;
+          ctx.fillStyle = "#b4202d";
+          ctx.font = "bold 16px 'Oxanium', sans-serif";
+          ctx.fillText("[ E ] TALK", cx, n.y - 62 + bob);
+          ctx.globalAlpha = 1;
+        }
+        ctx.textAlign = "start";
+        ctx.restore();
+      }
+    }
+
+
 
     // hazards (spikes - scribbled triangles)
     for (const hz of r.level.hazards) {

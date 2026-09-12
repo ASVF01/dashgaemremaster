@@ -11,12 +11,15 @@ export type Level = {
   pickups: Pickup[];
   // tutorial-only signs
   signs?: { x: number; y: number; text: string }[];
+  // Interactable characters (MAYHEM). Press the interact key while standing
+  // next to one to fire `onNpcInteract(id)` up to the page.
+  npcs?: { id: string; x: number; y: number; w: number; h: number; name: string }[];
   // Pre-placed invboi-star pickup (normally spawned by pressing E).
   // When set, the GameCanvas will spawn it at level init.
   invboiStart?: { x: number; y: number; facing: 1 | -1 };
 };
 
-export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "chase" | "speed-test" | "just-run-bro" | "meet-invboi" | "roaring-knight" | "aftermath-1" | "aftermath-2" | "aftermath-3" | "celestial-marathon" | "mayhem-outside";
+export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "chase" | "speed-test" | "just-run-bro" | "meet-invboi" | "roaring-knight" | "aftermath-1" | "aftermath-2" | "aftermath-3" | "celestial-marathon" | "mayhem-outside" | "mayhem-main" | "mayhem-floor-1";
 
 export type LevelMeta = {
   id: LevelId;
@@ -42,6 +45,8 @@ export const LEVELS: LevelMeta[] = [
   { id: "aftermath-3", name: "FINAL DRAFT",    subtitle: "everything you've learned. one run.",      difficulty: 4, par: 75 },
   { id: "celestial-marathon", name: "CELESTIAL MARATHON", subtitle: "every level. one breath. invboi forever.", difficulty: 4, par: 9999 },
   { id: "mayhem-outside", name: "THE OUTSIDE", subtitle: "the tower is east. keep running.", difficulty: 2, par: 40, hidden: true },
+  { id: "mayhem-main",    name: "MAIN FLOOR",  subtitle: "clock in. talk to the checker.",   difficulty: 1, par: 90, hidden: true },
+  { id: "mayhem-floor-1", name: "FLOOR ONE",   subtitle: "the tower is bigger inside.",      difficulty: 2, par: 180, hidden: true },
 ];
 
 export function buildLevel(id: LevelId = "scribble-1", opts: { marathon?: boolean } = {}): Level {
@@ -60,6 +65,8 @@ export function buildLevel(id: LevelId = "scribble-1", opts: { marathon?: boolea
     case "aftermath-2": lv = buildAftermath2(); break;
     case "aftermath-3": lv = buildAftermath3(); break;
     case "mayhem-outside": lv = buildMayhemOutside(); break;
+    case "mayhem-main": lv = buildMayhemMain(); break;
+    case "mayhem-floor-1": lv = buildMayhemFloor1(); break;
     // Marathon is a meta-level handled by Index (chains all levels back-to-back).
     // If it ever loads as a real level, fall back to tutorial.
     case "celestial-marathon": lv = buildTutorial(); break;
@@ -937,6 +944,117 @@ function buildMayhemOutside(): Level {
       { x: 5600,  y: groundY - 120, text: "the lights are still on up there." },
       { x: 8600,  y: groundY - 120, text: "she knows you're coming." },
       { x: 10600, y: groundY - 120, text: "the door →" },
+    ],
+  };
+}
+
+// ---------- MAYHEM · MAIN FLOOR: the lobby. talk to the checker, ride up ----------
+function buildMayhemMain(): Level {
+  const W = 3400;
+  const H = 720;
+  const groundY = H - 80;
+
+  const platforms: Platform[] = [
+    // lobby floor
+    { x: 0, y: groundY, w: W, h: 80, kind: "ground" },
+    // west wall (you came in from the outside; no going back)
+    { x: -60, y: 0, w: 60, h: groundY, kind: "block" },
+    // ceiling slab so the lobby reads as an interior
+    { x: 0, y: 0, w: W, h: 60, kind: "block" },
+    // reception counter the checker stands behind
+    { x: 840, y: groundY - 70, w: 260, h: 70, kind: "block" },
+    // waiting benches / crates
+    { x: 1500, y: groundY - 44, w: 180, h: 44, kind: "block" },
+    { x: 1900, y: groundY - 66, w: 120, h: 66, kind: "block" },
+    { x: 2260, y: groundY - 40, w: 200, h: 40, kind: "block" },
+    // mezzanine ledge (optional airtime, nothing up there yet)
+    { x: 1400, y: groundY - 250, w: 320, h: 22, kind: "block" },
+    { x: 2000, y: groundY - 320, w: 260, h: 22, kind: "block" },
+    // elevator shaft wall at the east end; the goal sits in its doorway
+    { x: W - 320, y: 0, w: 60, h: groundY - 220, kind: "block" },
+    { x: W - 200, y: 0, w: 200, h: groundY - 230, kind: "block" },
+  ];
+
+  return {
+    width: W, height: H,
+    spawn: { x: 120, y: groundY - 80 },
+    goal: { x: W - 240, y: groundY - 220, w: 46, h: 220 },
+    platforms,
+    hazards: [],
+    enemies: [],
+    pickups: [],
+    npcs: [
+      { id: "checker", x: 980, y: groundY - 132, w: 34, h: 62, name: "CHECKER" },
+    ],
+    signs: [
+      { x: 300,     y: groundY - 130, text: "MAIN FLOOR · night shift" },
+      { x: 980,     y: groundY - 320, text: "RECEPTION" },
+      { x: 2700,    y: groundY - 130, text: "elevator →" },
+    ],
+  };
+}
+
+// ---------- MAYHEM · FLOOR ONE: big empty tower floor. platforms only ----------
+function buildMayhemFloor1(): Level {
+  const W = 16000;
+  const H = 720;
+  const groundY = H - 80;
+
+  const platforms: Platform[] = [
+    { x: 0, y: groundY, w: W, h: 80, kind: "ground" },
+    { x: -60, y: 0, w: 60, h: groundY, kind: "block" },
+    { x: 0, y: 0, w: W, h: 50, kind: "block" },
+  ];
+
+  // Section A — corridor steps: short blocks you can run straight over.
+  for (let x = 600; x < 3600; x += 420) {
+    const i = Math.floor(x / 420);
+    platforms.push({ x, y: groundY - 46 - (i % 3) * 22, w: 120, h: 46 + (i % 3) * 22, kind: "block" });
+  }
+  // Section B — stacked shelving: rising then falling ledges.
+  for (let i = 0; i < 10; i++) {
+    const x = 3900 + i * 380;
+    const lift = 120 + (i < 5 ? i : 9 - i) * 78;
+    platforms.push({ x, y: groundY - lift, w: 190, h: 20, kind: "block" });
+  }
+  // Section C — pillar hall: tall thin pillars with caps to hop across.
+  for (let i = 0; i < 8; i++) {
+    const x = 7900 + i * 300;
+    platforms.push({ x, y: groundY - 150 - (i % 2) * 90, w: 70, h: 150 + (i % 2) * 90, kind: "block" });
+  }
+  // Section D — vent crawl: low overhangs to slide under, at speed.
+  for (let x = 10500; x < 12600; x += 700) {
+    platforms.push({ x, y: groundY - 90, w: 380, h: 26, kind: "block" });
+  }
+  // Section E — the long gantry: floating catwalks toward the stairwell.
+  for (let i = 0; i < 9; i++) {
+    const x = 12900 + i * 300;
+    platforms.push({ x, y: groundY - 200 - (i % 3) * 70, w: 210, h: 20, kind: "block" });
+  }
+  // Stairwell wall at the east end; the goal door sits in it.
+  platforms.push({ x: W - 320, y: 0, w: 60, h: groundY - 220, kind: "block" });
+  platforms.push({ x: W - 200, y: 0, w: 200, h: groundY - 230, kind: "block" });
+
+  const pickups: Pickup[] = [];
+  for (let x = 500; x < W - 600; x += 300) {
+    pickups.push({ x, y: groundY - 140 - ((x / 300) % 3) * 46, collected: false });
+  }
+
+  return {
+    width: W, height: H,
+    spawn: { x: 120, y: groundY - 80 },
+    goal: { x: W - 240, y: groundY - 220, w: 46, h: 220 },
+    platforms,
+    hazards: [],
+    enemies: [],
+    pickups,
+    signs: [
+      { x: 320,   y: groundY - 130, text: "FLOOR 1" },
+      { x: 3700,  y: groundY - 130, text: "storage — keep moving" },
+      { x: 7700,  y: groundY - 130, text: "pillar hall" },
+      { x: 10400, y: groundY - 130, text: "vents. slide." },
+      { x: 12800, y: groundY - 130, text: "gantry" },
+      { x: 15500, y: groundY - 130, text: "stairwell →" },
     ],
   };
 }

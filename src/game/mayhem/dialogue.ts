@@ -68,4 +68,25 @@ export const MAYHEM_SCRIPTS: Record<string, DialogueScript> = {
       { speaker: "???", text: "RED MEANS LOOK AWAY.", color: MAYHEM_VOICE.she, shake: true, speed: 24, hold: 260 },
     ],
   },
+  /** MAIN FLOOR: the checker hands you the elevator ticket. */
+  checker: {
+    id: "checker",
+    lines: [
+      { speaker: "CHECKER", text: "Greetings sir!", color: MAYHEM_VOICE.intercom },
+      { speaker: "YOU", text: ".. uh... hi..?", color: MAYHEM_VOICE.you },
+      { speaker: "CHECKER", text: "Are you here to clock in for today's shift?", color: MAYHEM_VOICE.intercom },
+      { speaker: "YOU", text: "Yeah, i guess..", color: MAYHEM_VOICE.you },
+      { speaker: "CHECKER", text: "Good! Here, take this ticket, it will give you access to that elevator over there!", color: MAYHEM_VOICE.intercom },
+      {
+        text: "[You got the ticket! you can use this in each floor that you enter, but you would need to upgrade it, to upgrade it, simply beat the floors night to progress to the next night!]",
+        color: NARRATOR,
+        speed: 26,
+        hold: 420,
+      },
+      { speaker: "YOU", text: "Oh, thanks.", color: MAYHEM_VOICE.you },
+      { speaker: "CHECKER", text: "no problem! Happy safe travels valued employee!", color: MAYHEM_VOICE.intercom },
+      { speaker: "YOU", text: "...", color: MAYHEM_VOICE.you },
+      { speaker: "YOU", text: "thank you..?", color: MAYHEM_VOICE.you },
+    ],
+  },
 };
