@@ -201,6 +201,11 @@ const Index = () => {
     setScreen(levelId === "just-run-bro" ? "cutscene" : "win");
   }, [levelId, marathonStep]);
   const handleDeath = useCallback(() => {
+    // MAYHEM handles its own death screen inside the mode.
+    if (mayhemRef.current) {
+      setScreen("dead");
+      return;
+    }
     // Marathon: invboi can't die, but the boss death-cutscene path still
     // runs if somehow triggered. Bail back to menu cleanly.
     if (marathonStep != null) {
