@@ -2334,8 +2334,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
     // smooth fade-in of the black backdrop
     const bgT = starmanFx ? Math.min(1, (starElapsed - 3.20) / 0.6) : 0;
     const isBossLevel = levelIdRef.current === "roaring-knight";
-    // paper bg (or black during starman fx, or OLED black post-impact for som som,
-    // or the boss-level cyan-flame backdrop)
+    const isMayhemLevel = levelIdRef.current === "mayhem-outside";
+    // paper bg (or black during starman fx, OLED black post-impact for som som,
+    // the boss-level cyan-flame backdrop, or MAYHEM's pitch-black industrial night)
     if (isBossLevel) {
       // Solid black under the bg image.
       ctx.fillStyle = "#000";
@@ -2370,6 +2371,23 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
         }
         ctx.restore();
       }
+    } else if (isMayhemLevel) {
+      // True-black sky with a faint industrial haze and slow red warning glow.
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, w, h);
+      const haze = ctx.createLinearGradient(0, 0, 0, h);
+      haze.addColorStop(0, "rgba(8,10,14,0.2)");
+      haze.addColorStop(0.58, "rgba(15,18,23,0.58)");
+      haze.addColorStop(1, "rgba(0,0,0,0.9)");
+      ctx.fillStyle = haze;
+      ctx.fillRect(0, 0, w, h);
+      const pulse = 0.35 + Math.sin(r.time * 1.7) * 0.12;
+      const glow = ctx.createRadialGradient(w * 0.82, h * 0.28, 20, w * 0.82, h * 0.28, w * 0.5);
+      glow.addColorStop(0, `rgba(110,18,24,${pulse * 0.28})`);
+      glow.addColorStop(0.4, `rgba(50,10,14,${pulse * 0.16})`);
+      glow.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, w, h);
     } else {
       if (postImpact) {
         ctx.fillStyle = "#000";
