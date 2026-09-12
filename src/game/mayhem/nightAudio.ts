@@ -4,8 +4,8 @@ import trackAsset from "@/assets/audio/bgm_play.mp3.asset.json";
 
 const RATE = 0.85; // speed -15%
 const DETUNE = -216; // cents; 0.85 * 2^(-216/1200) ≈ 0.75 (pitch -25%)
-const MUFFLE = 260; // Hz low-pass — super muffled
-const VOLUME = 0.5;
+const MUFFLE = 420; // Hz low-pass — muffled but still audible
+const VOLUME = 1.0;
 
 let ctx: AudioContext | null = null;
 let source: AudioBufferSourceNode | null = null;
