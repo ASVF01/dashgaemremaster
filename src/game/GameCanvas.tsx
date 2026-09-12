@@ -637,6 +637,16 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
           cheatBuf = "";
         }
       }
+      // Press E next to a level NPC to talk to them. Takes priority over the
+      // invboi-star spawn below (MAYHEM levels are the only ones with NPCs).
+      if (e.code === "KeyE" && refs.current) {
+        const r = refs.current;
+        const near = nearbyNpc(r);
+        if (near && r.player.alive && !r.finished) {
+          onNpcInteractRef.current?.(near.id);
+          return;
+        }
+      }
       // Press E to spawn an invboi-star pickup in front of the player.
       // Touching it activates invboi mode (same as the cheat code).
       if (e.code === "KeyE" && refs.current) {
