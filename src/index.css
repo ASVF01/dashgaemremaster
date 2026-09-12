@@ -184,13 +184,12 @@
     20%, 65% { opacity: 0.58; }
   }
 
-  /* Infinite downward crawl: shift by many stripe periods so the lines
-     travel a long distance before the repeating pattern realigns. The end
-     frame is still identical to the start, so it loops forever without a
-     visible jump — but now it feels like one continuous fall. */
+  /* Infinite downward grid crawl: two perpendicular stripe layers form a
+     wireframe grid, then the whole pattern drops by many periods before
+     seamlessly realigning — one continuous falling lattice. */
   @keyframes hell-rain {
     from { background-position: 0 0; }
-    to { background-position: -464.8px 1861.6px; }
+    to { background-position: 0 1920px; }
   }
 
   /* Fixed pixel travel so every drop fully exits the panel before looping —
@@ -266,7 +265,7 @@
   .hell-tab::before { left: 5px; }
   .hell-tab::after { right: 5px; }
   .hell-tab-active { color: hsl(var(--hell-warning)); box-shadow: inset 0 0 0 2px hsl(var(--hell-black)), 0 0 14px hsl(var(--hell-warning) / 0.4), 4px 4px 0 hsl(var(--hell-black)); }
-  .hell-tab-rain { position: absolute; inset: 0; opacity: 0.32; background: repeating-linear-gradient(104deg, transparent 0 12px, hsl(var(--hell-muted) / 0.6) 13px, transparent 14px 24px); animation: hell-rain 40s linear infinite; will-change: background-position; }
+  .hell-tab-rain { position: absolute; inset: 0; opacity: 0.32; background-image: repeating-linear-gradient(0deg, transparent 0 12px, hsl(var(--hell-muted) / 0.6) 13px, transparent 14px 24px), repeating-linear-gradient(90deg, transparent 0 12px, hsl(var(--hell-muted) / 0.6) 13px, transparent 14px 24px); background-size: 24px 24px; animation: hell-rain 40s linear infinite; will-change: background-position; }
 
   .hell-preview { color: hsl(var(--hell-muted)); background: hsl(var(--hell-black)); box-shadow: inset 0 0 70px hsl(var(--hell-black)); }
   .hell-preview::after { content: ''; position: absolute; inset: 0; z-index: 18; pointer-events: none; background: repeating-linear-gradient(0deg, transparent 0 3px, hsl(var(--hell-steel) / 0.07) 4px); }
