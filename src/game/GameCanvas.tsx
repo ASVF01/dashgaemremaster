@@ -4265,6 +4265,66 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, p
     ctx.restore();
   }
 
+  function drawMayhemDoor(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, time: number) {
+    ctx.save();
+    const doorX = x - 18;
+    const doorW = w + 36;
+    const frameX = doorX - 12;
+    const frameW = doorW + 24;
+
+    // recessed tower doorway and heavy frame
+    ctx.fillStyle = "#050607";
+    ctx.fillRect(frameX - 8, y - 16, frameW + 16, h + 16);
+    sketchRect(ctx, frameX, y - 10, frameW, h + 10, "#242a31", "#a8b2ba", 3, 0.45);
+
+    // brushed metal slab
+    const metal = ctx.createLinearGradient(doorX, y, doorX + doorW, y);
+    metal.addColorStop(0, "#101419");
+    metal.addColorStop(0.5, "#303842");
+    metal.addColorStop(1, "#0b0e12");
+    sketchRect(ctx, doorX, y, doorW, h, metal as unknown as string, "#c4ced6", 2.4, 0.35);
+    ctx.save();
+    ctx.strokeStyle = "rgba(225,235,240,0.16)";
+    ctx.lineWidth = 1;
+    for (let yy = y + 14; yy < y + h - 8; yy += 12) {
+      ctx.beginPath();
+      ctx.moveTo(doorX + 5, yy);
+      ctx.lineTo(doorX + doorW - 5, yy + Math.sin(yy * 0.3) * 1.5);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // center seam, handle, and warning light
+    ctx.strokeStyle = "rgba(0,0,0,0.8)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(doorX + doorW / 2, y + 6);
+    ctx.lineTo(doorX + doorW / 2, y + h - 6);
+    ctx.stroke();
+    ctx.fillStyle = "#b7c1c8";
+    ctx.fillRect(doorX + doorW - 15, y + h * 0.52, 5, 22);
+    ctx.fillStyle = `rgba(190,28,42,${0.55 + Math.sin(time * 5) * 0.3})`;
+    ctx.beginPath();
+    ctx.arc(doorX + doorW / 2, y + 24, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,120,130,0.24)";
+    ctx.beginPath();
+    ctx.arc(doorX + doorW / 2, y + 24, 17 + Math.sin(time * 5) * 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // small industrial label
+    ctx.fillStyle = "#07090b";
+    ctx.fillRect(doorX + 9, y + 42, doorW - 18, 20);
+    ctx.strokeStyle = "rgba(170,180,188,0.5)";
+    ctx.strokeRect(doorX + 9, y + 42, doorW - 18, 20);
+    ctx.fillStyle = "#b4202d";
+    ctx.font = "bold 12px 'Oxanium', sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("03", doorX + doorW / 2, y + 52);
+    ctx.restore();
+  }
+
   function drawGoal(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, time: number) {
     // big swirling FINISH flag
     ctx.save();
