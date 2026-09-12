@@ -67,6 +67,10 @@ const Index = () => {
   const [mayhem, setMayhem] = useState(false);
   const [mayhemPaused, setMayhemPaused] = useState(false);
   const [mayhemCleared, setMayhemCleared] = useState(false);
+  // Which MAYHEM conversation is on screen, and whether the checker has
+  // handed over the elevator ticket yet (the main-floor elevator needs it).
+  const [mayhemDialogue, setMayhemDialogue] = useState<string | null>(null);
+  const [mayhemTicket, setMayhemTicket] = useState(false);
   const mayhemRef = useRef(false);
   mayhemRef.current = mayhem;
   const [binds] = useKeybinds();
