@@ -152,6 +152,7 @@ export default function NightRooms() {
   return (
     <div
       className="absolute inset-0 z-[50] select-none overflow-hidden bg-black"
+      style={{ perspective: "1200px" }}
       onMouseMove={onMove}
       onMouseLeave={() => { target.current.x = 0; target.current.y = 0; }}
     >
