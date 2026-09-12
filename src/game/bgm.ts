@@ -350,6 +350,13 @@ export function playMayhemBgm(fadeMs = 1200) {
   lowpass.frequency.linearRampToValueAtTime(900, now + fadeMs / 1000);
 }
 
+// MAYHEM main floor theme — "Insomnia Blues". Plays clean (no muffle),
+// crossfading out of whatever was playing before.
+export function playMayhemMainBgm() {
+  loadBuffer(bgmMayhemMain).catch(() => { /* ignore */ });
+  playSrc(bgmMayhemMain);
+}
+
 // Like playMenuBgm but ramps the master gain from 0 → target over `fadeMs`.
 // Used for the intro card so the music swells in as the card fades out.
 export function playMenuBgmFadeIn(fadeMs = 800) {
