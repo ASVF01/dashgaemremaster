@@ -185,6 +185,28 @@ let thunderMode = false;
 export function setThunderMode(on: boolean) { thunderMode = on; }
 export function isThunderMode() { return thunderMode; }
 
+// ---------- METAL MODE (MAYHEM's tower approach) ----------
+// Replaces the papery movement foley with hard industrial impacts/scrapes.
+let metalMode = false;
+export function setMetalMode(on: boolean) { metalMode = on; }
+export function isMetalMode() { return metalMode; }
+function metalReplaces() { return metalMode && !shimmerReplaces(); }
+
+function metalHit(base = 420, intensity = 1) {
+  const f = base * (0.92 + Math.random() * 0.16);
+  tone({ freq: f, to: f * 0.42, dur: 0.12, type: "square", vol: 0.24 * intensity, attack: 0.001, release: 0.08 });
+  tone({ freq: f * 2.37, to: f * 1.4, dur: 0.08, type: "triangle", vol: 0.12 * intensity, attack: 0.001, release: 0.05, delay: 0.006 });
+  tone({ freq: f * 0.48, to: f * 0.25, dur: 0.16, type: "sine", vol: 0.16 * intensity, attack: 0.001, release: 0.1 });
+  noise(0.055, 0.20 * intensity, 900, 6200);
+  noise(0.14, 0.08 * intensity, 2600, 11000, 0.012);
+}
+
+function metalScrape(dur = 0.2, intensity = 1) {
+  noise(dur, 0.18 * intensity, 1200, 7600);
+  tone({ freq: 1500, to: 760, dur, type: "sawtooth", vol: 0.055 * intensity, attack: 0.004, release: 0.08 });
+  tone({ freq: 290, to: 160, dur: Math.min(0.16, dur), type: "square", vol: 0.07 * intensity, attack: 0.002, release: 0.08, delay: 0.01 });
+}
+
 function thunderBoom(opts: { intensity?: number; crack?: boolean; rumbleDur?: number } = {}) {
   if (!thunderMode) return;
   const intensity = opts.intensity ?? 1;
