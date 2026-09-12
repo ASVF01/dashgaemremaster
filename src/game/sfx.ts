@@ -958,3 +958,113 @@ function stopSlideShimmer() {
   clearTimeout(slideShimmer.timer);
   slideShimmer = null;
 }
+
+// ---------- MAYHEM NIGHT SFX BUS ----------
+// Realistic-leaning placeholder sounds for the MAYHEM night ("fnaf") mode.
+// They run on a dedicated bus so they still play while the mode mutes the
+// main sfx bus (night mode silences all "gamey" sounds on purpose).
+let nightBus: GainNode | null = null;
+function nbus(): GainNode | null {
+  const c = ac(); if (!c) return null;
+  if (!nightBus) {
+    nightBus = c.createGain();
+    nightBus.gain.value = 0.9;
+    nightBus.connect(c.destination);
+  }
+  return nightBus;
+}
+
+function nTone(o: ToneOpts) {
+  const c = ac(); const b = nbus(); if (!c || !b) return;
+  const t0 = c.currentTime + (o.delay ?? 0);
+  const osc = c.createOscillator();
+  const g = c.createGain();
+  osc.type = o.type ?? "square";
+  osc.frequency.setValueAtTime(o.freq, t0);
+  if (o.to !== undefined) osc.frequency.exponentialRampToValueAtTime(Math.max(20, o.to), t0 + o.dur);
+  const v = o.vol ?? 0.4;
+  const a = o.attack ?? 0.005;
+  const rel = o.release ?? 0.05;
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(v, t0 + a);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + o.dur + rel);
+  osc.connect(g).connect(b);
+  osc.start(t0);
+  osc.stop(t0 + o.dur + rel + 0.02);
+}
+
+// Noise with an optional frequency sweep on the lowpass for whooshes.
+function nNoise(dur: number, vol = 0.4, hp = 200, lp = 4000, delay = 0, lpTo?: number) {
+  const c = ac(); const b = nbus(); if (!c || !b) return;
+  const t0 = c.currentTime + delay;
+  const len = Math.max(1, Math.floor(c.sampleRate * dur));
+  const buf = c.createBuffer(1, len, c.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+  const src = c.createBufferSource();
+  src.buffer = buf;
+  const hpf = c.createBiquadFilter(); hpf.type = "highpass"; hpf.frequency.value = hp;
+  const lpf = c.createBiquadFilter(); lpf.type = "lowpass";
+  lpf.frequency.setValueAtTime(lp, t0);
+  if (lpTo !== undefined) lpf.frequency.exponentialRampToValueAtTime(Math.max(40, lpTo), t0 + dur);
+  const g = c.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(vol, t0 + 0.006);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  src.connect(hpf).connect(lpf).connect(g).connect(b);
+  src.start(t0);
+  src.stop(t0 + dur + 0.02);
+}
+
+export const mayhemSfx = {
+  // terminal panel sliding up — servo whir + soft clunk when it seats
+  terminalOpen() {
+    nTone({ freq: 150, to: 430, dur: 0.38, type: "sawtooth", vol: 0.10, attack: 0.03, release: 0.05 });
+    nTone({ freq: 155, to: 436, dur: 0.38, type: "sawtooth", vol: 0.06, attack: 0.03, release: 0.05 });
+    nNoise(0.36, 0.05, 300, 1800, 0.02);
+    nTone({ freq: 95, to: 52, dur: 0.1, type: "sine", vol: 0.35, attack: 0.002, release: 0.09, delay: 0.4 });
+    nNoise(0.03, 0.18, 900, 5000, 0.4);
+  },
+  // terminal sliding back down — reversed servo
+  terminalClose() {
+    nTone({ freq: 430, to: 140, dur: 0.34, type: "sawtooth", vol: 0.09, attack: 0.02, release: 0.05 });
+    nNoise(0.32, 0.045, 300, 1600, 0.01);
+    nTone({ freq: 88, to: 48, dur: 0.1, type: "sine", vol: 0.3, attack: 0.002, release: 0.09, delay: 0.36 });
+  },
+  // boot hum + two soft confirm blips
+  terminalBoot() {
+    nTone({ freq: 60, dur: 1.0, type: "sine", vol: 0.14, attack: 0.08, release: 0.3 });
+    nNoise(0.9, 0.03, 500, 3000, 0.05);
+    nTone({ freq: 740, dur: 0.05, type: "sine", vol: 0.12, attack: 0.004, release: 0.05, delay: 0.55 });
+    nTone({ freq: 990, dur: 0.06, type: "sine", vol: 0.12, attack: 0.004, release: 0.06, delay: 0.75 });
+  },
+  // plastic key press — short tick + faint electronic blip
+  terminalSelect() {
+    nNoise(0.018, 0.3, 1400, 8000);
+    nTone({ freq: 620, dur: 0.035, type: "sine", vol: 0.10, attack: 0.002, release: 0.04, delay: 0.008 });
+  },
+  // pause menu opening — deep soft thunk + slow air swell
+  pauseOpen() {
+    nTone({ freq: 72, to: 36, dur: 0.28, type: "sine", vol: 0.4, attack: 0.004, release: 0.22 });
+    nNoise(0.5, 0.06, 60, 500, 0.03, 220);
+  },
+  // door — latch click, slow hinge creak, closing-air thud
+  doorOpen() {
+    nNoise(0.02, 0.32, 1600, 9000);
+    nTone({ freq: 1250, dur: 0.04, type: "square", vol: 0.06, attack: 0.001, release: 0.04, delay: 0.005 });
+    nTone({ freq: 235, to: 168, dur: 0.5, type: "sawtooth", vol: 0.045, attack: 0.06, release: 0.12, delay: 0.05 });
+    nNoise(0.45, 0.05, 150, 900, 0.06, 380);
+    nTone({ freq: 64, to: 40, dur: 0.14, type: "sine", vol: 0.28, attack: 0.003, release: 0.12, delay: 0.5 });
+  },
+  // turning around — cloth whoosh + a single soft footstep
+  turn() {
+    nNoise(0.2, 0.16, 350, 2600, 0, 700);
+    nTone({ freq: 82, to: 44, dur: 0.11, type: "sine", vol: 0.26, attack: 0.003, release: 0.1, delay: 0.14 });
+  },
+  // leaning into the keyhole — quiet fabric shift + faint metal ring
+  keyhole() {
+    nNoise(0.26, 0.08, 120, 900, 0, 420);
+    nTone({ freq: 2150, dur: 0.05, type: "sine", vol: 0.03, attack: 0.01, release: 0.08, delay: 0.12 });
+    nTone({ freq: 70, to: 55, dur: 0.12, type: "sine", vol: 0.08, attack: 0.01, release: 0.1, delay: 0.05 });
+  },
+};

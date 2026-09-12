@@ -11,13 +11,52 @@ import packArt from "@/assets/mayhem/storage_pack.png.asset.json";
 import packUsedArt from "@/assets/mayhem/storage_used.png.asset.json";
 import Terminal from "./Terminal";
 import { startNightBgm, stopNightBgm } from "./nightAudio";
-import { isMuted, setMuted } from "@/game/sfx";
+import { isMuted, setMuted, mayhemSfx } from "@/game/sfx";
 import { isBgmMuted, setBgmMuted, stopBgm } from "@/game/bgm";
 
 
 type View = "office" | "door" | "keyhole" | "hallway" | "storage" | "storageKeyhole";
 
 const HOLD_MS = 3000;
+
+// Pure room-transition map — kept outside the component so the key handler
+// can compute the next view (and its sound) without a state updater.
+function nextView(v: View, k: string): View {
+  switch (v) {
+    case "office":
+      if (k === "a") return "door";
+      return v;
+    case "door":
+      if (k === "e") return "keyhole";
+      if (k === "w") return "hallway";
+      if (k === "d") return "office";
+      return v;
+    case "keyhole":
+      if (k === "e" || k === "d" || k === "s") return "door";
+      return v;
+    case "hallway":
+      if (k === "a") return "storage";
+      if (k === "d") return "door";
+      return v;
+    case "storage":
+      if (k === "e") return "storageKeyhole";
+      if (k === "d" || k === "w") return "hallway";
+      return v;
+    case "storageKeyhole":
+      if (k === "e" || k === "d" || k === "s") return "storage";
+      return v;
+    default:
+      return v;
+  }
+}
+
+// Realistic-ish movement sounds per transition.
+function playMoveSound(from: View, to: View) {
+  if (to === "keyhole" || to === "storageKeyhole") { mayhemSfx.keyhole(); return; }
+  if (from === "keyhole" || from === "storageKeyhole") { mayhemSfx.turn(); return; }
+  if (from === "hallway" || to === "hallway" || from === "storage" || to === "storage") { mayhemSfx.doorOpen(); return; }
+  mayhemSfx.turn();
+}
 
 export default function NightRooms() {
   const [view, setView] = useState<View>("office");
@@ -41,44 +80,24 @@ export default function NightRooms() {
       // terminal: s toggles it; while open, navigation keys are ignored
       if (k === "s") {
         if (terminalOpenRef.current) {
+          mayhemSfx.terminalClose();
           setTerminalOpen(false);
           return;
         }
         // the terminal lives in the storage room only
         if (viewRef.current === "storage") {
+          mayhemSfx.terminalOpen();
           setTerminalOpen(true);
           return;
         }
       }
-      setView((v) => {
-        if (terminalOpenRef.current) return v;
-        switch (v) {
-          case "office":
-            if (k === "a") return "door";
-            return v;
-          case "door":
-            if (k === "e") return "keyhole";
-            if (k === "w") return "hallway";
-            if (k === "d") return "office";
-            return v;
-          case "keyhole":
-            if (k === "e" || k === "d" || k === "s") return "door";
-            return v;
-          case "hallway":
-            if (k === "a") return "storage";
-            if (k === "d") return "door";
-            return v;
-          case "storage":
-            if (k === "e") return "storageKeyhole";
-            if (k === "d" || k === "w") return "hallway";
-            return v;
-          case "storageKeyhole":
-            if (k === "e" || k === "d" || k === "s") return "storage";
-            return v;
-          default:
-            return v;
-        }
-      });
+      if (terminalOpenRef.current) return;
+      const from = viewRef.current;
+      const to = nextView(from, k);
+      if (to !== from) {
+        playMoveSound(from, to);
+        setView(to);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);

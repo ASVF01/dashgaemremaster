@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { mayhemSfx } from "@/game/sfx";
+
 import { useSettings } from "@/game/settings";
 import { sfx, setSfxVolume } from "@/game/sfx";
 import { setBgmVolume } from "@/game/bgm";
@@ -17,6 +19,9 @@ export default function MayhemPause({
 }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settings, setSettings] = useSettings();
+
+  // deep thunk when the pause menu opens
+  useEffect(() => { mayhemSfx.pauseOpen(); }, []);
 
   useEffect(() => { setSfxVolume(settings.sfxVolume); }, [settings.sfxVolume]);
   useEffect(() => { setBgmVolume(settings.bgmVolume * 0.5); }, [settings.bgmVolume]);
