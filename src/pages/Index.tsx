@@ -159,8 +159,15 @@ const Index = () => {
   const handleHud = useCallback((h: HudState) => setHud(h), []);
   const handleFinish = useCallback((t: number, s: number) => {
     setFinalTime(t); setFinalScore(s);
-    // MAYHEM: reaching the tower door ends the outside run inside the mode.
+    // MAYHEM: each door leads to the next part of the tower.
     if (mayhemRef.current) {
+      const idx = MAYHEM_SEQUENCE.indexOf(levelId);
+      if (idx >= 0 && idx + 1 < MAYHEM_SEQUENCE.length) {
+        setLevelId(MAYHEM_SEQUENCE[idx + 1]);
+        setResetKey((k) => k + 1);
+        resetBgmLevelEndFx();
+        return;
+      }
       setMayhemCleared(true);
       return;
     }
