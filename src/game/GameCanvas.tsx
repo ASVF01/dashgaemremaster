@@ -2685,6 +2685,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     // fade in/out smoothly (no abrupt pop).
     const fadeIn = density;
 
+    // MAYHEM-only: slow floaty star fall. Normal levels keep the brisk
+    // classic star rain.
+    const floaty = levelIdRef.current.startsWith("mayhem");
+
     if (density > 0 && r.rainStars.length < maxRainStars) {
       // Stratified column spawning, but DETERMINISTIC per frame: rotate
       // through every column at least once before repeating, so no column
@@ -2703,10 +2707,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         const col = (colOffset + colIdx) % cols;
         colIdx++;
         const x = (col + Math.random()) * colStep;
-        // Fall speed also interpolates with density — but kept slow and
-        // floaty: the stars drift down like snow rather than pour like rain.
-        const vyBase = 34 + density * 66;       // 34 → 100
-        const vyJit  = 18 + density * 42;       // 18 → 60
+        // Fall speed also interpolates with density. MAYHEM keeps it slow
+        // and floaty (stars drift down like snow); other levels rain fast.
+        const vyBase = floaty ? 34 + density * 66 : 130 + density * 170;
+        const vyJit  = floaty ? 18 + density * 42 : 60 + density * 90;
         r.rainStars.push({
           x,
           y: -10 - Math.random() * 80,
@@ -2732,11 +2736,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       ctx.globalAlpha = prevAlpha * visAlpha;
       for (let i = 0; i < stars.length; i++) {
         const s = stars[i];
-        // Floaty drift: gentle vertical bob layered on the slow fall, plus a
-        // wide lazy horizontal sway so they feel weightless.
-        s.y += s.vy * dtFrame + Math.sin(s.phase * 1.7 + t * 0.8) * 0.45;
+        // Floaty drift (MAYHEM only): gentle vertical bob layered on the
+        // slow fall, plus a wide lazy horizontal sway so they feel weightless.
+        s.y += s.vy * dtFrame + (floaty ? Math.sin(s.phase * 1.7 + t * 0.8) * 0.45 : 0);
         if (!starmanFx || s.y >= h + 28) continue;
-        s.x += Math.sin(s.phase + t * 0.6) * 0.95;
+        if (floaty) s.x += Math.sin(s.phase + t * 0.6) * 0.95;
         const img = getRainStar(s.size, s.hue + t * 80);
         const half = img.width / 2;
         ctx.drawImage(img, s.x - half, s.y - half);
