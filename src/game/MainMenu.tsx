@@ -36,6 +36,21 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
   const [charSelectOpen, setCharSelectOpen] = useState(false);
   const [bestiaryOpen, setBestiaryOpen] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
+  const prevTabRef = useRef<MenuTab>("play");
+
+  useEffect(() => {
+    const prev = prevTabRef.current;
+    if (tab === "hell" && prev !== "hell") {
+      unlockAudio();
+      stopBgm();
+      playMayhemBgm();
+    } else if (prev === "hell" && tab !== "hell") {
+      unlockAudio();
+      stopBgm();
+      playMenuBgm();
+    }
+    prevTabRef.current = tab;
+  }, [tab]);
 
   const handlePlay = (id: LevelId) => {
     unlockAudio();
