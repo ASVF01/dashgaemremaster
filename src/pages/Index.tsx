@@ -397,6 +397,46 @@ const Index = () => {
   };
   const handleInvboiPickup = useCallback(() => setInvboiIntroOpen(true), []);
 
+  // ---- MAYHEM mode session control ----
+  const startMayhem = () => {
+    setMarathonStep(null);
+    marathonStartRef.current = null;
+    setMarathonFinalMs(null);
+    setInvboiIntroOpen(false); setChaseIntroOpen(false);
+    setMayhemCleared(false);
+    setMayhemPaused(false);
+    setMayhem(true);
+    setLevelId("mayhem-outside");
+    setResetKey((k) => k + 1);
+    setScreen("playing");
+  };
+  const retryMayhem = () => {
+    setMayhemCleared(false);
+    setMayhemPaused(false);
+    setResetKey((k) => k + 1);
+    setScreen("playing");
+  };
+  const quitMayhem = () => {
+    setMayhem(false);
+    setMayhemPaused(false);
+    setMayhemCleared(false);
+    stopBgm(0.25);
+    setScreen("menu");
+  };
+
+  // ESC pauses / unpauses MAYHEM (its pause menu is the only way out).
+  useEffect(() => {
+    if (!mayhem) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.repeat) return;
+      e.preventDefault();
+      if (mayhemCleared || screen === "dead") return;
+      setMayhemPaused((p) => !p);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mayhem, mayhemCleared, screen]);
+
   // Award the "just run bro" badge and head back to the main menu.
   const finishCutscene = useCallback(() => {
     setHasJrbBadge(true);
