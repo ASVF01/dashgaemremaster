@@ -4,13 +4,14 @@ import trackAsset from "@/assets/audio/bgm_play.mp3.asset.json";
 
 const RATE = 0.85; // speed -15%
 const DETUNE = -216; // cents; 0.85 * 2^(-216/1200) ≈ 0.75 (pitch -25%)
-const MUFFLE = 260; // Hz low-pass — super muffled
-const VOLUME = 0.5;
+const MUFFLE = 420; // Hz low-pass — muffled but still audible
+const VOLUME = 1.0;
 
 let ctx: AudioContext | null = null;
 let source: AudioBufferSourceNode | null = null;
 let master: GainNode | null = null;
 let buffer: AudioBuffer | null = null;
+let element: HTMLAudioElement | null = null;
 let token = 0;
 
 function ac(): AudioContext | null {
@@ -27,8 +28,20 @@ function ac(): AudioContext | null {
 export function startNightBgm() {
   const c = ac();
   if (!c) return;
+  stopNightBgm(0);
   const id = ++token;
-  stopNightBgm();
+
+  // If the browser blocks audio until a gesture, retry on the next input.
+  if (c.state !== "running") {
+    const kick = () => {
+      c.resume().catch(() => {});
+      window.removeEventListener("pointerdown", kick);
+      window.removeEventListener("keydown", kick);
+    };
+    window.addEventListener("pointerdown", kick);
+    window.addEventListener("keydown", kick);
+  }
+
 
   const build = (buf: AudioBuffer) => {
     if (id !== token || !c) return;
@@ -85,7 +98,31 @@ export function startNightBgm() {
     .then((r) => r.arrayBuffer())
     .then((a) => c.decodeAudioData(a))
     .then((buf) => { buffer = buf; build(buf); })
-    .catch(() => { /* stay silent */ });
+    .catch(() => { fallback(id); });
+}
+
+// Last resort: plain <audio> playback (still slowed + muffled via the graph).
+function fallback(id: number) {
+  const c = ctx;
+  if (!c || id !== token) return;
+  try {
+    const el = new Audio(trackAsset.url);
+    el.loop = true;
+    el.playbackRate = RATE;
+    el.crossOrigin = "anonymous";
+    const node = c.createMediaElementSource(el);
+    const lp = c.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.value = MUFFLE;
+    const out = c.createGain();
+    out.gain.value = VOLUME;
+    node.connect(lp);
+    lp.connect(out);
+    out.connect(c.destination);
+    master = out;
+    element = el;
+    el.play().catch(() => {});
+  } catch { /* noop */ }
 }
 
 export function stopNightBgm(fadeMs = 300) {
@@ -93,8 +130,11 @@ export function stopNightBgm(fadeMs = 300) {
   const c = ctx;
   const s = source;
   const g = master;
+  const el = element;
   source = null;
   master = null;
+  element = null;
+  if (el) { try { el.pause(); el.src = ""; } catch { /* noop */ } }
   if (!c || !s) return;
   const now = c.currentTime;
   try {
