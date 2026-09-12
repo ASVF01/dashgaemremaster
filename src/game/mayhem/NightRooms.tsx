@@ -22,6 +22,10 @@ export default function NightRooms() {
   const [hold, setHold] = useState(0); // 0..1 progress on the health pack
   const holdStart = useRef<number | null>(null);
   const raf = useRef<number | null>(null);
+  const viewRef = useRef(view);
+  viewRef.current = view;
+  const terminalOpenRef = useRef(terminalOpen);
+  terminalOpenRef.current = terminalOpen;
 
   // ---- keyboard navigation ----
   useEffect(() => {
@@ -150,12 +154,17 @@ export default function NightRooms() {
       const el = lookRef.current;
       if (el) {
         const p = peekRef.current;
-        const tx = -cur.current.x * 34 * p;
-        const ty = -cur.current.y * 18 * p;
-        const rx = -cur.current.y * 1.6;
-        const ry = cur.current.x * 2.4;
+        // terminal open: zoom in toward the player's face (lower-center) and
+        // damp the head drift so the panel feels like it's in front of you
+        const zoomed = terminalOpenRef.current;
+        const scale = zoomed ? 2.1 : 1.1;
+        const damp = zoomed ? 0.35 : 1;
+        const tx = -cur.current.x * 34 * p * damp;
+        const ty = (-cur.current.y * 18 * p * damp) + (zoomed ? -60 : 0);
+        const rx = -cur.current.y * 1.6 * damp;
+        const ry = cur.current.x * 2.4 * damp;
         el.style.transform =
-          `scale(1.1) translate3d(${tx}px, ${ty}px, 0) rotateX(${rx}deg) rotateY(${ry}deg)`;
+          `scale(${scale}) translate3d(${tx}px, ${ty}px, 0) rotateX(${rx}deg) rotateY(${ry}deg)`;
       }
       id = requestAnimationFrame(tick);
     };
