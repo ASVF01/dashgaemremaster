@@ -17,6 +17,8 @@ import { selectCharacter, unlockCharacter, useCharacter } from "@/game/character
 import { getSettings } from "@/game/settings";
 import { recordLevelResult } from "@/game/levelStats";
 import MayhemPause from "@/game/mayhem/MayhemPause";
+import DialogueBox from "@/game/mayhem/DialogueBox";
+import { MAYHEM_SCRIPTS } from "@/game/mayhem/dialogue";
 
 
 type Screen = "menu" | "loading" | "playing" | "dead" | "win" | "cutscene" | "death-cutscene";
