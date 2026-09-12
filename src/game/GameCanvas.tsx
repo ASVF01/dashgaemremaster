@@ -907,8 +907,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
           parryCooldown: r.player.starman ? 0 : Math.max(0, r.player.parryCooldown),
           dashCooldown: r.player.starman ? 0 : Math.max(0, r.player.dashCooldown),
           dashCooldownMax: DASH_COOLDOWN,
-          playerScreenX: ((r.player.x + r.player.w * 0.5 - r.cameraX - size.w * 0.5) * r.cameraZoom + size.w * 0.5) * (size.dw / size.w),
-          playerScreenY: ((r.player.y - r.cameraY - size.h * 0.5) * r.cameraZoom + size.h * 0.5) * (size.dh / size.h),
+          // Zoom is anchored on the player sprite, so the player's own
+          // on-screen position is just their offset from the camera.
+          playerScreenX: (r.player.x + r.player.w * 0.5 - r.cameraX) * (size.dw / size.w),
+          playerScreenY: (r.player.y + r.player.h * 0.5 - r.cameraY) * (size.dh / size.h),
           starman: r.player.starman,
           somSom: r.player.somSom,
         });
