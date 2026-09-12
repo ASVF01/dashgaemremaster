@@ -97,7 +97,31 @@ export function startNightBgm() {
     .then((r) => r.arrayBuffer())
     .then((a) => c.decodeAudioData(a))
     .then((buf) => { buffer = buf; build(buf); })
-    .catch(() => { /* stay silent */ });
+    .catch(() => { fallback(id); });
+}
+
+// Last resort: plain <audio> playback (still slowed + muffled via the graph).
+function fallback(id: number) {
+  const c = ctx;
+  if (!c || id !== token) return;
+  try {
+    const el = new Audio(trackAsset.url);
+    el.loop = true;
+    el.playbackRate = RATE;
+    el.crossOrigin = "anonymous";
+    const node = c.createMediaElementSource(el);
+    const lp = c.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.value = MUFFLE;
+    const out = c.createGain();
+    out.gain.value = VOLUME;
+    node.connect(lp);
+    lp.connect(out);
+    out.connect(c.destination);
+    master = out;
+    element = el;
+    el.play().catch(() => {});
+  } catch { /* noop */ }
 }
 
 export function stopNightBgm(fadeMs = 300) {
