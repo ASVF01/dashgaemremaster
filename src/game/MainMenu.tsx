@@ -228,6 +228,7 @@ function HellPreview() {
       onPointerMove={handlePointerMove}
       onPointerLeave={() => setOffset({ x: 0, y: 0 })}
     >
+      <div aria-hidden="true" className="mayhem-menu-grid absolute inset-0 z-[1]" />
       <img
         src={mayhemArtwork.url}
         alt="A hand-drawn figure facing a looming dark tower"

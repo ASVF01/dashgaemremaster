@@ -259,6 +259,16 @@
   .hell-preview::after { content: ''; position: absolute; inset: 0; z-index: 18; pointer-events: none; background: repeating-linear-gradient(0deg, transparent 0 3px, hsl(var(--hell-steel) / 0.07) 4px); }
   .hell-static { z-index: 1; background-image: radial-gradient(hsl(var(--hell-muted) / 0.6) 0.7px, transparent 0.7px); background-size: 7px 7px; animation: hell-static-shift 0.18s steps(2) infinite; }
   .mayhem-preview { cursor: crosshair; background: hsl(var(--hell-black)); }
+  .mayhem-menu-grid {
+    pointer-events: none;
+    background-color: hsl(var(--hell-black) / 0.7);
+    background-image:
+      repeating-linear-gradient(0deg, transparent 0 23px, hsl(var(--hell-muted) / 0.2) 23px 24px),
+      repeating-linear-gradient(90deg, transparent 0 23px, hsl(var(--hell-muted) / 0.2) 23px 24px);
+    background-size: 24px 24px;
+    animation: hell-rain 70s linear infinite;
+    will-change: background-position;
+  }
   .mayhem-art { transform-origin: center; transition: transform 180ms ease-out; user-select: none; }
   .mayhem-rain-field { pointer-events: none; }
   .mayhem-raindrop {
@@ -327,7 +337,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .hell-tab-rain, .hell-static, .hell-title, .hell-eye, .hell-monitor span, .mayhem-raindrop { animation: none !important; }
+    .hell-tab-rain, .hell-static, .hell-title, .hell-eye, .hell-monitor span, .mayhem-raindrop, .mayhem-menu-grid { animation: none !important; }
     .mayhem-rain-field { display: none; }
     .mayhem-art { transition: none !important; }
   }
