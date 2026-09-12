@@ -74,6 +74,9 @@ type Playing = {
   nextLoopAt: number;
   rafId: number | null;
   stopped: boolean;
+  // playbackRate/detune applied to the source (used to sync visual timers)
+  rate: number;
+  detune: number;
 };
 
 let playing: Playing | null = null;
