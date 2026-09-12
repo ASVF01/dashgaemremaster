@@ -115,7 +115,7 @@ export default function NightRooms() {
     packUsed ? packUsedArt.url : packArt.url;
 
   const hint =
-    view === "office" ? "[ A ] TURN TO THE DOOR" :
+    view === "office" ? "[ A ] TURN TO THE DOOR   [ S ] TERMINAL" :
     view === "door" ? "[ E ] KEYHOLE   [ W ] HALLWAY   [ D ] TURN BACK" :
     view === "keyhole" ? "[ E ] STOP LOOKING" :
     view === "hallway" ? "[ A ] STORAGE   [ D ] OFFICE" :
@@ -226,6 +226,8 @@ export default function NightRooms() {
         <div className="font-pixel text-[10px] tracking-[0.3em] text-white/80">{label}</div>
         <div className="font-pixel text-[9px] text-[hsl(var(--hell-muted))]">{hint}</div>
       </div>
+
+      {terminalOpen && <Terminal onClose={() => setTerminalOpen(false)} />}
     </div>
   );
 }
