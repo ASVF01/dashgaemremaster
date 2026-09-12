@@ -36,7 +36,7 @@ export function sketchLine(
 export function sketchRect(
   ctx: CanvasRenderingContext2D,
   x: number, y: number, w: number, h: number,
-  fill: string | null, stroke = INK, lineW = 2.6, wobble = 1.4
+  fill: string | CanvasGradient | CanvasPattern | null, stroke = INK, lineW = 2.6, wobble = 1.4
 ) {
   if (fill) {
     ctx.save();
