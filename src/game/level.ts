@@ -11,12 +11,15 @@ export type Level = {
   pickups: Pickup[];
   // tutorial-only signs
   signs?: { x: number; y: number; text: string }[];
+  // Interactable characters (MAYHEM). Press the interact key while standing
+  // next to one to fire `onNpcInteract(id)` up to the page.
+  npcs?: { id: string; x: number; y: number; w: number; h: number; name: string }[];
   // Pre-placed invboi-star pickup (normally spawned by pressing E).
   // When set, the GameCanvas will spawn it at level init.
   invboiStart?: { x: number; y: number; facing: 1 | -1 };
 };
 
-export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "chase" | "speed-test" | "just-run-bro" | "meet-invboi" | "roaring-knight" | "aftermath-1" | "aftermath-2" | "aftermath-3" | "celestial-marathon" | "mayhem-outside";
+export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "chase" | "speed-test" | "just-run-bro" | "meet-invboi" | "roaring-knight" | "aftermath-1" | "aftermath-2" | "aftermath-3" | "celestial-marathon" | "mayhem-outside" | "mayhem-main" | "mayhem-floor-1";
 
 export type LevelMeta = {
   id: LevelId;
