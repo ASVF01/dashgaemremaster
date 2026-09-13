@@ -1071,6 +1071,10 @@ export const mayhemSfx = {
   terminalClose() {
     playSample(firewallCloseAsset.url, { vol: 0.7 });
   },
+  // terminal sequence completes and the DONE screen appears
+  terminalDone() {
+    playSample(terminalDoneAsset.url, { vol: 0.75 });
+  },
   // boot hum + two soft confirm blips
   terminalBoot() {
     nTone({ freq: 60, dur: 1.0, type: "sine", vol: 0.14, attack: 0.08, release: 0.3 });
