@@ -51,17 +51,19 @@ export function useTestEnemy(view: string) {
       scheduleSpawn();
     };
 
+    const enterHall = () => {
+      setSpot({ kind: "hall" });
+      // it entered the hallway — announce it unless the player is in there
+      if (viewRef.current !== "hallway") mayhemSfx.animInHall();
+    };
+
     const spawn = () => {
       if (!alive) return;
       const route = [...CAM_ROUTE].sort(() => Math.random() - 0.5);
       setSpot({ kind: "cam", cam: route[0] });
       at(CAM_STEP_MS, () => setSpot({ kind: "cam", cam: route[1] }));
       at(CAM_STEP_MS * 2, () => setSpot({ kind: "cam", cam: route[2] }));
-      at(CAM_STEP_MS * 3, () => {
-        setSpot({ kind: "hall" });
-        // it entered the hallway — announce it unless the player is in there
-        if (viewRef.current !== "hallway") mayhemSfx.animInHall();
-      });
+      at(CAM_STEP_MS * 3, enterHall);
       at(CAM_STEP_MS * 3 + HALL_MS, () => setSpot({ kind: "door" }));
       at(PRESENCE_MS, leave);
     };
@@ -71,8 +73,20 @@ export function useTestEnemy(view: string) {
       at(IDLE_MIN_MS + Math.random() * (IDLE_MAX_MS - IDLE_MIN_MS), spawn);
     };
 
+    // Debug: [I] instantly puts the test character in the hallway.
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "i" && e.key !== "I") return;
+      if (!alive) return;
+      clearTimers();
+      enterHall();
+      at(HALL_MS, () => setSpot({ kind: "door" }));
+      at(PRESENCE_MS, leave);
+    };
+    window.addEventListener("keydown", onKey);
+
     scheduleSpawn();
     return () => {
+      window.removeEventListener("keydown", onKey);
       alive = false;
       clearTimers();
       if (stareTimer.current != null) window.clearTimeout(stareTimer.current);
