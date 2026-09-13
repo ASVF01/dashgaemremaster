@@ -180,6 +180,8 @@ export default function NightRooms() {
         const nudge = (() => {
           // office → door (looking left toward the door)
           if (from === "office" && to === "door") return { x: -28, y: 0, z: 0 };
+          // door → hallway (stepping through the door into the hall: slide right to center)
+          if (from === "door" && to === "hallway") return { x: -28, y: 0, z: 0 };
           // hallway → door (stepping back: a quick zoom-out snap)
           if (from === "hallway" && to === "door") return { x: 0, y: 0, z: -0.09 };
           // hallway → storage (entering storage from the hall: slide right to center)
