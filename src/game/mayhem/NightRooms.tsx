@@ -521,7 +521,7 @@ export default function NightRooms() {
       </div>
 
       {terminalOpen && <Terminal onClose={() => setTerminalOpen(false)} />}
-      {cameraOpen && <CameraSystem onClose={() => setCameraOpen(false)} />}
+      {cameraOpen && <CameraSystem onClose={() => setCameraOpen(false)} enemyCam={enemy.enemyCam} />}
     </div>
   );
 }
