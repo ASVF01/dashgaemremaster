@@ -12,6 +12,7 @@ import mayhemFootstepsAsset from "@/assets/audio/mayhem-room-footsteps.ogg.asset
 import mayhemDoorCloseAsset from "@/assets/audio/DoorClose_Tabook-2.wav.asset.json";
 import mayhemTurnAsset from "@/assets/audio/mayhem-turn.wav.asset.json";
 import crtOnAsset from "@/assets/audio/CRT_On_kyles.wav.asset.json";
+import crtAmbientAsset from "@/assets/audio/CRT_Ambient_kyles.ogg.asset.json";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -147,7 +148,7 @@ function ac(): AudioContext | null {
   return ctx;
 }
 
-export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); loadSample(wwHitUrl); loadSample(auraUrl); loadSample(swingSwipeUrl); loadSample(laserBeamUrl); loadSample(mayhemFootstepsAsset.url); loadSample(mayhemDoorCloseAsset.url); loadSample(mayhemTurnAsset.url); loadSample(crtOnAsset.url); }
+export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); loadSample(wwHitUrl); loadSample(auraUrl); loadSample(swingSwipeUrl); loadSample(laserBeamUrl); loadSample(mayhemFootstepsAsset.url); loadSample(mayhemDoorCloseAsset.url); loadSample(mayhemTurnAsset.url); loadSample(crtOnAsset.url); loadSample(crtAmbientAsset.url); }
 let baseVol = 0.35;
 export function setMuted(v: boolean) {
   muted = v;
@@ -978,6 +979,44 @@ function nbus(): GainNode | null {
   return nightBus;
 }
 
+// CRT monitor ambient hum — loops while the camera system is active.
+let crtAmbientSource: AudioBufferSourceNode | null = null;
+let crtAmbientGain: GainNode | null = null;
+export function startCrtAmbient() {
+  const c = ac(); const b = nbus(); if (!c || !b) return;
+  if (crtAmbientSource) return;
+  const buf = sampleCache.get(crtAmbientAsset.url);
+  if (!buf) { loadSample(crtAmbientAsset.url); return; }
+  const src = c.createBufferSource();
+  src.buffer = buf;
+  src.loop = true;
+  const g = c.createGain();
+  g.gain.value = 0.0001;
+  g.gain.exponentialRampToValueAtTime(0.28, c.currentTime + 0.25);
+  src.connect(g).connect(b);
+  src.start();
+  crtAmbientSource = src;
+  crtAmbientGain = g;
+}
+export function stopCrtAmbient() {
+  const c = ac(); if (!c) return;
+  if (crtAmbientGain) {
+    const g = crtAmbientGain;
+    const now = c.currentTime;
+    g.gain.cancelScheduledValues(now);
+    g.gain.setValueAtTime(g.gain.value, now);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
+  }
+  if (crtAmbientSource) {
+    const src = crtAmbientSource;
+    const stopAt = c.currentTime + 0.22;
+    try { src.stop(stopAt); } catch { /* noop */ }
+    setTimeout(() => { try { src.stop(0); } catch { /* noop */ } }, 250);
+    crtAmbientSource = null;
+    crtAmbientGain = null;
+  }
+}
+
 function nTone(o: ToneOpts) {
   const c = ac(); const b = nbus(); if (!c || !b) return;
   const t0 = c.currentTime + (o.delay ?? 0);
@@ -1060,6 +1099,7 @@ export const mayhemSfx = {
     } else {
       loadSample(crtOnAsset.url);
     }
+    startCrtAmbient();
     nNoise(0.12, 0.16, 700, 6200);
     nTone({ freq: 74, to: 52, dur: 0.18, type: "square", vol: 0.12, attack: 0.003, release: 0.1 });
     nTone({ freq: 860, dur: 0.035, type: "sine", vol: 0.1, attack: 0.002, release: 0.05, delay: 0.09 });
@@ -1069,6 +1109,7 @@ export const mayhemSfx = {
     nTone({ freq: 520, to: 760, dur: 0.045, type: "square", vol: 0.07, attack: 0.002, release: 0.04 });
   },
   cameraClose() {
+    stopCrtAmbient();
     nTone({ freq: 170, to: 54, dur: 0.16, type: "sawtooth", vol: 0.08, attack: 0.004, release: 0.1 });
     nNoise(0.09, 0.12, 500, 3200, 0.03);
   },
