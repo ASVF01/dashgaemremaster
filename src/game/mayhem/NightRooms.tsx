@@ -9,6 +9,10 @@ import keyholeArt from "@/assets/mayhem/THE_KEYHOLE.png.asset.json";
 import hallwayArt from "@/assets/mayhem/THE_HALLWAY.png.asset.json";
 import packArt from "@/assets/mayhem/storage_pack.png.asset.json";
 import packUsedArt from "@/assets/mayhem/storage_used.png.asset.json";
+import hallLitSprite from "@/assets/mayhem/enemy/Tealerhall_TESTSTATIC.webp.asset.json";
+import keyholeFaceSprite from "@/assets/mayhem/enemy/Tealer_Keyhole_static_LOOPTEST.webp.asset.json";
+import keyholeAppearSprite from "@/assets/mayhem/enemy/Tealer_appears_at_keyhole_TEST.webp.asset.json";
+import jumpscareSprite from "@/assets/mayhem/enemy/TealerJS_TEST.webp.asset.json";
 
 import Terminal, { TERMINAL_ASSET_URLS } from "./Terminal";
 import CameraSystem, { CAMERA_ASSET_URLS } from "./CameraSystem";
@@ -33,9 +37,14 @@ const NIGHT_IMAGE_URLS = [
   hallwayArt.url,
   packArt.url,
   packUsedArt.url,
+  hallLitSprite.url,
+  keyholeFaceSprite.url,
+  keyholeAppearSprite.url,
+  jumpscareSprite.url,
   ...CAMERA_ASSET_URLS,
   ...TERMINAL_ASSET_URLS,
 ];
+
 
 function preloadNightImages(): Promise<void> {
   return Promise.all(NIGHT_IMAGE_URLS.map((url) => new Promise<void>((resolve) => {
