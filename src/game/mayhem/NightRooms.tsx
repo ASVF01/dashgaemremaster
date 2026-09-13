@@ -86,6 +86,9 @@ export default function NightRooms() {
   const [hold, setHold] = useState(0); // 0..1 progress on the health pack
   const [nightElapsed, setNightElapsed] = useState(0);
   const [hp] = useState(100);
+  const [watchRaised, setWatchRaised] = useState(false);
+  const watchRaf = useRef<number | null>(null);
+  const watchY = useRef(100);
   const holdStart = useRef<number | null>(null);
   const raf = useRef<number | null>(null);
   const viewRef = useRef(view);
@@ -246,6 +249,38 @@ export default function NightRooms() {
     raf.current = requestAnimationFrame(tick);
   };
   useEffect(() => () => { if (raf.current != null) cancelAnimationFrame(raf.current); }, []);
+
+  // ---- R to raise the wrist watch (arm comes up into view) ----
+  useEffect(() => {
+    const onDown = (e: KeyboardEvent) => {
+      if (e.repeat) return;
+      if (e.key.toLowerCase() === "r" && !cameraOpenRef.current && !terminalOpenRef.current) {
+        setWatchRaised(true);
+      }
+    };
+    const onUp = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === "r") setWatchRaised(false);
+    };
+    window.addEventListener("keydown", onDown);
+    window.addEventListener("keyup", onUp);
+    return () => {
+      window.removeEventListener("keydown", onDown);
+      window.removeEventListener("keyup", onUp);
+    };
+  }, []);
+
+  useEffect(() => {
+    const tick = () => {
+      const target = watchRaised ? 0 : 100;
+      watchY.current += (target - watchY.current) * 0.12;
+      if (Math.abs(watchY.current - target) < 0.2) watchY.current = target;
+      const el = document.getElementById("mayhem-watch-arm");
+      if (el) el.style.transform = `translateY(${watchY.current}%)`;
+      watchRaf.current = requestAnimationFrame(tick);
+    };
+    watchRaf.current = requestAnimationFrame(tick);
+    return () => { if (watchRaf.current != null) cancelAnimationFrame(watchRaf.current); };
+  }, [watchRaised]);
 
   // ---- audio: silence every other sound, play the muffled night track ----
   useEffect(() => {
@@ -448,10 +483,30 @@ export default function NightRooms() {
         </div>
       </div>
 
-      <div className="pointer-events-none absolute right-4 top-[clamp(90px,12vh,130px)] z-[91] w-[clamp(110px,14vw,180px)]">
-        <div className="relative rounded border border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))]/85 p-1 shadow-[0_0_18px_hsl(var(--hell-black))]">
-          <img src={wristWatchArt.url} alt="Wrist watch" draggable={false} className="block h-auto w-full" />
-          <div className="absolute left-[46%] top-[46%] -translate-x-1/2 -translate-y-1/2 rotate-[-4deg] font-pixel text-[clamp(10px,1.5vw,20px)] text-[hsl(var(--hell-black))]">
+      {/* R-raised arm + watch: slides up from below so it feels like the player's own arm. */}
+      <div
+        id="mayhem-watch-arm"
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-[92] flex justify-center"
+        style={{ transform: "translateY(100%)", transition: "none" }}
+      >
+        <div className="relative w-[min(620px,50vw)]">
+          {/* forearm / sleeve that anchors the watch to something real */}
+          <div
+            className="absolute left-1/2 top-[14%] h-[135%] w-[72%] -translate-x-1/2"
+            style={{
+              background: "linear-gradient(180deg, #241e1a 0%, #15100c 25%, #0a0705 70%, #030201 100%)",
+              borderRadius: "38% 38% 0 0 / 14% 14% 0 0",
+              clipPath: "polygon(18% 0%, 82% 0%, 100% 100%, 0% 100%)",
+              boxShadow: "inset 12px 0 26px rgba(0,0,0,0.85), inset -12px 0 26px rgba(0,0,0,0.85), 0 -14px 34px rgba(0,0,0,0.9)",
+            }}
+          />
+          <img
+            src={wristWatchArt.url}
+            alt="Wrist watch"
+            draggable={false}
+            className="relative z-10 block h-auto w-full"
+          />
+          <div className="absolute left-[46%] top-[46%] z-20 -translate-x-1/2 -translate-y-1/2 rotate-[-4deg] font-pixel text-[clamp(18px,2.4vw,34px)] text-[hsl(var(--hell-black))]">
             {hourLabel}
           </div>
         </div>
