@@ -3,6 +3,8 @@ import { resetSettings } from "@/game/settings";
 import { resetShop } from "@/game/shop";
 import { resetCharacterProgress } from "@/game/character";
 
+const NIGHT_KEY = "dashgaem_mayhem_night_v1";
+
 /** Every localStorage key this game writes to. */
 const PROGRESS_KEYS = [
   "dashgaem_level_stats_v1",
@@ -23,8 +25,6 @@ const PROGRESS_KEYS = [
 ];
 
 // ---- MAYHEM night counter + animatronic AI levels ----
-
-const NIGHT_KEY = "dashgaem_mayhem_night_v1";
 
 /** AI level (1–20) per night. Night 5+: 50/50 movement chance every 5s. */
 export function mayhemAiLevel(night: number): number {
