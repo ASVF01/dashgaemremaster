@@ -315,8 +315,8 @@ export default function NightRooms() {
         const damp = zoomed ? 0.35 : 1;
         const tyOff = zoomed ? -60 : 0;
         const entrySlide = cameraEntryState === "rush" ? Math.min(1, Math.max(0, (scale - 1.1) / 4.1)) : 0;
-        const tx = (-cur.current.x * 34 * p * damp) - 18 * entrySlide + slideX.current;
-        const ty = (-cur.current.y * 18 * p * damp) + tyOff * (scale - 1.1) + 34 * entrySlide + slideY.current;
+        const tx = (-cur.current.x * 34 * p * damp) - 18 * entrySlide;
+        const ty = (-cur.current.y * 18 * p * damp) + tyOff * (scale - 1.1) + 34 * entrySlide;
         const rx = -cur.current.y * 1.6 * damp;
         const ry = cur.current.x * 2.4 * damp;
         el.style.transform =
