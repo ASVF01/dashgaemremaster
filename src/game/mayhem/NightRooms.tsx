@@ -506,7 +506,7 @@ export default function NightRooms() {
             draggable={false}
             className="relative z-10 block h-auto w-full"
           />
-          <div className="absolute left-[46%] top-[34%] z-20 -translate-x-1/2 -translate-y-1/2 rotate-[-4deg] font-pixel text-[clamp(18px,2.4vw,34px)] text-[hsl(var(--hell-black))]">
+          <div className="absolute left-[46%] top-[46%] z-20 -translate-x-1/2 -translate-y-1/2 rotate-[-4deg] font-pixel text-[clamp(18px,2.4vw,34px)] text-[hsl(var(--hell-black))]">
             {hourLabel}
           </div>
         </div>
