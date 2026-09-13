@@ -269,9 +269,9 @@ export default function NightRooms() {
   const lookRef = useRef<HTMLDivElement | null>(null);
   const target = useRef({ x: 0, y: 0 });
   const cur = useRef({ x: 0, y: 0 });
-  // Lateral "walk-in" slide: when you turn/walk somewhere, the new room
-  // starts shifted sideways and eases to the middle — like your head turning.
-  const slide = useRef(0);
+  // Tiny directional nudges when changing rooms — eased back to center.
+  const slideX = useRef(0);
+  const slideY = useRef(0);
   const zoomCur = useRef(1.1);
   const peek = view === "keyhole" || view === "storageKeyhole" ? 1.22 : 1;
   const peekRef = useRef(peek);
