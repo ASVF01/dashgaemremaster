@@ -471,15 +471,35 @@ export default function NightRooms() {
           style={{ animation: "mayhemRoomFade 180ms ease-out" }}
         />
 
-        {/* the test animatronic's eye, pressed into the middle of the keyhole */}
+        {/* the animatronic's face pressed into the keyhole */}
         {view === "keyhole" && enemy.atKeyhole && (
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <div className="mayhem-keyhole-eye relative h-[9%] w-[5%] rounded-[50%] bg-[#f2e6c8] shadow-[0_0_22px_rgba(0,0,0,0.9)_inset]">
-              <i className="absolute left-1/2 top-1/2 block h-[52%] w-[52%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#8f1010]" />
-              <i className="absolute left-1/2 top-1/2 block h-[26%] w-[26%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-black" />
-            </div>
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+            <img
+              src={keyholeFaceSprite.url}
+              alt=""
+              draggable={false}
+              className="mayhem-enemy-keyhole absolute left-1/2 top-1/2 h-[70%] -translate-x-1/2 -translate-y-1/2 object-contain"
+            />
+            <img
+              src={keyholeAppearSprite.url}
+              alt=""
+              draggable={false}
+              className="mayhem-enemy-appear absolute left-1/2 top-1/2 h-[80%] -translate-x-1/2 -translate-y-1/2 object-contain"
+            />
           </div>
         )}
+
+        {/* it lurks down the hall when the player walks in on it */}
+        {view === "hallway" && enemy.spot.kind === "hall" && (
+          <img
+            src={hallLitSprite.url}
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            className="mayhem-enemy-lurk pointer-events-none absolute bottom-[16%] left-1/2 h-[52%] -translate-x-1/2 object-contain"
+          />
+        )}
+
 
         {view === "office" && !cameraOpen && cameraEntry === "idle" && (
           <>
