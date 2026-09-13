@@ -1109,6 +1109,7 @@ export const mayhemSfx = {
     nTone({ freq: 520, to: 760, dur: 0.045, type: "square", vol: 0.07, attack: 0.002, release: 0.04 });
   },
   cameraClose() {
+    stopCrtAmbient();
     nTone({ freq: 170, to: 54, dur: 0.16, type: "sawtooth", vol: 0.08, attack: 0.004, release: 0.1 });
     nNoise(0.09, 0.12, 500, 3200, 0.03);
   },
