@@ -250,6 +250,38 @@ export default function NightRooms() {
   };
   useEffect(() => () => { if (raf.current != null) cancelAnimationFrame(raf.current); }, []);
 
+  // ---- R to raise the wrist watch (arm comes up into view) ----
+  useEffect(() => {
+    const onDown = (e: KeyboardEvent) => {
+      if (e.repeat) return;
+      if (e.key.toLowerCase() === "r" && !cameraOpenRef.current && !terminalOpenRef.current) {
+        setWatchRaised(true);
+      }
+    };
+    const onUp = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === "r") setWatchRaised(false);
+    };
+    window.addEventListener("keydown", onDown);
+    window.addEventListener("keyup", onUp);
+    return () => {
+      window.removeEventListener("keydown", onDown);
+      window.removeEventListener("keyup", onUp);
+    };
+  }, []);
+
+  useEffect(() => {
+    const tick = () => {
+      const target = watchRaised ? 0 : 100;
+      watchY.current += (target - watchY.current) * 0.12;
+      if (Math.abs(watchY.current - target) < 0.2) watchY.current = target;
+      const el = document.getElementById("mayhem-watch-arm");
+      if (el) el.style.transform = `translateY(${watchY.current}%)`;
+      watchRaf.current = requestAnimationFrame(tick);
+    };
+    watchRaf.current = requestAnimationFrame(tick);
+    return () => { if (watchRaf.current != null) cancelAnimationFrame(watchRaf.current); };
+  }, [watchRaised]);
+
   // ---- audio: silence every other sound, play the muffled night track ----
   useEffect(() => {
     const prevSfxMuted = isMuted();
