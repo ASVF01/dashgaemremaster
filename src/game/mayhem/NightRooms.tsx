@@ -9,7 +9,7 @@ import keyholeArt from "@/assets/mayhem/THE_KEYHOLE.png.asset.json";
 import hallwayArt from "@/assets/mayhem/THE_HALLWAY.png.asset.json";
 import packArt from "@/assets/mayhem/storage_pack.png.asset.json";
 import packUsedArt from "@/assets/mayhem/storage_used.png.asset.json";
-import wristWatchArt from "@/assets/mayhem/wrist-watch.png.asset.json";
+
 import Terminal from "./Terminal";
 import CameraSystem from "./CameraSystem";
 import { startNightBgm, stopNightBgm } from "./nightAudio";
@@ -483,32 +483,30 @@ export default function NightRooms() {
         </div>
       </div>
 
-      {/* R-raised arm + watch: slides up from below so it feels like the player's own arm. */}
+      {/* R-raised night timer: a full-screen digital readout instead of a watch sprite. */}
       <div
         id="mayhem-watch-arm"
         className="pointer-events-none absolute inset-x-0 bottom-0 z-[92] flex justify-center"
         style={{ transform: "translateY(100%)", transition: "none" }}
       >
-        <div className="relative w-[min(620px,50vw)]">
-          {/* forearm / sleeve that anchors the watch to something real */}
-          <div
-            className="absolute left-1/2 top-[14%] h-[135%] w-[72%] -translate-x-1/2"
-            style={{
-              background: "linear-gradient(180deg, #241e1a 0%, #15100c 25%, #0a0705 70%, #030201 100%)",
-              borderRadius: "38% 38% 0 0 / 14% 14% 0 0",
-              clipPath: "polygon(18% 0%, 82% 0%, 100% 100%, 0% 100%)",
-              boxShadow: "inset 12px 0 26px rgba(0,0,0,0.85), inset -12px 0 26px rgba(0,0,0,0.85), 0 -14px 34px rgba(0,0,0,0.9)",
-            }}
-          />
-          <img
-            src={wristWatchArt.url}
-            alt="Wrist watch"
-            draggable={false}
-            className="relative z-10 block h-auto w-full"
-          />
-          <div className="absolute left-[46%] top-[46%] z-20 -translate-x-1/2 -translate-y-1/2 rotate-[-4deg] font-pixel text-[clamp(18px,2.4vw,34px)] text-[hsl(var(--hell-black))]">
+        <div className="relative mb-8 flex w-[min(720px,90vw)] flex-col items-center gap-3 border-2 border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))]/90 p-6 shadow-[0_0_40px_rgba(0,0,0,0.95)]">
+          <div className="font-pixel text-[10px] tracking-[0.4em] text-[hsl(var(--hell-muted))]">NIGHT TIMER</div>
+          <div className="font-pixel text-[clamp(48px,10vw,112px)] leading-none text-[hsl(var(--hell-warning))] drop-shadow-[0_0_18px_hsl(var(--hell-warning))]">
             {hourLabel}
           </div>
+          <div className="w-full">
+            <div className="mb-1 flex justify-between font-pixel text-[9px] text-[hsl(var(--hell-muted))]">
+              <span>12 AM</span>
+              <span>6 AM</span>
+            </div>
+            <div className="h-3 w-full border border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-panel))]/40 p-0.5">
+              <div
+                className="h-full bg-[hsl(var(--hell-warning))]"
+                style={{ width: `${Math.min(100, (nightElapsed / NIGHT_MS) * 100)}%` }}
+              />
+            </div>
+          </div>
+          <div className="font-pixel text-[9px] text-[hsl(var(--hell-muted))]">HOLD [ R ] TO CHECK TIME</div>
         </div>
       </div>
 
