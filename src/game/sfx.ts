@@ -1088,15 +1088,15 @@ function nNoise(dur: number, vol = 0.4, hp = 200, lp = 4000, delay = 0, lpTo?: n
 export const mayhemSfx = {
   // terminal panel sliding up — uploaded FirewallOpenV2 sample
   terminalOpen() {
-    playSample(firewallOpenAsset.url, { vol: 0.7 });
+    nSample(firewallOpenAsset.url, { vol: 0.7 });
   },
   // terminal sliding back down — uploaded FirewallClosev2 sample
   terminalClose() {
-    playSample(firewallCloseAsset.url, { vol: 0.7 });
+    nSample(firewallCloseAsset.url, { vol: 0.7 });
   },
   // terminal sequence completes and the DONE screen appears
   terminalDone() {
-    playSample(terminalDoneAsset.url, { vol: 0.75 });
+    nSample(terminalDoneAsset.url, { vol: 0.75 });
   },
   // boot hum + two soft confirm blips
   terminalBoot() {
@@ -1164,13 +1164,13 @@ export const mayhemSfx = {
   },
   // turning around — cloth whoosh + a single soft footstep
   turn() {
-    playSample(mayhemTurnAsset.url, { vol: 0.6, rate: 0.98 + Math.random() * 0.05 });
+    nSample(mayhemTurnAsset.url, { vol: 0.6, rate: 0.98 + Math.random() * 0.05 });
   },
   // walking between rooms — supplied quick footstep recording
   walk(steps = 3) {
     // The recording already contains the full quick crossing. Keep the old
     // `steps` argument as a small intensity hint so office turns stay softer.
-    playSample(mayhemFootstepsAsset.url, {
+    nSample(mayhemFootstepsAsset.url, {
       vol: steps <= 2 ? 0.48 : 0.62,
       rate: 0.97 + Math.random() * 0.06,
     });
@@ -1199,7 +1199,7 @@ export const mayhemSfx = {
   },
   // leaning into the keyhole — supplied short keyhole-enter recording
   keyhole() {
-    playSample(keyholeEnterAsset.url, { vol: 0.75 });
+    nSample(keyholeEnterAsset.url, { vol: 0.75 });
   },
 
   // ---- test animatronic ----
