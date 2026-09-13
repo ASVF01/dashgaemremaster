@@ -76,40 +76,11 @@ export function useTestEnemy(view: string) {
   // ---- appearance timeline ----
   useEffect(() => {
     aliveRef.current = true;
-      if (stareTimer.current != null) { window.clearTimeout(stareTimer.current); stareTimer.current = null; }
-      staringRef.current = false;
-      // Cut every sound it just made, then a single footstep away.
-      mayhemSfx.animMove();
-      setSpot({ kind: "gone" });
-      scheduleSpawn();
-    };
-
-    const enterHall = () => {
-      setSpot({ kind: "hall" });
-      // it entered the hallway — announce it unless the player is in there
-      if (viewRef.current !== "hallway") mayhemSfx.animInHall();
-    };
-
-    const spawn = () => {
-      if (!alive) return;
-      const route = [...CAM_ROUTE].sort(() => Math.random() - 0.5);
-      setSpot({ kind: "cam", cam: route[0] });
-      at(CAM_STEP_MS, () => setSpot({ kind: "cam", cam: route[1] }));
-      at(CAM_STEP_MS * 2, () => setSpot({ kind: "cam", cam: route[2] }));
-      at(CAM_STEP_MS * 3, enterHall);
-      at(CAM_STEP_MS * 3 + HALL_MS, () => setSpot({ kind: "door" }));
-      at(PRESENCE_MS, leave);
-    };
-
-    const scheduleSpawn = () => {
-      clearTimers();
-      at(IDLE_MIN_MS + Math.random() * (IDLE_MAX_MS - IDLE_MIN_MS), spawn);
-    };
 
     // Debug: [I] instantly puts the test character in the hallway.
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "i" && e.key !== "I") return;
-      if (!alive) return;
+      if (!aliveRef.current) return;
       clearTimers();
       enterHall();
       at(HALL_MS, () => setSpot({ kind: "door" }));
@@ -120,11 +91,12 @@ export function useTestEnemy(view: string) {
     scheduleSpawn();
     return () => {
       window.removeEventListener("keydown", onKey);
-      alive = false;
+      aliveRef.current = false;
       clearTimers();
       if (stareTimer.current != null) window.clearTimeout(stareTimer.current);
       mayhemSfx.stopAnimSounds();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ---- eye-to-eye at the keyhole ----
