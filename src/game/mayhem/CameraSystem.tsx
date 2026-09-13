@@ -26,7 +26,7 @@ const BUTTONS = [
   { n: 5, left: 32.6, top: 63.3, width: 22.3, height: 17.5 },
 ] as const;
 
-export default function CameraSystem({ onClose }: { onClose: () => void }) {
+export default function CameraSystem({ onClose, enemyCam = null }: { onClose: () => void; enemyCam?: number | null }) {
   const [camera, setCamera] = useState(1);
   const [controlsReady, setControlsReady] = useState(false);
   const [staticFlash, setStaticFlash] = useState(false);
