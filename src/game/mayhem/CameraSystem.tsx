@@ -29,14 +29,19 @@ const BUTTONS = [
 export default function CameraSystem({ onClose }: { onClose: () => void }) {
   const [camera, setCamera] = useState(1);
   const [controlsReady, setControlsReady] = useState(false);
+  const [staticFlash, setStaticFlash] = useState(false);
   const feedRef = useRef<HTMLDivElement | null>(null);
   const target = useRef({ x: 0, y: 0 });
   const current = useRef({ x: 0, y: 0 });
+  const staticTimer = useRef<number | null>(null);
 
   const selectCamera = (next: number) => {
     if (next === camera) return;
     mayhemSfx.cameraSwitch();
     setCamera(next);
+    setStaticFlash(true);
+    if (staticTimer.current != null) window.clearTimeout(staticTimer.current);
+    staticTimer.current = window.setTimeout(() => setStaticFlash(false), 300);
   };
 
   useEffect(() => {
