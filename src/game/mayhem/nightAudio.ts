@@ -16,6 +16,15 @@ let token = 0;
 // User-controlled music volume (0..1), mirrors the settings slider live.
 let userVolume = 1;
 
+export async function preloadNightBgm(): Promise<void> {
+  const c = ac();
+  if (!c || buffer) return;
+  const response = await fetch(trackAsset.url);
+  if (!response.ok) throw new Error("Night music failed to load");
+  const audioData = await response.arrayBuffer();
+  buffer = await c.decodeAudioData(audioData);
+}
+
 export function setNightBgmVolume(v: number) {
   userVolume = Math.max(0, Math.min(1, v));
   if (ctx && master) {
@@ -105,10 +114,8 @@ export function startNightBgm() {
   };
 
   if (buffer) { build(buffer); return; }
-  fetch(trackAsset.url)
-    .then((r) => r.arrayBuffer())
-    .then((a) => c.decodeAudioData(a))
-    .then((buf) => { buffer = buf; build(buf); })
+  preloadNightBgm()
+    .then(() => { if (buffer) build(buffer); })
     .catch(() => { fallback(id); });
 }
 

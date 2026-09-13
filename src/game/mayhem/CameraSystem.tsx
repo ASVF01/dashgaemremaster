@@ -18,6 +18,8 @@ const PANELS: Partial<Record<number, string>> = {
   5: panel5.url,
 };
 
+export const CAMERA_ASSET_URLS = [...FEEDS, ...Object.values(PANELS).filter((url): url is string => Boolean(url))];
+
 const BUTTONS = [
   { n: 1, left: 7.6, top: 42.2, width: 22.3, height: 17.5 },
   { n: 2, left: 32.6, top: 42.2, width: 22.3, height: 17.5 },
