@@ -489,13 +489,15 @@ export default function NightRooms() {
         className="pointer-events-none absolute inset-x-0 bottom-0 z-[92] flex justify-center"
         style={{ transform: "translateY(100%)", transition: "none" }}
       >
-        <div className="relative w-[min(520px,42vw)]">
+        <div className="relative w-[min(620px,50vw)]">
           {/* forearm / sleeve that anchors the watch to something real */}
           <div
-            className="absolute left-1/2 top-[18%] h-[120%] w-[64%] -translate-x-1/2 rounded-t-[40%]"
+            className="absolute left-1/2 top-[14%] h-[135%] w-[72%] -translate-x-1/2"
             style={{
-              background: "linear-gradient(180deg, #1a1512 0%, #0d0a08 60%, #050403 100%)",
-              boxShadow: "inset 0 0 40px rgba(0,0,0,0.9), 0 -10px 30px rgba(0,0,0,0.8)",
+              background: "linear-gradient(180deg, #241e1a 0%, #15100c 25%, #0a0705 70%, #030201 100%)",
+              borderRadius: "38% 38% 0 0 / 14% 14% 0 0",
+              clipPath: "polygon(18% 0%, 82% 0%, 100% 100%, 0% 100%)",
+              boxShadow: "inset 12px 0 26px rgba(0,0,0,0.85), inset -12px 0 26px rgba(0,0,0,0.85), 0 -14px 34px rgba(0,0,0,0.9)",
             }}
           />
           <img
