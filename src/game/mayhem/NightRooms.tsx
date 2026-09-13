@@ -104,13 +104,13 @@ export default function NightRooms() {
     cameraEntryTimers.current.push(window.setTimeout(() => {
       cameraEntryRef.current = "rush";
       setCameraEntry("rush");
-    }, 480));
+    }, 520));
     cameraEntryTimers.current.push(window.setTimeout(() => {
       cameraOpenRef.current = true;
       cameraEntryRef.current = "idle";
       setCameraOpen(true);
       setCameraEntry("idle");
-    }, 1280));
+    }, 1180));
   };
 
   useEffect(() => () => {
@@ -278,8 +278,8 @@ export default function NightRooms() {
         const zoomed = terminalOpenRef.current;
         const keyhole = p > 1; // pressed against the door: narrow the FOV
         const cameraEntryState = cameraEntryRef.current;
-        const zoomT = cameraEntryState === "pullback" ? 0.82 : cameraEntryState === "rush" ? 5.2 : zoomed ? 2.1 : keyhole ? 1.35 : 1.1;
-        const zoomEase = cameraEntryState === "rush" ? 0.19 : 0.075;
+        const zoomT = cameraEntryState === "pullback" ? 0.9 : cameraEntryState === "rush" ? 3.0 : zoomed ? 2.1 : keyhole ? 1.35 : 1.1;
+        const zoomEase = cameraEntryState === "rush" ? 0.16 : 0.075;
         zoomCur.current += (zoomT - zoomCur.current) * zoomEase;
         const scale = zoomCur.current;
         const damp = zoomed ? 0.35 : 1;
