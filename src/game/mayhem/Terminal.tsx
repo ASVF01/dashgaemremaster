@@ -184,3 +184,67 @@ export default function Terminal({ onClose }: { onClose: () => void }) {
     </>
   );
 }
+
+/**
+ * AI MODE terminal: the same screen flow drawn as a green phosphor console
+ * instead of the hand-drawn sprites. Sits on top of the sprite screen.
+ */
+function AiTerminalScreen({ screen, go }: { screen: Screen; go: (s: Screen) => void }) {
+  const shell = "absolute inset-0 flex flex-col bg-[#03110a] p-3 font-pixel text-[hsl(var(--hell-terminal))] sm:p-4";
+  const head = (
+    <div className="mb-2 flex items-center justify-between border-b border-[hsl(var(--hell-terminal))]/40 pb-1 text-[8px] tracking-[0.3em] opacity-80">
+      <span>MAYHEM // CTRL CONSOLE</span>
+      <span>v0.9 AI</span>
+    </div>
+  );
+  const btn = "border border-[hsl(var(--hell-terminal))]/70 bg-[hsl(var(--hell-terminal))]/10 px-2 py-2 text-[10px] tracking-[0.2em] hover:bg-[hsl(var(--hell-terminal))]/25";
+
+  return (
+    <div className={shell} style={{ textShadow: "0 0 8px hsl(var(--hell-terminal))" }}>
+      {head}
+      <div className="flex flex-1 flex-col justify-center gap-3 text-[11px] leading-relaxed">
+        {screen === "loading" && <div className="text-center opacity-80">BOOTING CAMERA CONTROL...<br />[■■■■■□□□□□]</div>}
+
+        {screen === "home" && (
+          <>
+            <div className="text-[10px] opacity-70">SELECT AN OPERATION</div>
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" className={btn} onClick={() => go("rcs")}>RESET ALL CAMS</button>
+              <button type="button" className={btn} onClick={() => go("which")}>RESET ONE CAM</button>
+            </div>
+          </>
+        )}
+
+        {screen === "rcs" && (
+          <>
+            <div>RESET THE ENTIRE CAMERA SYSTEM?</div>
+            <div className="flex gap-2">
+              <button type="button" className={btn} onClick={() => go("wait1")}>[ Y ] YES</button>
+              <button type="button" className={btn} onClick={() => go("home")}>[ N ] NO</button>
+            </div>
+          </>
+        )}
+
+        {screen === "which" && (
+          <>
+            <div>WHICH CAMERA?</div>
+            <div className="grid grid-cols-5 gap-2">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button key={n} type="button" className={btn} onClick={() => go("wait1")}>{n}</button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {(screen === "wait1" || screen === "wait2" || screen === "wait3") && (
+          <div className="text-center opacity-85">
+            WORKING{screen === "wait1" ? "." : screen === "wait2" ? ".." : "..."}
+            <div className="mt-2 text-[9px] opacity-60">DO NOT LEAVE THE TERMINAL</div>
+          </div>
+        )}
+
+        {screen === "done" && <div className="text-center text-[clamp(16px,3vw,28px)]">DONE</div>}
+      </div>
+    </div>
+  );
+}
