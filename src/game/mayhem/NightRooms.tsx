@@ -494,18 +494,6 @@ export default function NightRooms() {
           <div className="font-pixel text-[clamp(48px,10vw,112px)] leading-none text-[hsl(var(--hell-warning))] drop-shadow-[0_0_18px_hsl(var(--hell-warning))]">
             {hourLabel}
           </div>
-          <div className="w-full">
-            <div className="mb-1 flex justify-between font-pixel text-[9px] text-[hsl(var(--hell-muted))]">
-              <span>12 AM</span>
-              <span>6 AM</span>
-            </div>
-            <div className="h-3 w-full border border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-panel))]/40 p-0.5">
-              <div
-                className="h-full bg-[hsl(var(--hell-warning))]"
-                style={{ width: `${Math.min(100, (nightElapsed / NIGHT_MS) * 100)}%` }}
-              />
-            </div>
-          </div>
           <div className="font-pixel text-[9px] text-[hsl(var(--hell-muted))]">HOLD [ R ] TO CHECK TIME</div>
         </div>
       </div>
