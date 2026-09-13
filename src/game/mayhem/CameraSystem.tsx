@@ -109,6 +109,12 @@ export default function CameraSystem({ onClose }: { onClose: () => void }) {
 
       <div aria-hidden="true" className="mayhem-camera-scan pointer-events-none absolute inset-0" />
       <div aria-hidden="true" className="hell-static pointer-events-none absolute inset-0 opacity-25" />
+      {staticFlash && (
+        <div
+          aria-hidden="true"
+          className="hell-static pointer-events-none absolute inset-0 z-[74] animate-[fade-out_0.3s_ease-out_forwards] opacity-70"
+        />
+      )}
 
       {controlsReady && <div className="mayhem-camera-controls-pop absolute bottom-[3%] left-[2.5%] z-[75] w-[clamp(150px,20vw,260px)] origin-bottom-left rotate-[4deg]">
         <div className="relative aspect-[184/166] w-full">
