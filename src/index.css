@@ -623,3 +623,11 @@
 @media (prefers-reduced-motion: reduce) {
   .mayhem-dialogue-shake { animation: none; }
 }
+
+/* MAYHEM — the test animatronic's eye at the keyhole: a slow uneasy shift. */
+@keyframes mayhemKeyholeEye {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  35% { transform: translate(2%, -1%) scale(1.03); }
+  70% { transform: translate(-2%, 1%) scale(0.99); }
+}
+.mayhem-keyhole-eye { animation: mayhemKeyholeEye 3.4s ease-in-out infinite; }
