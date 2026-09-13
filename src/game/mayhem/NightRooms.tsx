@@ -84,7 +84,6 @@ export default function NightRooms() {
   const [redGuyMeowing, setRedGuyMeowing] = useState(false);
   const [packUsed, setPackUsed] = useState(false);
   const [hold, setHold] = useState(0); // 0..1 progress on the health pack
-  const [watchRaised, setWatchRaised] = useState(false);
   const [nightElapsed, setNightElapsed] = useState(0);
   const [hp] = useState(100);
   const holdStart = useRef<number | null>(null);
@@ -123,32 +122,13 @@ export default function NightRooms() {
     if (meowTimer.current != null) window.clearTimeout(meowTimer.current);
   }, []);
 
-  // One real minute equals one in-game hour. Holding R raises the watch.
+  // One real minute equals one in-game hour.
   useEffect(() => {
     const startedAt = performance.now();
     const timer = window.setInterval(() => {
       setNightElapsed(Math.min(NIGHT_MS, performance.now() - startedAt));
     }, 250);
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() !== "r") return;
-      event.preventDefault();
-      setWatchRaised(true);
-    };
-    const onKeyUp = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() !== "r") return;
-      event.preventDefault();
-      setWatchRaised(false);
-    };
-    const lowerWatch = () => setWatchRaised(false);
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
-    window.addEventListener("blur", lowerWatch);
-    return () => {
-      window.clearInterval(timer);
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
-      window.removeEventListener("blur", lowerWatch);
-    };
+    return () => window.clearInterval(timer);
   }, []);
 
   const meowRedGuy = () => {
@@ -468,13 +448,10 @@ export default function NightRooms() {
         </div>
       </div>
 
-      <div
-        aria-hidden={!watchRaised}
-        className={`pointer-events-none absolute inset-x-0 bottom-0 z-[91] flex justify-center transition-transform duration-200 ease-out ${watchRaised ? "translate-y-0" : "translate-y-full"}`}
-      >
-        <div className="relative w-[min(88vw,900px)]">
+      <div className="pointer-events-none absolute right-4 top-[clamp(90px,12vh,130px)] z-[91] w-[clamp(110px,14vw,180px)]">
+        <div className="relative rounded border border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))]/85 p-1 shadow-[0_0_18px_hsl(var(--hell-black))]">
           <img src={wristWatchArt.url} alt="Wrist watch" draggable={false} className="block h-auto w-full" />
-          <div className="absolute left-[46.5%] top-[47%] -translate-x-1/2 -translate-y-1/2 rotate-[-4deg] font-pixel text-[clamp(9px,1.4vw,18px)] text-[hsl(var(--hell-black))]">
+          <div className="absolute left-[46%] top-[46%] -translate-x-1/2 -translate-y-1/2 rotate-[-4deg] font-pixel text-[clamp(10px,1.5vw,20px)] text-[hsl(var(--hell-black))]">
             {hourLabel}
           </div>
         </div>
