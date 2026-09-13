@@ -497,25 +497,28 @@ export default function NightRooms() {
           style={{ animation: "mayhemRoomFade 180ms ease-out" }}
         />
 
-        {/* the animatronic's face pressed into the keyhole */}
+        {/* Tealer remains on the far side of the door and is only visible
+            through the narrow keyhole opening. */}
         {view === "keyhole" && enemy.atKeyhole && (
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-            {keyholeAppearing ? (
-              <img
-                key={`keyhole-appear-${enemy.encounterId}`}
-                src={keyholeAppearSprite.url}
-                alt=""
-                draggable={false}
-                className="absolute left-1/2 top-1/2 h-[80%] -translate-x-1/2 -translate-y-1/2 object-contain"
-              />
-            ) : (
-              <img
-                src={keyholeFaceSprite.url}
-                alt=""
-                draggable={false}
-                className="mayhem-enemy-keyhole absolute left-1/2 top-1/2 h-[70%] -translate-x-1/2 -translate-y-1/2 object-contain"
-              />
-            )}
+          <div aria-hidden="true" className="mayhem-keyhole-depth pointer-events-none absolute left-1/2 top-1/2 z-10">
+            <div className="mayhem-keyhole-aperture absolute inset-0 overflow-hidden">
+              {keyholeAppearing ? (
+                <img
+                  key={`keyhole-appear-${enemy.encounterId}`}
+                  src={keyholeAppearSprite.url}
+                  alt=""
+                  draggable={false}
+                  className="mayhem-enemy-behind-door mayhem-enemy-arrive absolute inset-0 h-full w-full object-cover"
+                />
+              ) : (
+                <img
+                  src={keyholeFaceSprite.url}
+                  alt=""
+                  draggable={false}
+                  className="mayhem-enemy-behind-door mayhem-enemy-keyhole absolute inset-0 h-full w-full object-cover"
+                />
+              )}
+            </div>
           </div>
         )}
 
