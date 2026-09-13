@@ -13,7 +13,7 @@ import hallEnterSprite from "@/assets/mayhem/enemy/Tealerhall_TEST.webp.asset.js
 import hallLitSprite from "@/assets/mayhem/enemy/Tealerhall_TESTSTATIC.webp.asset.json";
 import keyholeFaceSprite from "@/assets/mayhem/enemy/Tealer_Keyhole_static_LOOPTEST.webp.asset.json";
 import keyholeAppearSprite from "@/assets/mayhem/enemy/Tealer_appears_at_keyhole_TEST.webp.asset.json";
-import jumpscareSprite from "@/assets/mayhem/enemy/TealerJS_TEST.webp.asset.json";
+import jumpscareSpriteOnce from "@/assets/mayhem/enemy/TealerJS_ONCE.webp";
 
 import Terminal, { TERMINAL_ASSET_URLS } from "./Terminal";
 import CameraSystem, { CAMERA_ASSET_URLS } from "./CameraSystem";
@@ -42,7 +42,7 @@ const NIGHT_IMAGE_URLS = [
   hallLitSprite.url,
   keyholeFaceSprite.url,
   keyholeAppearSprite.url,
-  jumpscareSprite.url,
+  jumpscareSpriteOnce,
   ...CAMERA_ASSET_URLS,
   ...TERMINAL_ASSET_URLS,
 ];
@@ -595,15 +595,15 @@ export default function NightRooms() {
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-[95] bg-[hsl(var(--hell-warning))]/25 mix-blend-screen" />
       )}
 
-      {/* Jumpscare: the animatronic fills the screen and shakes with the
-          scream, then lingers as a burned-in white/black afterimage. */}
+      {/* Jumpscare: the one-shot animation fills the screen, then its final
+          unfiltered frame fades away without an afterimage. */}
       {enemy.scare != null && (
-        <div aria-hidden="true" className={`pointer-events-none absolute inset-0 z-[96] flex items-center justify-center ${enemy.scare === "shake" ? "bg-black" : "mayhem-scare-burn bg-black"}`}>
+        <div aria-hidden="true" className={`pointer-events-none absolute inset-0 z-[96] flex items-center justify-center ${enemy.scare === "shake" ? "bg-black" : "mayhem-scare-fade"}`}>
           <img
-            src={jumpscareSprite.url}
+            src={jumpscareSpriteOnce}
             alt=""
             draggable={false}
-            className={`h-full w-full object-cover ${enemy.scare === "shake" ? "mayhem-scare-shake" : "mayhem-scare-after"}`}
+            className={`h-full w-full object-cover ${enemy.scare === "shake" ? "mayhem-scare-shake" : "mayhem-scare-image-fade"}`}
           />
         </div>
       )}
