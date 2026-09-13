@@ -631,3 +631,28 @@
   70% { transform: translate(-2%, 1%) scale(0.99); }
 }
 .mayhem-keyhole-eye { animation: mayhemKeyholeEye 3.4s ease-in-out infinite; }
+
+/* MAYHEM — jumpscare: violent shake for the scream, then a white flash-out. */
+@keyframes mayhemScareShake {
+  0% { transform: translate(0, 0) scale(1); }
+  10% { transform: translate(-3.5%, 2%) scale(1.06) rotate(-2deg); }
+  20% { transform: translate(3%, -2.5%) scale(1.1) rotate(1.5deg); }
+  30% { transform: translate(-2.5%, -2%) scale(1.05) rotate(2deg); }
+  40% { transform: translate(3.5%, 2.5%) scale(1.12) rotate(-1.5deg); }
+  50% { transform: translate(-3%, 1.5%) scale(1.08) rotate(1deg); }
+  60% { transform: translate(2.5%, -2%) scale(1.11) rotate(-2deg); }
+  70% { transform: translate(-3.5%, -1.5%) scale(1.06) rotate(1.5deg); }
+  80% { transform: translate(3%, 2%) scale(1.1) rotate(-1deg); }
+  90% { transform: translate(-2%, -2.5%) scale(1.07) rotate(2deg); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+.mayhem-scare-shake { animation: mayhemScareShake 0.105s linear infinite; }
+@keyframes mayhemScareFade {
+  0% { opacity: 0; }
+  18% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.mayhem-scare-fade { animation: mayhemScareFade 0.65s ease-in forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .mayhem-scare-shake { animation: none; }
+}
