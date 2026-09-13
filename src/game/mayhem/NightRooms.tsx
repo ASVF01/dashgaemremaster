@@ -299,25 +299,27 @@ export default function NightRooms() {
           />
         )}
 
-        <div aria-hidden="true" className="mayhem-dust-field pointer-events-none absolute inset-0">
-          {dust.map((particle) => (
-            <i
-              key={particle.id}
-              className="mayhem-dust-particle"
-              style={{
-                left: `${particle.left}%`,
-                top: `${particle.top}%`,
-                width: `${particle.size}px`,
-                height: `${particle.size}px`,
-                opacity: particle.opacity,
-                animationDuration: `${particle.duration}s`,
-                animationDelay: `${particle.delay}s`,
-                "--dust-x": `${particle.driftX}px`,
-                "--dust-y": `${particle.driftY}px`,
-              } as React.CSSProperties}
-            />
-          ))}
-        </div>
+        {view !== "keyhole" && view !== "storageKeyhole" && (
+          <div aria-hidden="true" className="mayhem-dust-field pointer-events-none absolute inset-0">
+            {dust.map((particle) => (
+              <i
+                key={particle.id}
+                className="mayhem-dust-particle"
+                style={{
+                  left: `${particle.left}%`,
+                  top: `${particle.top}%`,
+                  width: `${particle.size}px`,
+                  height: `${particle.size}px`,
+                  opacity: particle.opacity,
+                  animationDuration: `${particle.duration}s`,
+                  animationDelay: `${particle.delay}s`,
+                  "--dust-x": `${particle.driftX}px`,
+                  "--dust-y": `${particle.driftY}px`,
+                } as React.CSSProperties}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       <div aria-hidden="true" className="mayhem-pov-vignette pointer-events-none absolute inset-0" />
