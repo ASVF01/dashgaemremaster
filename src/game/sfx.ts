@@ -1062,19 +1062,13 @@ function nNoise(dur: number, vol = 0.4, hp = 200, lp = 4000, delay = 0, lpTo?: n
 }
 
 export const mayhemSfx = {
-  // terminal panel sliding up — servo whir + soft clunk when it seats
+  // terminal panel sliding up — uploaded FirewallOpenV2 sample
   terminalOpen() {
-    nTone({ freq: 150, to: 430, dur: 0.38, type: "sawtooth", vol: 0.10, attack: 0.03, release: 0.05 });
-    nTone({ freq: 155, to: 436, dur: 0.38, type: "sawtooth", vol: 0.06, attack: 0.03, release: 0.05 });
-    nNoise(0.36, 0.05, 300, 1800, 0.02);
-    nTone({ freq: 95, to: 52, dur: 0.1, type: "sine", vol: 0.35, attack: 0.002, release: 0.09, delay: 0.4 });
-    nNoise(0.03, 0.18, 900, 5000, 0.4);
+    playSample(firewallOpenAsset.url, { vol: 0.7 });
   },
-  // terminal sliding back down — reversed servo
+  // terminal sliding back down — uploaded FirewallClosev2 sample
   terminalClose() {
-    nTone({ freq: 430, to: 140, dur: 0.34, type: "sawtooth", vol: 0.09, attack: 0.02, release: 0.05 });
-    nNoise(0.32, 0.045, 300, 1600, 0.01);
-    nTone({ freq: 88, to: 48, dur: 0.1, type: "sine", vol: 0.3, attack: 0.002, release: 0.09, delay: 0.36 });
+    playSample(firewallCloseAsset.url, { vol: 0.7 });
   },
   // boot hum + two soft confirm blips
   terminalBoot() {
