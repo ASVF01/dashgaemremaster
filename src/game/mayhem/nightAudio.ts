@@ -97,7 +97,7 @@ export function startNightBgm() {
 
     const now = c.currentTime;
     out.gain.setValueAtTime(0.0001, now);
-    out.gain.linearRampToValueAtTime(VOLUME, now + 1.2);
+    out.gain.linearRampToValueAtTime(VOLUME * userVolume, now + 1.2);
 
     src.start(now);
     source = src;
@@ -126,7 +126,7 @@ function fallback(id: number) {
     lp.type = "lowpass";
     lp.frequency.value = MUFFLE;
     const out = c.createGain();
-    out.gain.value = VOLUME;
+    out.gain.value = VOLUME * userVolume;
     node.connect(lp);
     lp.connect(out);
     out.connect(c.destination);
