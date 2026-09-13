@@ -175,6 +175,10 @@ export default function NightRooms() {
       const to = nextView(from, k);
       if (to !== from) {
         playMoveSound(from, to);
+        // a = turn/move left → new room slides in from the right;
+        // d = turn/move right → slides in from the left;
+        // w = walk forward → a slight push from straight ahead.
+        slide.current = k === "a" ? 190 : k === "d" ? -190 : k === "w" ? 70 : 0;
         setView(to);
       }
     };
@@ -254,6 +258,9 @@ export default function NightRooms() {
   const lookRef = useRef<HTMLDivElement | null>(null);
   const target = useRef({ x: 0, y: 0 });
   const cur = useRef({ x: 0, y: 0 });
+  // Lateral "walk-in" slide: when you turn/walk somewhere, the new room
+  // starts shifted sideways and eases to the middle — like your head turning.
+  const slide = useRef(0);
   const zoomCur = useRef(1.1);
   const peek = view === "keyhole" || view === "storageKeyhole" ? 1.22 : 1;
   const peekRef = useRef(peek);
