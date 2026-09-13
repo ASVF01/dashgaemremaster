@@ -10,6 +10,8 @@ import panel4 from "@/assets/mayhem/cameras/CTRL_PANEL_4.png.asset.json";
 import panel5 from "@/assets/mayhem/cameras/CTRL_PANEL_5.png.asset.json";
 
 import { mayhemSfx } from "@/game/sfx";
+import { useSettings } from "@/game/settings";
+import { AI_CAM_FEEDS } from "./aiArt";
 
 const FEEDS = [cam1.url, cam2.url, cam3.url, cam4.url, cam5.url];
 const PANELS: Partial<Record<number, string>> = {
@@ -35,6 +37,8 @@ const BUTTONS = [
 ] as const;
 
 export default function CameraSystem({ onClose, enemyCam = null, enemyMoveCount = 0 }: { onClose: () => void; enemyCam?: number | null; enemyMoveCount?: number }) {
+  const [settings] = useSettings();
+  const aiMode = settings.aiMode;
   const [camera, setCamera] = useState(1);
   const [controlsReady, setControlsReady] = useState(false);
   const [staticFlash, setStaticFlash] = useState(false);
@@ -118,7 +122,7 @@ export default function CameraSystem({ onClose, enemyCam = null, enemyMoveCount 
         <div className="mayhem-camera-entry-zoom absolute inset-0">
           <img
             key={camera}
-            src={FEEDS[camera - 1]}
+            src={(aiMode ? AI_CAM_FEEDS : FEEDS)[camera - 1]}
             alt={`Camera ${camera} surveillance feed`}
             draggable={false}
             className="absolute inset-0 h-full w-full object-cover mayhem-camera-feed"
@@ -139,7 +143,39 @@ export default function CameraSystem({ onClose, enemyCam = null, enemyMoveCount 
         />
       )}
 
-      {controlsReady && <div className="mayhem-camera-controls-pop absolute bottom-[3%] left-[2.5%] z-[75] w-[clamp(150px,20vw,260px)] origin-bottom-left rotate-[4deg]">
+      {controlsReady && aiMode && (
+        <div className="mayhem-camera-controls-pop absolute bottom-[3%] left-[2.5%] z-[75] w-[clamp(170px,22vw,290px)] origin-bottom-left rotate-[4deg]">
+          <div className="rounded-md border-2 border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))]/95 p-3 shadow-[0_10px_40px_rgba(0,0,0,0.9)]">
+            <div className="mb-2 flex items-center justify-between font-pixel text-[8px] tracking-[0.25em] text-[hsl(var(--hell-muted))]">
+              <span>CTRL UNIT</span>
+              <span className="text-[hsl(var(--hell-terminal))]">LIVE</span>
+            </div>
+            <div className="mb-2 border border-[hsl(var(--hell-steel))] bg-black px-2 py-1.5 text-center font-pixel text-[clamp(14px,2.2vw,24px)] text-[hsl(var(--hell-terminal))]">
+              CAM {camera}
+            </div>
+            <div className="grid grid-cols-3 gap-1.5">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  aria-label={`View camera ${n}`}
+                  aria-pressed={camera === n}
+                  onClick={() => selectCamera(n)}
+                  className={`border py-1.5 font-pixel text-[10px] transition-colors ${
+                    camera === n
+                      ? "border-[hsl(var(--hell-terminal))] bg-[hsl(var(--hell-terminal))]/20 text-[hsl(var(--hell-terminal))]"
+                      : "border-[hsl(var(--hell-steel))] text-[hsl(var(--hell-muted))] hover:border-white/70 hover:text-white"
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {controlsReady && !aiMode && <div className="mayhem-camera-controls-pop absolute bottom-[3%] left-[2.5%] z-[75] w-[clamp(150px,20vw,260px)] origin-bottom-left rotate-[4deg]">
         <div className="relative aspect-[184/166] w-full">
           <img
             src={PANELS[camera] ?? panel1.url}

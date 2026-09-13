@@ -17,6 +17,8 @@ import { preloadNightBgm, startNightBgm, stopNightBgm } from "./nightAudio";
 import { getMayhemNight, mayhemAiLevel, setMayhemNight } from "@/game/progress";
 import { isMuted, setMuted, mayhemSfx, preloadMayhemSfx } from "@/game/sfx";
 import { isBgmMuted, setBgmMuted, stopBgm } from "@/game/bgm";
+import { useSettings } from "@/game/settings";
+import { AI_ASSET_URLS, AI_HOTSPOTS, AI_ROOMS } from "./aiArt";
 
 
 type View = "office" | "door" | "keyhole" | "hallway" | "storage" | "storageKeyhole";
@@ -35,6 +37,7 @@ const NIGHT_IMAGE_URLS = [
   packUsedArt.url,
   ...CAMERA_ASSET_URLS,
   ...TERMINAL_ASSET_URLS,
+  ...AI_ASSET_URLS,
 ];
 
 
@@ -102,6 +105,8 @@ function makeDust(): { id: number; left: number; top: number; size: number; dura
 }
 
 export default function NightRooms() {
+  const [settings] = useSettings();
+  const aiMode = settings.aiMode;
   const [view, setView] = useState<View>("office");
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
@@ -370,12 +375,26 @@ export default function NightRooms() {
   }, [nightReady]);
 
 
-  const art =
-    view === "office" ? (redGuyMeowing ? officeMeowArt.url : officeArt.url) :
-    view === "door" ? doorArt.url :
-    view === "keyhole" || view === "storageKeyhole" ? keyholeArt.url :
-    view === "hallway" ? hallwayArt.url :
-    packUsed ? packUsedArt.url : packArt.url;
+  // AI MODE swaps the whole art set (rooms, cameras, terminal, health pack).
+  const art = aiMode
+    ? (
+      view === "office" ? (redGuyMeowing ? AI_ROOMS.officeMeow : AI_ROOMS.office) :
+      view === "door" ? AI_ROOMS.door :
+      view === "keyhole" || view === "storageKeyhole" ? AI_ROOMS.keyhole :
+      view === "hallway" ? AI_ROOMS.hallway :
+      packUsed ? AI_ROOMS.storageUsed : AI_ROOMS.storage
+    )
+    : (
+      view === "office" ? (redGuyMeowing ? officeMeowArt.url : officeArt.url) :
+      view === "door" ? doorArt.url :
+      view === "keyhole" || view === "storageKeyhole" ? keyholeArt.url :
+      view === "hallway" ? hallwayArt.url :
+      packUsed ? packUsedArt.url : packArt.url
+    );
+
+  const monitorSpot = aiMode ? AI_HOTSPOTS.monitor : { left: "37.5%", top: "39%", width: "25%", height: "22%" };
+  const redGuySpot = aiMode ? AI_HOTSPOTS.redGuy : { left: "65.5%", top: "46%", width: "12%", height: "27%" };
+  const packSpot = aiMode ? AI_HOTSPOTS.healthPack : { left: "59%", top: "40%", width: "16%", height: "26%" };
 
   const hint =
     view === "office" ? "[ W ] CCTV SYSTEM   [ A ] TURN TO THE DOOR" :
@@ -496,14 +515,14 @@ export default function NightRooms() {
               aria-label="Open CCTV camera system"
               onClick={openCamera}
               className="absolute border-2 border-transparent hover:border-white/60"
-              style={{ left: "37.5%", top: "39%", width: "25%", height: "22%" }}
+              style={monitorSpot}
             />
             <button
               type="button"
               aria-label="Pet the little red guy"
               onClick={meowRedGuy}
               className="absolute cursor-pointer border-2 border-transparent hover:border-white/40"
-              style={{ left: "65.5%", top: "46%", width: "12%", height: "27%" }}
+              style={redGuySpot}
             />
           </>
         )}
@@ -519,7 +538,7 @@ export default function NightRooms() {
             onTouchStart={(e) => { e.preventDefault(); startHold(); }}
             onTouchEnd={stopHold}
             className="absolute border-2 border-transparent hover:border-[hsl(var(--hell-warning))]/60"
-            style={{ left: "59%", top: "40%", width: "16%", height: "26%" }}
+            style={packSpot}
           />
         )}
 
