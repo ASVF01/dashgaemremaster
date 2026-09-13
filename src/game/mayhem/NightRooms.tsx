@@ -84,7 +84,6 @@ export default function NightRooms() {
   const [redGuyMeowing, setRedGuyMeowing] = useState(false);
   const [packUsed, setPackUsed] = useState(false);
   const [hold, setHold] = useState(0); // 0..1 progress on the health pack
-  const [watchRaised, setWatchRaised] = useState(false);
   const [nightElapsed, setNightElapsed] = useState(0);
   const [hp] = useState(100);
   const holdStart = useRef<number | null>(null);
