@@ -3,6 +3,7 @@
 // Office, camera system, hallway, storage room, and terminal navigation.
 import { useEffect, useMemo, useRef, useState } from "react";
 import officeArt from "@/assets/mayhem/THE_OFFICE.png.asset.json";
+import officeMeowArt from "@/assets/mayhem/THE_OFFICE_red_guy_meow.png.asset.json";
 import doorArt from "@/assets/mayhem/THE_DOOR.png.asset.json";
 import keyholeArt from "@/assets/mayhem/THE_KEYHOLE.png.asset.json";
 import hallwayArt from "@/assets/mayhem/THE_HALLWAY.png.asset.json";
@@ -78,6 +79,7 @@ export default function NightRooms() {
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraEntry, setCameraEntry] = useState<"idle" | "pullback" | "rush">("idle");
+  const [redGuyMeowing, setRedGuyMeowing] = useState(false);
   const [packUsed, setPackUsed] = useState(false);
   const [hold, setHold] = useState(0); // 0..1 progress on the health pack
   const holdStart = useRef<number | null>(null);
@@ -91,6 +93,7 @@ export default function NightRooms() {
   const cameraEntryRef = useRef(cameraEntry);
   cameraEntryRef.current = cameraEntry;
   const cameraEntryTimers = useRef<number[]>([]);
+  const meowTimer = useRef<number | null>(null);
   const [dust, setDust] = useState(makeDust);
 
   const openCamera = () => {
@@ -112,7 +115,19 @@ export default function NightRooms() {
 
   useEffect(() => () => {
     cameraEntryTimers.current.forEach((timer) => window.clearTimeout(timer));
+    if (meowTimer.current != null) window.clearTimeout(meowTimer.current);
   }, []);
+
+  const meowRedGuy = () => {
+    if (redGuyMeowing) return;
+    setRedGuyMeowing(true);
+    mayhemSfx.meow();
+    if (meowTimer.current != null) window.clearTimeout(meowTimer.current);
+    meowTimer.current = window.setTimeout(() => {
+      setRedGuyMeowing(false);
+      meowTimer.current = null;
+    }, 1000);
+  };
 
   // Randomize dust placement every time we enter a non-keyhole room so the
   // atmosphere never feels like the same particles are glued to the camera.
@@ -211,7 +226,7 @@ export default function NightRooms() {
 
 
   const art =
-    view === "office" ? officeArt.url :
+    view === "office" ? (redGuyMeowing ? officeMeowArt.url : officeArt.url) :
     view === "door" ? doorArt.url :
     view === "keyhole" || view === "storageKeyhole" ? keyholeArt.url :
     view === "hallway" ? hallwayArt.url :
@@ -301,13 +316,22 @@ export default function NightRooms() {
         />
 
         {view === "office" && !cameraOpen && cameraEntry === "idle" && (
-          <button
-            type="button"
-            aria-label="Open CCTV camera system"
-            onClick={openCamera}
-            className="absolute border-2 border-transparent hover:border-white/60"
-            style={{ left: "37.5%", top: "39%", width: "25%", height: "22%" }}
-          />
+          <>
+            <button
+              type="button"
+              aria-label="Open CCTV camera system"
+              onClick={openCamera}
+              className="absolute border-2 border-transparent hover:border-white/60"
+              style={{ left: "37.5%", top: "39%", width: "25%", height: "22%" }}
+            />
+            <button
+              type="button"
+              aria-label="Pet the little red guy"
+              onClick={meowRedGuy}
+              className="absolute cursor-pointer border-2 border-transparent hover:border-white/40"
+              style={{ left: "65.5%", top: "46%", width: "12%", height: "27%" }}
+            />
+          </>
         )}
 
         {/* health pack hotspot — only in the storage room */}

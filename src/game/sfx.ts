@@ -1056,6 +1056,13 @@ export const mayhemSfx = {
     nTone({ freq: 170, to: 54, dur: 0.16, type: "sawtooth", vol: 0.08, attack: 0.004, release: 0.1 });
     nNoise(0.09, 0.12, 500, 3200, 0.03);
   },
+  // A small, slightly raspy one-second cat meow for the office desk buddy.
+  meow() {
+    nTone({ freq: 430, to: 760, dur: 0.26, type: "sawtooth", vol: 0.075, attack: 0.025, release: 0.05 });
+    nTone({ freq: 760, to: 540, dur: 0.5, type: "sawtooth", vol: 0.08, attack: 0.015, release: 0.16, delay: 0.24 });
+    nTone({ freq: 215, to: 270, dur: 0.27, type: "triangle", vol: 0.1, attack: 0.02, release: 0.12, delay: 0.05 });
+    nNoise(0.68, 0.018, 350, 1800, 0.04, 900);
+  },
   // pause menu opening — deep soft thunk + slow air swell
   pauseOpen() {
     nTone({ freq: 72, to: 36, dur: 0.28, type: "sine", vol: 0.4, attack: 0.004, release: 0.22 });
