@@ -122,32 +122,13 @@ export default function NightRooms() {
     if (meowTimer.current != null) window.clearTimeout(meowTimer.current);
   }, []);
 
-  // One real minute equals one in-game hour. Holding R raises the watch.
+  // One real minute equals one in-game hour.
   useEffect(() => {
     const startedAt = performance.now();
     const timer = window.setInterval(() => {
       setNightElapsed(Math.min(NIGHT_MS, performance.now() - startedAt));
     }, 250);
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() !== "r") return;
-      event.preventDefault();
-      setWatchRaised(true);
-    };
-    const onKeyUp = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() !== "r") return;
-      event.preventDefault();
-      setWatchRaised(false);
-    };
-    const lowerWatch = () => setWatchRaised(false);
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
-    window.addEventListener("blur", lowerWatch);
-    return () => {
-      window.clearInterval(timer);
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
-      window.removeEventListener("blur", lowerWatch);
-    };
+    return () => window.clearInterval(timer);
   }, []);
 
   const meowRedGuy = () => {
