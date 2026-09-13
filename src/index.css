@@ -657,13 +657,35 @@
 }
 .mayhem-keyhole-eye { animation: mayhemKeyholeEye 3.4s ease-in-out infinite; }
 
-/* MAYHEM — the animatronic's face at the keyhole: a slow breathing lean-in. */
+/* MAYHEM — Tealer is behind the closed door, visible only through its keyhole. */
+.mayhem-keyhole-depth {
+  width: clamp(72px, 8vw, 126px);
+  aspect-ratio: 0.58;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 0 8px hsl(var(--hell-black)));
+}
+.mayhem-keyhole-aperture {
+  clip-path: polygon(50% 0%, 65% 4%, 76% 14%, 81% 28%, 79% 41%, 70% 52%, 62% 57%, 73% 100%, 27% 100%, 38% 57%, 30% 52%, 21% 41%, 19% 28%, 24% 14%, 35% 4%);
+  background: hsl(var(--hell-black));
+  box-shadow: inset 0 0 18px 8px hsl(var(--hell-black));
+}
+.mayhem-enemy-behind-door {
+  object-position: 50% 48%;
+  filter: brightness(0.62) contrast(1.25) saturate(0.72);
+}
 @keyframes mayhemEnemyKeyhole {
-  0%, 100% { transform: translate(-50%, -50%) scale(1); }
-  40% { transform: translate(-49%, -51%) scale(1.05); }
-  70% { transform: translate(-51%, -49%) scale(1.02); }
+  0%, 100% { transform: translate(0, 0) scale(1.45); }
+  40% { transform: translate(2%, -1%) scale(1.5); }
+  70% { transform: translate(-2%, 1%) scale(1.47); }
 }
 .mayhem-enemy-keyhole { animation: mayhemEnemyKeyhole 3.2s ease-in-out infinite; }
+
+@keyframes mayhemEnemyBehindDoorArrival {
+  0% { opacity: 0; transform: translateX(-38%) scale(1.55); }
+  45% { opacity: 0.65; }
+  100% { opacity: 1; transform: translateX(0) scale(1.45); }
+}
+.mayhem-enemy-arrive { animation: mayhemEnemyBehindDoorArrival 2.6s ease-out both; }
 
 /* MAYHEM — the moment it appears at the keyhole: a quick shadow sweep. */
 @keyframes mayhemEnemyAppear {
