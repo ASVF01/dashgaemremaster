@@ -175,28 +175,31 @@ export default function NightRooms() {
       const to = nextView(from, k);
       if (to !== from) {
         playMoveSound(from, to);
-        // Tiny per-transition nudges so the room feels alive without
-        // becoming a disorienting camera swing.
-        const nudge = (() => {
-          // office → door (looking left toward the door)
-          if (from === "office" && to === "door") return { x: -28, y: 0, z: 0 };
-          // door → hallway (stepping through the door into the hall: slide right to center)
-          if (from === "door" && to === "hallway") return { x: -28, y: 0, z: 0 };
+        // Room transitions reuse the mouse-look system: the head snaps
+        // toward the turn direction, then eases back to center exactly
+        // like a mouse sweep (same smoothing + rotation).
+        const turn = (() => {
+          // office → door (turning left toward the door)
+          if (from === "office" && to === "door") return { x: -0.85, y: 0, z: 0 };
+          // door → hallway (entering the hall: look swings right to center)
+          if (from === "door" && to === "hallway") return { x: 0.85, y: 0, z: 0 };
           // hallway → door (stepping back: a quick zoom-out snap)
           if (from === "hallway" && to === "door") return { x: 0, y: 0, z: -0.09 };
-          // hallway → storage (entering storage from the hall: slide right to center)
-          if (from === "hallway" && to === "storage") return { x: -28, y: 0, z: 0 };
-          // door → office (turning away from the door: slide left to center)
-          if (from === "door" && to === "office") return { x: 28, y: 0, z: 0 };
-          // generic tiny shifts
-          if (k === "a") return { x: 18, y: 0, z: 0 };
-          if (k === "d") return { x: -18, y: 0, z: 0 };
-          if (k === "w") return { x: 0, y: -10, z: 0 };
+          // hallway → storage (entering storage: look swings right to center)
+          if (from === "hallway" && to === "storage") return { x: 0.85, y: 0, z: 0 };
+          // door → office (turning away from the door: look swings left to center)
+          if (from === "door" && to === "office") return { x: -0.85, y: 0, z: 0 };
+          // generic turns follow the key direction
+          if (k === "a") return { x: -0.5, y: 0, z: 0 };
+          if (k === "d") return { x: 0.5, y: 0, z: 0 };
+          if (k === "w") return { x: 0, y: 0.55, z: 0 };
           return { x: 0, y: 0, z: 0 };
         })();
-        slideX.current = nudge.x;
-        slideY.current = nudge.y;
-        zoomNudge.current = nudge.z;
+        cur.current.x = turn.x;
+        cur.current.y = turn.y;
+        target.current.x = 0;
+        target.current.y = 0;
+        zoomNudge.current = turn.z;
         setView(to);
       }
     };
