@@ -293,8 +293,10 @@ export default function NightRooms() {
       // ease the tiny room nudge back to center
       slideX.current *= 0.86;
       slideY.current *= 0.86;
+      zoomNudge.current *= 0.86;
       if (Math.abs(slideX.current) < 0.4) slideX.current = 0;
       if (Math.abs(slideY.current) < 0.4) slideY.current = 0;
+      if (Math.abs(zoomNudge.current) < 0.002) zoomNudge.current = 0;
       const el = lookRef.current;
       if (el) {
         const p = peekRef.current;
