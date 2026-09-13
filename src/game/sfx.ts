@@ -1048,6 +1048,18 @@ export const mayhemSfx = {
     nTone({ freq: 620, dur: 0.035, type: "sine", vol: 0.10, attack: 0.002, release: 0.04, delay: 0.008 });
   },
   cameraOpen() {
+    const c = ac(); const b = nbus(); if (!c || !b) return;
+    const buf = sampleCache.get(crtOnAsset.url);
+    if (buf) {
+      const src = c.createBufferSource();
+      src.buffer = buf;
+      const g = c.createGain();
+      g.gain.value = 0.75;
+      src.connect(g).connect(b);
+      src.start(c.currentTime);
+    } else {
+      loadSample(crtOnAsset.url);
+    }
     nNoise(0.12, 0.16, 700, 6200);
     nTone({ freq: 74, to: 52, dur: 0.18, type: "square", vol: 0.12, attack: 0.003, release: 0.1 });
     nTone({ freq: 860, dur: 0.035, type: "sine", vol: 0.1, attack: 0.002, release: 0.05, delay: 0.09 });
