@@ -175,10 +175,21 @@ export default function NightRooms() {
       const to = nextView(from, k);
       if (to !== from) {
         playMoveSound(from, to);
-        // a = turn/move left → new room slides in from the right;
-        // d = turn/move right → slides in from the left;
-        // w = walk forward → a slight push from straight ahead.
-        slide.current = k === "a" ? 190 : k === "d" ? -190 : k === "w" ? 70 : 0;
+        // Tiny per-transition nudges so the room feels alive without
+        // becoming a disorienting camera swing.
+        const nudge = (() => {
+          // office → door (looking left toward the door)
+          if (from === "office" && to === "door") return { x: -28, y: 0 };
+          // hallway → door (stepping backward out of the hall)
+          if (from === "hallway" && to === "door") return { x: 0, y: 22 };
+          // generic tiny shifts
+          if (k === "a") return { x: 18, y: 0 };
+          if (k === "d") return { x: -18, y: 0 };
+          if (k === "w") return { x: 0, y: -10 };
+          return { x: 0, y: 0 };
+        })();
+        slideX.current = nudge.x;
+        slideY.current = nudge.y;
         setView(to);
       }
     };
