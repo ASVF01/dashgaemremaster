@@ -113,6 +113,7 @@ export default function NightRooms() {
       setCameraEntry("rush");
       cameraOpenRef.current = true;
       setCameraOpen(true);
+      mayhemSfx.cameraCrtOn();
     }, 520));
     cameraEntryTimers.current.push(window.setTimeout(() => {
       cameraEntryRef.current = "idle";
