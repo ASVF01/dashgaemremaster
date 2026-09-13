@@ -118,6 +118,8 @@ export default function Terminal({ onClose }: { onClose: () => void }) {
               style={{ imageRendering: "pixelated" }}
             />
 
+            {aiMode && <AiTerminalScreen screen={screen} go={go} />}
+
             {/* home hotspots: two panels at the bottom */}
             {screen === "home" && (
               <>
