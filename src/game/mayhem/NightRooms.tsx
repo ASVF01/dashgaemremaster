@@ -175,6 +175,10 @@ export default function NightRooms() {
       const to = nextView(from, k);
       if (to !== from) {
         playMoveSound(from, to);
+        // a = turn/move left → new room slides in from the right;
+        // d = turn/move right → slides in from the left;
+        // w = walk forward → a slight push from straight ahead.
+        slide.current = k === "a" ? 190 : k === "d" ? -190 : k === "w" ? 70 : 0;
         setView(to);
       }
     };
@@ -254,6 +258,9 @@ export default function NightRooms() {
   const lookRef = useRef<HTMLDivElement | null>(null);
   const target = useRef({ x: 0, y: 0 });
   const cur = useRef({ x: 0, y: 0 });
+  // Lateral "walk-in" slide: when you turn/walk somewhere, the new room
+  // starts shifted sideways and eases to the middle — like your head turning.
+  const slide = useRef(0);
   const zoomCur = useRef(1.1);
   const peek = view === "keyhole" || view === "storageKeyhole" ? 1.22 : 1;
   const peekRef = useRef(peek);
@@ -270,6 +277,9 @@ export default function NightRooms() {
     const tick = () => {
       cur.current.x += (target.current.x - cur.current.x) * 0.08;
       cur.current.y += (target.current.y - cur.current.y) * 0.08;
+      // ease the room-slide offset back to center
+      slide.current *= 0.86;
+      if (Math.abs(slide.current) < 0.4) slide.current = 0;
       const el = lookRef.current;
       if (el) {
         const p = peekRef.current;
@@ -285,7 +295,7 @@ export default function NightRooms() {
         const damp = zoomed ? 0.35 : 1;
         const tyOff = zoomed ? -60 : 0;
         const entrySlide = cameraEntryState === "rush" ? Math.min(1, Math.max(0, (scale - 1.1) / 4.1)) : 0;
-        const tx = (-cur.current.x * 34 * p * damp) - 18 * entrySlide;
+        const tx = (-cur.current.x * 34 * p * damp) - 18 * entrySlide + slide.current;
         const ty = (-cur.current.y * 18 * p * damp) + tyOff * (scale - 1.1) + 34 * entrySlide;
         const rx = -cur.current.y * 1.6 * damp;
         const ry = cur.current.x * 2.4 * damp;
