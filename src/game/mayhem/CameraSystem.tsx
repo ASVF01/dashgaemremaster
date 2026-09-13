@@ -71,7 +71,7 @@ export default function CameraSystem({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="absolute inset-0 z-[72] overflow-hidden bg-black"
+      className="mayhem-camera-slide-in absolute inset-0 z-[72] overflow-hidden bg-black"
       onMouseMove={(event) => {
         const bounds = event.currentTarget.getBoundingClientRect();
         target.current.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
