@@ -11,6 +11,7 @@ import laserBeamUrl from "@/assets/audio/weapon_beam3_3.mp3";
 import mayhemFootstepsAsset from "@/assets/audio/mayhem-room-footsteps.ogg.asset.json";
 import mayhemDoorCloseAsset from "@/assets/audio/DoorClose_Tabook-2.wav.asset.json";
 import mayhemTurnAsset from "@/assets/audio/mayhem-turn.wav.asset.json";
+import crtOnAsset from "@/assets/audio/CRT_On_kyles.wav.asset.json";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
