@@ -67,7 +67,10 @@ export default function Terminal({ onClose }: { onClose: () => void }) {
     if (screen === "wait1") later(() => setScreen("wait2"), WAIT_MS);
     else if (screen === "wait2") later(() => setScreen("wait3"), WAIT_MS);
     else if (screen === "wait3") later(() => setScreen("done"), WAIT_MS);
-    else if (screen === "done") later(() => setScreen("home"), DONE_MS);
+    else if (screen === "done") {
+      mayhemSfx.terminalDone();
+      later(() => setScreen("home"), DONE_MS);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screen]);
 

@@ -15,6 +15,7 @@ import crtOnAsset from "@/assets/audio/CRT_On_kyles.wav.asset.json";
 import crtAmbientAsset from "@/assets/audio/CRT_Ambient_kyles.ogg.asset.json";
 import firewallOpenAsset from "@/assets/audio/FirewallOpenV2.ogg.asset.json";
 import firewallCloseAsset from "@/assets/audio/FirewallClosev2.ogg.asset.json";
+import terminalDoneAsset from "@/assets/audio/Tlure_FixedSound.wav.asset.json";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -150,7 +151,7 @@ function ac(): AudioContext | null {
   return ctx;
 }
 
-export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); loadSample(wwHitUrl); loadSample(auraUrl); loadSample(swingSwipeUrl); loadSample(laserBeamUrl); loadSample(mayhemFootstepsAsset.url); loadSample(mayhemDoorCloseAsset.url); loadSample(mayhemTurnAsset.url); loadSample(crtOnAsset.url); loadSample(crtAmbientAsset.url); loadSample(firewallOpenAsset.url); loadSample(firewallCloseAsset.url); }
+export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); loadSample(wwHitUrl); loadSample(auraUrl); loadSample(swingSwipeUrl); loadSample(laserBeamUrl); loadSample(mayhemFootstepsAsset.url); loadSample(mayhemDoorCloseAsset.url); loadSample(mayhemTurnAsset.url); loadSample(crtOnAsset.url); loadSample(crtAmbientAsset.url); loadSample(firewallOpenAsset.url); loadSample(firewallCloseAsset.url); loadSample(terminalDoneAsset.url); }
 let baseVol = 0.35;
 export function setMuted(v: boolean) {
   muted = v;
@@ -1069,6 +1070,10 @@ export const mayhemSfx = {
   // terminal sliding back down — uploaded FirewallClosev2 sample
   terminalClose() {
     playSample(firewallCloseAsset.url, { vol: 0.7 });
+  },
+  // terminal sequence completes and the DONE screen appears
+  terminalDone() {
+    playSample(terminalDoneAsset.url, { vol: 0.75 });
   },
   // boot hum + two soft confirm blips
   terminalBoot() {
