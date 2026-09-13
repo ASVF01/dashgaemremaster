@@ -175,10 +175,21 @@ export default function NightRooms() {
       const to = nextView(from, k);
       if (to !== from) {
         playMoveSound(from, to);
-        // a = turn/move left → new room slides in from the right;
-        // d = turn/move right → slides in from the left;
-        // w = walk forward → a slight push from straight ahead.
-        slide.current = k === "a" ? 190 : k === "d" ? -190 : k === "w" ? 70 : 0;
+        // Tiny per-transition nudges so the room feels alive without
+        // becoming a disorienting camera swing.
+        const nudge = (() => {
+          // office → door (looking left toward the door)
+          if (from === "office" && to === "door") return { x: -28, y: 0 };
+          // hallway → door (stepping backward out of the hall)
+          if (from === "hallway" && to === "door") return { x: 0, y: 22 };
+          // generic tiny shifts
+          if (k === "a") return { x: 18, y: 0 };
+          if (k === "d") return { x: -18, y: 0 };
+          if (k === "w") return { x: 0, y: -10 };
+          return { x: 0, y: 0 };
+        })();
+        slideX.current = nudge.x;
+        slideY.current = nudge.y;
         setView(to);
       }
     };
@@ -258,9 +269,9 @@ export default function NightRooms() {
   const lookRef = useRef<HTMLDivElement | null>(null);
   const target = useRef({ x: 0, y: 0 });
   const cur = useRef({ x: 0, y: 0 });
-  // Lateral "walk-in" slide: when you turn/walk somewhere, the new room
-  // starts shifted sideways and eases to the middle — like your head turning.
-  const slide = useRef(0);
+  // Tiny directional nudges when changing rooms — eased back to center.
+  const slideX = useRef(0);
+  const slideY = useRef(0);
   const zoomCur = useRef(1.1);
   const peek = view === "keyhole" || view === "storageKeyhole" ? 1.22 : 1;
   const peekRef = useRef(peek);
@@ -277,9 +288,11 @@ export default function NightRooms() {
     const tick = () => {
       cur.current.x += (target.current.x - cur.current.x) * 0.08;
       cur.current.y += (target.current.y - cur.current.y) * 0.08;
-      // ease the room-slide offset back to center
-      slide.current *= 0.86;
-      if (Math.abs(slide.current) < 0.4) slide.current = 0;
+      // ease the tiny room nudge back to center
+      slideX.current *= 0.86;
+      slideY.current *= 0.86;
+      if (Math.abs(slideX.current) < 0.4) slideX.current = 0;
+      if (Math.abs(slideY.current) < 0.4) slideY.current = 0;
       const el = lookRef.current;
       if (el) {
         const p = peekRef.current;
@@ -295,8 +308,8 @@ export default function NightRooms() {
         const damp = zoomed ? 0.35 : 1;
         const tyOff = zoomed ? -60 : 0;
         const entrySlide = cameraEntryState === "rush" ? Math.min(1, Math.max(0, (scale - 1.1) / 4.1)) : 0;
-        const tx = (-cur.current.x * 34 * p * damp) - 18 * entrySlide + slide.current;
-        const ty = (-cur.current.y * 18 * p * damp) + tyOff * (scale - 1.1) + 34 * entrySlide;
+        const tx = (-cur.current.x * 34 * p * damp) - 18 * entrySlide + slideX.current;
+        const ty = (-cur.current.y * 18 * p * damp) + tyOff * (scale - 1.1) + 34 * entrySlide + slideY.current;
         const rx = -cur.current.y * 1.6 * damp;
         const ry = cur.current.x * 2.4 * damp;
         el.style.transform =
