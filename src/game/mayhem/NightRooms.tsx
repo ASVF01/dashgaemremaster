@@ -179,17 +179,18 @@ export default function NightRooms() {
         // becoming a disorienting camera swing.
         const nudge = (() => {
           // office → door (looking left toward the door)
-          if (from === "office" && to === "door") return { x: -28, y: 0 };
-          // hallway → door (stepping backward out of the hall)
-          if (from === "hallway" && to === "door") return { x: 0, y: 22 };
+          if (from === "office" && to === "door") return { x: -28, y: 0, z: 0 };
+          // hallway → door (stepping back: a quick zoom-out snap)
+          if (from === "hallway" && to === "door") return { x: 0, y: 0, z: -0.09 };
           // generic tiny shifts
-          if (k === "a") return { x: 18, y: 0 };
-          if (k === "d") return { x: -18, y: 0 };
-          if (k === "w") return { x: 0, y: -10 };
-          return { x: 0, y: 0 };
+          if (k === "a") return { x: 18, y: 0, z: 0 };
+          if (k === "d") return { x: -18, y: 0, z: 0 };
+          if (k === "w") return { x: 0, y: -10, z: 0 };
+          return { x: 0, y: 0, z: 0 };
         })();
         slideX.current = nudge.x;
         slideY.current = nudge.y;
+        zoomNudge.current = nudge.z;
         setView(to);
       }
     };
