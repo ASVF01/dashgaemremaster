@@ -279,9 +279,7 @@ export default function NightRooms() {
   const lookRef = useRef<HTMLDivElement | null>(null);
   const target = useRef({ x: 0, y: 0 });
   const cur = useRef({ x: 0, y: 0 });
-  // Tiny directional nudges when changing rooms — eased back to center.
-  const slideX = useRef(0);
-  const slideY = useRef(0);
+  // Zoom nudge for the hallway→door step-back — eased back to center.
   const zoomNudge = useRef(0);
   const zoomCur = useRef(1.1);
   const peek = view === "keyhole" || view === "storageKeyhole" ? 1.22 : 1;
@@ -299,12 +297,8 @@ export default function NightRooms() {
     const tick = () => {
       cur.current.x += (target.current.x - cur.current.x) * 0.08;
       cur.current.y += (target.current.y - cur.current.y) * 0.08;
-      // ease the tiny room nudge back to center
-      slideX.current *= 0.86;
-      slideY.current *= 0.86;
+      // ease the zoom nudge back to center
       zoomNudge.current *= 0.86;
-      if (Math.abs(slideX.current) < 0.4) slideX.current = 0;
-      if (Math.abs(slideY.current) < 0.4) slideY.current = 0;
       if (Math.abs(zoomNudge.current) < 0.002) zoomNudge.current = 0;
       const el = lookRef.current;
       if (el) {
