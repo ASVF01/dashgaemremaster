@@ -37,6 +37,8 @@ const BUTTONS = [
 ] as const;
 
 export default function CameraSystem({ onClose, enemyCam = null, enemyMoveCount = 0 }: { onClose: () => void; enemyCam?: number | null; enemyMoveCount?: number }) {
+  const [settings] = useSettings();
+  const aiMode = settings.aiMode;
   const [camera, setCamera] = useState(1);
   const [controlsReady, setControlsReady] = useState(false);
   const [staticFlash, setStaticFlash] = useState(false);
