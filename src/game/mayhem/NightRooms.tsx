@@ -9,6 +9,10 @@ import keyholeArt from "@/assets/mayhem/THE_KEYHOLE.png.asset.json";
 import hallwayArt from "@/assets/mayhem/THE_HALLWAY.png.asset.json";
 import packArt from "@/assets/mayhem/storage_pack.png.asset.json";
 import packUsedArt from "@/assets/mayhem/storage_used.png.asset.json";
+import hallLitSprite from "@/assets/mayhem/enemy/Tealerhall_TESTSTATIC.webp.asset.json";
+import keyholeFaceSprite from "@/assets/mayhem/enemy/Tealer_Keyhole_static_LOOPTEST.webp.asset.json";
+import keyholeAppearSprite from "@/assets/mayhem/enemy/Tealer_appears_at_keyhole_TEST.webp.asset.json";
+import jumpscareSprite from "@/assets/mayhem/enemy/TealerJS_TEST.webp.asset.json";
 
 import Terminal, { TERMINAL_ASSET_URLS } from "./Terminal";
 import CameraSystem, { CAMERA_ASSET_URLS } from "./CameraSystem";
@@ -33,9 +37,14 @@ const NIGHT_IMAGE_URLS = [
   hallwayArt.url,
   packArt.url,
   packUsedArt.url,
+  hallLitSprite.url,
+  keyholeFaceSprite.url,
+  keyholeAppearSprite.url,
+  jumpscareSprite.url,
   ...CAMERA_ASSET_URLS,
   ...TERMINAL_ASSET_URLS,
 ];
+
 
 function preloadNightImages(): Promise<void> {
   return Promise.all(NIGHT_IMAGE_URLS.map((url) => new Promise<void>((resolve) => {
@@ -471,15 +480,35 @@ export default function NightRooms() {
           style={{ animation: "mayhemRoomFade 180ms ease-out" }}
         />
 
-        {/* the test animatronic's eye, pressed into the middle of the keyhole */}
+        {/* the animatronic's face pressed into the keyhole */}
         {view === "keyhole" && enemy.atKeyhole && (
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <div className="mayhem-keyhole-eye relative h-[9%] w-[5%] rounded-[50%] bg-[#f2e6c8] shadow-[0_0_22px_rgba(0,0,0,0.9)_inset]">
-              <i className="absolute left-1/2 top-1/2 block h-[52%] w-[52%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#8f1010]" />
-              <i className="absolute left-1/2 top-1/2 block h-[26%] w-[26%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-black" />
-            </div>
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+            <img
+              src={keyholeFaceSprite.url}
+              alt=""
+              draggable={false}
+              className="mayhem-enemy-keyhole absolute left-1/2 top-1/2 h-[70%] -translate-x-1/2 -translate-y-1/2 object-contain"
+            />
+            <img
+              src={keyholeAppearSprite.url}
+              alt=""
+              draggable={false}
+              className="mayhem-enemy-appear absolute left-1/2 top-1/2 h-[80%] -translate-x-1/2 -translate-y-1/2 object-contain"
+            />
           </div>
         )}
+
+        {/* it lurks down the hall when the player walks in on it */}
+        {view === "hallway" && enemy.spot.kind === "hall" && (
+          <img
+            src={hallLitSprite.url}
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            className="mayhem-enemy-lurk pointer-events-none absolute bottom-[16%] left-1/2 h-[52%] -translate-x-1/2 object-contain"
+          />
+        )}
+
 
         {view === "office" && !cameraOpen && cameraEntry === "idle" && (
           <>
@@ -545,25 +574,18 @@ export default function NightRooms() {
       )}
 
       {/* Jumpscare: the animatronic fills the screen and shakes with the
-          scream, then everything flashes white and fades back out. */}
-      {/* Jumpscare: the animatronic fills the screen and shakes with the
           scream, then lingers as a burned-in white/black afterimage. */}
       {enemy.scare != null && (
         <div aria-hidden="true" className={`pointer-events-none absolute inset-0 z-[96] flex items-center justify-center ${enemy.scare === "shake" ? "bg-black" : "mayhem-scare-burn bg-black"}`}>
-          <div className={`relative h-[85%] w-[70%] ${enemy.scare === "shake" ? "mayhem-scare-shake" : "mayhem-scare-after"}`}>
-            <div className="absolute inset-0 rounded-[46%] bg-[#120a08] shadow-[0_0_120px_rgba(0,0,0,1)_inset,0_0_60px_rgba(0,0,0,0.9)]" />
-            <div className="absolute left-[18%] top-[30%] h-[12%] w-[16%] rounded-[50%] bg-[#f2e6c8]">
-              <i className="absolute left-1/2 top-1/2 block h-[58%] w-[58%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#a01010] shadow-[0_0_28px_rgba(255,30,30,0.9)]" />
-              <i className="absolute left-1/2 top-1/2 block h-[26%] w-[26%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-black" />
-            </div>
-            <div className="absolute right-[18%] top-[30%] h-[12%] w-[16%] rounded-[50%] bg-[#f2e6c8]">
-              <i className="absolute left-1/2 top-1/2 block h-[58%] w-[58%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#a01010] shadow-[0_0_28px_rgba(255,30,30,0.9)]" />
-              <i className="absolute left-1/2 top-1/2 block h-[26%] w-[26%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-black" />
-            </div>
-            <div className="absolute bottom-[14%] left-1/2 h-[22%] w-[46%] -translate-x-1/2 rounded-[50%] bg-black shadow-[0_0_40px_rgba(0,0,0,1)_inset]" />
-          </div>
+          <img
+            src={jumpscareSprite.url}
+            alt=""
+            draggable={false}
+            className={`h-full w-full object-cover ${enemy.scare === "shake" ? "mayhem-scare-shake" : "mayhem-scare-after"}`}
+          />
         </div>
       )}
+
 
       {hold > 0 && (
         <div className="pointer-events-none absolute left-1/2 bottom-24 w-56 -translate-x-1/2">

@@ -657,6 +657,30 @@
 }
 .mayhem-keyhole-eye { animation: mayhemKeyholeEye 3.4s ease-in-out infinite; }
 
+/* MAYHEM — the animatronic's face at the keyhole: a slow breathing lean-in. */
+@keyframes mayhemEnemyKeyhole {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  40% { transform: translate(-49%, -51%) scale(1.05); }
+  70% { transform: translate(-51%, -49%) scale(1.02); }
+}
+.mayhem-enemy-keyhole { animation: mayhemEnemyKeyhole 3.2s ease-in-out infinite; }
+
+/* MAYHEM — the moment it appears at the keyhole: a quick shadow sweep. */
+@keyframes mayhemEnemyAppear {
+  0% { opacity: 1; transform: translate(-70%, -50%) scale(1.12); }
+  70% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.02); }
+  100% { opacity: 0; transform: translate(-46%, -50%) scale(1); }
+}
+.mayhem-enemy-appear { animation: mayhemEnemyAppear 0.85s ease-out forwards; }
+
+/* MAYHEM — it lurks with a faint uneasy sway on the feeds and in the hall. */
+@keyframes mayhemEnemyLurk {
+  0%, 100% { transform: translate(-50%, 0) scale(1); opacity: 0.94; }
+  50% { transform: translate(-50%, -1.5%) scale(1.01); opacity: 1; }
+}
+.mayhem-enemy-lurk { animation: mayhemEnemyLurk 4.6s ease-in-out infinite; }
+
+
 /* MAYHEM — jumpscare: violent shake for the scream, then a white flash-out. */
 @keyframes mayhemScareShake {
   0% { transform: translate(0, 0) scale(1); }

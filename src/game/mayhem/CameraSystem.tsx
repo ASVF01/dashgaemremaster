@@ -8,6 +8,8 @@ import panel1 from "@/assets/mayhem/cameras/CTRL_PANEL_1.png.asset.json";
 import panel3 from "@/assets/mayhem/cameras/CTRL_PANEL_3.png.asset.json";
 import panel4 from "@/assets/mayhem/cameras/CTRL_PANEL_4.png.asset.json";
 import panel5 from "@/assets/mayhem/cameras/CTRL_PANEL_5.png.asset.json";
+import hallSprite from "@/assets/mayhem/enemy/Tealerhall_TEST.webp.asset.json";
+import overlaySprite from "@/assets/mayhem/enemy/Character_Overlay_TEST.webp.asset.json";
 import { mayhemSfx } from "@/game/sfx";
 
 const FEEDS = [cam1.url, cam2.url, cam3.url, cam4.url, cam5.url];
@@ -18,7 +20,13 @@ const PANELS: Partial<Record<number, string>> = {
   5: panel5.url,
 };
 
-export const CAMERA_ASSET_URLS = [...FEEDS, ...Object.values(PANELS).filter((url): url is string => Boolean(url))];
+export const CAMERA_ASSET_URLS = [
+  ...FEEDS,
+  ...Object.values(PANELS).filter((url): url is string => Boolean(url)),
+  hallSprite.url,
+  overlaySprite.url,
+];
+
 
 const BUTTONS = [
   { n: 1, left: 7.6, top: 42.2, width: 22.3, height: 17.5 },
@@ -118,12 +126,24 @@ export default function CameraSystem({ onClose, enemyCam = null, enemyMoveCount 
             className="absolute inset-0 h-full w-full object-cover mayhem-camera-feed"
           />
           {enemyCam === camera && (
-            <div aria-hidden="true" className="pointer-events-none absolute bottom-[18%] left-1/2 h-[34%] w-[13%] -translate-x-1/2">
-              <div className="absolute inset-0 rounded-t-[45%] bg-black/85 blur-[1px]" />
-              <i className="absolute left-[28%] top-[9%] block h-[4%] w-[10%] rounded-full bg-[hsl(var(--hell-warning))] shadow-[0_0_10px_hsl(var(--hell-warning))]" />
-              <i className="absolute left-[60%] top-[9%] block h-[4%] w-[10%] rounded-full bg-[hsl(var(--hell-warning))] shadow-[0_0_10px_hsl(var(--hell-warning))]" />
-            </div>
+            <>
+              <img
+                src={hallSprite.url}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                className="mayhem-enemy-lurk pointer-events-none absolute bottom-[14%] left-1/2 h-[46%] -translate-x-1/2 object-contain"
+              />
+              <img
+                src={overlaySprite.url}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                className="pointer-events-none absolute right-[4%] top-[5%] h-[9%] object-contain opacity-90 drop-shadow-[0_0_12px_rgba(255,60,0,0.8)]"
+              />
+            </>
           )}
+
         </div>
 
       </div>
