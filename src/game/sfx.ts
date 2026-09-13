@@ -1099,6 +1099,7 @@ export const mayhemSfx = {
     } else {
       loadSample(crtOnAsset.url);
     }
+    startCrtAmbient();
     nNoise(0.12, 0.16, 700, 6200);
     nTone({ freq: 74, to: 52, dur: 0.18, type: "square", vol: 0.12, attack: 0.003, release: 0.1 });
     nTone({ freq: 860, dur: 0.035, type: "sine", vol: 0.1, attack: 0.002, release: 0.05, delay: 0.09 });
