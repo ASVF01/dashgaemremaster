@@ -273,6 +273,7 @@ export default function NightRooms() {
   // Tiny directional nudges when changing rooms — eased back to center.
   const slideX = useRef(0);
   const slideY = useRef(0);
+  const zoomNudge = useRef(0);
   const zoomCur = useRef(1.1);
   const peek = view === "keyhole" || view === "storageKeyhole" ? 1.22 : 1;
   const peekRef = useRef(peek);
