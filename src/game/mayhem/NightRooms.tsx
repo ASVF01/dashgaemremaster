@@ -59,6 +59,20 @@ function playMoveSound(from: View, to: View) {
   mayhemSfx.turn();
 }
 
+function makeDust(): { id: number; left: number; top: number; size: number; duration: number; delay: number; driftX: number; driftY: number; opacity: number }[] {
+  return Array.from({ length: 78 }, (_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    top: Math.random() * 100,
+    size: 1 + Math.floor(Math.random() * 4),
+    duration: 5.5 + Math.random() * 7.5,
+    delay: -(Math.random() * 11),
+    driftX: -28 + Math.random() * 57,
+    driftY: -42 - Math.random() * 54,
+    opacity: 0.12 + Math.random() * 0.24,
+  }));
+}
+
 export default function NightRooms() {
   const [view, setView] = useState<View>("office");
   const [terminalOpen, setTerminalOpen] = useState(false);
@@ -73,17 +87,15 @@ export default function NightRooms() {
   terminalOpenRef.current = terminalOpen;
   const cameraOpenRef = useRef(cameraOpen);
   cameraOpenRef.current = cameraOpen;
-  const dust = useMemo(() => Array.from({ length: 78 }, (_, i) => ({
-    id: i,
-    left: (i * 37.17 + 11) % 100,
-    top: (i * 61.83 + 7) % 100,
-    size: 1 + ((i * 17) % 4),
-    duration: 5.5 + ((i * 29) % 75) / 10,
-    delay: -((i * 43) % 110) / 10,
-    driftX: -28 + ((i * 47) % 57),
-    driftY: -42 - ((i * 31) % 54),
-    opacity: 0.12 + ((i * 13) % 24) / 100,
-  })), []);
+  const [dust, setDust] = useState(makeDust);
+
+  // Randomize dust placement every time we enter a non-keyhole room so the
+  // atmosphere never feels like the same particles are glued to the camera.
+  useEffect(() => {
+    if (view !== "keyhole" && view !== "storageKeyhole") {
+      setDust(makeDust());
+    }
+  }, [view]);
 
   // ---- keyboard navigation ----
   useEffect(() => {
@@ -287,25 +299,27 @@ export default function NightRooms() {
           />
         )}
 
-        <div aria-hidden="true" className="mayhem-dust-field pointer-events-none absolute inset-0">
-          {dust.map((particle) => (
-            <i
-              key={particle.id}
-              className="mayhem-dust-particle"
-              style={{
-                left: `${particle.left}%`,
-                top: `${particle.top}%`,
-                width: `${particle.size}px`,
-                height: `${particle.size}px`,
-                opacity: particle.opacity,
-                animationDuration: `${particle.duration}s`,
-                animationDelay: `${particle.delay}s`,
-                "--dust-x": `${particle.driftX}px`,
-                "--dust-y": `${particle.driftY}px`,
-              } as React.CSSProperties}
-            />
-          ))}
-        </div>
+        {view !== "keyhole" && view !== "storageKeyhole" && (
+          <div aria-hidden="true" className="mayhem-dust-field pointer-events-none absolute inset-0">
+            {dust.map((particle) => (
+              <i
+                key={particle.id}
+                className="mayhem-dust-particle"
+                style={{
+                  left: `${particle.left}%`,
+                  top: `${particle.top}%`,
+                  width: `${particle.size}px`,
+                  height: `${particle.size}px`,
+                  opacity: particle.opacity,
+                  animationDuration: `${particle.duration}s`,
+                  animationDelay: `${particle.delay}s`,
+                  "--dust-x": `${particle.driftX}px`,
+                  "--dust-y": `${particle.driftY}px`,
+                } as React.CSSProperties}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       <div aria-hidden="true" className="mayhem-pov-vignette pointer-events-none absolute inset-0" />
