@@ -659,24 +659,24 @@
 
 /* MAYHEM — the art's existing black circle is the only opening through the door. */
 .mayhem-keyhole-mask {
-  width: max(16.5vw, 25.7vh);
+  width: max(13vw, 20.5vh);
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
   clip-path: circle(47% at 50% 50%);
 }
 @keyframes mayhemEnemyKeyhole {
   0%, 100% { transform: translate(0, 0) scale(1.08); }
-  40% { transform: translate(1%, -1%) scale(1.13); }
-  70% { transform: translate(-1%, 1%) scale(1.1); }
+  40% { transform: translate(0, -1%) scale(1.13); }
+  70% { transform: translate(0, 1%) scale(1.1); }
 }
 .mayhem-enemy-keyhole { animation: mayhemEnemyKeyhole 3.2s ease-in-out infinite; }
 
 @keyframes mayhemEnemyBehindDoorArrival {
-  0% { opacity: 0; transform: translate(-38%, 0) scale(1.12); }
+  0% { opacity: 0; transform: translate(0, 0) scale(1.12); }
   45% { opacity: 0.65; }
   100% { opacity: 1; transform: translate(0, 0) scale(1.08); }
 }
-.mayhem-enemy-arrive { animation: mayhemEnemyBehindDoorArrival 2.6s ease-out both; }
+.mayhem-enemy-arrive { animation: mayhemEnemyBehindDoorArrival 0.78s ease-out both; }
 
 /* MAYHEM — the moment it appears at the keyhole: a quick shadow sweep. */
 @keyframes mayhemEnemyAppear {

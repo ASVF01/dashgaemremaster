@@ -12,7 +12,7 @@ import packUsedArt from "@/assets/mayhem/storage_used.png.asset.json";
 import hallEnterSprite from "@/assets/mayhem/enemy/Tealerhall_TEST.webp.asset.json";
 import hallLitSprite from "@/assets/mayhem/enemy/Tealerhall_TESTSTATIC.webp.asset.json";
 import keyholeFaceSprite from "@/assets/mayhem/enemy/Tealer_Keyhole_static_LOOPTEST.webp.asset.json";
-import keyholeAppearSprite from "@/assets/mayhem/enemy/Tealer_appears_at_keyhole_TEST.webp.asset.json";
+import keyholeAppearSpriteOnce from "@/assets/mayhem/enemy/Tealer_appears_at_keyhole_ONCE.webp";
 import jumpscareSpriteOnce from "@/assets/mayhem/enemy/TealerJS_ONCE.webp";
 
 import Terminal, { TERMINAL_ASSET_URLS } from "./Terminal";
@@ -41,7 +41,7 @@ const NIGHT_IMAGE_URLS = [
   hallEnterSprite.url,
   hallLitSprite.url,
   keyholeFaceSprite.url,
-  keyholeAppearSprite.url,
+  keyholeAppearSpriteOnce,
   jumpscareSpriteOnce,
   ...CAMERA_ASSET_URLS,
   ...TERMINAL_ASSET_URLS,
@@ -154,7 +154,7 @@ export default function NightRooms() {
     keyholeAppearTimer.current = window.setTimeout(() => {
       setKeyholeAppearing(false);
       keyholeAppearTimer.current = null;
-    }, 2600);
+    }, 780);
   }, [view, enemy.atKeyhole, enemy.encounterId]);
 
   // The title card doubles as the loader. It remains visible long enough to
@@ -503,7 +503,7 @@ export default function NightRooms() {
             {keyholeAppearing ? (
               <img
                 key={`keyhole-appear-${enemy.encounterId}`}
-                src={keyholeAppearSprite.url}
+                src={keyholeAppearSpriteOnce}
                 alt=""
                 draggable={false}
                 className="mayhem-enemy-arrive absolute inset-0 h-full w-full object-cover"
