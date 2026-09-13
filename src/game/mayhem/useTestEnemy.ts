@@ -17,12 +17,15 @@ const CAM_STEP_MS = 3000;
 const HALL_MS = 3000;
 const PRESENCE_MS = 15000;
 const STARE_GRACE_MS = 4200;
+const SCARE_SHAKE_MS = 1050;
+const SCARE_FADE_MS = 650;
 const IDLE_MIN_MS = 14000;
 const IDLE_MAX_MS = 26000;
 
 export function useTestEnemy(view: string) {
   const [spot, setSpot] = useState<EnemySpot>({ kind: "gone" });
   const [caught, setCaught] = useState(false);
+  const [scare, setScare] = useState<null | "shake" | "fade">(null);
   const viewRef = useRef(view);
   viewRef.current = view;
   const timers = useRef<number[]>([]);
@@ -102,8 +105,17 @@ export function useTestEnemy(view: string) {
       mayhemSfx.animKeyholeStare();
       stareTimer.current = window.setTimeout(() => {
         stareTimer.current = null;
+        // Held eye contact too long — jumpscare: shake + scream, white fade, gone.
         setCaught(true);
         window.setTimeout(() => setCaught(false), 900);
+        mayhemSfx.jumpscare();
+        setScare("shake");
+        at(SCARE_SHAKE_MS, () => setScare("fade"));
+        at(SCARE_SHAKE_MS + SCARE_FADE_MS, () => {
+          setScare(null);
+          setSpot({ kind: "gone" });
+          scheduleSpawn();
+        });
       }, STARE_GRACE_MS);
     } else if (!staring && staringRef.current) {
       staringRef.current = false;
@@ -115,6 +127,7 @@ export function useTestEnemy(view: string) {
   return {
     spot,
     caught,
+    scare,
     enemyCam: spot.kind === "cam" ? spot.cam : null,
     atKeyhole: spot.kind === "door",
   };
