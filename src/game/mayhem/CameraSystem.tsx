@@ -10,6 +10,8 @@ import panel4 from "@/assets/mayhem/cameras/CTRL_PANEL_4.png.asset.json";
 import panel5 from "@/assets/mayhem/cameras/CTRL_PANEL_5.png.asset.json";
 
 import { mayhemSfx } from "@/game/sfx";
+import { useSettings } from "@/game/settings";
+import { AI_CAM_FEEDS } from "./aiArt";
 
 const FEEDS = [cam1.url, cam2.url, cam3.url, cam4.url, cam5.url];
 const PANELS: Partial<Record<number, string>> = {
