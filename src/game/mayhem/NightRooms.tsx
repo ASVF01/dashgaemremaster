@@ -1,7 +1,6 @@
 // MAYHEM — first-person room navigation (the "night" shift).
 //
-// Movement only for now: office ⇄ door ⇄ keyhole, hallway, storage room.
-// Cameras / terminal come later.
+// Office, camera system, hallway, storage room, and terminal navigation.
 import { useEffect, useRef, useState } from "react";
 import officeArt from "@/assets/mayhem/THE_OFFICE.png.asset.json";
 import doorArt from "@/assets/mayhem/THE_DOOR.png.asset.json";
@@ -10,6 +9,7 @@ import hallwayArt from "@/assets/mayhem/THE_HALLWAY.png.asset.json";
 import packArt from "@/assets/mayhem/storage_pack.png.asset.json";
 import packUsedArt from "@/assets/mayhem/storage_used.png.asset.json";
 import Terminal from "./Terminal";
+import CameraSystem from "./CameraSystem";
 import { startNightBgm, stopNightBgm } from "./nightAudio";
 import { isMuted, setMuted, mayhemSfx } from "@/game/sfx";
 import { isBgmMuted, setBgmMuted, stopBgm } from "@/game/bgm";
@@ -62,6 +62,7 @@ function playMoveSound(from: View, to: View) {
 export default function NightRooms() {
   const [view, setView] = useState<View>("office");
   const [terminalOpen, setTerminalOpen] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
   const [packUsed, setPackUsed] = useState(false);
   const [hold, setHold] = useState(0); // 0..1 progress on the health pack
   const holdStart = useRef<number | null>(null);
@@ -70,6 +71,8 @@ export default function NightRooms() {
   viewRef.current = view;
   const terminalOpenRef = useRef(terminalOpen);
   terminalOpenRef.current = terminalOpen;
+  const cameraOpenRef = useRef(cameraOpen);
+  cameraOpenRef.current = cameraOpen;
 
   // ---- keyboard navigation ----
   useEffect(() => {
@@ -78,6 +81,13 @@ export default function NightRooms() {
       const k = e.key.toLowerCase();
       if (!["a", "d", "w", "s", "e"].includes(k)) return;
       e.preventDefault();
+      if (cameraOpenRef.current) {
+        if (k === "w" || k === "s") {
+          mayhemSfx.cameraClose();
+          setCameraOpen(false);
+        }
+        return;
+      }
       // terminal: s toggles it; while open, navigation keys are ignored
       if (k === "s") {
         if (terminalOpenRef.current) {
@@ -93,6 +103,11 @@ export default function NightRooms() {
         }
       }
       if (terminalOpenRef.current) return;
+      if (k === "w" && viewRef.current === "office") {
+        mayhemSfx.cameraOpen();
+        setCameraOpen(true);
+        return;
+      }
       const from = viewRef.current;
       const to = nextView(from, k);
       if (to !== from) {
@@ -155,7 +170,7 @@ export default function NightRooms() {
     packUsed ? packUsedArt.url : packArt.url;
 
   const hint =
-    view === "office" ? "[ A ] TURN TO THE DOOR" :
+    view === "office" ? "[ W ] CCTV SYSTEM   [ A ] TURN TO THE DOOR" :
     view === "door" ? "[ E ] KEYHOLE   [ W ] HALLWAY   [ D ] TURN BACK" :
     view === "keyhole" ? "[ E ] STOP LOOKING" :
     view === "hallway" ? "[ A ] STORAGE   [ D ] OFFICE" :
@@ -236,6 +251,16 @@ export default function NightRooms() {
           style={{ animation: "mayhemRoomFade 180ms ease-out" }}
         />
 
+        {view === "office" && !cameraOpen && (
+          <button
+            type="button"
+            aria-label="Open CCTV camera system"
+            onClick={() => { mayhemSfx.cameraOpen(); setCameraOpen(true); }}
+            className="absolute border-2 border-transparent hover:border-white/60"
+            style={{ left: "37.5%", top: "39%", width: "25%", height: "22%" }}
+          />
+        )}
+
         {/* health pack hotspot — only in the storage room */}
         {view === "storage" && !packUsed && (
           <button
@@ -270,6 +295,7 @@ export default function NightRooms() {
       </div>
 
       {terminalOpen && <Terminal onClose={() => setTerminalOpen(false)} />}
+      {cameraOpen && <CameraSystem onClose={() => setCameraOpen(false)} />}
     </div>
   );
 }
