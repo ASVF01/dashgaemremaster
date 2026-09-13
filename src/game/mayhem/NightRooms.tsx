@@ -448,13 +448,10 @@ export default function NightRooms() {
         </div>
       </div>
 
-      <div
-        aria-hidden={!watchRaised}
-        className={`pointer-events-none absolute inset-x-0 bottom-0 z-[91] flex justify-center transition-transform duration-200 ease-out ${watchRaised ? "translate-y-0" : "translate-y-full"}`}
-      >
-        <div className="relative w-[min(88vw,900px)]">
+      <div className="pointer-events-none absolute right-4 top-[clamp(90px,12vh,130px)] z-[91] w-[clamp(110px,14vw,180px)]">
+        <div className="relative rounded border border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))]/85 p-1 shadow-[0_0_18px_hsl(var(--hell-black))]">
           <img src={wristWatchArt.url} alt="Wrist watch" draggable={false} className="block h-auto w-full" />
-          <div className="absolute left-[46.5%] top-[47%] -translate-x-1/2 -translate-y-1/2 rotate-[-4deg] font-pixel text-[clamp(9px,1.4vw,18px)] text-[hsl(var(--hell-black))]">
+          <div className="absolute left-[46%] top-[46%] -translate-x-1/2 -translate-y-1/2 rotate-[-4deg] font-pixel text-[clamp(10px,1.5vw,20px)] text-[hsl(var(--hell-black))]">
             {hourLabel}
           </div>
         </div>
