@@ -64,7 +64,7 @@ export function useTestEnemy(view: string) {
   };
 
   const leave = () => {
-    if (!aliveRef.current) return;
+    if (!aliveRef.current || scareRef.current) return; // never interrupt a jumpscare
     if (stareTimer.current != null) { window.clearTimeout(stareTimer.current); stareTimer.current = null; }
     staringRef.current = false;
     // Cut every sound it just made, then a single footstep away.
