@@ -16,6 +16,7 @@ import crtAmbientAsset from "@/assets/audio/CRT_Ambient_kyles.ogg.asset.json";
 import firewallOpenAsset from "@/assets/audio/FirewallOpenV2.ogg.asset.json";
 import firewallCloseAsset from "@/assets/audio/FirewallClosev2.ogg.asset.json";
 import terminalDoneAsset from "@/assets/audio/Tlure_FixedSound.wav.asset.json";
+import keyholeEnterAsset from "@/assets/audio/keyhole-enter.wav.asset.json";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -1174,10 +1175,8 @@ export const mayhemSfx = {
     mayhemSfx.walk(3);
     mayhemSfx.doorClose(0.25);
   },
-  // leaning into the keyhole — quiet fabric shift + faint metal ring
+  // leaning into the keyhole — supplied short keyhole-enter recording
   keyhole() {
-    nNoise(0.26, 0.08, 120, 900, 0, 420);
-    nTone({ freq: 2150, dur: 0.05, type: "sine", vol: 0.03, attack: 0.01, release: 0.08, delay: 0.12 });
-    nTone({ freq: 70, to: 55, dur: 0.12, type: "sine", vol: 0.08, attack: 0.01, release: 0.1, delay: 0.05 });
+    playSample(keyholeEnterAsset.url, { vol: 0.75 });
   },
 };
