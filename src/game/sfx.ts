@@ -137,6 +137,26 @@ function nSample(url: string, opts: { vol?: number; rate?: number } = {}) {
   src.start(c.currentTime);
 }
 
+// Night-bus sample that hard-stops after `maxDur` seconds (with a short fade).
+function nSampleClipped(url: string, maxDur: number, opts: { vol?: number; fade?: number } = {}) {
+  const c = ac(); const b = nbus(); if (!c || !b) return;
+  const buf = sampleCache.get(url);
+  if (!buf) { loadSample(url); return; }
+  const t0 = c.currentTime;
+  const src = c.createBufferSource();
+  src.buffer = buf;
+  const g = c.createGain();
+  const vol = opts.vol ?? 0.55;
+  const fade = opts.fade ?? 0.05;
+  g.gain.setValueAtTime(vol, t0);
+  const stopAt = t0 + Math.max(0.05, maxDur);
+  g.gain.setValueAtTime(vol, Math.max(t0, stopAt - fade));
+  g.gain.linearRampToValueAtTime(0.0001, stopAt);
+  src.connect(g).connect(b);
+  src.start(t0);
+  src.stop(stopAt + 0.02);
+}
+
 
 
 // Like playSample but stops after `maxDur` seconds with a short fade-out.
@@ -1220,7 +1240,7 @@ export const mayhemSfx = {
   // Full-volume scream when the player holds eye contact too long.
   jumpscare() {
     stopAnimSounds();
-    nSample(jumpscareAsset.url, { vol: 1 });
+    nSampleClipped(jumpscareAsset.url, 1.05, { vol: 1 });
   },
 };
 
