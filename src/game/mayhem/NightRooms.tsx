@@ -515,14 +515,14 @@ export default function NightRooms() {
               aria-label="Open CCTV camera system"
               onClick={openCamera}
               className="absolute border-2 border-transparent hover:border-white/60"
-              style={{ left: "37.5%", top: "39%", width: "25%", height: "22%" }}
+              style={monitorSpot}
             />
             <button
               type="button"
               aria-label="Pet the little red guy"
               onClick={meowRedGuy}
               className="absolute cursor-pointer border-2 border-transparent hover:border-white/40"
-              style={{ left: "65.5%", top: "46%", width: "12%", height: "27%" }}
+              style={redGuySpot}
             />
           </>
         )}
@@ -538,7 +538,7 @@ export default function NightRooms() {
             onTouchStart={(e) => { e.preventDefault(); startHold(); }}
             onTouchEnd={stopHold}
             className="absolute border-2 border-transparent hover:border-[hsl(var(--hell-warning))]/60"
-            style={{ left: "59%", top: "40%", width: "16%", height: "26%" }}
+            style={packSpot}
           />
         )}
 
