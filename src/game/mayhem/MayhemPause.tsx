@@ -4,6 +4,7 @@ import { mayhemSfx } from "@/game/sfx";
 import { useSettings } from "@/game/settings";
 import { sfx, setSfxVolume } from "@/game/sfx";
 import { setBgmVolume } from "@/game/bgm";
+import { setNightBgmVolume } from "@/game/mayhem/nightAudio";
 
 /**
  * MAYHEM pause menu. Covers the whole mode (which itself takes over the
@@ -24,7 +25,10 @@ export default function MayhemPause({
   useEffect(() => { mayhemSfx.pauseOpen(); }, []);
 
   useEffect(() => { setSfxVolume(settings.sfxVolume); }, [settings.sfxVolume]);
-  useEffect(() => { setBgmVolume(settings.bgmVolume * 0.5); }, [settings.bgmVolume]);
+  useEffect(() => {
+    setBgmVolume(settings.bgmVolume * 0.5);
+    setNightBgmVolume(settings.bgmVolume);
+  }, [settings.bgmVolume]);
 
   return (
     <div className="absolute inset-0 z-[60] overflow-hidden">

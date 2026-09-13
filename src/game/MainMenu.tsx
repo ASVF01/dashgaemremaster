@@ -9,6 +9,7 @@ import { useSettings, type Settings } from "@/game/settings";
 import mvAsset from "@/assets/audio/MV.ogg.asset.json";
 import { sfx, setSfxVolume, unlockAudio } from "@/game/sfx";
 import { setBgmVolume, pauseBgm, resumeBgm, playMenuBgm, stopBgm, playMayhemBgm } from "@/game/bgm";
+import { setNightBgmVolume } from "@/game/mayhem/nightAudio";
 import { resetAllProgress } from "@/game/progress";
 import exploseAsset from "@/assets/audio/explose1.mp3.asset.json";
 import BgmPlayer from "@/game/BgmPlayer";
@@ -271,7 +272,10 @@ function MayhemSettings({ onClose }: { onClose: () => void }) {
   const [settings, setSettings] = useSettings();
 
   useEffect(() => { setSfxVolume(settings.sfxVolume); }, [settings.sfxVolume]);
-  useEffect(() => { setBgmVolume(settings.bgmVolume * 0.5); }, [settings.bgmVolume]);
+  useEffect(() => {
+    setBgmVolume(settings.bgmVolume * 0.5);
+    setNightBgmVolume(settings.bgmVolume);
+  }, [settings.bgmVolume]);
 
   return (
     <div className="mayhem-settings absolute inset-3 z-40 flex items-center justify-center sm:inset-8">
@@ -908,7 +912,10 @@ function SettingsTab() {
 
   // Apply audio volumes live as the user drags.
   useEffect(() => { setSfxVolume(settings.sfxVolume); }, [settings.sfxVolume]);
-  useEffect(() => { setBgmVolume(settings.bgmVolume * 0.5); }, [settings.bgmVolume]);
+  useEffect(() => {
+    setBgmVolume(settings.bgmVolume * 0.5);
+    setNightBgmVolume(settings.bgmVolume);
+  }, [settings.bgmVolume]);
 
   const update = <K extends keyof Settings>(key: K, value: Settings[K]) => {
     setSettings({ [key]: value } as Partial<Settings>);

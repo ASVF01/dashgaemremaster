@@ -8,6 +8,7 @@ import MainMenu from "@/game/MainMenu";
 import { LEVELS, type LevelId } from "@/game/level";
 import { useKeybinds, keyLabel, type ActionId } from "@/game/keybinds";
 import { playMenuBgm, playMenuBgmFadeIn, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor, isSameTrackAs, setBgmVolume, bgmLevelEnd, playMarathonBgm, resetBgmLevelEndFx, playMayhemMainBgm, setMayhemMix } from "@/game/bgm";
+import { setNightBgmVolume } from "@/game/mayhem/nightAudio";
 import cutsceneJustRunBro from "@/assets/video/mcdonalds_sprite_2.mp4";
 import cutsceneBossDeath from "@/assets/video/boss_death_cutscene.mp4";
 import introCardImg from "@/assets/intro_card.png";
@@ -151,6 +152,7 @@ const Index = () => {
     const s = getSettings();
     setSfxVolume(s.sfxVolume);
     setBgmVolume(s.bgmVolume * 0.5);
+    setNightBgmVolume(s.bgmVolume);
   }, []);
 
   const toggleDark = () => {
