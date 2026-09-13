@@ -31,6 +31,7 @@ export function useTestEnemy(view: string) {
   const timers = useRef<number[]>([]);
   const stareTimer = useRef<number | null>(null);
   const staringRef = useRef(false);
+  const aliveRef = useRef(true);
 
   const clearTimers = () => {
     timers.current.forEach((t) => window.clearTimeout(t));
@@ -40,12 +41,41 @@ export function useTestEnemy(view: string) {
     timers.current.push(window.setTimeout(fn, ms));
   };
 
+  const spawn = () => {
+    if (!aliveRef.current) return;
+    const route = [...CAM_ROUTE].sort(() => Math.random() - 0.5);
+    setSpot({ kind: "cam", cam: route[0] });
+    at(CAM_STEP_MS, () => setSpot({ kind: "cam", cam: route[1] }));
+    at(CAM_STEP_MS * 2, () => setSpot({ kind: "cam", cam: route[2] }));
+    at(CAM_STEP_MS * 3, enterHall);
+    at(CAM_STEP_MS * 3 + HALL_MS, () => setSpot({ kind: "door" }));
+    at(PRESENCE_MS, leave);
+  };
+
+  const scheduleSpawn = () => {
+    clearTimers();
+    at(IDLE_MIN_MS + Math.random() * (IDLE_MAX_MS - IDLE_MIN_MS), spawn);
+  };
+
+  const enterHall = () => {
+    setSpot({ kind: "hall" });
+    // it entered the hallway — announce it unless the player is in there
+    if (viewRef.current !== "hallway") mayhemSfx.animInHall();
+  };
+
+  const leave = () => {
+    if (!aliveRef.current) return;
+    if (stareTimer.current != null) { window.clearTimeout(stareTimer.current); stareTimer.current = null; }
+    staringRef.current = false;
+    // Cut every sound it just made, then a single footstep away.
+    mayhemSfx.animMove();
+    setSpot({ kind: "gone" });
+    scheduleSpawn();
+  };
+
   // ---- appearance timeline ----
   useEffect(() => {
-    let alive = true;
-
-    const leave = () => {
-      if (!alive) return;
+    aliveRef.current = true;
       if (stareTimer.current != null) { window.clearTimeout(stareTimer.current); stareTimer.current = null; }
       staringRef.current = false;
       // Cut every sound it just made, then a single footstep away.
