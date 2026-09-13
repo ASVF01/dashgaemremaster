@@ -9,11 +9,6 @@ import keyholeArt from "@/assets/mayhem/THE_KEYHOLE.png.asset.json";
 import hallwayArt from "@/assets/mayhem/THE_HALLWAY.png.asset.json";
 import packArt from "@/assets/mayhem/storage_pack.png.asset.json";
 import packUsedArt from "@/assets/mayhem/storage_used.png.asset.json";
-import hallEnterSprite from "@/assets/mayhem/enemy/Tealerhall_TEST.webp.asset.json";
-import hallLitSprite from "@/assets/mayhem/enemy/Tealerhall_TESTSTATIC.webp.asset.json";
-import keyholeFaceSprite from "@/assets/mayhem/enemy/Tealer_Keyhole_static_LOOPTEST.webp.asset.json";
-import keyholeAppearSpriteOnce from "@/assets/mayhem/enemy/Tealer_appears_at_keyhole_ONCE.webp";
-import jumpscareSpriteOnce from "@/assets/mayhem/enemy/TealerJS_ONCE.webp";
 
 import Terminal, { TERMINAL_ASSET_URLS } from "./Terminal";
 import CameraSystem, { CAMERA_ASSET_URLS } from "./CameraSystem";
@@ -38,11 +33,6 @@ const NIGHT_IMAGE_URLS = [
   hallwayArt.url,
   packArt.url,
   packUsedArt.url,
-  hallEnterSprite.url,
-  hallLitSprite.url,
-  keyholeFaceSprite.url,
-  keyholeAppearSpriteOnce,
-  jumpscareSpriteOnce,
   ...CAMERA_ASSET_URLS,
   ...TERMINAL_ASSET_URLS,
 ];
@@ -497,39 +487,6 @@ export default function NightRooms() {
           style={{ animation: "mayhemRoomFade 180ms ease-out" }}
         />
 
-        {/* Only the existing black opening reveals Tealer, keeping him outside the door. */}
-        {view === "keyhole" && enemy.atKeyhole && (
-          <div aria-hidden="true" className="mayhem-keyhole-mask pointer-events-none absolute left-1/2 top-1/2 z-[1] overflow-hidden rounded-full">
-            {keyholeAppearing ? (
-              <img
-                key={`keyhole-appear-${enemy.encounterId}`}
-                src={keyholeAppearSpriteOnce}
-                alt=""
-                draggable={false}
-                className="mayhem-enemy-arrive absolute inset-0 h-full w-full object-cover"
-              />
-            ) : (
-              <img
-                src={keyholeFaceSprite.url}
-                alt=""
-                draggable={false}
-                className="mayhem-enemy-keyhole absolute inset-0 h-full w-full object-cover"
-              />
-            )}
-          </div>
-        )}
-
-        {/* it lurks down the hall when the player walks in on it */}
-        {view === "hallway" && enemy.spot.kind === "hall" && (
-          <img
-            key={`${enemy.encounterId}-${enemy.hallAnimating ? "enter" : "still"}`}
-            src={enemy.hallAnimating ? hallEnterSprite.url : hallLitSprite.url}
-            alt=""
-            aria-hidden="true"
-            draggable={false}
-            className="mayhem-enemy-lurk pointer-events-none absolute bottom-[16%] left-1/2 h-[52%] -translate-x-1/2 object-contain"
-          />
-        )}
 
 
         {view === "office" && !cameraOpen && cameraEntry === "idle" && (
