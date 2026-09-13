@@ -179,17 +179,18 @@ export default function NightRooms() {
         // becoming a disorienting camera swing.
         const nudge = (() => {
           // office → door (looking left toward the door)
-          if (from === "office" && to === "door") return { x: -28, y: 0 };
-          // hallway → door (stepping backward out of the hall)
-          if (from === "hallway" && to === "door") return { x: 0, y: 22 };
+          if (from === "office" && to === "door") return { x: -28, y: 0, z: 0 };
+          // hallway → door (stepping back: a quick zoom-out snap)
+          if (from === "hallway" && to === "door") return { x: 0, y: 0, z: -0.09 };
           // generic tiny shifts
-          if (k === "a") return { x: 18, y: 0 };
-          if (k === "d") return { x: -18, y: 0 };
-          if (k === "w") return { x: 0, y: -10 };
-          return { x: 0, y: 0 };
+          if (k === "a") return { x: 18, y: 0, z: 0 };
+          if (k === "d") return { x: -18, y: 0, z: 0 };
+          if (k === "w") return { x: 0, y: -10, z: 0 };
+          return { x: 0, y: 0, z: 0 };
         })();
         slideX.current = nudge.x;
         slideY.current = nudge.y;
+        zoomNudge.current = nudge.z;
         setView(to);
       }
     };
@@ -272,6 +273,7 @@ export default function NightRooms() {
   // Tiny directional nudges when changing rooms — eased back to center.
   const slideX = useRef(0);
   const slideY = useRef(0);
+  const zoomNudge = useRef(0);
   const zoomCur = useRef(1.1);
   const peek = view === "keyhole" || view === "storageKeyhole" ? 1.22 : 1;
   const peekRef = useRef(peek);
@@ -291,8 +293,10 @@ export default function NightRooms() {
       // ease the tiny room nudge back to center
       slideX.current *= 0.86;
       slideY.current *= 0.86;
+      zoomNudge.current *= 0.86;
       if (Math.abs(slideX.current) < 0.4) slideX.current = 0;
       if (Math.abs(slideY.current) < 0.4) slideY.current = 0;
+      if (Math.abs(zoomNudge.current) < 0.002) zoomNudge.current = 0;
       const el = lookRef.current;
       if (el) {
         const p = peekRef.current;
@@ -304,7 +308,7 @@ export default function NightRooms() {
         const zoomT = cameraEntryState === "pullback" ? 1.05 : cameraEntryState === "rush" ? 3.0 : zoomed ? 2.1 : keyhole ? 1.35 : 1.1;
         const zoomEase = cameraEntryState === "rush" ? 0.16 : 0.075;
         zoomCur.current += (zoomT - zoomCur.current) * zoomEase;
-        const scale = zoomCur.current;
+        const scale = zoomCur.current + zoomNudge.current;
         const damp = zoomed ? 0.35 : 1;
         const tyOff = zoomed ? -60 : 0;
         const entrySlide = cameraEntryState === "rush" ? Math.min(1, Math.max(0, (scale - 1.1) / 4.1)) : 0;
