@@ -121,6 +121,23 @@ function playSample(url: string, opts: { vol?: number; rate?: number } = {}) {
   src.start(c.currentTime);
 }
 
+// Same as playSample but routed through the MAYHEM night bus, which stays
+// audible while night mode mutes the main sfx bus.
+function nSample(url: string, opts: { vol?: number; rate?: number } = {}) {
+  const c = ac(); const b = nbus(); if (!c || !b) return;
+  const buf = sampleCache.get(url);
+  if (!buf) { loadSample(url); return; }
+  const src = c.createBufferSource();
+  src.buffer = buf;
+  if (opts.rate) src.playbackRate.value = opts.rate;
+  const g = c.createGain();
+  g.gain.value = opts.vol ?? 0.55;
+  src.connect(g).connect(b);
+  src.start(c.currentTime);
+}
+
+
+
 // Like playSample but stops after `maxDur` seconds with a short fade-out.
 function playSampleClipped(url: string, maxDur: number, opts: { vol?: number; fade?: number } = {}) {
   const c = ac(); if (!c || !master) return;
