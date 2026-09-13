@@ -175,28 +175,31 @@ export default function NightRooms() {
       const to = nextView(from, k);
       if (to !== from) {
         playMoveSound(from, to);
-        // Tiny per-transition nudges so the room feels alive without
-        // becoming a disorienting camera swing.
-        const nudge = (() => {
-          // office → door (looking left toward the door)
-          if (from === "office" && to === "door") return { x: -28, y: 0, z: 0 };
-          // door → hallway (stepping through the door into the hall: slide right to center)
-          if (from === "door" && to === "hallway") return { x: -28, y: 0, z: 0 };
+        // Room transitions reuse the mouse-look system: the head snaps
+        // toward the turn direction, then eases back to center exactly
+        // like a mouse sweep (same smoothing + rotation).
+        const turn = (() => {
+          // office → door (turning left toward the door)
+          if (from === "office" && to === "door") return { x: -0.85, y: 0, z: 0 };
+          // door → hallway (entering the hall: look swings right to center)
+          if (from === "door" && to === "hallway") return { x: 0.85, y: 0, z: 0 };
           // hallway → door (stepping back: a quick zoom-out snap)
           if (from === "hallway" && to === "door") return { x: 0, y: 0, z: -0.09 };
-          // hallway → storage (entering storage from the hall: slide right to center)
-          if (from === "hallway" && to === "storage") return { x: -28, y: 0, z: 0 };
-          // door → office (turning away from the door: slide left to center)
-          if (from === "door" && to === "office") return { x: 28, y: 0, z: 0 };
-          // generic tiny shifts
-          if (k === "a") return { x: 18, y: 0, z: 0 };
-          if (k === "d") return { x: -18, y: 0, z: 0 };
-          if (k === "w") return { x: 0, y: -10, z: 0 };
+          // hallway → storage (entering storage: look swings right to center)
+          if (from === "hallway" && to === "storage") return { x: 0.85, y: 0, z: 0 };
+          // door → office (turning away from the door: look swings left to center)
+          if (from === "door" && to === "office") return { x: -0.85, y: 0, z: 0 };
+          // generic turns follow the key direction
+          if (k === "a") return { x: -0.5, y: 0, z: 0 };
+          if (k === "d") return { x: 0.5, y: 0, z: 0 };
+          if (k === "w") return { x: 0, y: 0.55, z: 0 };
           return { x: 0, y: 0, z: 0 };
         })();
-        slideX.current = nudge.x;
-        slideY.current = nudge.y;
-        zoomNudge.current = nudge.z;
+        cur.current.x = turn.x;
+        cur.current.y = turn.y;
+        target.current.x = 0;
+        target.current.y = 0;
+        zoomNudge.current = turn.z;
         setView(to);
       }
     };
@@ -276,9 +279,7 @@ export default function NightRooms() {
   const lookRef = useRef<HTMLDivElement | null>(null);
   const target = useRef({ x: 0, y: 0 });
   const cur = useRef({ x: 0, y: 0 });
-  // Tiny directional nudges when changing rooms — eased back to center.
-  const slideX = useRef(0);
-  const slideY = useRef(0);
+  // Zoom nudge for the hallway→door step-back — eased back to center.
   const zoomNudge = useRef(0);
   const zoomCur = useRef(1.1);
   const peek = view === "keyhole" || view === "storageKeyhole" ? 1.22 : 1;
@@ -296,12 +297,8 @@ export default function NightRooms() {
     const tick = () => {
       cur.current.x += (target.current.x - cur.current.x) * 0.08;
       cur.current.y += (target.current.y - cur.current.y) * 0.08;
-      // ease the tiny room nudge back to center
-      slideX.current *= 0.86;
-      slideY.current *= 0.86;
+      // ease the zoom nudge back to center
       zoomNudge.current *= 0.86;
-      if (Math.abs(slideX.current) < 0.4) slideX.current = 0;
-      if (Math.abs(slideY.current) < 0.4) slideY.current = 0;
       if (Math.abs(zoomNudge.current) < 0.002) zoomNudge.current = 0;
       const el = lookRef.current;
       if (el) {
@@ -318,8 +315,8 @@ export default function NightRooms() {
         const damp = zoomed ? 0.35 : 1;
         const tyOff = zoomed ? -60 : 0;
         const entrySlide = cameraEntryState === "rush" ? Math.min(1, Math.max(0, (scale - 1.1) / 4.1)) : 0;
-        const tx = (-cur.current.x * 34 * p * damp) - 18 * entrySlide + slideX.current;
-        const ty = (-cur.current.y * 18 * p * damp) + tyOff * (scale - 1.1) + 34 * entrySlide + slideY.current;
+        const tx = (-cur.current.x * 34 * p * damp) - 18 * entrySlide;
+        const ty = (-cur.current.y * 18 * p * damp) + tyOff * (scale - 1.1) + 34 * entrySlide;
         const rx = -cur.current.y * 1.6 * damp;
         const ry = cur.current.x * 2.4 * damp;
         el.style.transform =
