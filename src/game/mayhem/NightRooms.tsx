@@ -12,6 +12,7 @@ import packUsedArt from "@/assets/mayhem/storage_used.png.asset.json";
 
 import Terminal from "./Terminal";
 import CameraSystem from "./CameraSystem";
+import { useTestEnemy } from "./useTestEnemy";
 import { startNightBgm, stopNightBgm } from "./nightAudio";
 import { isMuted, setMuted, mayhemSfx } from "@/game/sfx";
 import { isBgmMuted, setBgmMuted, stopBgm } from "@/game/bgm";
