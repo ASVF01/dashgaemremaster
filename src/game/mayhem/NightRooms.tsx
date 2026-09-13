@@ -476,9 +476,11 @@ export default function NightRooms() {
 
       {/* Jumpscare: the animatronic fills the screen and shakes with the
           scream, then everything flashes white and fades back out. */}
-      {enemy.scare === "shake" && (
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-[96] flex items-center justify-center bg-black">
-          <div className="mayhem-scare-shake relative h-[85%] w-[70%]">
+      {/* Jumpscare: the animatronic fills the screen and shakes with the
+          scream, then lingers as a burned-in white/black afterimage. */}
+      {enemy.scare != null && (
+        <div aria-hidden="true" className={`pointer-events-none absolute inset-0 z-[96] flex items-center justify-center ${enemy.scare === "shake" ? "bg-black" : "mayhem-scare-burn bg-black"}`}>
+          <div className={`relative h-[85%] w-[70%] ${enemy.scare === "shake" ? "mayhem-scare-shake" : "mayhem-scare-after"}`}>
             <div className="absolute inset-0 rounded-[46%] bg-[#120a08] shadow-[0_0_120px_rgba(0,0,0,1)_inset,0_0_60px_rgba(0,0,0,0.9)]" />
             <div className="absolute left-[18%] top-[30%] h-[12%] w-[16%] rounded-[50%] bg-[#f2e6c8]">
               <i className="absolute left-1/2 top-1/2 block h-[58%] w-[58%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#a01010] shadow-[0_0_28px_rgba(255,30,30,0.9)]" />
@@ -491,9 +493,6 @@ export default function NightRooms() {
             <div className="absolute bottom-[14%] left-1/2 h-[22%] w-[46%] -translate-x-1/2 rounded-[50%] bg-black shadow-[0_0_40px_rgba(0,0,0,1)_inset]" />
           </div>
         </div>
-      )}
-      {enemy.scare === "fade" && (
-        <div aria-hidden="true" className="mayhem-scare-fade pointer-events-none absolute inset-0 z-[97] bg-white" />
       )}
 
       {hold > 0 && (
