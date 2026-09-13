@@ -1184,4 +1184,55 @@ export const mayhemSfx = {
   keyhole() {
     playSample(keyholeEnterAsset.url, { vol: 0.75 });
   },
+
+  // ---- test animatronic ----
+  // Its sounds are tracked so they can all be cut when it leaves.
+  animInHall() {
+    playTrackedAnim(animInHallAsset.url, 0.85);
+  },
+  animKeyholeStare() {
+    playTrackedAnim(animGrowlAsset.url, 0.8);
+    playTrackedAnim(animKeyholeAsset.url, 0.7);
+  },
+  animMove() {
+    stopAnimSounds();
+    playTrackedAnim(Math.random() < 0.5 ? animMove1Asset.url : animMove4Asset.url, 0.8);
+  },
+  stopAnimSounds,
 };
+
+// Every animatronic one-shot goes through here so `stopAnimSounds()` can
+// silence anything it made recently (growls, hall stomp, keyhole rattle).
+let animSources: { src: AudioBufferSourceNode; gain: GainNode }[] = [];
+function playTrackedAnim(url: string, vol: number) {
+  const c = ac(); const b = nbus(); if (!c || !b) return;
+  const buf = sampleCache.get(url);
+  if (!buf) { loadSample(url); return; }
+  const src = c.createBufferSource();
+  src.buffer = buf;
+  const g = c.createGain();
+  g.gain.value = vol;
+  src.connect(g).connect(b);
+  src.start(c.currentTime);
+  const entry = { src, gain: g };
+  animSources.push(entry);
+  src.onended = () => { animSources = animSources.filter((s) => s !== entry); };
+}
+function stopAnimSounds() {
+  const c = ac();
+  const list = animSources;
+  animSources = [];
+  list.forEach(({ src, gain }) => {
+    try {
+      if (c) {
+        const now = c.currentTime;
+        gain.gain.cancelScheduledValues(now);
+        gain.gain.setValueAtTime(gain.gain.value, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+        src.stop(now + 0.14);
+      } else {
+        src.stop(0);
+      }
+    } catch { /* noop */ }
+  });
+}
