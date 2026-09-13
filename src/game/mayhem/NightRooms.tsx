@@ -9,7 +9,7 @@ import keyholeArt from "@/assets/mayhem/THE_KEYHOLE.png.asset.json";
 import hallwayArt from "@/assets/mayhem/THE_HALLWAY.png.asset.json";
 import packArt from "@/assets/mayhem/storage_pack.png.asset.json";
 import packUsedArt from "@/assets/mayhem/storage_used.png.asset.json";
-import wristWatchArt from "@/assets/mayhem/wrist-watch.png.asset.json";
+
 import Terminal from "./Terminal";
 import CameraSystem from "./CameraSystem";
 import { startNightBgm, stopNightBgm } from "./nightAudio";
