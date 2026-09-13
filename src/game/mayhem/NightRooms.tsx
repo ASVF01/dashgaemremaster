@@ -288,9 +288,11 @@ export default function NightRooms() {
     const tick = () => {
       cur.current.x += (target.current.x - cur.current.x) * 0.08;
       cur.current.y += (target.current.y - cur.current.y) * 0.08;
-      // ease the room-slide offset back to center
-      slide.current *= 0.86;
-      if (Math.abs(slide.current) < 0.4) slide.current = 0;
+      // ease the tiny room nudge back to center
+      slideX.current *= 0.86;
+      slideY.current *= 0.86;
+      if (Math.abs(slideX.current) < 0.4) slideX.current = 0;
+      if (Math.abs(slideY.current) < 0.4) slideY.current = 0;
       const el = lookRef.current;
       if (el) {
         const p = peekRef.current;
