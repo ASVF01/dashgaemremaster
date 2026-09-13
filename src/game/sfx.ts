@@ -13,6 +13,8 @@ import mayhemDoorCloseAsset from "@/assets/audio/DoorClose_Tabook-2.wav.asset.js
 import mayhemTurnAsset from "@/assets/audio/mayhem-turn.wav.asset.json";
 import crtOnAsset from "@/assets/audio/CRT_On_kyles.wav.asset.json";
 import crtAmbientAsset from "@/assets/audio/CRT_Ambient_kyles.ogg.asset.json";
+import firewallOpenAsset from "@/assets/audio/FirewallOpenV2.ogg.asset.json";
+import firewallCloseAsset from "@/assets/audio/FirewallClosev2.ogg.asset.json";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
