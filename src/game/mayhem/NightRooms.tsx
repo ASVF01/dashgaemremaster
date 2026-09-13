@@ -453,12 +453,12 @@ export default function NightRooms() {
 
       <div aria-hidden="true" className="hell-static pointer-events-none absolute inset-0 opacity-40" />
 
-      <div className="pointer-events-none absolute right-4 top-4 z-[90] w-[clamp(150px,18vw,230px)] border border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))]/85 p-2 font-pixel text-[8px] text-[hsl(var(--hell-muted))] shadow-[0_0_18px_hsl(var(--hell-black))]">
-        <div className="mb-1.5 flex items-center justify-between">
+      <div className="pointer-events-none absolute left-4 top-4 z-[90] w-[clamp(220px,26vw,340px)] border border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))]/85 p-2.5 font-pixel text-[10px] text-[hsl(var(--hell-muted))] shadow-[0_0_18px_hsl(var(--hell-black))]">
+        <div className="mb-2 flex items-center justify-between">
           <span>HP</span>
           <span>{hp} / 100</span>
         </div>
-        <div className="grid h-3 grid-cols-10 gap-0.5 border border-[hsl(var(--hell-steel))] p-0.5">
+        <div className="grid h-5 grid-cols-10 gap-1 border border-[hsl(var(--hell-steel))] p-0.5">
           {Array.from({ length: 10 }, (_, segment) => (
             <i
               key={segment}
