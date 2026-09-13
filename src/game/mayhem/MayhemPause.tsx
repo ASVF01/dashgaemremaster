@@ -110,6 +110,16 @@ export default function MayhemPause({
             <button
               type="button"
               role="switch"
+              aria-checked={settings.aiMode}
+              onClick={() => { sfx.menuClick(); setSettings({ aiMode: !settings.aiMode }); }}
+              className="mayhem-settings-toggle"
+            >
+              <span>AI MODE (GENERATED ART)</span>
+              <strong>{settings.aiMode ? "ON" : "OFF"}</strong>
+            </button>
+            <button
+              type="button"
+              role="switch"
               aria-checked={settings.reducedFx}
               onClick={() => { sfx.menuClick(); setSettings({ reducedFx: !settings.reducedFx }); }}
               className="mayhem-settings-toggle"
