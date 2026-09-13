@@ -26,7 +26,7 @@ const BUTTONS = [
   { n: 5, left: 32.6, top: 63.3, width: 22.3, height: 17.5 },
 ] as const;
 
-export default function CameraSystem({ onClose, enemyCam = null }: { onClose: () => void; enemyCam?: number | null }) {
+export default function CameraSystem({ onClose, enemyCam = null, enemyMoveCount = 0 }: { onClose: () => void; enemyCam?: number | null; enemyMoveCount?: number }) {
   const [camera, setCamera] = useState(1);
   const [controlsReady, setControlsReady] = useState(false);
   const [staticFlash, setStaticFlash] = useState(false);
@@ -35,14 +35,27 @@ export default function CameraSystem({ onClose, enemyCam = null }: { onClose: ()
   const current = useRef({ x: 0, y: 0 });
   const staticTimer = useRef<number | null>(null);
 
-  const selectCamera = (next: number) => {
-    if (next === camera) return;
-    mayhemSfx.cameraSwitch();
-    setCamera(next);
+  const flashStatic = () => {
     setStaticFlash(true);
     if (staticTimer.current != null) window.clearTimeout(staticTimer.current);
     staticTimer.current = window.setTimeout(() => setStaticFlash(false), 300);
   };
+
+  const selectCamera = (next: number) => {
+    if (next === camera) return;
+    mayhemSfx.cameraSwitch();
+    setCamera(next);
+    flashStatic();
+  };
+
+  // The animatronic moved while the cameras were up — burst of static.
+  const seenMoves = useRef(enemyMoveCount);
+  useEffect(() => {
+    if (enemyMoveCount !== seenMoves.current) {
+      seenMoves.current = enemyMoveCount;
+      flashStatic();
+    }
+  }, [enemyMoveCount]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setControlsReady(true), 520);
