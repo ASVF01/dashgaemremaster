@@ -10,6 +10,7 @@ import sfxYesUrl from "@/assets/audio/sfx_yes.ogg";
 import laserBeamUrl from "@/assets/audio/weapon_beam3_3.mp3";
 import mayhemFootstepsAsset from "@/assets/audio/mayhem-room-footsteps.ogg.asset.json";
 import mayhemDoorCloseAsset from "@/assets/audio/DoorClose_Tabook-2.wav.asset.json";
+import mayhemTurnAsset from "@/assets/audio/mayhem-turn.wav.asset.json";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -145,7 +146,7 @@ function ac(): AudioContext | null {
   return ctx;
 }
 
-export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); loadSample(wwHitUrl); loadSample(auraUrl); loadSample(swingSwipeUrl); loadSample(laserBeamUrl); loadSample(mayhemFootstepsAsset.url); loadSample(mayhemDoorCloseAsset.url); }
+export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); loadSample(wwHitUrl); loadSample(auraUrl); loadSample(swingSwipeUrl); loadSample(laserBeamUrl); loadSample(mayhemFootstepsAsset.url); loadSample(mayhemDoorCloseAsset.url); loadSample(mayhemTurnAsset.url); }
 let baseVol = 0.35;
 export function setMuted(v: boolean) {
   muted = v;
@@ -1080,8 +1081,7 @@ export const mayhemSfx = {
   },
   // turning around — cloth whoosh + a single soft footstep
   turn() {
-    nNoise(0.2, 0.16, 350, 2600, 0, 700);
-    nTone({ freq: 82, to: 44, dur: 0.11, type: "sine", vol: 0.26, attack: 0.003, release: 0.1, delay: 0.14 });
+    playSample(mayhemTurnAsset.url, { vol: 0.6, rate: 0.98 + Math.random() * 0.05 });
   },
   // walking between rooms — supplied quick footstep recording
   walk(steps = 3) {
@@ -1102,12 +1102,12 @@ export const mayhemSfx = {
     src.buffer = buf;
     const g = c.createGain();
     g.gain.setValueAtTime(0.0001, t0);
-    g.gain.exponentialRampToValueAtTime(0.72, t0 + 0.04);
+    g.gain.exponentialRampToValueAtTime(0.95, t0 + 0.04);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + buf.duration + 0.02);
     src.connect(g).connect(b);
     src.start(t0);
     // tiny low thud underneath the latch for weight
-    nTone({ freq: 58, to: 34, dur: 0.22, type: "sine", vol: 0.18, attack: 0.003, release: 0.2, delay: delay + 0.14 });
+    nTone({ freq: 58, to: 34, dur: 0.22, type: "sine", vol: 0.24, attack: 0.003, release: 0.2, delay: delay + 0.14 });
   },
   // full room transition: the door starts closing over the ongoing footsteps
   roomSwitch() {
