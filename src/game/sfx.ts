@@ -979,6 +979,44 @@ function nbus(): GainNode | null {
   return nightBus;
 }
 
+// CRT monitor ambient hum — loops while the camera system is active.
+let crtAmbientSource: AudioBufferSourceNode | null = null;
+let crtAmbientGain: GainNode | null = null;
+export function startCrtAmbient() {
+  const c = ac(); const b = nbus(); if (!c || !b) return;
+  if (crtAmbientSource) return;
+  const buf = sampleCache.get(crtAmbientAsset.url);
+  if (!buf) { loadSample(crtAmbientAsset.url); return; }
+  const src = c.createBufferSource();
+  src.buffer = buf;
+  src.loop = true;
+  const g = c.createGain();
+  g.gain.value = 0.0001;
+  g.gain.exponentialRampToValueAtTime(0.28, c.currentTime + 0.25);
+  src.connect(g).connect(b);
+  src.start();
+  crtAmbientSource = src;
+  crtAmbientGain = g;
+}
+export function stopCrtAmbient() {
+  const c = ac(); if (!c) return;
+  if (crtAmbientGain) {
+    const g = crtAmbientGain;
+    const now = c.currentTime;
+    g.gain.cancelScheduledValues(now);
+    g.gain.setValueAtTime(g.gain.value, now);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
+  }
+  if (crtAmbientSource) {
+    const src = crtAmbientSource;
+    const stopAt = c.currentTime + 0.22;
+    try { src.stop(stopAt); } catch { /* noop */ }
+    setTimeout(() => { try { src.stop(0); } catch { /* noop */ } }, 250);
+    crtAmbientSource = null;
+    crtAmbientGain = null;
+  }
+}
+
 function nTone(o: ToneOpts) {
   const c = ac(); const b = nbus(); if (!c || !b) return;
   const t0 = c.currentTime + (o.delay ?? 0);
