@@ -25,7 +25,10 @@ export default function MayhemPause({
   useEffect(() => { mayhemSfx.pauseOpen(); }, []);
 
   useEffect(() => { setSfxVolume(settings.sfxVolume); }, [settings.sfxVolume]);
-  useEffect(() => { setBgmVolume(settings.bgmVolume * 0.5); }, [settings.bgmVolume]);
+  useEffect(() => {
+    setBgmVolume(settings.bgmVolume * 0.5);
+    setNightBgmVolume(settings.bgmVolume);
+  }, [settings.bgmVolume]);
 
   return (
     <div className="absolute inset-0 z-[60] overflow-hidden">
