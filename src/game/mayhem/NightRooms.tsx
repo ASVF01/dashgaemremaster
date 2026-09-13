@@ -12,8 +12,9 @@ import packUsedArt from "@/assets/mayhem/storage_used.png.asset.json";
 
 import Terminal from "./Terminal";
 import CameraSystem from "./CameraSystem";
-import { useTestEnemy } from "./useTestEnemy";
+import { useAnimatronic } from "./useAnimatronic";
 import { startNightBgm, stopNightBgm } from "./nightAudio";
+import { getMayhemNight, mayhemAiLevel, setMayhemNight } from "@/game/progress";
 import { isMuted, setMuted, mayhemSfx } from "@/game/sfx";
 import { isBgmMuted, setBgmMuted, stopBgm } from "@/game/bgm";
 
@@ -103,7 +104,9 @@ export default function NightRooms() {
   const cameraEntryTimers = useRef<number[]>([]);
   const meowTimer = useRef<number | null>(null);
   const [dust, setDust] = useState(makeDust);
-  const enemy = useTestEnemy(view);
+  const [night, setNight] = useState(getMayhemNight);
+  const nightAdvanced = useRef(false);
+  const enemy = useAnimatronic(view, mayhemAiLevel(night));
 
   const openCamera = () => {
     if (cameraOpenRef.current || cameraEntryRef.current !== "idle") return;
