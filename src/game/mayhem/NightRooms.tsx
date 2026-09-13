@@ -104,7 +104,7 @@ export default function NightRooms() {
   const cameraEntryTimers = useRef<number[]>([]);
   const meowTimer = useRef<number | null>(null);
   const [dust, setDust] = useState(makeDust);
-  const [night, setNight] = useState(getMayhemNight);
+  const [night] = useState(getMayhemNight);
   const nightAdvanced = useRef(false);
   const enemy = useAnimatronic(view, mayhemAiLevel(night));
 
