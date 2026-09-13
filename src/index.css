@@ -659,10 +659,10 @@
 
 /* MAYHEM — the art's existing black circle is the only opening through the door. */
 .mayhem-keyhole-mask {
-  width: max(13vw, 20.5vh);
+  width: max(19vw, 30vh);
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
-  clip-path: circle(47% at 50% 50%);
+  clip-path: circle(48% at 50% 50%);
 }
 @keyframes mayhemEnemyKeyhole {
   0%, 100% { transform: translate(0, 0) scale(1.08); }
