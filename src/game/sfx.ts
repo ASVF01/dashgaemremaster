@@ -148,7 +148,7 @@ function ac(): AudioContext | null {
   return ctx;
 }
 
-export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); loadSample(wwHitUrl); loadSample(auraUrl); loadSample(swingSwipeUrl); loadSample(laserBeamUrl); loadSample(mayhemFootstepsAsset.url); loadSample(mayhemDoorCloseAsset.url); loadSample(mayhemTurnAsset.url); loadSample(crtOnAsset.url); }
+export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); loadSample(wwHitUrl); loadSample(auraUrl); loadSample(swingSwipeUrl); loadSample(laserBeamUrl); loadSample(mayhemFootstepsAsset.url); loadSample(mayhemDoorCloseAsset.url); loadSample(mayhemTurnAsset.url); loadSample(crtOnAsset.url); loadSample(crtAmbientAsset.url); }
 let baseVol = 0.35;
 export function setMuted(v: boolean) {
   muted = v;
