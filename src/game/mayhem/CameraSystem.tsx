@@ -8,7 +8,7 @@ import panel1 from "@/assets/mayhem/cameras/CTRL_PANEL_1.png.asset.json";
 import panel3 from "@/assets/mayhem/cameras/CTRL_PANEL_3.png.asset.json";
 import panel4 from "@/assets/mayhem/cameras/CTRL_PANEL_4.png.asset.json";
 import panel5 from "@/assets/mayhem/cameras/CTRL_PANEL_5.png.asset.json";
-import overlaySprite from "@/assets/mayhem/enemy/Character_Overlay_TEST.webp.asset.json";
+
 import { mayhemSfx } from "@/game/sfx";
 
 const FEEDS = [cam1.url, cam2.url, cam3.url, cam4.url, cam5.url];
@@ -22,7 +22,7 @@ const PANELS: Partial<Record<number, string>> = {
 export const CAMERA_ASSET_URLS = [
   ...FEEDS,
   ...Object.values(PANELS).filter((url): url is string => Boolean(url)),
-  overlaySprite.url,
+  
 ];
 
 
