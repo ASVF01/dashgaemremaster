@@ -17,6 +17,8 @@ import { preloadNightBgm, startNightBgm, stopNightBgm } from "./nightAudio";
 import { getMayhemNight, mayhemAiLevel, setMayhemNight } from "@/game/progress";
 import { isMuted, setMuted, mayhemSfx, preloadMayhemSfx } from "@/game/sfx";
 import { isBgmMuted, setBgmMuted, stopBgm } from "@/game/bgm";
+import { useSettings } from "@/game/settings";
+import { AI_ASSET_URLS, AI_HOTSPOTS, AI_ROOMS } from "./aiArt";
 
 
 type View = "office" | "door" | "keyhole" | "hallway" | "storage" | "storageKeyhole";
@@ -35,6 +37,7 @@ const NIGHT_IMAGE_URLS = [
   packUsedArt.url,
   ...CAMERA_ASSET_URLS,
   ...TERMINAL_ASSET_URLS,
+  ...AI_ASSET_URLS,
 ];
 
 
