@@ -17,6 +17,11 @@ import firewallOpenAsset from "@/assets/audio/FirewallOpenV2.ogg.asset.json";
 import firewallCloseAsset from "@/assets/audio/FirewallClosev2.ogg.asset.json";
 import terminalDoneAsset from "@/assets/audio/Tlure_FixedSound.wav.asset.json";
 import keyholeEnterAsset from "@/assets/audio/keyhole-enter.wav.asset.json";
+import animInHallAsset from "@/assets/audio/NewAnimInHall.wav.asset.json";
+import animGrowlAsset from "@/assets/audio/TealerGrowl.wav.asset.json";
+import animKeyholeAsset from "@/assets/audio/AnimKeyhole.ogg.asset.json";
+import animMove1Asset from "@/assets/audio/AnimMove1.wav.asset.json";
+import animMove4Asset from "@/assets/audio/AnimMove4.wav.asset.json";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
