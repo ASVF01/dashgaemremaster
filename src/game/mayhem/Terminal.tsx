@@ -41,6 +41,8 @@ const WAIT_MS = 1100;
 const DONE_MS = 1200;
 
 export default function Terminal({ onClose }: { onClose: () => void }) {
+  const [settings] = useSettings();
+  const aiMode = settings.aiMode;
   const [screen, setScreen] = useState<Screen>("loading");
   const timer = useRef<number | null>(null);
 
