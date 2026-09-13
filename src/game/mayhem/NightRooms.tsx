@@ -470,6 +470,10 @@ export default function NightRooms() {
 
       <div aria-hidden="true" className="mayhem-pov-vignette pointer-events-none absolute inset-0" />
 
+      {enemy.caught && (
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-[95] bg-[hsl(var(--hell-warning))]/25 mix-blend-screen" />
+      )}
+
       {hold > 0 && (
         <div className="pointer-events-none absolute left-1/2 bottom-24 w-56 -translate-x-1/2">
           <div className="h-2 w-full border border-white/50 bg-black/60">
