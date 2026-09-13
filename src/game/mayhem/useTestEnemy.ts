@@ -26,6 +26,11 @@ export function useTestEnemy(view: string) {
   const [spot, setSpot] = useState<EnemySpot>({ kind: "gone" });
   const [caught, setCaught] = useState(false);
   const [scare, setScare] = useState<null | "shake" | "fade">(null);
+  const scareRef = useRef<null | "shake" | "fade">(null);
+  const setScarePhase = (phase: null | "shake" | "fade") => {
+    scareRef.current = phase;
+    setScare(phase);
+  };
   const viewRef = useRef(view);
   viewRef.current = view;
   const timers = useRef<number[]>([]);
@@ -111,10 +116,10 @@ export function useTestEnemy(view: string) {
         setCaught(true);
         window.setTimeout(() => setCaught(false), 900);
         mayhemSfx.jumpscare();
-        setScare("shake");
-        at(SCARE_SHAKE_MS, () => setScare("fade"));
+        setScarePhase("shake");
+        at(SCARE_SHAKE_MS, () => setScarePhase("fade"));
         at(SCARE_SHAKE_MS + SCARE_FADE_MS, () => {
-          setScare(null);
+          setScarePhase(null);
           setSpot({ kind: "gone" });
           scheduleSpawn();
         });
