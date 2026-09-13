@@ -157,7 +157,7 @@ function ac(): AudioContext | null {
   return ctx;
 }
 
-export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); loadSample(wwHitUrl); loadSample(auraUrl); loadSample(swingSwipeUrl); loadSample(laserBeamUrl); loadSample(mayhemFootstepsAsset.url); loadSample(mayhemDoorCloseAsset.url); loadSample(mayhemTurnAsset.url); loadSample(crtOnAsset.url); loadSample(crtAmbientAsset.url); loadSample(firewallOpenAsset.url); loadSample(firewallCloseAsset.url); loadSample(terminalDoneAsset.url); loadSample(keyholeEnterAsset.url); }
+export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); loadSample(wwHitUrl); loadSample(auraUrl); loadSample(swingSwipeUrl); loadSample(laserBeamUrl); loadSample(mayhemFootstepsAsset.url); loadSample(mayhemDoorCloseAsset.url); loadSample(mayhemTurnAsset.url); loadSample(crtOnAsset.url); loadSample(crtAmbientAsset.url); loadSample(firewallOpenAsset.url); loadSample(firewallCloseAsset.url); loadSample(terminalDoneAsset.url); loadSample(keyholeEnterAsset.url); loadSample(animInHallAsset.url); loadSample(animGrowlAsset.url); loadSample(animKeyholeAsset.url); loadSample(animMove1Asset.url); loadSample(animMove4Asset.url); }
 let baseVol = 0.35;
 export function setMuted(v: boolean) {
   muted = v;
