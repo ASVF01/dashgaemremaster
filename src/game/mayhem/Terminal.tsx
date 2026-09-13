@@ -3,6 +3,7 @@
 // Screens are the hand-drawn sprites; interactions are invisible hotspots.
 import { useEffect, useRef, useState } from "react";
 import { mayhemSfx } from "@/game/sfx";
+import { useSettings } from "@/game/settings";
 import loadingArt from "@/assets/mayhem/terminal/TERMINAL_Loading.png.asset.json";
 import homeArt from "@/assets/mayhem/terminal/TERMINAL_Home_Page.png.asset.json";
 import rcsArt from "@/assets/mayhem/terminal/TERMINAL_RCS.png.asset.json";
