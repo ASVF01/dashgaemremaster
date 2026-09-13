@@ -135,7 +135,13 @@ export default function NightRooms() {
   useEffect(() => {
     const startedAt = performance.now();
     const timer = window.setInterval(() => {
-      setNightElapsed(Math.min(NIGHT_MS, performance.now() - startedAt));
+      const elapsed = Math.min(NIGHT_MS, performance.now() - startedAt);
+      setNightElapsed(elapsed);
+      // 6 AM — survived: save the next (harder) night for the next run.
+      if (elapsed >= NIGHT_MS && !nightAdvanced.current) {
+        nightAdvanced.current = true;
+        setMayhemNight(getMayhemNight() + 1);
+      }
     }, 250);
     return () => window.clearInterval(timer);
   }, []);
@@ -531,7 +537,7 @@ export default function NightRooms() {
         style={{ transform: "translateY(100%)", transition: "none" }}
       >
         <div className="relative mb-8 flex w-[min(720px,90vw)] flex-col items-center gap-3 border-2 border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))]/90 p-6 shadow-[0_0_40px_rgba(0,0,0,0.95)]">
-          <div className="font-pixel text-[10px] tracking-[0.4em] text-[hsl(var(--hell-muted))]">NIGHT TIMER</div>
+          <div className="font-pixel text-[10px] tracking-[0.4em] text-[hsl(var(--hell-muted))]">NIGHT {night} — TIMER</div>
           <div className="font-pixel text-[clamp(48px,10vw,112px)] leading-none text-[hsl(var(--hell-warning))] drop-shadow-[0_0_18px_hsl(var(--hell-warning))]">
             {hourLabel}
           </div>
@@ -545,7 +551,7 @@ export default function NightRooms() {
       </div>
 
       {terminalOpen && <Terminal onClose={() => setTerminalOpen(false)} />}
-      {cameraOpen && <CameraSystem onClose={() => setCameraOpen(false)} enemyCam={enemy.enemyCam} />}
+      {cameraOpen && <CameraSystem onClose={() => setCameraOpen(false)} enemyCam={enemy.enemyCam} enemyMoveCount={enemy.moveCount} />}
     </div>
   );
 }
