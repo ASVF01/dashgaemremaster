@@ -4,6 +4,7 @@ import { mayhemSfx } from "@/game/sfx";
 import { useSettings } from "@/game/settings";
 import { sfx, setSfxVolume } from "@/game/sfx";
 import { setBgmVolume } from "@/game/bgm";
+import { setNightBgmVolume } from "@/game/mayhem/nightAudio";
 
 /**
  * MAYHEM pause menu. Covers the whole mode (which itself takes over the
