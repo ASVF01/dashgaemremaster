@@ -17,6 +17,8 @@ export type Settings = {
   sfxVolume: number;
   /** Master BGM volume 0..1. */
   bgmVolume: number;
+  /** MAYHEM: swap every room / camera / terminal for the generated art set. */
+  aiMode: boolean;
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -27,6 +29,7 @@ export const DEFAULT_SETTINGS: Settings = {
   lowHpHeartbeat: true,
   sfxVolume: 0.7,
   bgmVolume: 0.7,
+  aiMode: false,
 };
 
 const KEY = "dashgaem_settings_v1";
