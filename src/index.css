@@ -273,8 +273,13 @@
     100% { transform: scale(1); }
   }
   @keyframes mayhemCameraSlideIn {
-    0% { transform: translate3d(0, 18%, 0) scale(1.04); }
+    0% { transform: translate3d(0, 22%, 0) scale(1.08); }
     100% { transform: translate3d(0, 0, 0) scale(1); }
+  }
+  @keyframes mayhemCameraControlsPop {
+    0% { opacity: 0; transform: translate3d(0, 55%, 0) scale(0.72) rotate(4deg); }
+    65% { opacity: 1; transform: translate3d(0, -5%, 0) scale(1.06) rotate(4deg); }
+    100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1) rotate(4deg); }
   }
   @keyframes mayhemCameraEntryFlash {
     0% { opacity: 1; background: hsl(var(--hell-muted)); }
@@ -283,6 +288,7 @@
   }
   .mayhem-camera-feed { animation: mayhemCameraTune 180ms steps(3); }
   .mayhem-camera-slide-in { animation: mayhemCameraSlideIn 240ms cubic-bezier(0.16, 0.84, 0.24, 1) both; }
+  .mayhem-camera-controls-pop { animation: mayhemCameraControlsPop 260ms cubic-bezier(0.2, 0.9, 0.3, 1.25) both; }
   .mayhem-camera-entry-zoom { animation: mayhemCameraEntryZoom 420ms cubic-bezier(0.16, 0.8, 0.25, 1) both; transform-origin: center; }
   .mayhem-camera-entry-flash { animation: mayhemCameraEntryFlash 210ms steps(3) forwards; }
   .mayhem-camera-scan {

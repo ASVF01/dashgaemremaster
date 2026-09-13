@@ -28,6 +28,7 @@ const BUTTONS = [
 
 export default function CameraSystem({ onClose }: { onClose: () => void }) {
   const [camera, setCamera] = useState(1);
+  const [controlsReady, setControlsReady] = useState(false);
   const feedRef = useRef<HTMLDivElement | null>(null);
   const target = useRef({ x: 0, y: 0 });
   const current = useRef({ x: 0, y: 0 });
@@ -37,6 +38,11 @@ export default function CameraSystem({ onClose }: { onClose: () => void }) {
     mayhemSfx.cameraSwitch();
     setCamera(next);
   };
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setControlsReady(true), 520);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -96,7 +102,7 @@ export default function CameraSystem({ onClose }: { onClose: () => void }) {
       <div aria-hidden="true" className="mayhem-camera-scan pointer-events-none absolute inset-0" />
       <div aria-hidden="true" className="hell-static pointer-events-none absolute inset-0 opacity-25" />
 
-      <div className="absolute bottom-[3%] left-[2.5%] z-[75] w-[clamp(150px,20vw,260px)] origin-bottom-left rotate-[4deg]">
+      {controlsReady && <div className="mayhem-camera-controls-pop absolute bottom-[3%] left-[2.5%] z-[75] w-[clamp(150px,20vw,260px)] origin-bottom-left rotate-[4deg]">
         <div className="relative aspect-[184/166] w-full">
           <img
             src={PANELS[camera] ?? panel1.url}
@@ -123,7 +129,7 @@ export default function CameraSystem({ onClose }: { onClose: () => void }) {
             />
           ))}
         </div>
-      </div>
+      </div>}
 
       <button
         type="button"
