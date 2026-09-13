@@ -308,7 +308,7 @@ export default function NightRooms() {
         const zoomT = cameraEntryState === "pullback" ? 1.05 : cameraEntryState === "rush" ? 3.0 : zoomed ? 2.1 : keyhole ? 1.35 : 1.1;
         const zoomEase = cameraEntryState === "rush" ? 0.16 : 0.075;
         zoomCur.current += (zoomT - zoomCur.current) * zoomEase;
-        const scale = zoomCur.current;
+        const scale = zoomCur.current + zoomNudge.current;
         const damp = zoomed ? 0.35 : 1;
         const tyOff = zoomed ? -60 : 0;
         const entrySlide = cameraEntryState === "rush" ? Math.min(1, Math.max(0, (scale - 1.1) / 4.1)) : 0;
