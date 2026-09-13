@@ -552,17 +552,9 @@ export default function NightRooms() {
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-[95] bg-[hsl(var(--hell-warning))]/25 mix-blend-screen" />
       )}
 
-      {/* Jumpscare: the one-shot animation fills the screen, then its final
-          unfiltered frame fades away without an afterimage. */}
+      {/* Jumpscare: black shake while the scream plays, then a clean fade. */}
       {enemy.scare != null && (
-        <div aria-hidden="true" className={`pointer-events-none absolute inset-0 z-[96] flex items-center justify-center ${enemy.scare === "shake" ? "bg-black" : "mayhem-scare-fade"}`}>
-          <img
-            src={jumpscareSpriteOnce}
-            alt=""
-            draggable={false}
-            className={`h-full w-full object-cover ${enemy.scare === "shake" ? "mayhem-scare-shake" : "mayhem-scare-image-fade"}`}
-          />
-        </div>
+        <div aria-hidden="true" className={`pointer-events-none absolute inset-0 z-[96] ${enemy.scare === "shake" ? "bg-black mayhem-scare-shake" : "bg-black mayhem-scare-fade"}`} />
       )}
 
 

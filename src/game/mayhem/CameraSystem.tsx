@@ -123,15 +123,6 @@ export default function CameraSystem({ onClose, enemyCam = null, enemyMoveCount 
             draggable={false}
             className="absolute inset-0 h-full w-full object-cover mayhem-camera-feed"
           />
-          {enemyCam === camera && (
-            <img
-              src={overlaySprite.url}
-              alt=""
-              aria-hidden="true"
-              draggable={false}
-              className="pointer-events-none absolute right-[4%] top-[5%] h-[9%] object-contain opacity-90 drop-shadow-[0_0_12px_rgba(255,60,0,0.8)]"
-            />
-          )}
 
         </div>
 
