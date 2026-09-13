@@ -1,7 +1,7 @@
 // MAYHEM — first-person room navigation (the "night" shift).
 //
 // Office, camera system, hallway, storage room, and terminal navigation.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import officeArt from "@/assets/mayhem/THE_OFFICE.png.asset.json";
 import doorArt from "@/assets/mayhem/THE_DOOR.png.asset.json";
 import keyholeArt from "@/assets/mayhem/THE_KEYHOLE.png.asset.json";
@@ -73,6 +73,17 @@ export default function NightRooms() {
   terminalOpenRef.current = terminalOpen;
   const cameraOpenRef = useRef(cameraOpen);
   cameraOpenRef.current = cameraOpen;
+  const dust = useMemo(() => Array.from({ length: 78 }, (_, i) => ({
+    id: i,
+    left: (i * 37.17 + 11) % 100,
+    top: (i * 61.83 + 7) % 100,
+    size: 1 + ((i * 17) % 4),
+    duration: 5.5 + ((i * 29) % 75) / 10,
+    delay: -((i * 43) % 110) / 10,
+    driftX: -28 + ((i * 47) % 57),
+    driftY: -42 - ((i * 31) % 54),
+    opacity: 0.12 + ((i * 13) % 24) / 100,
+  })), []);
 
   // ---- keyboard navigation ----
   useEffect(() => {
@@ -277,6 +288,26 @@ export default function NightRooms() {
         )}
       </div>
 
+      <div aria-hidden="true" className="mayhem-dust-field pointer-events-none absolute inset-0">
+        {dust.map((particle) => (
+          <i
+            key={particle.id}
+            className="mayhem-dust-particle"
+            style={{
+              left: `${particle.left}%`,
+              top: `${particle.top}%`,
+              width: `${particle.size}px`,
+              height: `${particle.size}px`,
+              opacity: particle.opacity,
+              animationDuration: `${particle.duration}s`,
+              animationDelay: `${particle.delay}s`,
+              "--dust-x": `${particle.driftX}px`,
+              "--dust-y": `${particle.driftY}px`,
+            } as React.CSSProperties}
+          />
+        ))}
+      </div>
+      <div aria-hidden="true" className="mayhem-pov-vignette pointer-events-none absolute inset-0" />
 
       {hold > 0 && (
         <div className="pointer-events-none absolute left-1/2 bottom-24 w-56 -translate-x-1/2">
