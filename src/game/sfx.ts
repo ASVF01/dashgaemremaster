@@ -12,6 +12,7 @@ import mayhemFootstepsAsset from "@/assets/audio/mayhem-room-footsteps.ogg.asset
 import mayhemDoorCloseAsset from "@/assets/audio/DoorClose_Tabook-2.wav.asset.json";
 import mayhemTurnAsset from "@/assets/audio/mayhem-turn.wav.asset.json";
 import crtOnAsset from "@/assets/audio/CRT_On_kyles.wav.asset.json";
+import crtAmbientAsset from "@/assets/audio/CRT_Ambient_kyles.ogg.asset.json";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
