@@ -103,6 +103,7 @@ export default function NightRooms() {
   const cameraEntryTimers = useRef<number[]>([]);
   const meowTimer = useRef<number | null>(null);
   const [dust, setDust] = useState(makeDust);
+  const enemy = useTestEnemy(view);
 
   const openCamera = () => {
     if (cameraOpenRef.current || cameraEntryRef.current !== "idle") return;
