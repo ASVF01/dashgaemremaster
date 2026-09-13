@@ -483,10 +483,28 @@ export default function NightRooms() {
         </div>
       </div>
 
-      <div className="pointer-events-none absolute right-4 top-[clamp(90px,12vh,130px)] z-[91] w-[clamp(110px,14vw,180px)]">
-        <div className="relative rounded border border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))]/85 p-1 shadow-[0_0_18px_hsl(var(--hell-black))]">
-          <img src={wristWatchArt.url} alt="Wrist watch" draggable={false} className="block h-auto w-full" />
-          <div className="absolute left-[46%] top-[46%] -translate-x-1/2 -translate-y-1/2 rotate-[-4deg] font-pixel text-[clamp(10px,1.5vw,20px)] text-[hsl(var(--hell-black))]">
+      {/* R-raised arm + watch: slides up from below so it feels like the player's own arm. */}
+      <div
+        id="mayhem-watch-arm"
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-[92] flex justify-center"
+        style={{ transform: "translateY(100%)", transition: "none" }}
+      >
+        <div className="relative w-[min(520px,42vw)]">
+          {/* forearm / sleeve that anchors the watch to something real */}
+          <div
+            className="absolute left-1/2 top-[18%] h-[120%] w-[64%] -translate-x-1/2 rounded-t-[40%]"
+            style={{
+              background: "linear-gradient(180deg, #1a1512 0%, #0d0a08 60%, #050403 100%)",
+              boxShadow: "inset 0 0 40px rgba(0,0,0,0.9), 0 -10px 30px rgba(0,0,0,0.8)",
+            }}
+          />
+          <img
+            src={wristWatchArt.url}
+            alt="Wrist watch"
+            draggable={false}
+            className="relative z-10 block h-auto w-full"
+          />
+          <div className="absolute left-[46%] top-[34%] z-20 -translate-x-1/2 -translate-y-1/2 rotate-[-4deg] font-pixel text-[clamp(18px,2.4vw,34px)] text-[hsl(var(--hell-black))]">
             {hourLabel}
           </div>
         </div>
