@@ -182,6 +182,10 @@ export default function NightRooms() {
           if (from === "office" && to === "door") return { x: -28, y: 0, z: 0 };
           // hallway → door (stepping back: a quick zoom-out snap)
           if (from === "hallway" && to === "door") return { x: 0, y: 0, z: -0.09 };
+          // hallway → storage (entering storage from the hall: slide right to center)
+          if (from === "hallway" && to === "storage") return { x: -28, y: 0, z: 0 };
+          // door → office (turning away from the door: slide left to center)
+          if (from === "door" && to === "office") return { x: 28, y: 0, z: 0 };
           // generic tiny shifts
           if (k === "a") return { x: 18, y: 0, z: 0 };
           if (k === "d") return { x: -18, y: 0, z: 0 };
