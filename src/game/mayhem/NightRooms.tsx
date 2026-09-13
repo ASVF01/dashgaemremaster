@@ -9,6 +9,7 @@ import keyholeArt from "@/assets/mayhem/THE_KEYHOLE.png.asset.json";
 import hallwayArt from "@/assets/mayhem/THE_HALLWAY.png.asset.json";
 import packArt from "@/assets/mayhem/storage_pack.png.asset.json";
 import packUsedArt from "@/assets/mayhem/storage_used.png.asset.json";
+import hallEnterSprite from "@/assets/mayhem/enemy/Tealerhall_TEST.webp.asset.json";
 import hallLitSprite from "@/assets/mayhem/enemy/Tealerhall_TESTSTATIC.webp.asset.json";
 import keyholeFaceSprite from "@/assets/mayhem/enemy/Tealer_Keyhole_static_LOOPTEST.webp.asset.json";
 import keyholeAppearSprite from "@/assets/mayhem/enemy/Tealer_appears_at_keyhole_TEST.webp.asset.json";
@@ -37,6 +38,7 @@ const NIGHT_IMAGE_URLS = [
   hallwayArt.url,
   packArt.url,
   packUsedArt.url,
+  hallEnterSprite.url,
   hallLitSprite.url,
   keyholeFaceSprite.url,
   keyholeAppearSprite.url,
@@ -136,10 +138,24 @@ export default function NightRooms() {
   cameraEntryRef.current = cameraEntry;
   const cameraEntryTimers = useRef<number[]>([]);
   const meowTimer = useRef<number | null>(null);
+  const keyholeAppearTimer = useRef<number | null>(null);
+  const seenKeyholeEncounter = useRef(0);
+  const [keyholeAppearing, setKeyholeAppearing] = useState(false);
   const [dust, setDust] = useState(makeDust);
   const [night] = useState(getMayhemNight);
   const nightAdvanced = useRef(false);
   const enemy = useAnimatronic(view, mayhemAiLevel(night), nightReady);
+
+  useEffect(() => {
+    if (view !== "keyhole" || !enemy.atKeyhole || seenKeyholeEncounter.current === enemy.encounterId) return;
+    seenKeyholeEncounter.current = enemy.encounterId;
+    setKeyholeAppearing(true);
+    if (keyholeAppearTimer.current != null) window.clearTimeout(keyholeAppearTimer.current);
+    keyholeAppearTimer.current = window.setTimeout(() => {
+      setKeyholeAppearing(false);
+      keyholeAppearTimer.current = null;
+    }, 2600);
+  }, [view, enemy.atKeyhole, enemy.encounterId]);
 
   // The title card doubles as the loader. It remains visible long enough to
   // read while room art, camera feeds, terminal art, SFX, and music decode.
@@ -181,6 +197,7 @@ export default function NightRooms() {
   useEffect(() => () => {
     cameraEntryTimers.current.forEach((timer) => window.clearTimeout(timer));
     if (meowTimer.current != null) window.clearTimeout(meowTimer.current);
+    if (keyholeAppearTimer.current != null) window.clearTimeout(keyholeAppearTimer.current);
   }, []);
 
   // One real minute equals one in-game hour.
@@ -483,25 +500,30 @@ export default function NightRooms() {
         {/* the animatronic's face pressed into the keyhole */}
         {view === "keyhole" && enemy.atKeyhole && (
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-            <img
-              src={keyholeFaceSprite.url}
-              alt=""
-              draggable={false}
-              className="mayhem-enemy-keyhole absolute left-1/2 top-1/2 h-[70%] -translate-x-1/2 -translate-y-1/2 object-contain"
-            />
-            <img
-              src={keyholeAppearSprite.url}
-              alt=""
-              draggable={false}
-              className="mayhem-enemy-appear absolute left-1/2 top-1/2 h-[80%] -translate-x-1/2 -translate-y-1/2 object-contain"
-            />
+            {keyholeAppearing ? (
+              <img
+                key={`keyhole-appear-${enemy.encounterId}`}
+                src={keyholeAppearSprite.url}
+                alt=""
+                draggable={false}
+                className="absolute left-1/2 top-1/2 h-[80%] -translate-x-1/2 -translate-y-1/2 object-contain"
+              />
+            ) : (
+              <img
+                src={keyholeFaceSprite.url}
+                alt=""
+                draggable={false}
+                className="mayhem-enemy-keyhole absolute left-1/2 top-1/2 h-[70%] -translate-x-1/2 -translate-y-1/2 object-contain"
+              />
+            )}
           </div>
         )}
 
         {/* it lurks down the hall when the player walks in on it */}
         {view === "hallway" && enemy.spot.kind === "hall" && (
           <img
-            src={hallLitSprite.url}
+            key={`${enemy.encounterId}-${enemy.hallAnimating ? "enter" : "still"}`}
+            src={enemy.hallAnimating ? hallEnterSprite.url : hallLitSprite.url}
             alt=""
             aria-hidden="true"
             draggable={false}

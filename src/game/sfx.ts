@@ -1261,6 +1261,9 @@ export const mayhemSfx = {
   animInHall() {
     playTrackedAnim(animInHallAsset.url, 0.85);
   },
+  animHallEncounter() {
+    playTrackedAnim(animGrowlAsset.url, 0.8);
+  },
   animKeyholeStare() {
     playTrackedAnim(animGrowlAsset.url, 0.8);
     playTrackedAnim(animKeyholeAsset.url, 0.7);
