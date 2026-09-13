@@ -1043,6 +1043,19 @@ export const mayhemSfx = {
     nNoise(0.018, 0.3, 1400, 8000);
     nTone({ freq: 620, dur: 0.035, type: "sine", vol: 0.10, attack: 0.002, release: 0.04, delay: 0.008 });
   },
+  cameraOpen() {
+    nNoise(0.12, 0.16, 700, 6200);
+    nTone({ freq: 74, to: 52, dur: 0.18, type: "square", vol: 0.12, attack: 0.003, release: 0.1 });
+    nTone({ freq: 860, dur: 0.035, type: "sine", vol: 0.1, attack: 0.002, release: 0.05, delay: 0.09 });
+  },
+  cameraSwitch() {
+    nNoise(0.07, 0.22, 900, 7600);
+    nTone({ freq: 520, to: 760, dur: 0.045, type: "square", vol: 0.07, attack: 0.002, release: 0.04 });
+  },
+  cameraClose() {
+    nTone({ freq: 170, to: 54, dur: 0.16, type: "sawtooth", vol: 0.08, attack: 0.004, release: 0.1 });
+    nNoise(0.09, 0.12, 500, 3200, 0.03);
+  },
   // pause menu opening — deep soft thunk + slow air swell
   pauseOpen() {
     nTone({ freq: 72, to: 36, dur: 0.28, type: "sine", vol: 0.4, attack: 0.004, release: 0.22 });
@@ -1080,10 +1093,10 @@ export const mayhemSfx = {
     nTone({ freq: 58, to: 34, dur: 0.22, type: "sine", vol: 0.42, attack: 0.003, release: 0.2, delay: delay + 0.14 });
     nNoise(0.18, 0.07, 90, 600, delay + 0.14, 240);
   },
-  // full room transition: walk first, door closes 0.2s after the steps end
+  // full room transition: the door starts closing over the ongoing footsteps
   roomSwitch() {
     mayhemSfx.walk(3);
-    mayhemSfx.doorClose(3 * 0.22 + 0.2);
+    mayhemSfx.doorClose(0.25);
   },
   // leaning into the keyhole — quiet fabric shift + faint metal ring
   keyhole() {

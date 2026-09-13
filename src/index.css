@@ -261,6 +261,17 @@
   .mayhem-preview { cursor: crosshair; background: hsl(var(--hell-black)); }
   @keyframes mayhemRoomFade { from { opacity: 0; } to { opacity: 1; } }
   @keyframes mayhemTerminalUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @keyframes mayhemCameraTune {
+    0% { opacity: 0; filter: contrast(2) brightness(2); }
+    28% { opacity: 0.35; filter: contrast(1.7) brightness(0.5); }
+    46% { opacity: 0.08; }
+    100% { opacity: 1; filter: contrast(1) brightness(1); }
+  }
+  .mayhem-camera-feed { animation: mayhemCameraTune 180ms steps(3); }
+  .mayhem-camera-scan {
+    background-image: repeating-linear-gradient(0deg, hsl(var(--hell-black) / 0.18) 0 1px, transparent 1px 4px);
+    box-shadow: inset 0 0 120px hsl(var(--hell-black) / 0.95);
+  }
 
   .mayhem-menu-grid {
     pointer-events: none;
