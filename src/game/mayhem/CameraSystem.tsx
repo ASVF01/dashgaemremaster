@@ -8,7 +8,6 @@ import panel1 from "@/assets/mayhem/cameras/CTRL_PANEL_1.png.asset.json";
 import panel3 from "@/assets/mayhem/cameras/CTRL_PANEL_3.png.asset.json";
 import panel4 from "@/assets/mayhem/cameras/CTRL_PANEL_4.png.asset.json";
 import panel5 from "@/assets/mayhem/cameras/CTRL_PANEL_5.png.asset.json";
-import hallSprite from "@/assets/mayhem/enemy/Tealerhall_TEST.webp.asset.json";
 import overlaySprite from "@/assets/mayhem/enemy/Character_Overlay_TEST.webp.asset.json";
 import { mayhemSfx } from "@/game/sfx";
 
@@ -23,7 +22,6 @@ const PANELS: Partial<Record<number, string>> = {
 export const CAMERA_ASSET_URLS = [
   ...FEEDS,
   ...Object.values(PANELS).filter((url): url is string => Boolean(url)),
-  hallSprite.url,
   overlaySprite.url,
 ];
 
@@ -126,22 +124,13 @@ export default function CameraSystem({ onClose, enemyCam = null, enemyMoveCount 
             className="absolute inset-0 h-full w-full object-cover mayhem-camera-feed"
           />
           {enemyCam === camera && (
-            <>
-              <img
-                src={hallSprite.url}
-                alt=""
-                aria-hidden="true"
-                draggable={false}
-                className="mayhem-enemy-lurk pointer-events-none absolute bottom-[14%] left-1/2 h-[46%] -translate-x-1/2 object-contain"
-              />
-              <img
-                src={overlaySprite.url}
-                alt=""
-                aria-hidden="true"
-                draggable={false}
-                className="pointer-events-none absolute right-[4%] top-[5%] h-[9%] object-contain opacity-90 drop-shadow-[0_0_12px_rgba(255,60,0,0.8)]"
-              />
-            </>
+            <img
+              src={overlaySprite.url}
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              className="pointer-events-none absolute right-[4%] top-[5%] h-[9%] object-contain opacity-90 drop-shadow-[0_0_12px_rgba(255,60,0,0.8)]"
+            />
           )}
 
         </div>
