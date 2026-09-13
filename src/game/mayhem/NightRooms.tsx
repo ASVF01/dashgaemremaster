@@ -497,23 +497,23 @@ export default function NightRooms() {
           style={{ animation: "mayhemRoomFade 180ms ease-out" }}
         />
 
-        {/* Tealer lines up behind the keyhole already painted into the room art. */}
+        {/* Only the existing black opening reveals Tealer, keeping him outside the door. */}
         {view === "keyhole" && enemy.atKeyhole && (
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div aria-hidden="true" className="mayhem-keyhole-mask pointer-events-none absolute left-1/2 top-1/2 z-[1] overflow-hidden rounded-full">
             {keyholeAppearing ? (
               <img
                 key={`keyhole-appear-${enemy.encounterId}`}
                 src={keyholeAppearSprite.url}
                 alt=""
                 draggable={false}
-                className="mayhem-enemy-arrive absolute left-1/2 top-1/2 h-[18%] -translate-x-1/2 -translate-y-1/2 object-contain"
+                className="mayhem-enemy-arrive absolute inset-0 h-full w-full object-cover"
               />
             ) : (
               <img
                 src={keyholeFaceSprite.url}
                 alt=""
                 draggable={false}
-                className="mayhem-enemy-keyhole absolute left-1/2 top-1/2 h-[18%] -translate-x-1/2 -translate-y-1/2 object-contain"
+                className="mayhem-enemy-keyhole absolute inset-0 h-full w-full object-cover"
               />
             )}
           </div>

@@ -657,18 +657,24 @@
 }
 .mayhem-keyhole-eye { animation: mayhemKeyholeEye 3.4s ease-in-out infinite; }
 
-/* MAYHEM — Tealer lines up with the keyhole already present in the room art. */
+/* MAYHEM — the art's existing black circle is the only opening through the door. */
+.mayhem-keyhole-mask {
+  width: max(16.5vw, 25.7vh);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  clip-path: circle(47% at 50% 50%);
+}
 @keyframes mayhemEnemyKeyhole {
-  0%, 100% { transform: translate(-50%, -50%) scale(1); }
-  40% { transform: translate(-49%, -51%) scale(1.05); }
-  70% { transform: translate(-51%, -49%) scale(1.02); }
+  0%, 100% { transform: translate(0, 0) scale(1.08); }
+  40% { transform: translate(1%, -1%) scale(1.13); }
+  70% { transform: translate(-1%, 1%) scale(1.1); }
 }
 .mayhem-enemy-keyhole { animation: mayhemEnemyKeyhole 3.2s ease-in-out infinite; }
 
 @keyframes mayhemEnemyBehindDoorArrival {
-  0% { opacity: 0; transform: translate(-88%, -50%) scale(1.08); }
+  0% { opacity: 0; transform: translate(-38%, 0) scale(1.12); }
   45% { opacity: 0.65; }
-  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 1; transform: translate(0, 0) scale(1.08); }
 }
 .mayhem-enemy-arrive { animation: mayhemEnemyBehindDoorArrival 2.6s ease-out both; }
 
