@@ -9,6 +9,7 @@ import keyholeArt from "@/assets/mayhem/THE_KEYHOLE.png.asset.json";
 import hallwayArt from "@/assets/mayhem/THE_HALLWAY.png.asset.json";
 import packArt from "@/assets/mayhem/storage_pack.png.asset.json";
 import packUsedArt from "@/assets/mayhem/storage_used.png.asset.json";
+import wristWatchArt from "@/assets/mayhem/wrist-watch.png.asset.json";
 import Terminal from "./Terminal";
 import CameraSystem from "./CameraSystem";
 import { startNightBgm, stopNightBgm } from "./nightAudio";
@@ -19,6 +20,7 @@ import { isBgmMuted, setBgmMuted, stopBgm } from "@/game/bgm";
 type View = "office" | "door" | "keyhole" | "hallway" | "storage" | "storageKeyhole";
 
 const HOLD_MS = 3000;
+const NIGHT_MS = 6 * 60 * 1000;
 
 // Pure room-transition map — kept outside the component so the key handler
 // can compute the next view (and its sound) without a state updater.
@@ -82,6 +84,9 @@ export default function NightRooms() {
   const [redGuyMeowing, setRedGuyMeowing] = useState(false);
   const [packUsed, setPackUsed] = useState(false);
   const [hold, setHold] = useState(0); // 0..1 progress on the health pack
+  const [watchRaised, setWatchRaised] = useState(false);
+  const [nightElapsed, setNightElapsed] = useState(0);
+  const [hp] = useState(100);
   const holdStart = useRef<number | null>(null);
   const raf = useRef<number | null>(null);
   const viewRef = useRef(view);
@@ -116,6 +121,34 @@ export default function NightRooms() {
   useEffect(() => () => {
     cameraEntryTimers.current.forEach((timer) => window.clearTimeout(timer));
     if (meowTimer.current != null) window.clearTimeout(meowTimer.current);
+  }, []);
+
+  // One real minute equals one in-game hour. Holding R raises the watch.
+  useEffect(() => {
+    const startedAt = performance.now();
+    const timer = window.setInterval(() => {
+      setNightElapsed(Math.min(NIGHT_MS, performance.now() - startedAt));
+    }, 250);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() !== "r") return;
+      event.preventDefault();
+      setWatchRaised(true);
+    };
+    const onKeyUp = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() !== "r") return;
+      event.preventDefault();
+      setWatchRaised(false);
+    };
+    const lowerWatch = () => setWatchRaised(false);
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", lowerWatch);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", lowerWatch);
+    };
   }, []);
 
   const meowRedGuy = () => {
@@ -272,6 +305,9 @@ export default function NightRooms() {
     view === "hallway" ? "THE HALLWAY" :
     "THE STORAGE";
 
+  const hour = Math.min(6, Math.floor(nightElapsed / 60000));
+  const hourLabel = hour === 0 ? "12 AM" : `${hour} AM`;
+
   // ---- mouse look ----
   // Cursor position (-1..1) drives a smoothed counter-drift of the room, so
   // sweeping the mouse feels like turning your head. Keyhole views peek
@@ -416,6 +452,33 @@ export default function NightRooms() {
       )}
 
       <div aria-hidden="true" className="hell-static pointer-events-none absolute inset-0 opacity-40" />
+
+      <div className="pointer-events-none absolute right-4 top-4 z-[90] w-[clamp(150px,18vw,230px)] border border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))]/85 p-2 font-pixel text-[8px] text-[hsl(var(--hell-muted))] shadow-[0_0_18px_hsl(var(--hell-black))]">
+        <div className="mb-1.5 flex items-center justify-between">
+          <span>HP</span>
+          <span>{hp} / 100</span>
+        </div>
+        <div className="grid h-3 grid-cols-10 gap-0.5 border border-[hsl(var(--hell-steel))] p-0.5">
+          {Array.from({ length: 10 }, (_, segment) => (
+            <i
+              key={segment}
+              className={segment < Math.ceil(hp / 10) ? "bg-[hsl(var(--hell-warning))]" : "bg-[hsl(var(--hell-panel))]"}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div
+        aria-hidden={!watchRaised}
+        className={`pointer-events-none absolute inset-x-0 bottom-0 z-[91] flex justify-center transition-transform duration-200 ease-out ${watchRaised ? "translate-y-0" : "translate-y-full"}`}
+      >
+        <div className="relative w-[min(88vw,900px)]">
+          <img src={wristWatchArt.url} alt="Wrist watch" draggable={false} className="block h-auto w-full" />
+          <div className="absolute left-[46.5%] top-[47%] -translate-x-1/2 -translate-y-1/2 rotate-[-4deg] font-pixel text-[clamp(9px,1.4vw,18px)] text-[hsl(var(--hell-black))]">
+            {hourLabel}
+          </div>
+        </div>
+      </div>
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-1 bg-gradient-to-t from-black/85 to-transparent px-4 pb-4 pt-10 text-center">
         <div className="font-pixel text-[10px] tracking-[0.3em] text-white/80">{label}</div>
