@@ -122,7 +122,7 @@ export default function CameraSystem({ onClose, enemyCam = null, enemyMoveCount 
         <div className="mayhem-camera-entry-zoom absolute inset-0">
           <img
             key={camera}
-            src={FEEDS[camera - 1]}
+            src={(aiMode ? AI_CAM_FEEDS : FEEDS)[camera - 1]}
             alt={`Camera ${camera} surveillance feed`}
             draggable={false}
             className="absolute inset-0 h-full w-full object-cover mayhem-camera-feed"
