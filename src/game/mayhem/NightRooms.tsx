@@ -12,6 +12,7 @@ import packUsedArt from "@/assets/mayhem/storage_used.png.asset.json";
 
 import Terminal from "./Terminal";
 import CameraSystem from "./CameraSystem";
+import { useTestEnemy } from "./useTestEnemy";
 import { startNightBgm, stopNightBgm } from "./nightAudio";
 import { isMuted, setMuted, mayhemSfx } from "@/game/sfx";
 import { isBgmMuted, setBgmMuted, stopBgm } from "@/game/bgm";
@@ -102,6 +103,7 @@ export default function NightRooms() {
   const cameraEntryTimers = useRef<number[]>([]);
   const meowTimer = useRef<number | null>(null);
   const [dust, setDust] = useState(makeDust);
+  const enemy = useTestEnemy(view);
 
   const openCamera = () => {
     if (cameraOpenRef.current || cameraEntryRef.current !== "idle") return;
@@ -399,6 +401,16 @@ export default function NightRooms() {
           style={{ animation: "mayhemRoomFade 180ms ease-out" }}
         />
 
+        {/* the test animatronic's eye, pressed into the middle of the keyhole */}
+        {view === "keyhole" && enemy.atKeyhole && (
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div className="mayhem-keyhole-eye relative h-[9%] w-[5%] rounded-[50%] bg-[#f2e6c8] shadow-[0_0_22px_rgba(0,0,0,0.9)_inset]">
+              <i className="absolute left-1/2 top-1/2 block h-[52%] w-[52%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#8f1010]" />
+              <i className="absolute left-1/2 top-1/2 block h-[26%] w-[26%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-black" />
+            </div>
+          </div>
+        )}
+
         {view === "office" && !cameraOpen && cameraEntry === "idle" && (
           <>
             <button
@@ -458,6 +470,10 @@ export default function NightRooms() {
 
       <div aria-hidden="true" className="mayhem-pov-vignette pointer-events-none absolute inset-0" />
 
+      {enemy.caught && (
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-[95] bg-[hsl(var(--hell-warning))]/25 mix-blend-screen" />
+      )}
+
       {hold > 0 && (
         <div className="pointer-events-none absolute left-1/2 bottom-24 w-56 -translate-x-1/2">
           <div className="h-2 w-full border border-white/50 bg-black/60">
@@ -505,7 +521,7 @@ export default function NightRooms() {
       </div>
 
       {terminalOpen && <Terminal onClose={() => setTerminalOpen(false)} />}
-      {cameraOpen && <CameraSystem onClose={() => setCameraOpen(false)} />}
+      {cameraOpen && <CameraSystem onClose={() => setCameraOpen(false)} enemyCam={enemy.enemyCam} />}
     </div>
   );
 }

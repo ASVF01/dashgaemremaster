@@ -26,7 +26,7 @@ const BUTTONS = [
   { n: 5, left: 32.6, top: 63.3, width: 22.3, height: 17.5 },
 ] as const;
 
-export default function CameraSystem({ onClose }: { onClose: () => void }) {
+export default function CameraSystem({ onClose, enemyCam = null }: { onClose: () => void; enemyCam?: number | null }) {
   const [camera, setCamera] = useState(1);
   const [controlsReady, setControlsReady] = useState(false);
   const [staticFlash, setStaticFlash] = useState(false);
@@ -102,7 +102,15 @@ export default function CameraSystem({ onClose }: { onClose: () => void }) {
             draggable={false}
             className="absolute inset-0 h-full w-full object-cover mayhem-camera-feed"
           />
+          {enemyCam === camera && (
+            <div aria-hidden="true" className="pointer-events-none absolute bottom-[18%] left-1/2 h-[34%] w-[13%] -translate-x-1/2">
+              <div className="absolute inset-0 rounded-t-[45%] bg-black/85 blur-[1px]" />
+              <i className="absolute left-[28%] top-[9%] block h-[4%] w-[10%] rounded-full bg-[hsl(var(--hell-warning))] shadow-[0_0_10px_hsl(var(--hell-warning))]" />
+              <i className="absolute left-[60%] top-[9%] block h-[4%] w-[10%] rounded-full bg-[hsl(var(--hell-warning))] shadow-[0_0_10px_hsl(var(--hell-warning))]" />
+            </div>
+          )}
         </div>
+
       </div>
 
       <div aria-hidden="true" className="mayhem-camera-entry-flash pointer-events-none absolute inset-0 z-[73]" />
