@@ -1092,13 +1092,22 @@ export const mayhemSfx = {
       rate: 0.97 + Math.random() * 0.06,
     });
   },
-  // door closing behind you — hinge settle, latch clack, deep frame thud
+  // door closing behind you — uploaded heavy door-close recording
   doorClose(delay = 0) {
-    nTone({ freq: 180, to: 110, dur: 0.16, type: "sawtooth", vol: 0.04, attack: 0.02, release: 0.1, delay });
-    nNoise(0.02, 0.3, 1200, 8000, delay + 0.1);
-    nTone({ freq: 1500, dur: 0.03, type: "square", vol: 0.05, attack: 0.001, release: 0.03, delay: delay + 0.1 });
-    nTone({ freq: 58, to: 34, dur: 0.22, type: "sine", vol: 0.42, attack: 0.003, release: 0.2, delay: delay + 0.14 });
-    nNoise(0.18, 0.07, 90, 600, delay + 0.14, 240);
+    const c = ac(); const b = nbus(); if (!c || !b) return;
+    const buf = sampleCache.get(mayhemDoorCloseAsset.url);
+    if (!buf) { loadSample(mayhemDoorCloseAsset.url); return; }
+    const t0 = c.currentTime + delay;
+    const src = c.createBufferSource();
+    src.buffer = buf;
+    const g = c.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(0.72, t0 + 0.04);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + buf.duration + 0.02);
+    src.connect(g).connect(b);
+    src.start(t0);
+    // tiny low thud underneath the latch for weight
+    nTone({ freq: 58, to: 34, dur: 0.22, type: "sine", vol: 0.18, attack: 0.003, release: 0.2, delay: delay + 0.14 });
   },
   // full room transition: the door starts closing over the ongoing footsteps
   roomSwitch() {
