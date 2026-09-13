@@ -22,6 +22,7 @@ import animGrowlAsset from "@/assets/audio/TealerGrowl.wav.asset.json";
 import animKeyholeAsset from "@/assets/audio/AnimKeyhole.ogg.asset.json";
 import animMove1Asset from "@/assets/audio/AnimMove1.wav.asset.json";
 import animMove4Asset from "@/assets/audio/AnimMove4.wav.asset.json";
+import jumpscareAsset from "@/assets/audio/JumpscareRevised3.ogg.asset.json";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -174,7 +175,7 @@ function ac(): AudioContext | null {
   return ctx;
 }
 
-export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); loadSample(wwHitUrl); loadSample(auraUrl); loadSample(swingSwipeUrl); loadSample(laserBeamUrl); loadSample(mayhemFootstepsAsset.url); loadSample(mayhemDoorCloseAsset.url); loadSample(mayhemTurnAsset.url); loadSample(crtOnAsset.url); loadSample(crtAmbientAsset.url); loadSample(firewallOpenAsset.url); loadSample(firewallCloseAsset.url); loadSample(terminalDoneAsset.url); loadSample(keyholeEnterAsset.url); loadSample(animInHallAsset.url); loadSample(animGrowlAsset.url); loadSample(animKeyholeAsset.url); loadSample(animMove1Asset.url); loadSample(animMove4Asset.url); }
+export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); loadSample(wwHitUrl); loadSample(auraUrl); loadSample(swingSwipeUrl); loadSample(laserBeamUrl); loadSample(mayhemFootstepsAsset.url); loadSample(mayhemDoorCloseAsset.url); loadSample(mayhemTurnAsset.url); loadSample(crtOnAsset.url); loadSample(crtAmbientAsset.url); loadSample(firewallOpenAsset.url); loadSample(firewallCloseAsset.url); loadSample(terminalDoneAsset.url); loadSample(keyholeEnterAsset.url); loadSample(animInHallAsset.url); loadSample(animGrowlAsset.url); loadSample(animKeyholeAsset.url); loadSample(animMove1Asset.url); loadSample(animMove4Asset.url); loadSample(jumpscareAsset.url); }
 let baseVol = 0.35;
 export function setMuted(v: boolean) {
   muted = v;
@@ -1216,6 +1217,11 @@ export const mayhemSfx = {
     playTrackedAnim(Math.random() < 0.5 ? animMove1Asset.url : animMove4Asset.url, 0.8);
   },
   stopAnimSounds,
+  // Full-volume scream when the player holds eye contact too long.
+  jumpscare() {
+    stopAnimSounds();
+    nSample(jumpscareAsset.url, { vol: 1 });
+  },
 };
 
 // Every animatronic one-shot goes through here so `stopAnimSounds()` can
