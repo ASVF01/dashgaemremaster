@@ -179,8 +179,8 @@ export default function NightRooms() {
         // toward the turn direction, then eases back to center exactly
         // like a mouse sweep (same smoothing + rotation).
         const turn = (() => {
-          // office → door (turning left toward the door)
-          if (from === "office" && to === "door") return { x: -0.85, y: 0, z: 0 };
+          // office → door (turning right toward the door)
+          if (from === "office" && to === "door") return { x: 0.85, y: 0, z: 0 };
           // door → hallway (entering the hall: look swings right to center)
           if (from === "door" && to === "hallway") return { x: 0.85, y: 0, z: 0 };
           // hallway → door (stepping back: a quick zoom-out snap)
