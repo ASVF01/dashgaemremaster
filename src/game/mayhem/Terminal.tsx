@@ -93,19 +93,14 @@ export default function Terminal({ onClose }: { onClose: () => void }) {
 
   return (
     <>
-      {/* full-screen CRT backdrop — the tv effect lives in the black area around the terminal */}
+      {/* Soft room dimmer; CRT texture remains inside the terminal itself. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-[69] bg-black/55"
-        style={{
-          backgroundImage:
-            "repeating-linear-gradient(0deg, rgba(0,0,0,0.22) 0px, rgba(0,0,0,0.22) 1px, transparent 1px, transparent 3px)",
-          boxShadow: "inset 0 0 160px rgba(0,0,0,0.95)",
-        }}
+        className="pointer-events-none absolute inset-0 z-[69] bg-black/25"
       />
 
       <div
-        className="absolute left-[7.5%] right-[7.5%] top-[7.5%] bottom-[7.5%] z-[70] rounded-lg border-4 border-[#2a2f2a] bg-black shadow-[0_20px_80px_rgba(0,0,0,0.9)]"
+        className="absolute bottom-0 left-1/2 z-[70] h-[min(46vh,420px)] w-[min(720px,76vw)] -translate-x-1/2 rounded-t-md border-x-4 border-t-4 border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))] shadow-[0_-12px_55px_hsl(var(--hell-black))] max-sm:h-[40vh] max-sm:w-[94vw]"
         style={{ animation: "mayhemTerminalUp 420ms cubic-bezier(0.22,1,0.36,1)" }}
       >
         {/* screen */}
@@ -177,7 +172,7 @@ export default function Terminal({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        <div className="pointer-events-none absolute inset-x-0 top-3 text-center font-pixel text-[9px] tracking-[0.3em] text-[#39ff6a]/60">
+        <div className="pointer-events-none absolute inset-x-0 top-2 text-center font-pixel text-[9px] tracking-[0.3em] text-[hsl(var(--hell-terminal))]/60">
           [ S ] CLOSE TERMINAL
         </div>
       </div>
