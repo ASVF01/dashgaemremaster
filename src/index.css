@@ -260,6 +260,31 @@
   .hell-static { z-index: 1; background-image: radial-gradient(hsl(var(--hell-muted) / 0.6) 0.7px, transparent 0.7px); background-size: 7px 7px; animation: hell-static-shift 0.18s steps(2) infinite; }
   .mayhem-preview { cursor: crosshair; background: hsl(var(--hell-black)); }
   @keyframes mayhemRoomFade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes mayhemNightIntroRise {
+    0% { opacity: 0; transform: translate3d(0, 115vh, 0); }
+    42% { opacity: 1; }
+    100% { opacity: 1; transform: translate3d(0, 0, 0); }
+  }
+  @keyframes mayhemNightIntroExit {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+  .mayhem-night-intro-grid {
+    background-image:
+      linear-gradient(hsl(var(--hell-muted) / 0.24) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--hell-muted) / 0.24) 1px, transparent 1px);
+    background-size: 40px 40px;
+    box-shadow: inset 0 0 150px 45px hsl(var(--hell-black));
+  }
+  .mayhem-night-intro-copy {
+    animation: mayhemNightIntroRise 1.35s cubic-bezier(0.18, 0.78, 0.24, 1) both;
+    text-shadow: 0 0 14px hsl(var(--hell-muted) / 0.45);
+  }
+  .mayhem-night-intro-exit { animation: mayhemNightIntroExit 480ms ease-in forwards; }
+  @media (prefers-reduced-motion: reduce) {
+    .mayhem-night-intro-copy { animation: none; }
+    .mayhem-night-intro-exit { animation-duration: 1ms; }
+  }
   @keyframes mayhemTerminalUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
   @keyframes mayhemCameraTune {
     0% { opacity: 0; filter: contrast(2) brightness(2); }

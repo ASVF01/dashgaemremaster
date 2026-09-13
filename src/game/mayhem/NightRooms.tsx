@@ -10,12 +10,12 @@ import hallwayArt from "@/assets/mayhem/THE_HALLWAY.png.asset.json";
 import packArt from "@/assets/mayhem/storage_pack.png.asset.json";
 import packUsedArt from "@/assets/mayhem/storage_used.png.asset.json";
 
-import Terminal from "./Terminal";
-import CameraSystem from "./CameraSystem";
+import Terminal, { TERMINAL_ASSET_URLS } from "./Terminal";
+import CameraSystem, { CAMERA_ASSET_URLS } from "./CameraSystem";
 import { useAnimatronic } from "./useAnimatronic";
-import { startNightBgm, stopNightBgm } from "./nightAudio";
+import { preloadNightBgm, startNightBgm, stopNightBgm } from "./nightAudio";
 import { getMayhemNight, mayhemAiLevel, setMayhemNight } from "@/game/progress";
-import { isMuted, setMuted, mayhemSfx } from "@/game/sfx";
+import { isMuted, setMuted, mayhemSfx, preloadMayhemSfx } from "@/game/sfx";
 import { isBgmMuted, setBgmMuted, stopBgm } from "@/game/bgm";
 
 
@@ -23,6 +23,28 @@ type View = "office" | "door" | "keyhole" | "hallway" | "storage" | "storageKeyh
 
 const HOLD_MS = 3000;
 const NIGHT_MS = 6 * 60 * 1000;
+const INTRO_MIN_MS = 2600;
+
+const NIGHT_IMAGE_URLS = [
+  officeArt.url,
+  officeMeowArt.url,
+  doorArt.url,
+  keyholeArt.url,
+  hallwayArt.url,
+  packArt.url,
+  packUsedArt.url,
+  ...CAMERA_ASSET_URLS,
+  ...TERMINAL_ASSET_URLS,
+];
+
+function preloadNightImages(): Promise<void> {
+  return Promise.all(NIGHT_IMAGE_URLS.map((url) => new Promise<void>((resolve) => {
+    const image = new Image();
+    image.onload = () => resolve();
+    image.onerror = () => resolve();
+    image.src = url;
+  }))).then(() => undefined);
+}
 
 // Pure room-transition map — kept outside the component so the key handler
 // can compute the next view (and its sound) without a state updater.
@@ -87,6 +109,8 @@ export default function NightRooms() {
   const [packUsed, setPackUsed] = useState(false);
   const [hold, setHold] = useState(0); // 0..1 progress on the health pack
   const [nightElapsed, setNightElapsed] = useState(0);
+  const [nightReady, setNightReady] = useState(false);
+  const [introLeaving, setIntroLeaving] = useState(false);
   const [hp] = useState(100);
   const [watchRaised, setWatchRaised] = useState(false);
   const watchRaf = useRef<number | null>(null);
@@ -106,7 +130,26 @@ export default function NightRooms() {
   const [dust, setDust] = useState(makeDust);
   const [night] = useState(getMayhemNight);
   const nightAdvanced = useRef(false);
-  const enemy = useAnimatronic(view, mayhemAiLevel(night));
+  const enemy = useAnimatronic(view, mayhemAiLevel(night), nightReady);
+
+  // The title card doubles as the loader. It remains visible long enough to
+  // read while room art, camera feeds, terminal art, SFX, and music decode.
+  useEffect(() => {
+    let cancelled = false;
+    let revealTimer: number | null = null;
+    const minimum = new Promise<void>((resolve) => {
+      revealTimer = window.setTimeout(resolve, INTRO_MIN_MS);
+    });
+    Promise.allSettled([preloadNightImages(), preloadMayhemSfx(), preloadNightBgm(), minimum]).then(() => {
+      if (cancelled) return;
+      setIntroLeaving(true);
+      revealTimer = window.setTimeout(() => setNightReady(true), 480);
+    });
+    return () => {
+      cancelled = true;
+      if (revealTimer != null) window.clearTimeout(revealTimer);
+    };
+  }, []);
 
   const openCamera = () => {
     if (cameraOpenRef.current || cameraEntryRef.current !== "idle") return;
@@ -133,6 +176,7 @@ export default function NightRooms() {
 
   // One real minute equals one in-game hour.
   useEffect(() => {
+    if (!nightReady) return;
     const startedAt = performance.now();
     const timer = window.setInterval(() => {
       const elapsed = Math.min(NIGHT_MS, performance.now() - startedAt);
@@ -144,7 +188,7 @@ export default function NightRooms() {
       }
     }, 250);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [nightReady]);
 
   const meowRedGuy = () => {
     if (redGuyMeowing) return;
@@ -301,13 +345,13 @@ export default function NightRooms() {
     setMuted(true);
     setBgmMuted(true);
     stopBgm(0.3);
-    startNightBgm();
+    if (nightReady) startNightBgm();
     return () => {
       stopNightBgm();
       setMuted(prevSfxMuted);
       setBgmMuted(prevBgmMuted);
     };
-  }, []);
+  }, [nightReady]);
 
 
   const art =
@@ -399,6 +443,16 @@ export default function NightRooms() {
       onMouseMove={onMove}
       onMouseLeave={() => { target.current.x = 0; target.current.y = 0; }}
     >
+      {!nightReady && (
+        <div className={`mayhem-night-intro absolute inset-0 z-[120] flex items-center justify-center overflow-hidden bg-[hsl(var(--hell-black))] ${introLeaving ? "mayhem-night-intro-exit" : ""}`}>
+          <div aria-hidden="true" className="mayhem-night-intro-grid absolute inset-0" />
+          <div className="mayhem-night-intro-copy relative z-10 flex flex-col items-center text-center">
+            <div className="font-pixel text-[clamp(30px,6vw,72px)] leading-none text-[hsl(var(--hell-muted))]">NIGHT {night}</div>
+            <div className="mt-7 font-pixel text-[clamp(15px,2.5vw,28px)] text-[hsl(var(--hell-muted))]">12 AM</div>
+          </div>
+        </div>
+      )}
+
       {/* mouse-look layer: the room drifts opposite the cursor */}
       <div ref={lookRef} className="absolute inset-0 will-change-transform">
         <img

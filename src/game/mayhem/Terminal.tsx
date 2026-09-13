@@ -33,6 +33,8 @@ const ART: Record<Screen, string> = {
   done: doneArt.url,
 };
 
+export const TERMINAL_ASSET_URLS = Object.values(ART);
+
 const BOOT_MS = 1800;
 const WAIT_MS = 1100;
 const DONE_MS = 1200;

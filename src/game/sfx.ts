@@ -195,7 +195,40 @@ function ac(): AudioContext | null {
   return ctx;
 }
 
-export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); loadSample(wwHitUrl); loadSample(auraUrl); loadSample(swingSwipeUrl); loadSample(laserBeamUrl); loadSample(mayhemFootstepsAsset.url); loadSample(mayhemDoorCloseAsset.url); loadSample(mayhemTurnAsset.url); loadSample(crtOnAsset.url); loadSample(crtAmbientAsset.url); loadSample(firewallOpenAsset.url); loadSample(firewallCloseAsset.url); loadSample(terminalDoneAsset.url); loadSample(keyholeEnterAsset.url); loadSample(animInHallAsset.url); loadSample(animGrowlAsset.url); loadSample(animKeyholeAsset.url); loadSample(animMove1Asset.url); loadSample(animMove4Asset.url); loadSample(jumpscareAsset.url); }
+const MAYHEM_SAMPLE_URLS = [
+  mayhemFootstepsAsset.url,
+  mayhemDoorCloseAsset.url,
+  mayhemTurnAsset.url,
+  crtOnAsset.url,
+  crtAmbientAsset.url,
+  firewallOpenAsset.url,
+  firewallCloseAsset.url,
+  terminalDoneAsset.url,
+  keyholeEnterAsset.url,
+  animInHallAsset.url,
+  animGrowlAsset.url,
+  animKeyholeAsset.url,
+  animMove1Asset.url,
+  animMove4Asset.url,
+  jumpscareAsset.url,
+];
+
+export function preloadMayhemSfx(): Promise<void> {
+  ac();
+  return Promise.all(MAYHEM_SAMPLE_URLS.map((url) => loadSample(url))).then(() => undefined);
+}
+
+export function unlockAudio() {
+  ac();
+  loadSample(nySampleUrl);
+  loadSample(beamCriticalUrl);
+  loadSample(notBadUrl);
+  loadSample(wwHitUrl);
+  loadSample(auraUrl);
+  loadSample(swingSwipeUrl);
+  loadSample(laserBeamUrl);
+  void preloadMayhemSfx();
+}
 let baseVol = 0.35;
 export function setMuted(v: boolean) {
   muted = v;

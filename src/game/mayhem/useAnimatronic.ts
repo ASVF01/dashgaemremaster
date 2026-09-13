@@ -30,7 +30,7 @@ const SCARE_FADE_MS = 650;
 const RESPAWN_MIN_MS = 6000;
 const RESPAWN_MAX_MS = 12000;
 
-export function useAnimatronic(view: string, aiLevel: number) {
+export function useAnimatronic(view: string, aiLevel: number, active = true) {
   const [spot, setSpot] = useState<EnemySpot>({ kind: "gone" });
   const [caught, setCaught] = useState(false);
   const [scare, setScare] = useState<null | "shake" | "fade">(null);
@@ -98,6 +98,7 @@ export function useAnimatronic(view: string, aiLevel: number) {
 
   // ---- spawn + dice-roll movement loop ----
   useEffect(() => {
+    if (!active) return;
     aliveRef.current = true;
     spawn();
 
@@ -135,7 +136,7 @@ export function useAnimatronic(view: string, aiLevel: number) {
       mayhemSfx.stopAnimSounds();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [active]);
 
   // ---- eye-to-eye at the keyhole ----
   useEffect(() => {
