@@ -112,7 +112,7 @@ export default function CameraSystem({ onClose }: { onClose: () => void }) {
       {staticFlash && (
         <div
           aria-hidden="true"
-          className="hell-static pointer-events-none absolute inset-0 z-[74] animate-[fade-out_0.3s_ease-out_forwards] opacity-70"
+          className="hell-static pointer-events-none absolute inset-0 z-[74] animate-[fade-out_0.3s_ease-out_forwards] opacity-80"
         />
       )}
 
