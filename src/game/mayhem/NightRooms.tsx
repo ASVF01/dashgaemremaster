@@ -104,13 +104,13 @@ export default function NightRooms() {
     cameraEntryTimers.current.push(window.setTimeout(() => {
       cameraEntryRef.current = "rush";
       setCameraEntry("rush");
+      cameraOpenRef.current = true;
+      setCameraOpen(true);
     }, 520));
     cameraEntryTimers.current.push(window.setTimeout(() => {
-      cameraOpenRef.current = true;
       cameraEntryRef.current = "idle";
-      setCameraOpen(true);
       setCameraEntry("idle");
-    }, 1180));
+    }, 1020));
   };
 
   useEffect(() => () => {
