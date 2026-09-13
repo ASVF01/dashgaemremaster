@@ -8,6 +8,8 @@ import panel1 from "@/assets/mayhem/cameras/CTRL_PANEL_1.png.asset.json";
 import panel3 from "@/assets/mayhem/cameras/CTRL_PANEL_3.png.asset.json";
 import panel4 from "@/assets/mayhem/cameras/CTRL_PANEL_4.png.asset.json";
 import panel5 from "@/assets/mayhem/cameras/CTRL_PANEL_5.png.asset.json";
+import hallSprite from "@/assets/mayhem/enemy/Tealerhall_TEST.webp.asset.json";
+import overlaySprite from "@/assets/mayhem/enemy/Character_Overlay_TEST.webp.asset.json";
 import { mayhemSfx } from "@/game/sfx";
 
 const FEEDS = [cam1.url, cam2.url, cam3.url, cam4.url, cam5.url];
@@ -18,7 +20,13 @@ const PANELS: Partial<Record<number, string>> = {
   5: panel5.url,
 };
 
-export const CAMERA_ASSET_URLS = [...FEEDS, ...Object.values(PANELS).filter((url): url is string => Boolean(url))];
+export const CAMERA_ASSET_URLS = [
+  ...FEEDS,
+  ...Object.values(PANELS).filter((url): url is string => Boolean(url)),
+  hallSprite.url,
+  overlaySprite.url,
+];
+
 
 const BUTTONS = [
   { n: 1, left: 7.6, top: 42.2, width: 22.3, height: 17.5 },
