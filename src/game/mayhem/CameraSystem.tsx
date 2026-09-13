@@ -46,7 +46,10 @@ export default function CameraSystem({ onClose }: { onClose: () => void }) {
 
   useEffect(() => {
     const timer = window.setTimeout(() => setControlsReady(true), 520);
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+      if (staticTimer.current != null) window.clearTimeout(staticTimer.current);
+    };
   }, []);
 
   useEffect(() => {
