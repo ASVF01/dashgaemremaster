@@ -8,6 +8,7 @@ import swingSwipeUrl from "@/assets/audio/swing_swipe.ogg";
 import sfxCompleteUrl from "@/assets/audio/sfx_complete.ogg";
 import sfxYesUrl from "@/assets/audio/sfx_yes.ogg";
 import laserBeamUrl from "@/assets/audio/weapon_beam3_3.mp3";
+import mayhemFootstepsAsset from "@/assets/audio/mayhem-room-footsteps.ogg.asset.json";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -143,7 +144,7 @@ function ac(): AudioContext | null {
   return ctx;
 }
 
-export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); loadSample(wwHitUrl); loadSample(auraUrl); loadSample(swingSwipeUrl); loadSample(laserBeamUrl); }
+export function unlockAudio() { ac(); loadSample(nySampleUrl); loadSample(beamCriticalUrl); loadSample(notBadUrl); loadSample(wwHitUrl); loadSample(auraUrl); loadSample(swingSwipeUrl); loadSample(laserBeamUrl); loadSample(mayhemFootstepsAsset.url); }
 let baseVol = 0.35;
 export function setMuted(v: boolean) {
   muted = v;
@@ -1081,16 +1082,14 @@ export const mayhemSfx = {
     nNoise(0.2, 0.16, 350, 2600, 0, 700);
     nTone({ freq: 82, to: 44, dur: 0.11, type: "sine", vol: 0.26, attack: 0.003, release: 0.1, delay: 0.14 });
   },
-  // walking between rooms — a few quick, slightly heel-heavy steps
-  footstep(vol = 0.22, delay = 0, pitch = 1) {
-    nNoise(0.045, vol * 0.5, 250, 1800, delay);
-    nTone({ freq: 96 * pitch, to: 48 * pitch, dur: 0.09, type: "sine", vol, attack: 0.002, release: 0.08, delay });
-  },
+  // walking between rooms — supplied quick footstep recording
   walk(steps = 3) {
-    for (let i = 0; i < steps; i++) {
-      const t = i * 0.22;
-      mayhemSfx.footstep(0.2 - i * 0.03, t, i % 2 === 0 ? 1 : 0.88);
-    }
+    // The recording already contains the full quick crossing. Keep the old
+    // `steps` argument as a small intensity hint so office turns stay softer.
+    playSample(mayhemFootstepsAsset.url, {
+      vol: steps <= 2 ? 0.48 : 0.62,
+      rate: 0.97 + Math.random() * 0.06,
+    });
   },
   // door closing behind you — hinge settle, latch clack, deep frame thud
   doorClose(delay = 0) {
