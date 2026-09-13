@@ -410,17 +410,21 @@ export default function NightRooms() {
       const el = lookRef.current;
       if (el) {
         const p = peekRef.current;
-        // terminal open: zoom in toward the player's face (lower-center) and
-        // damp the head drift so the panel feels like it's in front of you
+        // Terminal open: lock the player's gaze, tighten the FOV slightly,
+        // and keep the room centered behind the raised panel.
         const zoomed = terminalOpenRef.current;
+        if (zoomed) {
+          target.current.x = 0;
+          target.current.y = 0;
+        }
         const keyhole = p > 1; // pressed against the door: narrow the FOV
         const cameraEntryState = cameraEntryRef.current;
-        const zoomT = cameraEntryState === "pullback" ? 1.05 : cameraEntryState === "rush" ? 3.0 : zoomed ? 2.1 : keyhole ? 1.35 : 1.1;
+        const zoomT = cameraEntryState === "pullback" ? 1.05 : cameraEntryState === "rush" ? 3.0 : zoomed ? 1.22 : keyhole ? 1.35 : 1.1;
         const zoomEase = cameraEntryState === "rush" ? 0.16 : 0.075;
         zoomCur.current += (zoomT - zoomCur.current) * zoomEase;
         const scale = zoomCur.current + zoomNudge.current;
-        const damp = zoomed ? 0.35 : 1;
-        const tyOff = zoomed ? -60 : 0;
+        const damp = zoomed ? 0 : 1;
+        const tyOff = 0;
         const entrySlide = cameraEntryState === "rush" ? Math.min(1, Math.max(0, (scale - 1.1) / 4.1)) : 0;
         const tx = (-cur.current.x * 34 * p * damp) - 18 * entrySlide;
         const ty = (-cur.current.y * 18 * p * damp) + tyOff * (scale - 1.1) + 34 * entrySlide;
@@ -454,7 +458,10 @@ export default function NightRooms() {
       )}
 
       {/* mouse-look layer: the room drifts opposite the cursor */}
-      <div ref={lookRef} className="absolute inset-0 will-change-transform">
+      <div
+        ref={lookRef}
+        className={`absolute inset-0 will-change-transform transition-[filter] duration-300 ${terminalOpen ? "blur-[3px] brightness-75" : "blur-0 brightness-100"}`}
+      >
         <img
           key={view + (packUsed ? "-used" : "")}
           src={art}
