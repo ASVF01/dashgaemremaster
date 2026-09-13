@@ -77,6 +77,7 @@ export default function NightRooms() {
   const [view, setView] = useState<View>("office");
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraEntry, setCameraEntry] = useState<"idle" | "pullback" | "rush">("idle");
   const [packUsed, setPackUsed] = useState(false);
   const [hold, setHold] = useState(0); // 0..1 progress on the health pack
   const holdStart = useRef<number | null>(null);
@@ -87,7 +88,31 @@ export default function NightRooms() {
   terminalOpenRef.current = terminalOpen;
   const cameraOpenRef = useRef(cameraOpen);
   cameraOpenRef.current = cameraOpen;
+  const cameraEntryRef = useRef(cameraEntry);
+  cameraEntryRef.current = cameraEntry;
+  const cameraEntryTimers = useRef<number[]>([]);
   const [dust, setDust] = useState(makeDust);
+
+  const openCamera = () => {
+    if (cameraOpenRef.current || cameraEntryRef.current !== "idle") return;
+    cameraEntryRef.current = "pullback";
+    setCameraEntry("pullback");
+    mayhemSfx.cameraOpen();
+    cameraEntryTimers.current.push(window.setTimeout(() => {
+      cameraEntryRef.current = "rush";
+      setCameraEntry("rush");
+    }, 150));
+    cameraEntryTimers.current.push(window.setTimeout(() => {
+      cameraOpenRef.current = true;
+      cameraEntryRef.current = "idle";
+      setCameraOpen(true);
+      setCameraEntry("idle");
+    }, 315));
+  };
+
+  useEffect(() => () => {
+    cameraEntryTimers.current.forEach((timer) => window.clearTimeout(timer));
+  }, []);
 
   // Randomize dust placement every time we enter a non-keyhole room so the
   // atmosphere never feels like the same particles are glued to the camera.
@@ -111,6 +136,7 @@ export default function NightRooms() {
         }
         return;
       }
+      if (cameraEntryRef.current !== "idle") return;
       // terminal: s toggles it; while open, navigation keys are ignored
       if (k === "s") {
         if (terminalOpenRef.current) {
@@ -127,8 +153,7 @@ export default function NightRooms() {
       }
       if (terminalOpenRef.current) return;
       if (k === "w" && viewRef.current === "office") {
-        mayhemSfx.cameraOpen();
-        setCameraOpen(true);
+        openCamera();
         return;
       }
       const from = viewRef.current;
@@ -237,7 +262,8 @@ export default function NightRooms() {
         // damp the head drift so the panel feels like it's in front of you
         const zoomed = terminalOpenRef.current;
         const keyhole = p > 1; // pressed against the door: narrow the FOV
-        const zoomT = zoomed ? 2.1 : keyhole ? 1.35 : 1.1;
+        const cameraEntryState = cameraEntryRef.current;
+        const zoomT = cameraEntryState === "pullback" ? 1.035 : cameraEntryState === "rush" ? 1.42 : zoomed ? 2.1 : keyhole ? 1.35 : 1.1;
         zoomCur.current += (zoomT - zoomCur.current) * 0.09;
         const scale = zoomCur.current;
         const damp = zoomed ? 0.35 : 1;
@@ -274,11 +300,11 @@ export default function NightRooms() {
           style={{ animation: "mayhemRoomFade 180ms ease-out" }}
         />
 
-        {view === "office" && !cameraOpen && (
+        {view === "office" && !cameraOpen && cameraEntry === "idle" && (
           <button
             type="button"
             aria-label="Open CCTV camera system"
-            onClick={() => { mayhemSfx.cameraOpen(); setCameraOpen(true); }}
+            onClick={openCamera}
             className="absolute border-2 border-transparent hover:border-white/60"
             style={{ left: "37.5%", top: "39%", width: "25%", height: "22%" }}
           />

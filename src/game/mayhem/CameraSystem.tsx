@@ -80,14 +80,18 @@ export default function CameraSystem({ onClose }: { onClose: () => void }) {
       onMouseLeave={() => { target.current.x = 0; target.current.y = 0; }}
     >
       <div ref={feedRef} className="absolute inset-0 will-change-transform">
-        <img
-          key={camera}
-          src={FEEDS[camera - 1]}
-          alt={`Camera ${camera} surveillance feed`}
-          draggable={false}
-          className="absolute inset-0 h-full w-full object-cover mayhem-camera-feed"
-        />
+        <div className="mayhem-camera-entry-zoom absolute inset-0">
+          <img
+            key={camera}
+            src={FEEDS[camera - 1]}
+            alt={`Camera ${camera} surveillance feed`}
+            draggable={false}
+            className="absolute inset-0 h-full w-full object-cover mayhem-camera-feed"
+          />
+        </div>
       </div>
+
+      <div aria-hidden="true" className="mayhem-camera-entry-flash pointer-events-none absolute inset-0 z-[73]" />
 
       <div aria-hidden="true" className="mayhem-camera-scan pointer-events-none absolute inset-0" />
       <div aria-hidden="true" className="hell-static pointer-events-none absolute inset-0 opacity-25" />
