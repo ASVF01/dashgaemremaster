@@ -335,16 +335,6 @@ function MayhemSettings({ onClose }: { onClose: () => void }) {
           <span>REDUCED FX</span>
           <strong>{settings.reducedFx ? "ON" : "OFF"}</strong>
         </button>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={settings.aiMode}
-          onClick={() => { sfx.menuClick(); setSettings({ aiMode: !settings.aiMode }); }}
-          className="mayhem-settings-toggle"
-        >
-          <span>AI MODE (GENERATED ART)</span>
-          <strong>{settings.aiMode ? "ON" : "OFF"}</strong>
-        </button>
       </div>
     </div>
   );
