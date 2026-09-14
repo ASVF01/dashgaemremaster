@@ -10,8 +10,6 @@ import panel4 from "@/assets/mayhem/cameras/CTRL_PANEL_4.png.asset.json";
 import panel5 from "@/assets/mayhem/cameras/CTRL_PANEL_5.png.asset.json";
 
 import { mayhemSfx } from "@/game/sfx";
-import { useSettings } from "@/game/settings";
-import { AI_CAM_FEEDS } from "./aiArt";
 
 const FEEDS = [cam1.url, cam2.url, cam3.url, cam4.url, cam5.url];
 const PANELS: Partial<Record<number, string>> = {
@@ -37,8 +35,6 @@ const BUTTONS = [
 ] as const;
 
 export default function CameraSystem({ onClose, enemyCam = null, enemyMoveCount = 0 }: { onClose: () => void; enemyCam?: number | null; enemyMoveCount?: number }) {
-  const [settings] = useSettings();
-  const aiMode = settings.aiMode;
   const [camera, setCamera] = useState(1);
   const [controlsReady, setControlsReady] = useState(false);
   const [staticFlash, setStaticFlash] = useState(false);
@@ -122,7 +118,7 @@ export default function CameraSystem({ onClose, enemyCam = null, enemyMoveCount 
         <div className="mayhem-camera-entry-zoom absolute inset-0">
           <img
             key={camera}
-            src={(aiMode ? AI_CAM_FEEDS : FEEDS)[camera - 1]}
+            src={FEEDS[camera - 1]}
             alt={`Camera ${camera} surveillance feed`}
             draggable={false}
             className="absolute inset-0 h-full w-full object-cover mayhem-camera-feed"
