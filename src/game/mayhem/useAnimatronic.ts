@@ -32,7 +32,7 @@ const SCARE_FADE_MS = 650;
 const RESPAWN_MIN_MS = 6000;
 const RESPAWN_MAX_MS = 12000;
 
-export function useAnimatronic(view: string, aiLevel: number, active = true) {
+export function useAnimatronic(view: string, aiLevel: number, active = true, paused = false) {
   const [spot, setSpot] = useState<EnemySpot>({ kind: "gone" });
   const [caught, setCaught] = useState(false);
   const [scare, setScare] = useState<null | "shake" | "fade">(null);
