@@ -136,12 +136,14 @@ export function useAnimatronic(view: string, aiLevel: number, active = true, pau
     else setSpot(next);
     setMoveCount((c) => c + 1);
     if (next.kind === "door") {
-      at(PRESENCE_MS, leave);
+      scheduleLeave();
     }
   };
 
   const leave = () => {
+    clearLeaveTimer();
     if (!aliveRef.current || scareRef.current) return; // never interrupt a jumpscare
+    if (spotRef.current.kind !== "door" && spotRef.current.kind !== "hall") return;
     if (stareTimer.current != null) { window.clearTimeout(stareTimer.current); stareTimer.current = null; }
     staringRef.current = false;
     hallDangerRef.current = false;
