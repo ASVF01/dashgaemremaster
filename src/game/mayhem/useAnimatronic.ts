@@ -96,9 +96,12 @@ export function useAnimatronic(view: string, aiLevel: number, active = true, pau
     if (playerIsInHall) {
       hallDangerRef.current = true;
       mayhemSfx.animHallEncounter();
-      at(HALL_GLORY_MS, () => {
+      const gloryCheck = () => {
+        // Paused: hold the encounter and re-check once the game resumes.
+        if (pausedRef.current) { at(400, gloryCheck); return; }
         if (hallDangerRef.current && viewRef.current === "hallway") startScare();
-      });
+      };
+      at(HALL_GLORY_MS, gloryCheck);
     } else {
       mayhemSfx.animInHall();
     }
