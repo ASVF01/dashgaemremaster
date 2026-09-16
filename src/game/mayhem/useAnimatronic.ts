@@ -178,7 +178,7 @@ export function useAnimatronic(view: string, aiLevel: number, active = true, pau
         posRef.current = 4;
         setSpot({ kind: "door" });
         setMoveCount((c) => c + 1);
-        at(PRESENCE_MS, leave);
+        scheduleLeave();
       });
     };
     window.addEventListener("keydown", onKey);
