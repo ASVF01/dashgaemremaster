@@ -48,6 +48,8 @@ export function useAnimatronic(view: string, aiLevel: number, active = true, pau
   };
   const viewRef = useRef(view);
   viewRef.current = view;
+  const spotRef = useRef<EnemySpot>(spot);
+  spotRef.current = spot;
   const levelRef = useRef(aiLevel);
   levelRef.current = aiLevel;
   const timers = useRef<number[]>([]);
