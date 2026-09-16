@@ -55,6 +55,18 @@ export function useAnimatronic(view: string, aiLevel: number, active = true, pau
   const staringRef = useRef(false);
   const aliveRef = useRef(true);
   const hallDangerRef = useRef(false);
+  // While the pause menu is up nothing may hunt, move, or scare the player.
+  const pausedRef = useRef(paused);
+  pausedRef.current = paused;
+  // The "it gave up and left" timeout, so a jumpscare can cancel it.
+  const leaveTimer = useRef<number | null>(null);
+  const clearLeaveTimer = () => {
+    if (leaveTimer.current != null) { window.clearTimeout(leaveTimer.current); leaveTimer.current = null; }
+  };
+  const scheduleLeave = () => {
+    clearLeaveTimer();
+    leaveTimer.current = window.setTimeout(() => { leaveTimer.current = null; leave(); }, PRESENCE_MS);
+  };
 
   const startScare = () => {
     if (!aliveRef.current || scareRef.current) return;
