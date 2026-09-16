@@ -169,7 +169,7 @@ export function useAnimatronic(view: string, aiLevel: number, active = true, pau
     // Debug: [I] instantly puts the animatronic in the hallway.
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "i" && e.key !== "I") return;
-      if (!aliveRef.current) return;
+      if (!aliveRef.current || pausedRef.current) return;
       posRef.current = 3; // hall index in ROUTE
       enterHall();
       setMoveCount((c) => c + 1);
