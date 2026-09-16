@@ -684,7 +684,7 @@ const Index = () => {
           {mayhem && mayhemPaused && (
             <MayhemPause onResume={() => setMayhemPaused(false)} onQuit={quitMayhem} />
           )}
-          {mayhem && mayhemNight && <NightRooms />}
+          {mayhem && mayhemNight && <NightRooms paused={mayhemPaused} />}
           {mayhem && mayhemCleared && (
             <div className="absolute inset-0 z-[60] overflow-hidden">
               <div aria-hidden="true" className="mayhem-menu-grid absolute inset-0" />

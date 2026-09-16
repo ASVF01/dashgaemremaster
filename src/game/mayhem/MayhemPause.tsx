@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { mayhemSfx } from "@/game/sfx";
 
 import { useSettings } from "@/game/settings";
-import { sfx, setSfxVolume } from "@/game/sfx";
+import { sfx, setSfxVolume, setNightSfxVolume, isMuted, setMuted } from "@/game/sfx";
 import { setBgmVolume } from "@/game/bgm";
 import { setNightBgmVolume } from "@/game/mayhem/nightAudio";
 
@@ -24,7 +24,18 @@ export default function MayhemPause({
   // deep thunk when the pause menu opens
   useEffect(() => { mayhemSfx.pauseOpen(); }, []);
 
-  useEffect(() => { setSfxVolume(settings.sfxVolume); }, [settings.sfxVolume]);
+  useEffect(() => {
+    setSfxVolume(settings.sfxVolume);
+    setNightSfxVolume(settings.sfxVolume);
+  }, [settings.sfxVolume]);
+
+  // A MAYHEM night mutes the normal sfx bus; un-mute it while paused so the
+  // menu's own clicks are audible, then restore whatever the game had.
+  useEffect(() => {
+    const wasMuted = isMuted();
+    if (wasMuted) setMuted(false);
+    return () => { if (wasMuted) setMuted(true); };
+  }, []);
   useEffect(() => {
     setBgmVolume(settings.bgmVolume * 0.5);
     setNightBgmVolume(settings.bgmVolume);

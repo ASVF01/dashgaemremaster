@@ -15,7 +15,7 @@ import CameraSystem, { CAMERA_ASSET_URLS } from "./CameraSystem";
 import { useAnimatronic } from "./useAnimatronic";
 import { preloadNightBgm, startNightBgm, stopNightBgm } from "./nightAudio";
 import { getMayhemNight, mayhemAiLevel, setMayhemNight } from "@/game/progress";
-import { isMuted, setMuted, mayhemSfx, preloadMayhemSfx } from "@/game/sfx";
+import { isMuted, setMuted, setNightSfxVolume, mayhemSfx, preloadMayhemSfx } from "@/game/sfx";
 import { isBgmMuted, setBgmMuted, stopBgm } from "@/game/bgm";
 import { useSettings } from "@/game/settings";
 
@@ -361,6 +361,9 @@ export default function NightRooms({ paused = false }: { paused?: boolean }) {
     watchRaf.current = requestAnimationFrame(tick);
     return () => { if (watchRaf.current != null) cancelAnimationFrame(watchRaf.current); };
   }, [watchRaised]);
+
+  // Night sfx follow the SFX VOLUME slider.
+  useEffect(() => { setNightSfxVolume(settings.sfxVolume); }, [settings.sfxVolume]);
 
   // ---- audio: silence every other sound, play the muffled night track ----
   useEffect(() => {
