@@ -201,7 +201,7 @@ export function useAnimatronic(view: string, aiLevel: number, active = true, pau
 
   // ---- eye-to-eye at the keyhole ----
   useEffect(() => {
-    const staring = spot.kind === "door" && view === "keyhole";
+    const staring = spot.kind === "door" && view === "keyhole" && !paused;
     if (staring && !staringRef.current) {
       staringRef.current = true;
       mayhemSfx.animKeyholeStare();
