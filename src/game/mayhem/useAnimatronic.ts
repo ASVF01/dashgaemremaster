@@ -32,7 +32,7 @@ const SCARE_FADE_MS = 650;
 const RESPAWN_MIN_MS = 6000;
 const RESPAWN_MAX_MS = 12000;
 
-export function useAnimatronic(view: string, aiLevel: number, active = true) {
+export function useAnimatronic(view: string, aiLevel: number, active = true, paused = false) {
   const [spot, setSpot] = useState<EnemySpot>({ kind: "gone" });
   const [caught, setCaught] = useState(false);
   const [scare, setScare] = useState<null | "shake" | "fade">(null);
@@ -48,6 +48,8 @@ export function useAnimatronic(view: string, aiLevel: number, active = true) {
   };
   const viewRef = useRef(view);
   viewRef.current = view;
+  const spotRef = useRef<EnemySpot>(spot);
+  spotRef.current = spot;
   const levelRef = useRef(aiLevel);
   levelRef.current = aiLevel;
   const timers = useRef<number[]>([]);
@@ -55,11 +57,26 @@ export function useAnimatronic(view: string, aiLevel: number, active = true) {
   const staringRef = useRef(false);
   const aliveRef = useRef(true);
   const hallDangerRef = useRef(false);
+  // While the pause menu is up nothing may hunt, move, or scare the player.
+  const pausedRef = useRef(paused);
+  pausedRef.current = paused;
+  // The "it gave up and left" timeout, so a jumpscare can cancel it.
+  const leaveTimer = useRef<number | null>(null);
+  const clearLeaveTimer = () => {
+    if (leaveTimer.current != null) { window.clearTimeout(leaveTimer.current); leaveTimer.current = null; }
+  };
+  const scheduleLeave = () => {
+    clearLeaveTimer();
+    leaveTimer.current = window.setTimeout(() => { leaveTimer.current = null; leave(); }, PRESENCE_MS);
+  };
 
   const startScare = () => {
-    if (!aliveRef.current || scareRef.current) return;
+    if (!aliveRef.current || scareRef.current || pausedRef.current) return;
     hallDangerRef.current = false;
     if (stareTimer.current != null) { window.clearTimeout(stareTimer.current); stareTimer.current = null; }
+    // The scare ends this encounter — drop the pending "it left" timeout so it
+    // can't fire later and yank the next encounter away with a ghost footstep.
+    clearLeaveTimer();
     setCaught(true);
     at(900, () => setCaught(false));
     mayhemSfx.jumpscare();
@@ -81,9 +98,12 @@ export function useAnimatronic(view: string, aiLevel: number, active = true) {
     if (playerIsInHall) {
       hallDangerRef.current = true;
       mayhemSfx.animHallEncounter();
-      at(HALL_GLORY_MS, () => {
+      const gloryCheck = () => {
+        // Paused: hold the encounter and re-check once the game resumes.
+        if (pausedRef.current) { at(400, gloryCheck); return; }
         if (hallDangerRef.current && viewRef.current === "hallway") startScare();
-      });
+      };
+      at(HALL_GLORY_MS, gloryCheck);
     } else {
       mayhemSfx.animInHall();
     }
@@ -118,12 +138,14 @@ export function useAnimatronic(view: string, aiLevel: number, active = true) {
     else setSpot(next);
     setMoveCount((c) => c + 1);
     if (next.kind === "door") {
-      at(PRESENCE_MS, leave);
+      scheduleLeave();
     }
   };
 
   const leave = () => {
+    clearLeaveTimer();
     if (!aliveRef.current || scareRef.current) return; // never interrupt a jumpscare
+    if (spotRef.current.kind !== "door" && spotRef.current.kind !== "hall") return;
     if (stareTimer.current != null) { window.clearTimeout(stareTimer.current); stareTimer.current = null; }
     staringRef.current = false;
     hallDangerRef.current = false;
@@ -141,7 +163,7 @@ export function useAnimatronic(view: string, aiLevel: number, active = true) {
 
     // Movement opportunity every 5s: roll 1–20, move if roll <= AI level.
     const roller = window.setInterval(() => {
-      if (!aliveRef.current || scareRef.current) return;
+      if (!aliveRef.current || scareRef.current || pausedRef.current) return;
       if (posRef.current >= ROUTE.length - 1) return; // at the door — no more moves
       if (1 + Math.floor(Math.random() * 20) <= levelRef.current) advance();
     }, MOVE_CHECK_MS);
@@ -149,7 +171,7 @@ export function useAnimatronic(view: string, aiLevel: number, active = true) {
     // Debug: [I] instantly puts the animatronic in the hallway.
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "i" && e.key !== "I") return;
-      if (!aliveRef.current) return;
+      if (!aliveRef.current || pausedRef.current) return;
       posRef.current = 3; // hall index in ROUTE
       enterHall();
       setMoveCount((c) => c + 1);
@@ -158,7 +180,7 @@ export function useAnimatronic(view: string, aiLevel: number, active = true) {
         posRef.current = 4;
         setSpot({ kind: "door" });
         setMoveCount((c) => c + 1);
-        at(PRESENCE_MS, leave);
+        scheduleLeave();
       });
     };
     window.addEventListener("keydown", onKey);
@@ -168,6 +190,7 @@ export function useAnimatronic(view: string, aiLevel: number, active = true) {
       window.clearInterval(roller);
       aliveRef.current = false;
       clearTimers();
+      clearLeaveTimer();
       if (stareTimer.current != null) window.clearTimeout(stareTimer.current);
       mayhemSfx.stopAnimSounds();
     };
@@ -181,7 +204,7 @@ export function useAnimatronic(view: string, aiLevel: number, active = true) {
 
   // ---- eye-to-eye at the keyhole ----
   useEffect(() => {
-    const staring = spot.kind === "door" && view === "keyhole";
+    const staring = spot.kind === "door" && view === "keyhole" && !paused;
     if (staring && !staringRef.current) {
       staringRef.current = true;
       mayhemSfx.animKeyholeStare();
@@ -195,7 +218,7 @@ export function useAnimatronic(view: string, aiLevel: number, active = true) {
       if (stareTimer.current != null) { window.clearTimeout(stareTimer.current); stareTimer.current = null; }
       mayhemSfx.stopAnimSounds();
     }
-  }, [spot, view]);
+  }, [spot, view, paused]);
 
   return {
     spot,

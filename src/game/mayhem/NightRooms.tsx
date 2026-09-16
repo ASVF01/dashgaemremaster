@@ -15,7 +15,7 @@ import CameraSystem, { CAMERA_ASSET_URLS } from "./CameraSystem";
 import { useAnimatronic } from "./useAnimatronic";
 import { preloadNightBgm, startNightBgm, stopNightBgm } from "./nightAudio";
 import { getMayhemNight, mayhemAiLevel, setMayhemNight } from "@/game/progress";
-import { isMuted, setMuted, mayhemSfx, preloadMayhemSfx } from "@/game/sfx";
+import { isMuted, setMuted, setNightSfxVolume, mayhemSfx, preloadMayhemSfx } from "@/game/sfx";
 import { isBgmMuted, setBgmMuted, stopBgm } from "@/game/bgm";
 import { useSettings } from "@/game/settings";
 
@@ -102,7 +102,7 @@ function makeDust(): { id: number; left: number; top: number; size: number; dura
   }));
 }
 
-export default function NightRooms() {
+export default function NightRooms({ paused = false }: { paused?: boolean }) {
   const [settings] = useSettings();
   const [view, setView] = useState<View>("office");
   const [terminalOpen, setTerminalOpen] = useState(false);
@@ -112,6 +112,7 @@ export default function NightRooms() {
   const [packUsed, setPackUsed] = useState(false);
   const [hold, setHold] = useState(0); // 0..1 progress on the health pack
   const [nightElapsed, setNightElapsed] = useState(0);
+  const nightElapsedRef = useRef(0);
   const [nightReady, setNightReady] = useState(false);
   const [introLeaving, setIntroLeaving] = useState(false);
   const [hp] = useState(100);
@@ -136,7 +137,9 @@ export default function NightRooms() {
   const [dust, setDust] = useState(makeDust);
   const [night] = useState(getMayhemNight);
   const nightAdvanced = useRef(false);
-  const enemy = useAnimatronic(view, mayhemAiLevel(night), nightReady);
+  const pausedRef = useRef(paused);
+  pausedRef.current = paused;
+  const enemy = useAnimatronic(view, mayhemAiLevel(night), nightReady, paused);
 
   useEffect(() => {
     if (view !== "keyhole" || !enemy.atKeyhole || seenKeyholeEncounter.current === enemy.encounterId) return;
@@ -194,10 +197,12 @@ export default function NightRooms() {
 
   // One real minute equals one in-game hour.
   useEffect(() => {
-    if (!nightReady) return;
-    const startedAt = performance.now();
+    if (!nightReady || paused) return;
+    // The clock resumes where it left off after the pause menu closes.
+    const startedAt = performance.now() - nightElapsedRef.current;
     const timer = window.setInterval(() => {
       const elapsed = Math.min(NIGHT_MS, performance.now() - startedAt);
+      nightElapsedRef.current = elapsed;
       setNightElapsed(elapsed);
       // 6 AM — survived: save the next (harder) night for the next run.
       if (elapsed >= NIGHT_MS && !nightAdvanced.current) {
@@ -206,7 +211,8 @@ export default function NightRooms() {
       }
     }, 250);
     return () => window.clearInterval(timer);
-  }, [nightReady]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nightReady, paused]);
 
   const meowRedGuy = () => {
     if (redGuyMeowing) return;
@@ -230,7 +236,7 @@ export default function NightRooms() {
   // ---- keyboard navigation ----
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.repeat) return;
+      if (e.repeat || pausedRef.current) return;
       const k = e.key.toLowerCase();
       if (!["a", "d", "w", "s", "e"].includes(k)) return;
       e.preventDefault();
@@ -327,7 +333,7 @@ export default function NightRooms() {
   // ---- R to raise the wrist watch (arm comes up into view) ----
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => {
-      if (e.repeat) return;
+      if (e.repeat || pausedRef.current) return;
       if (e.key.toLowerCase() === "r" && !cameraOpenRef.current && !terminalOpenRef.current) {
         setWatchRaised(true);
       }
@@ -355,6 +361,9 @@ export default function NightRooms() {
     watchRaf.current = requestAnimationFrame(tick);
     return () => { if (watchRaf.current != null) cancelAnimationFrame(watchRaf.current); };
   }, [watchRaised]);
+
+  // Night sfx follow the SFX VOLUME slider.
+  useEffect(() => { setNightSfxVolume(settings.sfxVolume); }, [settings.sfxVolume]);
 
   // ---- audio: silence every other sound, play the muffled night track ----
   useEffect(() => {
