@@ -161,7 +161,7 @@ export function useAnimatronic(view: string, aiLevel: number, active = true, pau
 
     // Movement opportunity every 5s: roll 1–20, move if roll <= AI level.
     const roller = window.setInterval(() => {
-      if (!aliveRef.current || scareRef.current) return;
+      if (!aliveRef.current || scareRef.current || pausedRef.current) return;
       if (posRef.current >= ROUTE.length - 1) return; // at the door — no more moves
       if (1 + Math.floor(Math.random() * 20) <= levelRef.current) advance();
     }, MOVE_CHECK_MS);
