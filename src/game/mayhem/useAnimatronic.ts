@@ -190,6 +190,7 @@ export function useAnimatronic(view: string, aiLevel: number, active = true, pau
       window.clearInterval(roller);
       aliveRef.current = false;
       clearTimers();
+      clearLeaveTimer();
       if (stareTimer.current != null) window.clearTimeout(stareTimer.current);
       mayhemSfx.stopAnimSounds();
     };
