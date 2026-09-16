@@ -215,7 +215,7 @@ export function useAnimatronic(view: string, aiLevel: number, active = true, pau
       if (stareTimer.current != null) { window.clearTimeout(stareTimer.current); stareTimer.current = null; }
       mayhemSfx.stopAnimSounds();
     }
-  }, [spot, view]);
+  }, [spot, view, paused]);
 
   return {
     spot,
