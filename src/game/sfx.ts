@@ -1049,11 +1049,17 @@ function stopSlideShimmer() {
 // They run on a dedicated bus so they still play while the mode mutes the
 // main sfx bus (night mode silences all "gamey" sounds on purpose).
 let nightBus: GainNode | null = null;
+// MAYHEM night sfx follow the SFX VOLUME slider like every other sound.
+let nightSfxVolume = 0.9;
+export function setNightSfxVolume(v: number) {
+  nightSfxVolume = Math.max(0, Math.min(1, v)) * 0.9;
+  if (nightBus) nightBus.gain.value = nightSfxVolume;
+}
 function nbus(): GainNode | null {
   const c = ac(); if (!c) return null;
   if (!nightBus) {
     nightBus = c.createGain();
-    nightBus.gain.value = 0.9;
+    nightBus.gain.value = nightSfxVolume;
     nightBus.connect(c.destination);
   }
   return nightBus;
