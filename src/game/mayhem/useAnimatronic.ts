@@ -69,9 +69,12 @@ export function useAnimatronic(view: string, aiLevel: number, active = true, pau
   };
 
   const startScare = () => {
-    if (!aliveRef.current || scareRef.current) return;
+    if (!aliveRef.current || scareRef.current || pausedRef.current) return;
     hallDangerRef.current = false;
     if (stareTimer.current != null) { window.clearTimeout(stareTimer.current); stareTimer.current = null; }
+    // The scare ends this encounter — drop the pending "it left" timeout so it
+    // can't fire later and yank the next encounter away with a ghost footstep.
+    clearLeaveTimer();
     setCaught(true);
     at(900, () => setCaught(false));
     mayhemSfx.jumpscare();
