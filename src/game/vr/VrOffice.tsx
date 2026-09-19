@@ -89,7 +89,7 @@ function Hallway() {
         <meshStandardMaterial map={enemy} transparent alphaTest={0.15} roughness={0.8} />
       </mesh>
       <pointLight ref={red} position={[0, 1.7, -3.1]} color="#ff2a1a" intensity={0.9} distance={5.5} decay={2} />
-lt    </group>
+    </group>
   );
 }
 
@@ -175,7 +175,7 @@ export default function VrOffice() {
       <div className="pointer-events-none absolute left-4 top-4 font-pixel text-[10px] tracking-[0.3em] text-white/70">
         MAYHEM — VR OFFICE [ PROTOTYPE ]
       </div>
-vt    </div>
+    </div>
   );
 }
 
