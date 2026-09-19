@@ -32,8 +32,6 @@ export default function VrPage() {
         </Link>
       </div>
 
-      {/* WebXR session entry — rendered by the XR runtime so it works inside VR overlays */}
-      <xr-button-slot />
     </div>
   );
 }

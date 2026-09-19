@@ -175,8 +175,14 @@ export default function VrOffice() {
       <div className="pointer-events-none absolute left-4 top-4 font-pixel text-[10px] tracking-[0.3em] text-white/70">
         MAYHEM — VR OFFICE [ PROTOTYPE ]
       </div>
+      <div className="absolute bottom-6 right-4 z-10">
+        <XRButton
+          mode="VR"
+          className="border border-white/40 bg-black/70 px-3 py-2 font-pixel text-[9px] tracking-[0.2em] text-white hover:border-white"
+        >
+          ENTER VR
+        </XRButton>
+      </div>
     </div>
   );
 }
-
-export { XRButton };
