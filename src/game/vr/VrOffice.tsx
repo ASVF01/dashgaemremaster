@@ -1,7 +1,7 @@
 // MAYHEM — VR office prototype (WebXR).
 // Sit in the office, turn your head, peek through the keyhole, check the monitor.
 // Desktop fallback: click to capture the mouse and look around.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { PointerLockControls, useTexture } from "@react-three/drei";
@@ -158,7 +158,7 @@ export default function VrOffice() {
         {/* dim ceiling fixture */}
         <pointLight position={[0.8, 2.8, 0.6]} color="#cfd8d2" intensity={0.5} distance={6} decay={2} />
         <AimAtDoor />
-        <XR sessionInit={{ optionalFeatures: ["local-floor", "bounded-floor", "hand-tracking"] }}>
+        <XR>
           <Room />
           <Hallway />
           <Door />
