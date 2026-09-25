@@ -252,6 +252,14 @@ function HellPreview({ onCommence }: { onCommence?: () => void }) {
             >
               SETTINGS
             </button>
+            <a
+              href="/vr"
+              onClick={() => sfx.menuConfirm()}
+              onMouseEnter={() => sfx.menuHover()}
+              className="mayhem-menu-button text-center"
+            >
+              VR MODE [ PROTOTYPE ]
+            </a>
             <button
               type="button"
               disabled
@@ -260,6 +268,7 @@ function HellPreview({ onCommence }: { onCommence?: () => void }) {
             >
               WATCH THIS BEFORE PLAYING.
             </button>
+
           </div>
         </div>
       )}
