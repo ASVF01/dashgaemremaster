@@ -10,7 +10,7 @@ import wallTex from "@/assets/vr/vr_wall.jpg";
 import floorTex from "@/assets/vr/vr_floor.jpg";
 import doorTex from "@/assets/vr/vr_door.png";
 import enemyTex from "@/assets/vr/vr_enemy.png";
-import cam1 from "@/assets/mayhem/cameras/CAM_1_out_of_5.png.asset.json";
+import cam1 from "@/assets/vr/cam1_feed.png";
 
 // Room dimensions (metres). Door wall sits at z = -2.
 const ROOM = { w: 6, d: 4, h: 3 };
@@ -63,6 +63,17 @@ function Room() {
         <planeGeometry args={[ROOM.d, ROOM.h]} />
         <meshStandardMaterial map={wallMap} roughness={1} />
       </mesh>
+      {/* front wall around the doorway (door sits centered at z = -2) */}
+      {[
+        { pos: [-(ROOM.w + DOOR.w) / 4, ROOM.h / 2, -ROOM.d / 2], size: [(ROOM.w - DOOR.w) / 2, ROOM.h] },
+        { pos: [(ROOM.w + DOOR.w) / 4, ROOM.h / 2, -ROOM.d / 2], size: [(ROOM.w - DOOR.w) / 2, ROOM.h] },
+        { pos: [0, (ROOM.h + DOOR.h) / 2, -ROOM.d / 2], size: [DOOR.w, ROOM.h - DOOR.h] },
+      ].map((seg, i) => (
+        <mesh key={i} position={seg.pos as [number, number, number]}>
+          <planeGeometry args={seg.size as [number, number]} />
+          <meshStandardMaterial map={wallMap} roughness={1} />
+        </mesh>
+      ))}
     </group>
   );
 }
@@ -108,7 +119,7 @@ function Door() {
 }
 
 function Desk() {
-  const feed = useTexture(cam1.url);
+  const feed = useTexture(cam1);
   useMemo(() => {
     feed.colorSpace = THREE.SRGBColorSpace;
     return feed;
@@ -153,10 +164,12 @@ export default function VrOffice() {
         gl={{ antialias: true, powerPreference: "high-performance" }}
       >
         <color attach="background" args={["#040505"]} />
-        <fog attach="fog" args={["#040505", 3.2, 9]} />
-        <ambientLight intensity={0.16} />
+        <fog attach="fog" args={["#040505", 5, 16]} />
+        <ambientLight intensity={0.5} />
         {/* dim ceiling fixture */}
-        <pointLight position={[0.8, 2.8, 0.6]} color="#cfd8d2" intensity={0.5} distance={6} decay={2} />
+        <pointLight position={[0.8, 2.8, 0.6]} color="#cfd8d2" intensity={6} distance={14} decay={2} />
+        {/* faint wash over the door wall so the door + keyhole read */}
+        <pointLight position={[0, 2.2, -1.2]} color="#9fb0a8" intensity={2.2} distance={7} decay={2} />
         <AimAtDoor />
         <XR>
           <Room />
