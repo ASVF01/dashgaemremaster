@@ -63,6 +63,17 @@ function Room() {
         <planeGeometry args={[ROOM.d, ROOM.h]} />
         <meshStandardMaterial map={wallMap} roughness={1} />
       </mesh>
+      {/* front wall around the doorway (door sits centered at z = -2) */}
+      {[
+        { pos: [-(ROOM.w + DOOR.w) / 4, ROOM.h / 2, -ROOM.d / 2], size: [(ROOM.w - DOOR.w) / 2, ROOM.h] },
+        { pos: [(ROOM.w + DOOR.w) / 4, ROOM.h / 2, -ROOM.d / 2], size: [(ROOM.w - DOOR.w) / 2, ROOM.h] },
+        { pos: [0, (ROOM.h + DOOR.h) / 2, -ROOM.d / 2], size: [DOOR.w, ROOM.h - DOOR.h] },
+      ].map((seg, i) => (
+        <mesh key={i} position={seg.pos as [number, number, number]}>
+          <planeGeometry args={seg.size as [number, number]} />
+          <meshStandardMaterial map={wallMap} roughness={1} />
+        </mesh>
+      ))}
     </group>
   );
 }
