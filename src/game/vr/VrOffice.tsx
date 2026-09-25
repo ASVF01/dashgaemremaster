@@ -10,7 +10,7 @@ import wallTex from "@/assets/vr/vr_wall.jpg";
 import floorTex from "@/assets/vr/vr_floor.jpg";
 import doorTex from "@/assets/vr/vr_door.png";
 import enemyTex from "@/assets/vr/vr_enemy.png";
-import cam1 from "@/assets/mayhem/cameras/CAM_1_out_of_5.png.asset.json";
+import cam1 from "@/assets/vr/cam1_feed.png";
 
 // Room dimensions (metres). Door wall sits at z = -2.
 const ROOM = { w: 6, d: 4, h: 3 };
