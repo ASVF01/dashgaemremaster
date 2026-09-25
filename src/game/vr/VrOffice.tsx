@@ -108,7 +108,7 @@ function Door() {
 }
 
 function Desk() {
-  const feed = useTexture(cam1.url);
+  const feed = useTexture(cam1);
   useMemo(() => {
     feed.colorSpace = THREE.SRGBColorSpace;
     return feed;
