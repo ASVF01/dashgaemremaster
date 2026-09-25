@@ -153,10 +153,10 @@ export default function VrOffice() {
         gl={{ antialias: true, powerPreference: "high-performance" }}
       >
         <color attach="background" args={["#040505"]} />
-        <fog attach="fog" args={["#040505", 3.2, 9]} />
-        <ambientLight intensity={0.16} />
+        <fog attach="fog" args={["#040505", 5, 16]} />
+        <ambientLight intensity={0.3} />
         {/* dim ceiling fixture */}
-        <pointLight position={[0.8, 2.8, 0.6]} color="#cfd8d2" intensity={0.5} distance={6} decay={2} />
+        <pointLight position={[0.8, 2.8, 0.6]} color="#cfd8d2" intensity={1.1} distance={8} decay={2} />
         <AimAtDoor />
         <XR>
           <Room />
