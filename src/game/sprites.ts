@@ -18,6 +18,24 @@ import superDash2 from "@/assets/sprites/super_dash_2.png";
 import superDash3 from "@/assets/sprites/super_dash_3.png";
 import beamAtkUrl from "@/assets/sprites/beam_atk.png";
 import beamAtkJumpUrl from "@/assets/sprites/beam_atk_jump.png";
+import greenStandUrl from "@/assets/sprites/green/stand.png";
+import greenWalkUrl from "@/assets/sprites/green/walk.png";
+import greenJumpUrl from "@/assets/sprites/green/jump.png";
+import greenFallUrl from "@/assets/sprites/green/fall.png";
+import greenSlideUrl from "@/assets/sprites/green/slide.png";
+import greenDiveUrl from "@/assets/sprites/green/dive.png";
+import greenDashUrl from "@/assets/sprites/green/dash.png";
+import greenSkidUrl from "@/assets/sprites/green/skid.png";
+import greenHurtUrl from "@/assets/sprites/green/hurt.png";
+import greenRunFast1 from "@/assets/sprites/green/run_fast_1.png";
+import greenRunFast2 from "@/assets/sprites/green/run_fast_2.png";
+import greenRunFast3 from "@/assets/sprites/green/run_fast_3.png";
+import greenRunFast4 from "@/assets/sprites/green/run_fast_4.png";
+import greenSuperDash1 from "@/assets/sprites/green/super_dash_1.png";
+import greenSuperDash2 from "@/assets/sprites/green/super_dash_2.png";
+import greenSuperDash3 from "@/assets/sprites/green/super_dash_3.png";
+import greenBeamUrl from "@/assets/sprites/green/beam_atk.png";
+import greenBeamJumpUrl from "@/assets/sprites/green/beam_atk_jump.png";
 import altIdleAsset from "@/assets/sprites/alternate/alt_idle.png.asset.json";
 import altWalkAsset from "@/assets/sprites/alternate/alt_walk.png.asset.json";
 import altJumpAsset from "@/assets/sprites/alternate/alt_jump.png.asset.json";
@@ -64,6 +82,19 @@ const CYCLES: Partial<Record<SpriteState, string[]>> = {
 // Per-character sprite overrides. Missing states fall back to the default
 // (stick) URLS/CYCLES so partial sprite sets still render sensibly.
 const CHAR_URLS: Partial<Record<CharacterId, Partial<Record<SpriteState, string>>>> = {
+  green: {
+    idle: greenStandUrl,
+    run: greenWalkUrl,
+    jump: greenJumpUrl,
+    fall: greenFallUrl,
+    slide: greenSlideUrl,
+    dive: greenDiveUrl,
+    dash: greenDashUrl,
+    skid: greenSkidUrl,
+    hurt: greenHurtUrl,
+    beam: greenBeamUrl,
+    beamJump: greenBeamJumpUrl,
+  },
   x3mode: {
     idle: altIdleAsset.url,
     run: altWalkAsset.url,
@@ -80,6 +111,10 @@ const CHAR_URLS: Partial<Record<CharacterId, Partial<Record<SpriteState, string>
 };
 
 const CHAR_CYCLES: Partial<Record<CharacterId, Partial<Record<SpriteState, string[]>>>> = {
+  green: {
+    runFast: [greenRunFast1, greenRunFast2, greenRunFast3, greenRunFast4],
+    superDash: [greenSuperDash1, greenSuperDash2, greenSuperDash3],
+  },
   x3mode: {
     // Alternate has an 8-frame run cycle — used as his fast-run animation.
     runFast: [
@@ -135,6 +170,8 @@ function loadCycle(char: CharacterId, state: SpriteState) {
 (Object.keys(URLS) as SpriteState[]).forEach((s) => load("stick", s));
 (Object.keys(CYCLES) as SpriteState[]).forEach((s) => loadCycle("stick", s));
 // Also warm alternate overrides so switching in-game is instant.
+(Object.keys(CHAR_URLS.green ?? {}) as SpriteState[]).forEach((s) => load("green", s));
+(Object.keys(CHAR_CYCLES.green ?? {}) as SpriteState[]).forEach((s) => loadCycle("green", s));
 (Object.keys(CHAR_URLS.x3mode ?? {}) as SpriteState[]).forEach((s) => load("x3mode", s));
 (Object.keys(CHAR_CYCLES.x3mode ?? {}) as SpriteState[]).forEach((s) => loadCycle("x3mode", s));
 

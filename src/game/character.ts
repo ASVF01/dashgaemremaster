@@ -3,7 +3,7 @@
 // without React re-renders.
 import { useEffect, useState } from "react";
 
-export type CharacterId = "stick" | "dasher" | "shadow" | "x3mode";
+export type CharacterId = "stick" | "green" | "dasher" | "shadow" | "x3mode";
 
 export type CharacterState = {
   selected: CharacterId;
@@ -12,7 +12,7 @@ export type CharacterState = {
 
 const DEFAULTS: CharacterState = {
   selected: "stick",
-  unlocked: { stick: true, dasher: true, shadow: true, x3mode: false },
+  unlocked: { stick: true, green: true, dasher: true, shadow: true, x3mode: false },
 };
 
 const KEY = "dashgaem_character_v1";
