@@ -1714,6 +1714,8 @@ import gachaBgmAsset from "@/assets/audio/bgm_map3.mp3.asset.json";
 const gachaBgm = gachaBgmAsset.url;
 import thePlayerArt from "@/assets/characters/the_player.png";
 import thePlayerPreviewAsset from "@/assets/characters/the_player_preview.png.asset.json";
+import greenMachineArt from "@/assets/characters/green_machine.png";
+import greenMachinePreview from "@/assets/characters/green_machine_preview.png";
 import blueBlurArtAsset from "@/assets/characters/blue_blur_art.png.asset.json";
 import sharkGalArtAsset from "@/assets/characters/shark_gal_art.png.asset.json";
 import theAlternateArtAsset from "@/assets/characters/the_alternate_art.png.asset.json";
@@ -2108,6 +2110,22 @@ const WIP_CHARACTERS: WipCharacter[] = [
       { name: "Dash", description: "Short horizontal burst that briefly cancels gravity. Use it to recover from misjudged jumps." },
     ],
   },
+  {
+    id: "green",
+    name: "GREEN MACHINE",
+    blurb: "The Player, dipped in radioactive lime. Same moves. More chlorophyll.",
+    art: greenMachineArt,
+    preview: greenMachinePreview,
+    howToPlay:
+      "Play it exactly like The Player: preserve momentum, chain jumps into dashes, and keep moving. Green Machine has the same timing, health, and abilities, so every route you already know still works.",
+    lore:
+      "Nobody knows why The Player turned green. The leading theories are toxic rain, too much terminal glow, or one truly suspicious energy drink. Green Machine refuses to clarify.",
+    abilities: [
+      { name: "Green Run", description: "The Player's familiar momentum, now in an aggressively green package." },
+      { name: "Lime Leap", description: "The same variable-height jump. Tap for a hop or hold for a full arc." },
+      { name: "Verdant Dash", description: "The standard gravity-canceling dash, leaving a streak of bright green motion." },
+    ],
+  },
   { id: "dasher",  name: "Blue Blur",       blurb: "Dashes faster. Thinks slower.", art: blueBlurArtAsset.url },
   { id: "shadow",  name: "Shark Gal",      blurb: "A rumor in pencil form. Hard to pin down.", art: sharkGalArtAsset.url },
   { id: "x3mode",  name: "THE ALTERNATE",       blurb: "TO ACHIVE SUCH FORM, YOU MUST UNLOCK THE MARK, MANIPULATE IT'S FACE AND RE-COMPLETE YOUR GENISIS WITH YOUR NEW FOUND POWER.", art: theAlternateArtAsset.url, locked: true },
@@ -2116,6 +2134,7 @@ const WIP_CHARACTERS: WipCharacter[] = [
 // Per-character outline tint for the grid cards (matches reference colors).
 const CARD_TINT: Record<string, string> = {
   stick:  "#1a1a1a",
+  green:  "hsl(var(--green-machine))",
   dasher: "#1a1a1a",
   shadow: "#1a1a1a",
   x3mode: "#1a1a1a",
@@ -2131,7 +2150,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   const isNotYet = (id: string) => id === "dasher" || id === "shadow";
   const isCharLocked = (id: string) =>
     isNotYet(id) ? true :
-    (id === "stick" || id === "x3mode")
+    (id === "stick" || id === "green" || id === "x3mode")
       ? !charState.unlocked[id as CharacterId]
       : false;
 
@@ -2308,8 +2327,8 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                 </button>
               </div>
 
-              {/* 2x2 character cards — staggered swipe-up on entrance */}
-              <div className="grid grid-cols-2 gap-3 sm:gap-5 flex-1">
+              {/* Character cards — a compact three-column roster that wraps cleanly. */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 flex-1 auto-rows-fr">
                 {WIP_CHARACTERS.map((c, i) => {
                   const active = picked === c.id;
                   const tint = CARD_TINT[c.id] ?? "#1a1a1a";
