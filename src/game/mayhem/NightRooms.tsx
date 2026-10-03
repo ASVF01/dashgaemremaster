@@ -25,7 +25,6 @@ import { useSettings } from "@/game/settings";
 type View = "office" | "door" | "keyhole" | "hallway" | "storage" | "storageKeyhole" | "storageDoor";
 
 const HOLD_MS = 3000;
-const NIGHT_MS = 6 * 60 * 1000;
 const INTRO_MIN_MS = 2600;
 
 const NIGHT_IMAGE_URLS = [
@@ -108,7 +107,7 @@ function makeDust(): { id: number; left: number; top: number; size: number; dura
   }));
 }
 
-export default function NightRooms({ paused = false }: { paused?: boolean }) {
+export default function NightRooms({ paused = false, onNightComplete }: { paused?: boolean; onNightComplete: () => void }) {
   const [settings] = useSettings();
   const [view, setView] = useState<View>("office");
   const [terminalOpen, setTerminalOpen] = useState(false);
@@ -122,14 +121,9 @@ export default function NightRooms({ paused = false }: { paused?: boolean }) {
   const [redGuyMeowing, setRedGuyMeowing] = useState(false);
   const [packUsed, setPackUsed] = useState(false);
   const [hold, setHold] = useState(0); // 0..1 progress on the health pack
-  const [nightElapsed, setNightElapsed] = useState(0);
-  const nightElapsedRef = useRef(0);
   const [nightReady, setNightReady] = useState(false);
   const [introLeaving, setIntroLeaving] = useState(false);
   const [hp] = useState(100);
-  const [watchRaised, setWatchRaised] = useState(false);
-  const watchRaf = useRef<number | null>(null);
-  const watchY = useRef(100);
   const holdStart = useRef<number | null>(null);
   const raf = useRef<number | null>(null);
   const viewRef = useRef(view);
@@ -149,7 +143,6 @@ export default function NightRooms({ paused = false }: { paused?: boolean }) {
   const [keyholeAppearing, setKeyholeAppearing] = useState(false);
   const [dust, setDust] = useState(makeDust);
   const [night] = useState(getMayhemNight);
-  const nightAdvanced = useRef(false);
   const pausedRef = useRef(paused);
   pausedRef.current = paused;
   const enemy = useAnimatronic(view, mayhemAiLevel(night), nightReady, paused);
@@ -207,25 +200,6 @@ export default function NightRooms({ paused = false }: { paused?: boolean }) {
     if (meowTimer.current != null) window.clearTimeout(meowTimer.current);
     if (keyholeAppearTimer.current != null) window.clearTimeout(keyholeAppearTimer.current);
   }, []);
-
-  // One real minute equals one in-game hour.
-  useEffect(() => {
-    if (!nightReady || paused) return;
-    // The clock resumes where it left off after the pause menu closes.
-    const startedAt = performance.now() - nightElapsedRef.current;
-    const timer = window.setInterval(() => {
-      const elapsed = Math.min(NIGHT_MS, performance.now() - startedAt);
-      nightElapsedRef.current = elapsed;
-      setNightElapsed(elapsed);
-      // 6 AM — survived: save the next (harder) night for the next run.
-      if (elapsed >= NIGHT_MS && !nightAdvanced.current) {
-        nightAdvanced.current = true;
-        setMayhemNight(getMayhemNight() + 1);
-      }
-    }, 250);
-    return () => window.clearInterval(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nightReady, paused]);
 
   const meowRedGuy = () => {
     if (redGuyMeowing) return;
@@ -358,38 +332,6 @@ export default function NightRooms({ paused = false }: { paused?: boolean }) {
   };
   useEffect(() => () => { if (raf.current != null) cancelAnimationFrame(raf.current); }, []);
 
-  // ---- R to raise the wrist watch (arm comes up into view) ----
-  useEffect(() => {
-    const onDown = (e: KeyboardEvent) => {
-      if (e.repeat || pausedRef.current) return;
-      if (e.key.toLowerCase() === "r" && !cameraOpenRef.current && !terminalOpenRef.current) {
-        setWatchRaised(true);
-      }
-    };
-    const onUp = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === "r") setWatchRaised(false);
-    };
-    window.addEventListener("keydown", onDown);
-    window.addEventListener("keyup", onUp);
-    return () => {
-      window.removeEventListener("keydown", onDown);
-      window.removeEventListener("keyup", onUp);
-    };
-  }, []);
-
-  useEffect(() => {
-    const tick = () => {
-      const target = watchRaised ? 0 : 100;
-      watchY.current += (target - watchY.current) * 0.12;
-      if (Math.abs(watchY.current - target) < 0.2) watchY.current = target;
-      const el = document.getElementById("mayhem-watch-arm");
-      if (el) el.style.transform = `translateY(${watchY.current}%)`;
-      watchRaf.current = requestAnimationFrame(tick);
-    };
-    watchRaf.current = requestAnimationFrame(tick);
-    return () => { if (watchRaf.current != null) cancelAnimationFrame(watchRaf.current); };
-  }, [watchRaised]);
-
   // Night sfx follow the SFX VOLUME slider.
   useEffect(() => { setNightSfxVolume(settings.sfxVolume); }, [settings.sfxVolume]);
 
@@ -439,9 +381,6 @@ export default function NightRooms({ paused = false }: { paused?: boolean }) {
     view === "storageDoor" ? "THE DOOR" :
     view === "hallway" ? "THE HALLWAY" :
     "THE STORAGE";
-
-  const hour = Math.min(6, Math.floor(nightElapsed / 60000));
-  const hourLabel = hour === 0 ? "12 AM" : `${hour} AM`;
 
   // ---- mouse look ----
   // Cursor position (-1..1) drives a smoothed counter-drift of the room, so
@@ -652,28 +591,18 @@ export default function NightRooms({ paused = false }: { paused?: boolean }) {
         </div>
       </div>
 
-      {/* R-raised night timer: a full-screen digital readout instead of a watch sprite. */}
-      <div
-        id="mayhem-watch-arm"
-        className="pointer-events-none absolute inset-x-0 bottom-0 z-[92] flex justify-center"
-        style={{ transform: "translateY(100%)", transition: "none" }}
-      >
-        <div className="relative mb-8 flex w-[min(720px,90vw)] flex-col items-center gap-3 border-2 border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))]/90 p-6 shadow-[0_0_40px_rgba(0,0,0,0.95)]">
-          <div className="font-pixel text-[10px] tracking-[0.4em] text-[hsl(var(--hell-muted))]">NIGHT {night} — TIMER</div>
-          <div className="font-pixel text-[clamp(48px,10vw,112px)] leading-none text-[hsl(var(--hell-warning))] drop-shadow-[0_0_18px_hsl(var(--hell-warning))]">
-            {hourLabel}
-          </div>
-          <div className="font-pixel text-[9px] text-[hsl(var(--hell-muted))]">HOLD [ R ] TO CHECK TIME</div>
-        </div>
-      </div>
-
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-1 bg-gradient-to-t from-black/85 to-transparent px-4 pb-4 pt-10 text-center">
         <div className="font-pixel text-[10px] tracking-[0.3em] text-white/80">{label}</div>
         <div className="font-pixel text-[9px] text-[hsl(var(--hell-muted))]">{hint}</div>
       </div>
 
       {terminalOpen && <Terminal paused={paused} session={terminalSession} onSessionChange={setTerminalSession} onClose={() => { mayhemSfx.terminalClose(); setTerminalOpen(false); }} />}
-      {generatorOpen && <GeneratorPanel paused={paused} progress={generatorProgress} onProgress={setGeneratorProgress} onClose={() => { mayhemSfx.terminalClose(); setGeneratorOpen(false); }} onComplete={() => { setGeneratorOnline(true); setGeneratorOpen(false); }} />}
+      {generatorOpen && <GeneratorPanel paused={paused} progress={generatorProgress} onProgress={setGeneratorProgress} onClose={() => { mayhemSfx.terminalClose(); setGeneratorOpen(false); }} onComplete={() => {
+        setGeneratorOnline(true);
+        setGeneratorOpen(false);
+        setMayhemNight(getMayhemNight() + 1);
+        onNightComplete();
+      }} />}
       {cameraOpen && <CameraSystem onClose={() => setCameraOpen(false)} enemyCam={enemy.enemyCam} enemyMoveCount={enemy.moveCount} />}
     </div>
   );

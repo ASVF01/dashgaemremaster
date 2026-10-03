@@ -75,7 +75,7 @@ export default function GeneratorPanel({ paused, progress, onProgress, onClose, 
   }, [progress.kind, progress.round, simon]);
 
   const finishRound = () => {
-    const percent = Math.min(100, progress.percent + 15);
+    const percent = Math.min(100, progress.percent + 3);
     mayhemSfx.terminalDone();
     if (percent >= 100) {
       onProgress({ ...progress, percent: 100 });
