@@ -342,6 +342,14 @@ export function playMenuBgm() {
   playSrc(bgmMenu);
 }
 
+// THE CHASE tutorial popup theme ("BP") — plays while the intro card is up,
+// then RUN!! hands off to the real chase track.
+const bgmChaseIntro = bgmChaseIntroAsset.url;
+export function playChaseIntroBgm() {
+  loadBuffer(bgmChaseIntro).catch(() => { /* ignore */ });
+  playSrc(bgmChaseIntro);
+}
+
 export function playMayhemBgm(fadeMs = 1200) {
   loadBuffer(bgmMayhem).catch(() => { /* ignore */ });
   playSrc(bgmMayhem);
