@@ -3,7 +3,7 @@ import { mayhemSfx } from "@/game/sfx";
 import FlowPuzzle, { makeRandomFlowPairs } from "./minigames/FlowPuzzle";
 
 type PuzzleKind = "simon" | "memory" | "flow";
-type GeneratorProgress = { percent: number; round: number; kind: PuzzleKind; seed: number };
+type GeneratorProgress = { percent: number; round: number; kind: PuzzleKind; seed: number; memoryMatched: boolean[] };
 
 const PAD_LABELS = ["A", "B", "C", "D"];
 
@@ -33,7 +33,7 @@ function randomKind(previous?: PuzzleKind): PuzzleKind {
 }
 
 export function makeGeneratorProgress(): GeneratorProgress {
-  return { percent: 0, round: 1, kind: randomKind(), seed: Math.floor(Math.random() * 0xFFFFFFFF) };
+  return { percent: 0, round: 1, kind: randomKind(), seed: Math.floor(Math.random() * 0xFFFFFFFF), memoryMatched: Array(6).fill(false) };
 }
 
 export default function GeneratorPanel({ paused, progress, onProgress, onClose, onComplete }: {
@@ -86,6 +86,7 @@ export default function GeneratorPanel({ paused, progress, onProgress, onClose, 
       round: progress.round + 1,
       kind: randomKind(progress.kind),
       seed: Math.floor(Math.random() * 0xFFFFFFFF),
+      memoryMatched: Array(6).fill(false),
     });
   };
 
