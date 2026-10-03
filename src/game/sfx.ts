@@ -25,6 +25,7 @@ import animMove4Asset from "@/assets/audio/AnimMove4.wav.asset.json";
 import jumpscareAsset from "@/assets/audio/JumpscareRevised3.ogg.asset.json";
 import chaserHitUrl from "@/assets/audio/trtf-5-jumpscare.mp3";
 import knightRoarAsset from "@/assets/audio/snd_knightroar.wav.asset.json";
+import knightDrawPowerAsset from "@/assets/audio/snd_knight_drawpower.wav.asset.json";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -747,8 +748,14 @@ export const sfx = {
       if (buf) playPixelSample(knightRoarAsset.url, { vol: 0.9, bits: 5, rateDiv: 8, lp: 4200, maxDur: 3 });
     });
   },
+  bossDrawPower() {
+    void loadSample(knightDrawPowerAsset.url).then((buf) => {
+      if (buf) playSample(knightDrawPowerAsset.url, { vol: 0.9 });
+    });
+  },
   preloadBossRoar() {
     void loadSample(knightRoarAsset.url);
+    void loadSample(knightDrawPowerAsset.url);
   },
   bossDefeat() {
     // Fire both victory stings simultaneously when a boss is beaten.

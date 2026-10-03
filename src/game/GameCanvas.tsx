@@ -32,6 +32,7 @@ import knightIdleUrl from "@/assets/sprites/knight/idle.png";
 import knightRoaringUrl from "@/assets/sprites/knight/roaring.png";
 import knightSwordAppearUrl from "@/assets/sprites/knight/sword_appear.png";
 import knightEquipSwordUrl from "@/assets/sprites/knight/equip_sword.png";
+import knightRoarWindupAsset from "@/assets/sprites/knight/roar-windup.png.asset.json";
 
 const bossParryFlashImg = new Image(); bossParryFlashImg.src = bossParryFlashUrl;
 let sugarcoatAudio: HTMLAudioElement | null = null;
@@ -82,6 +83,7 @@ const knightIdleStrip = new Image(); knightIdleStrip.src = knightIdleUrl;
 const knightRoaringStrip = new Image(); knightRoaringStrip.src = knightRoaringUrl;
 const knightSwordAppearStrip = new Image(); knightSwordAppearStrip.src = knightSwordAppearUrl;
 const knightEquipSwordStrip = new Image(); knightEquipSwordStrip.src = knightEquipSwordUrl;
+const knightRoarWindupImg = new Image(); knightRoarWindupImg.src = knightRoarWindupAsset.url;
 const bossBgImg = new Image(); bossBgImg.src = bossBgUrl;
 // Animated boss bg: 31 frames, 6 cols × 6 rows, each 320×180.
 const bossBgSheet = new Image(); bossBgSheet.src = bossBgSheetUrl;
@@ -92,7 +94,7 @@ const BOSS_BG_FH = 180;
 const BOSS_BG_FPS = 18;
 const KNIGHT_DRAW_H = 180; // rendered height in screen pixels (sprite is square-ish)
 const KNIGHT_INTRO_PAN_END = 1.25;
-const KNIGHT_INTRO_ROAR_START = KNIGHT_INTRO_PAN_END + 1.8;
+const KNIGHT_INTRO_ROAR_START = KNIGHT_INTRO_PAN_END + 1.895;
 const KNIGHT_INTRO_ROAR_END = KNIGHT_INTRO_ROAR_START + 3;
 const KNIGHT_INTRO_APPEAR_END = KNIGHT_INTRO_ROAR_END + 0.45;
 const KNIGHT_INTRO_EQUIP_END = KNIGHT_INTRO_APPEAR_END + 1.6;
@@ -106,6 +108,7 @@ function makeBoss() {
     worldX: 1280, worldY: 250,
     phase: "intro" as "intro" | "combat",
     introT: 0,
+    drawPowerStarted: false,
     roarStarted: false,
     musicStarted: false,
     hoverPhase: 0,
@@ -362,6 +365,7 @@ interface Boss {
   worldY: number;
   phase: "intro" | "combat";
   introT: number;
+  drawPowerStarted: boolean;
   roarStarted: boolean;
   musicStarted: boolean;
   hoverPhase: number;
@@ -3556,6 +3560,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     if (boss.phase === "intro") {
       boss.introT += dt;
       bossScreenAnchor(r, boss, screenW);
+      if (!boss.drawPowerStarted && boss.introT >= KNIGHT_INTRO_PAN_END) {
+        boss.drawPowerStarted = true;
+        sfx.bossDrawPower();
+      }
       if (!boss.roarStarted && boss.introT >= KNIGHT_INTRO_ROAR_START) {
         boss.roarStarted = true;
         sfx.bossRoar();
@@ -3871,7 +3879,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       let frame = Math.floor(boss.introT * 5) % frames;
       const windingUp = boss.introT >= KNIGHT_INTRO_PAN_END && boss.introT < KNIGHT_INTRO_ROAR_START;
       if (windingUp) {
-        strip = knightRoaringStrip; frames = 2; frameW = 39; frameH = 38; frame = 0;
+        strip = knightRoarWindupImg; frames = 1; frameW = 251; frameH = 211; frame = 0;
       } else if (boss.introT >= KNIGHT_INTRO_ROAR_START && boss.introT < KNIGHT_INTRO_ROAR_END) {
         strip = knightRoaringStrip; frames = 2; frameW = 39; frameH = 38;
         frame = Math.floor((boss.introT - KNIGHT_INTRO_ROAR_START) * 8) % frames;
@@ -3887,22 +3895,14 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         const introW = introH * frameW / frameH;
         ctx.save();
         ctx.imageSmoothingEnabled = false;
-        if (windingUp) {
-          const k = (boss.introT - KNIGHT_INTRO_PAN_END) / (KNIGHT_INTRO_ROAR_START - KNIGHT_INTRO_PAN_END);
-          const pulse = (boss.introT * 9) % 1;
+        const roaring = boss.introT >= KNIGHT_INTRO_ROAR_START && boss.introT < KNIGHT_INTRO_ROAR_END;
+        if (roaring) {
+          const pulse = ((boss.introT - KNIGHT_INTRO_ROAR_START) * 9) % 1;
           ctx.strokeStyle = `rgba(255,255,255,${0.65 * (1 - pulse)})`;
           ctx.lineWidth = 5;
           ctx.beginPath();
           ctx.arc(sx, sy, 35 + pulse * 145, 0, Math.PI * 2);
           ctx.stroke();
-          for (let i = 7; i >= 1; i--) {
-            ctx.globalAlpha = 0.06 + k * 0.055;
-            const trailScale = 1 + i * 0.055;
-            const trailW = introW * trailScale;
-            const trailH = introH * trailScale;
-            ctx.drawImage(strip, 0, 0, frameW, frameH, sx - trailW / 2 + i * 13, sy - trailH / 2, trailW, trailH);
-          }
-          ctx.globalAlpha = 1;
         }
         ctx.drawImage(strip, frame * frameW, 0, frameW, frameH, sx - introW / 2, sy - introH / 2, introW, introH);
         ctx.restore();
