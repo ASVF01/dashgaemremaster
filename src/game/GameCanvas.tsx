@@ -12,7 +12,7 @@ import { sketchLine, sketchRect, sketchCircle, jaggedBolt, INK } from "@/game/dr
 import { isPressed, matchesAction, getLiveBinds } from "@/game/keybinds";
 import { sfx, unlockAudio, setCelestialMode, setThunderMode, setMetalMode, setGrassMode } from "@/game/sfx";
 
-import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, getStarmanElapsed, playSomSomBgm, getSomSomElapsed } from "@/game/bgm";
+import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, playChaseStarmanLayer, getStarmanElapsed, playSomSomBgm, getSomSomElapsed } from "@/game/bgm";
 import weSfxUrl from "@/assets/audio/impact_aura_charge.ogg";
 import { getSettings } from "@/game/settings";
 import { getSprite, type SpriteState } from "@/game/sprites";
@@ -653,6 +653,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       r.player.invuln = Math.max(r.player.invuln, 9999);
       unlockAudio();
       if (inJrb) playSomSomBgm();
+      else if (levelIdRef.current === "chase") playChaseStarmanLayer();
       else playStarmanBgm();
       sfx.shineStart();
       setCelestialMode(true, { replaceDefaults: !inJrb });
@@ -2153,6 +2154,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         p.invuln = Math.max(p.invuln, 9999);
         unlockAudio();
         if (inJrb) playSomSomBgm();
+        else if (levelIdRef.current === "chase") playChaseStarmanLayer();
         else playStarmanBgm();
         sfx.shineStart();
         setCelestialMode(true, { replaceDefaults: !inJrb });
