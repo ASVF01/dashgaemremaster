@@ -1885,7 +1885,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
             e.stunTimer = 0.9;
             parrySuccess(r, e.x + e.w / 2, e.y + e.h / 2);
             e.hitFlash = 0.2;
-          } else if (p.invuln <= 0) {
+          } else if (p.starman || p.invuln <= 0) {
             damage(r, e.x + e.w / 2, e.y + e.h / 2, false);
             // The hit separates both characters instead of letting the chaser
             // sit inside the player's hurtbox for the whole i-frame window.
