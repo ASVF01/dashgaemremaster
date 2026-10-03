@@ -279,6 +279,37 @@ export function setMetalMode(on: boolean) { metalMode = on; }
 export function isMetalMode() { return metalMode; }
 function metalReplaces() { return metalMode && !shimmerReplaces(); }
 
+// ---------- GRASS MODE (THE CHASE forest trail) ----------
+// Replaces the default paper foley with soft turf impacts and leafy scrapes.
+let grassMode = false;
+export function setGrassMode(on: boolean) {
+  if (grassMode === on) return;
+  grassMode = on;
+  // Rebuild an active slide loop so its filters immediately match the surface.
+  if (slideActive) {
+    stopSlideLoop();
+    if (!shimmerReplaces()) startSlideLoop();
+  }
+}
+export function isGrassMode() { return grassMode; }
+function grassReplaces() { return grassMode && !metalReplaces() && !shimmerReplaces(); }
+
+function grassCrunch(intensity = 1, heavy = false) {
+  // Low dirt thud plus several tiny, dry leaf snaps.
+  noise(heavy ? 0.12 : 0.075, (heavy ? 0.25 : 0.17) * intensity, 90, heavy ? 950 : 1450);
+  noise(heavy ? 0.08 : 0.05, 0.12 * intensity, 1200, 4400, 0.006);
+  const snaps = heavy ? 4 : 2;
+  for (let i = 0; i < snaps; i++) {
+    noise(0.012 + Math.random() * 0.018, 0.055 * intensity, 1800, 6200, 0.008 + i * 0.012);
+  }
+  if (heavy) tone({ freq: 92, to: 54, dur: 0.11, type: "sine", vol: 0.11 * intensity, release: 0.07 });
+}
+
+function grassScrape(dur = 0.22, intensity = 1) {
+  noise(dur, 0.15 * intensity, 180, 2100);
+  noise(Math.min(dur, 0.16), 0.08 * intensity, 1700, 5200, 0.015);
+}
+
 function metalHit(base = 420, intensity = 1) {
   const f = base * (0.92 + Math.random() * 0.16);
   tone({ freq: f, to: f * 0.42, dur: 0.12, type: "square", vol: 0.24 * intensity, attack: 0.001, release: 0.08 });
@@ -417,6 +448,9 @@ export const sfx = {
     if (metalReplaces()) {
       metalHit(520, 0.62);
       metalScrape(0.08, 0.42);
+    } else if (grassReplaces()) {
+      grassCrunch(0.85, false);
+      grassScrape(0.09, 0.45);
     } else if (!shimmerReplaces()) {
       noise(0.22, 0.26, 110, 1300);                                  // long breathy puff
       noise(0.10, 0.14, 50, 520, 0.02);                              // low body
@@ -429,6 +463,9 @@ export const sfx = {
     if (metalReplaces()) {
       metalHit(360, 1.08);
       metalScrape(0.1, 0.34);
+    } else if (grassReplaces()) {
+      grassCrunch(1.15, true);
+      grassScrape(0.13, 0.55);
     } else if (!shimmerReplaces()) {
       // "bsh" — voiced "b" thump + airy "sh" hiss tail
       tone({ freq: 130, to: 70, dur: 0.05, type: "sine", vol: 0.42, attack: 0.002, release: 0.03 });
@@ -442,6 +479,9 @@ export const sfx = {
     if (metalReplaces()) {
       metalScrape(0.34, 0.9);
       metalHit(680, 0.25);
+    } else if (grassReplaces()) {
+      grassScrape(0.38, 1);
+      grassCrunch(0.65, false);
     } else if (!shimmerReplaces()) {
       // "thhh" — sustained airy noise around speech band
       noise(0.35, 0.16, 900, 5500);
@@ -452,6 +492,9 @@ export const sfx = {
   slideEnd() {
     if (metalReplaces()) {
       metalHit(430, 0.55);
+    } else if (grassReplaces()) {
+      grassScrape(0.14, 0.7);
+      grassCrunch(0.5, false);
     } else if (!shimmerReplaces()) {
       noise(0.16, 0.14, 600, 3800);
       noise(0.1, 0.08, 200, 1500, 0.02);
@@ -463,6 +506,8 @@ export const sfx = {
   step() {
     if (metalReplaces()) {
       metalHit(620 + Math.random() * 100, 0.34);
+    } else if (grassReplaces()) {
+      grassCrunch(0.72, false);
     } else if (!shimmerReplaces()) {
       // Original soft papery footstep — short filtered noise burst
       noise(0.05, 0.18, 280, 2600);
@@ -478,6 +523,8 @@ export const sfx = {
   run() {
     if (metalReplaces()) {
       metalHit(520 + Math.random() * 160, 0.42);
+    } else if (grassReplaces()) {
+      grassCrunch(0.95, true);
     } else if (!shimmerReplaces()) {
       noise(0.06, 0.22, 280, 2800);
     }
@@ -491,6 +538,9 @@ export const sfx = {
     if (metalReplaces()) {
       metalScrape(0.24, 1.1);
       tone({ freq: 2100, to: 900, dur: 0.16, type: "square", vol: 0.07, attack: 0.002, release: 0.09 });
+    } else if (grassReplaces()) {
+      grassScrape(0.26, 1.15);
+      grassCrunch(0.75, true);
     } else if (!shimmerReplaces()) {
       noise(0.18, 0.14, 500, 4500);
     }
@@ -880,9 +930,9 @@ function startSlideLoop() {
   for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
   const src = c.createBufferSource();
   src.buffer = buf; src.loop = true;
-  // Same band as the walk/run noise normally; MAYHEM brightens it into a metal grind.
-  const hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = metalMode ? 760 : 280;
-  const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = metalMode ? 5600 : 2600;
+  // Surface-specific texture: metal is bright, grass is low and leafy.
+  const hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = metalMode ? 760 : grassMode ? 150 : 280;
+  const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = metalMode ? 5600 : grassMode ? 2100 : 2600;
   const out = c.createGain();
   out.gain.setValueAtTime(0.0001, t0);
   out.gain.exponentialRampToValueAtTime(slideTargetVol, t0 + 0.06);
@@ -892,7 +942,7 @@ function startSlideLoop() {
   // very light low body so it doesn't feel hollow; metal mode gets a harsher industrial grind
   const rumble = c.createOscillator();
   rumble.type = metalMode ? "square" : "triangle";
-  rumble.frequency.value = metalMode ? 146 : 95;
+  rumble.frequency.value = metalMode ? 146 : grassMode ? 68 : 95;
   const rumbleGain = c.createGain();
   rumbleGain.gain.value = 0.012;
   rumble.connect(rumbleGain).connect(out);
@@ -903,7 +953,7 @@ function startSlideLoop() {
 
 function setSlideIntensity(v: number) {
   // v in [0,1] — modulates volume + brightness, kept quiet to feel like footsteps.
-  slideTargetVol = 0.025 + Math.max(0, Math.min(1, v)) * (metalMode ? 0.12 : 0.09);
+  slideTargetVol = 0.025 + Math.max(0, Math.min(1, v)) * (metalMode ? 0.12 : grassMode ? 0.105 : 0.09);
   if (!slide) return;
   const c = ac(); if (!c) return;
   const t = c.currentTime;
@@ -912,7 +962,7 @@ function setSlideIntensity(v: number) {
     slide.out.gain.setValueAtTime(slide.out.gain.value, t);
     slide.out.gain.linearRampToValueAtTime(slideTargetVol, t + 0.1);
     slide.lp.frequency.cancelScheduledValues(t);
-    slide.lp.frequency.linearRampToValueAtTime(metalMode ? 3200 + v * 3000 : 1800 + v * 1400, t + 0.1);
+    slide.lp.frequency.linearRampToValueAtTime(metalMode ? 3200 + v * 3000 : grassMode ? 1350 + v * 1300 : 1800 + v * 1400, t + 0.1);
   } catch { /* noop */ }
 }
 

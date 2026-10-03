@@ -10,7 +10,7 @@ import {
 import { buildLevel, type Level, type LevelId } from "@/game/level";
 import { sketchLine, sketchRect, sketchCircle, jaggedBolt, INK } from "@/game/draw";
 import { isPressed, matchesAction, getLiveBinds } from "@/game/keybinds";
-import { sfx, unlockAudio, setCelestialMode, setThunderMode, setMetalMode } from "@/game/sfx";
+import { sfx, unlockAudio, setCelestialMode, setThunderMode, setMetalMode, setGrassMode } from "@/game/sfx";
 
 import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, getStarmanElapsed, playSomSomBgm, getSomSomElapsed } from "@/game/bgm";
 import weSfxUrl from "@/assets/audio/impact_aura_charge.ogg";
@@ -589,6 +589,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     };
     // MAYHEM walks/runs on industrial metal instead of paper.
     setMetalMode(levelId.startsWith("mayhem"));
+    // THE CHASE uses its own forest-floor movement foley.
+    setGrassMode(levelId === "chase");
     // Pre-place the invboi star if this level configures one (e.g. meet-invboi).
     if (level.invboiStart) {
       refs.current.invboiPickup = {
@@ -627,7 +629,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
   // with the menu music here. Restart on retry is also driven by the
   // parent via screen/levelId/resetKey transitions.
   useEffect(() => {
-    return () => { stopBgm(); sfx.shineStop(); sfx.rainStop(); sfx.slideStop(); sfx.laserStop(); setCelestialMode(false); setThunderMode(false); setMetalMode(false); };
+    return () => { stopBgm(); sfx.shineStop(); sfx.rainStop(); sfx.slideStop(); sfx.laserStop(); setCelestialMode(false); setThunderMode(false); setMetalMode(false); setGrassMode(false); };
   }, []);
 
   // BGM: pause/resume with the game's pause state — but keep playing when
