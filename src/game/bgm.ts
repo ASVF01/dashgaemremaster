@@ -362,32 +362,43 @@ export function playChaseIntroBgm() {
   // Hard cut: kill whatever is playing instantly, then start BP with no
   // crossfade — the tutorial card snaps the music over.
   stopBgm();
-  const ac = getCtx();
-  resumeCtx(ac);
+  const c = ac();
+  if (!c || !masterGain) return;
   const requestId = ++playRequestId;
   loadBuffer(bgmChaseIntro).then((buf) => {
-    if (requestId !== playRequestId) return;
-    const src = ac.createBufferSource();
-    src.buffer = buf;
-    src.loop = true;
+    if (requestId !== playRequestId || !masterGain) return;
+    const source = c.createBufferSource();
+    source.buffer = buf;
+    source.loop = true;
     // Pixelated chain: bitcrush waveshaper + lowpass to shave the fizz.
-    const crush = ac.createWaveShaper();
+    const crush = c.createWaveShaper();
     crush.curve = makeBitcrushCurve();
     crush.oversample = "none";
-    const lp = ac.createBiquadFilter();
+    const lp = c.createBiquadFilter();
     lp.type = "lowpass";
     lp.frequency.value = 3200;
-    const g = ac.createGain();
+    const g = c.createGain();
     g.gain.value = 1;
-    src.connect(crush);
+    source.connect(crush);
     crush.connect(lp);
     lp.connect(g);
-    g.connect(bgmBus);
-    src.onended = () => {
-      if (current?.src === src) current = null;
+    g.connect(masterGain);
+    source.start();
+    // Register as the current track so stopBgm()/playSrc() can kill it.
+    playing = {
+      src: bgmChaseIntro,
+      buffer: buf,
+      source,
+      gain: g,
+      nextSource: null,
+      nextGain: null,
+      startedAt: c.currentTime,
+      nextLoopAt: 0,
+      rafId: null,
+      stopped: false,
+      rate: 1,
+      detune: 0,
     };
-    src.start();
-    current = { src, gain: g, url: bgmChaseIntro };
   }).catch(() => { /* ignore */ });
 }
 
