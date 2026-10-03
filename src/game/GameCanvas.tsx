@@ -33,6 +33,7 @@ import knightRoaringUrl from "@/assets/sprites/knight/roaring.png";
 import knightSwordAppearUrl from "@/assets/sprites/knight/sword_appear.png";
 import knightEquipSwordUrl from "@/assets/sprites/knight/equip_sword.png";
 import knightRoarWindupAsset from "@/assets/sprites/knight/roar-windup.png.asset.json";
+import receptionistAsset from "@/assets/mayhem/The_Receptionist.png.asset.json";
 
 const bossParryFlashImg = new Image(); bossParryFlashImg.src = bossParryFlashUrl;
 let sugarcoatAudio: HTMLAudioElement | null = null;
@@ -84,6 +85,7 @@ const knightRoaringStrip = new Image(); knightRoaringStrip.src = knightRoaringUr
 const knightSwordAppearStrip = new Image(); knightSwordAppearStrip.src = knightSwordAppearUrl;
 const knightEquipSwordStrip = new Image(); knightEquipSwordStrip.src = knightEquipSwordUrl;
 const knightRoarWindupImg = new Image(); knightRoarWindupImg.src = knightRoarWindupAsset.url;
+const receptionistImg = new Image(); receptionistImg.src = receptionistAsset.url;
 const bossBgImg = new Image(); bossBgImg.src = bossBgUrl;
 // Animated boss bg: 31 frames, 6 cols × 6 rows, each 320×180.
 const bossBgSheet = new Image(); bossBgSheet.src = bossBgSheetUrl;
@@ -2908,7 +2910,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     }
     ctx.translate(-camX, -camY);
 
-    // distant scribbled clouds / scenery — MAYHEM gets black industrial silhouettes
+    // distant scribbled clouds / scenery — MAYHEM hotel levels use bespoke interiors
     if (isMayhemLevel) drawMayhemScenery(ctx, camX, w, r.level.height, r.time);
     else if (levelIdRef.current === "chase") drawChaseScenery(ctx, camX, w, r.level.height, r.time);
     else drawScenery(ctx, camX, w, r.level.height);
@@ -2921,23 +2923,26 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       const visX = Math.max(pl.x, camX - 40);
       const visR = Math.min(pl.x + pl.w, camX + w + 40);
       const visW = visR - visX;
+      const mayhemHotel = levelIdRef.current === "mayhem-main" || levelIdRef.current === "mayhem-floor-1";
       const fill = isMayhemLevel
-        ? (isGround ? "#15191f" : "#20262e")
+        ? mayhemHotel
+          ? (isGround ? "#241b20" : "#47333a")
+          : (isGround ? "#15191f" : "#20262e")
         : bossPlatforms ? "#000000"
         : levelIdRef.current === "chase" ? (isGround ? "#26351f" : "#49331f")
         : (isGround ? "#e5dfc2" : "#f7f1dc");
-      const stroke = isMayhemLevel ? "#9aa5ad" : bossPlatforms ? "#ffffff" : levelIdRef.current === "chase" ? "#101a0f" : INK;
+      const stroke = isMayhemLevel ? (mayhemHotel ? "#b4936c" : "#9aa5ad") : bossPlatforms ? "#ffffff" : levelIdRef.current === "chase" ? "#101a0f" : INK;
       sketchRect(ctx, visX, pl.y, visW, pl.h, fill, stroke, isGround ? 3 : 2.6, isMayhemLevel ? 0.55 : isGround ? 1.6 : 1.2);
       if (isMayhemLevel) {
-        // Brushed top edge + panel seams/rivets make every walkable surface read as metal.
+        // Brushed metal outside; dark timber and brass trim inside the hotel.
         ctx.save();
-        ctx.strokeStyle = "rgba(220,230,235,0.55)";
+        ctx.strokeStyle = mayhemHotel ? "rgba(232,199,148,0.62)" : "rgba(220,230,235,0.55)";
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(visX, pl.y + 2);
         ctx.lineTo(visR, pl.y + 2);
         ctx.stroke();
-        ctx.strokeStyle = "rgba(0,0,0,0.55)";
+        ctx.strokeStyle = mayhemHotel ? "rgba(42,22,28,0.72)" : "rgba(0,0,0,0.55)";
         ctx.lineWidth = 1.5;
         for (let sx = Math.ceil(visX / 96) * 96; sx < visR; sx += 96) {
           ctx.beginPath();
@@ -2945,7 +2950,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
           ctx.lineTo(sx, pl.y + pl.h - 5);
           ctx.stroke();
         }
-        ctx.fillStyle = "rgba(180,190,198,0.55)";
+        ctx.fillStyle = mayhemHotel ? "rgba(198,155,94,0.58)" : "rgba(180,190,198,0.55)";
         for (let sx = Math.ceil(visX / 48) * 48; sx < visR; sx += 48) {
           ctx.beginPath();
           ctx.arc(sx, pl.y + Math.min(12, pl.h * 0.35), 2, 0, Math.PI * 2);
@@ -2994,7 +2999,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       ctx.restore();
     }
 
-    // interactable NPCs (MAYHEM) — a lanky steel-lit figure + [E] prompt
+    // interactable NPCs (MAYHEM) — supplied receptionist art + [E] prompt
     if (r.level.npcs) {
       const nearId = nearbyNpc(r)?.id;
       for (const n of r.level.npcs) {
@@ -3002,14 +3007,19 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         const cx = n.x + n.w / 2;
         const bob = Math.sin(r.time * 1.8 + n.x) * 2;
         ctx.save();
-        // body
-        sketchRect(ctx, n.x, n.y + bob, n.w, n.h, "#1b2128", "#9aa6ae", 2.2, 0.5);
-        // head
-        sketchCircle(ctx, cx, n.y - 14 + bob, 13, "#20272f", "#9aa6ae", 2.2, 0.5);
-        // eyes
-        ctx.fillStyle = "#ffd94a";
-        ctx.beginPath(); ctx.arc(cx - 5, n.y - 15 + bob, 2.2, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(cx + 5, n.y - 15 + bob, 2.2, 0, Math.PI * 2); ctx.fill();
+        if (n.id === "checker" && receptionistImg.complete && receptionistImg.naturalWidth > 0) {
+          ctx.imageSmoothingEnabled = false;
+          const ratio = receptionistImg.naturalWidth / receptionistImg.naturalHeight;
+          const drawH = n.h;
+          const drawW = drawH * ratio;
+          ctx.drawImage(receptionistImg, cx - drawW / 2, n.y + bob, drawW, drawH);
+        } else {
+          sketchRect(ctx, n.x, n.y + bob, n.w, n.h, "#1b2128", "#9aa6ae", 2.2, 0.5);
+          sketchCircle(ctx, cx, n.y - 14 + bob, 13, "#20272f", "#9aa6ae", 2.2, 0.5);
+          ctx.fillStyle = "#ffd94a";
+          ctx.beginPath(); ctx.arc(cx - 5, n.y - 15 + bob, 2.2, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(cx + 5, n.y - 15 + bob, 2.2, 0, Math.PI * 2); ctx.fill();
+        }
         // name plate
         ctx.font = "bold 13px 'Oxanium', sans-serif";
         ctx.textAlign = "center";
@@ -4112,6 +4122,104 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
   function drawMayhemScenery(ctx: CanvasRenderingContext2D, camX: number, w: number, levelH: number, time: number) {
     const groundY = levelH - 80;
     ctx.save();
+
+    if (levelIdRef.current === "mayhem-main") {
+      // Deep burgundy wallpaper, wooden wainscot and a patterned hotel carpet.
+      ctx.fillStyle = "#21171c";
+      ctx.fillRect(camX - 80, 58, w + 160, groundY - 58);
+      ctx.fillStyle = "#352127";
+      ctx.fillRect(camX - 80, 88, w + 160, groundY - 210);
+      ctx.strokeStyle = "rgba(183,139,85,0.28)";
+      ctx.lineWidth = 2;
+      for (let x = Math.floor((camX - 100) / 90) * 90; x < camX + w + 100; x += 90) {
+        ctx.beginPath();
+        ctx.moveTo(x, 90); ctx.lineTo(x, groundY - 122); ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(x + 45, 178, 19, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.fillStyle = "#171012";
+      ctx.fillRect(camX - 80, groundY - 122, w + 160, 122);
+      ctx.fillStyle = "#5a3035";
+      ctx.fillRect(camX - 80, groundY - 18, w + 160, 18);
+      ctx.strokeStyle = "rgba(218,171,95,0.48)";
+      for (let x = Math.floor((camX - 100) / 72) * 72; x < camX + w + 100; x += 72) {
+        ctx.beginPath(); ctx.moveTo(x, groundY - 18); ctx.lineTo(x + 36, groundY); ctx.lineTo(x + 72, groundY - 18); ctx.stroke();
+      }
+
+      // Reception key cubbies and warm desk lamps.
+      ctx.fillStyle = "#100b0d";
+      ctx.fillRect(760, 190, 470, 238);
+      ctx.strokeStyle = "#8f6842";
+      ctx.lineWidth = 4;
+      ctx.strokeRect(760, 190, 470, 238);
+      ctx.lineWidth = 1;
+      for (let row = 0; row < 5; row++) for (let col = 0; col < 10; col++) {
+        const rx = 774 + col * 44, ry = 205 + row * 40;
+        ctx.strokeRect(rx, ry, 34, 27);
+        if ((row * 10 + col) % 3 !== 0) {
+          ctx.fillStyle = "#c89b55"; ctx.fillRect(rx + 15, ry + 8, 3, 11);
+        }
+      }
+      const lamp = (x: number) => {
+        const glow = ctx.createRadialGradient(x, groundY - 190, 5, x, groundY - 190, 92);
+        glow.addColorStop(0, "rgba(255,210,132,0.3)"); glow.addColorStop(1, "rgba(255,210,132,0)");
+        ctx.fillStyle = glow; ctx.fillRect(x - 92, groundY - 282, 184, 184);
+        ctx.fillStyle = "#b1834f"; ctx.fillRect(x - 3, groundY - 185, 6, 108);
+        ctx.beginPath(); ctx.moveTo(x - 32, groundY - 196); ctx.lineTo(x + 32, groundY - 196); ctx.lineTo(x + 20, groundY - 232); ctx.lineTo(x - 20, groundY - 232); ctx.closePath(); ctx.fill();
+      };
+      lamp(580); lamp(1360);
+
+      // Framed paintings, lobby seating and luggage silhouettes.
+      for (const [x, y, ww, hh] of [[1480, 170, 180, 120], [1840, 135, 220, 150], [2250, 175, 170, 110]]) {
+        ctx.fillStyle = "#0c1012"; ctx.fillRect(x, y, ww, hh);
+        ctx.strokeStyle = "#a77a43"; ctx.lineWidth = 7; ctx.strokeRect(x, y, ww, hh);
+        ctx.fillStyle = "#273239"; ctx.beginPath(); ctx.moveTo(x + 10, y + hh - 10); ctx.lineTo(x + ww * .45, y + 32); ctx.lineTo(x + ww - 10, y + hh - 10); ctx.closePath(); ctx.fill();
+      }
+      ctx.fillStyle = "#4c2930"; ctx.fillRect(1430, groundY - 92, 300, 58); ctx.fillRect(2180, groundY - 86, 330, 52);
+      ctx.strokeStyle = "#a77a43"; ctx.lineWidth = 5; ctx.strokeRect(1430, groundY - 92, 300, 58); ctx.strokeRect(2180, groundY - 86, 330, 52);
+      ctx.fillStyle = "#151012"; ctx.fillRect(1860, groundY - 95, 66, 95); ctx.strokeStyle = "#9a744c"; ctx.strokeRect(1860, groundY - 95, 66, 95);
+      ctx.fillStyle = "#b48a50"; ctx.fillRect(1874, groundY - 103, 38, 8);
+
+      // Brass elevator bank at the far end.
+      ctx.fillStyle = "#0b090a"; ctx.fillRect(2950, 155, 390, groundY - 155);
+      ctx.strokeStyle = "#b78b4d"; ctx.lineWidth = 9; ctx.strokeRect(2950, 155, 390, groundY - 155);
+      ctx.strokeStyle = "#725334"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(3145, 164); ctx.lineTo(3145, groundY); ctx.stroke();
+      ctx.fillStyle = `rgba(196,45,45,${0.55 + Math.sin(time * 4) * 0.2})`; ctx.beginPath(); ctx.arc(3145, 132, 8, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+      return;
+    }
+
+    if (levelIdRef.current === "mayhem-floor-1") {
+      // An impossibly long hotel hallway, with repeating guest rooms and weak sconces.
+      ctx.fillStyle = "#181417";
+      ctx.fillRect(camX - 80, 48, w + 160, groundY - 48);
+      ctx.fillStyle = "#2d2025";
+      ctx.fillRect(camX - 80, 78, w + 160, groundY - 190);
+      ctx.fillStyle = "#121012";
+      ctx.fillRect(camX - 80, groundY - 112, w + 160, 112);
+      const firstDoor = Math.floor((camX - 400) / 520) * 520;
+      for (let x = firstDoor; x < camX + w + 520; x += 520) {
+        const room = 101 + Math.floor(x / 520);
+        ctx.fillStyle = "#120d10"; ctx.fillRect(x + 120, groundY - 330, 182, 330);
+        ctx.strokeStyle = "#76543b"; ctx.lineWidth = 7; ctx.strokeRect(x + 120, groundY - 330, 182, 330);
+        ctx.fillStyle = "#39262b"; ctx.fillRect(x + 138, groundY - 311, 146, 292);
+        ctx.strokeStyle = "rgba(171,127,75,0.42)"; ctx.lineWidth = 2; ctx.strokeRect(x + 157, groundY - 282, 108, 100); ctx.strokeRect(x + 157, groundY - 151, 108, 105);
+        ctx.fillStyle = "#c09858"; ctx.beginPath(); ctx.arc(x + 258, groundY - 162, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#120d10"; ctx.fillRect(x + 180, groundY - 357, 62, 25);
+        ctx.fillStyle = "#d0a766"; ctx.font = "bold 13px 'Oxanium', sans-serif"; ctx.textAlign = "center"; ctx.fillText(String(room), x + 211, groundY - 339);
+        const glow = ctx.createRadialGradient(x + 52, 258, 4, x + 52, 258, 74);
+        glow.addColorStop(0, "rgba(255,208,130,0.32)"); glow.addColorStop(1, "rgba(255,208,130,0)");
+        ctx.fillStyle = glow; ctx.fillRect(x - 22, 184, 148, 148);
+        ctx.fillStyle = "#aa7d48"; ctx.fillRect(x + 48, 226, 8, 44); ctx.beginPath(); ctx.arc(x + 52, 221, 18, Math.PI, 0); ctx.fill();
+      }
+      ctx.fillStyle = "#553039"; ctx.fillRect(camX - 80, groundY - 20, w + 160, 20);
+      ctx.strokeStyle = "rgba(218,171,95,0.38)"; ctx.lineWidth = 2;
+      for (let x = Math.floor((camX - 100) / 80) * 80; x < camX + w + 100; x += 80) {
+        ctx.beginPath(); ctx.moveTo(x, groundY - 20); ctx.lineTo(x + 40, groundY); ctx.lineTo(x + 80, groundY - 20); ctx.stroke();
+      }
+      ctx.restore();
+      return;
+    }
 
     // Far industrial ribs against the black sky.
     const ribStep = 420;
