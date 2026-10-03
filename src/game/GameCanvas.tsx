@@ -3945,7 +3945,52 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
           }
           ctx.shadowBlur = 0;
         }
+        // --- post-roar VFX, matching the reference footage ---
+        const cw = ctx.canvas.width, ch = ctx.canvas.height;
+        const afterRoar = boss.introT >= KNIGHT_INTRO_ROAR_END;
+        if (afterRoar) {
+          // the scene drops dark once the roar ends
+          ctx.fillStyle = "rgba(0,0,0,0.55)";
+          ctx.fillRect(0, 0, cw, ch);
+          // red glow clinging to the knight, fading out over the first moment
+          const glowT = Math.min(1, (boss.introT - KNIGHT_INTRO_ROAR_END) / 0.6);
+          const glow = ctx.createRadialGradient(sx, sy, 10, sx, sy, 260);
+          glow.addColorStop(0, `rgba(255,32,48,${0.5 * (1 - glowT)})`);
+          glow.addColorStop(1, "rgba(255,32,48,0)");
+          ctx.fillStyle = glow;
+          ctx.fillRect(sx - 260, sy - 260, 520, 520);
+        }
+        // faint red aura pulsing behind him during the long overhead hold
+        const holding = boss.introT >= KNIGHT_INTRO_APPEAR_END && boss.introT < KNIGHT_INTRO_EQUIP_END;
+        if (holding) {
+          const holdT = boss.introT - KNIGHT_INTRO_APPEAR_END;
+          const breathe = 0.5 + 0.5 * Math.sin(holdT * 3.2);
+          const aura = ctx.createRadialGradient(sx, sy, 20, sx, sy, 200 + breathe * 40);
+          aura.addColorStop(0, `rgba(160,10,40,${0.28 + breathe * 0.14})`);
+          aura.addColorStop(1, "rgba(160,10,40,0)");
+          ctx.fillStyle = aura;
+          ctx.fillRect(sx - 260, sy - 260, 520, 520);
+        }
         ctx.drawImage(strip, frame * frameW, 0, frameW, frameH, sx - introW / 2, sy - introH / 2, introW, introH);
+        // the cut: red slash streak across the screen + white impact flash
+        if (boss.introT >= KNIGHT_INTRO_CUT_AT && boss.introT < KNIGHT_INTRO_CUT_AT + 0.3) {
+          const cutT = (boss.introT - KNIGHT_INTRO_CUT_AT) / 0.3;
+          ctx.save();
+          ctx.globalAlpha = 1 - cutT;
+          ctx.strokeStyle = "rgb(255,40,60)";
+          ctx.lineWidth = 26 * (1 - cutT) + 4;
+          ctx.shadowColor = "rgb(255,40,60)";
+          ctx.shadowBlur = 30;
+          ctx.beginPath();
+          ctx.moveTo(sx - cw * 0.45, sy - ch * 0.35);
+          ctx.lineTo(sx + cw * 0.45, sy + ch * 0.3);
+          ctx.stroke();
+          ctx.restore();
+          if (cutT < 0.25) {
+            ctx.fillStyle = `rgba(255,255,255,${0.85 * (1 - cutT / 0.25)})`;
+            ctx.fillRect(0, 0, cw, ch);
+          }
+        }
         ctx.restore();
       }
       return;
