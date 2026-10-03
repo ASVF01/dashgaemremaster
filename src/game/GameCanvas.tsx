@@ -3575,6 +3575,14 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         r.shake = Math.max(r.shake, 0.72);
         boss.shakeT = Math.max(boss.shakeT, 0.2);
       }
+      if (!boss.swordFallStarted && boss.introT >= KNIGHT_INTRO_ROAR_END) {
+        boss.swordFallStarted = true;
+        sfx.bossSwordFall();
+      }
+      if (!boss.swordCutStarted && boss.introT >= KNIGHT_INTRO_EQUIP_END) {
+        boss.swordCutStarted = true;
+        sfx.bossSwordCut();
+      }
       if (boss.introT >= KNIGHT_INTRO_END) {
         boss.phase = "combat";
         boss.attackTimer = 1.2;
