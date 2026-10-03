@@ -3923,10 +3923,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
           }
           ctx.shadowBlur = 0;
         }
-        const roarScale = roaring ? 1.72 + Math.sin((boss.introT - KNIGHT_INTRO_ROAR_START) * 24) * 0.04 : 1;
-        const poseW = introW * roarScale;
-        const poseH = introH * roarScale;
-        ctx.drawImage(strip, frame * frameW, 0, frameW, frameH, sx - poseW / 2, sy - poseH / 2, poseW, poseH);
+        ctx.drawImage(strip, frame * frameW, 0, frameW, frameH, sx - introW / 2, sy - introH / 2, introW, introH);
         ctx.restore();
       }
       return;

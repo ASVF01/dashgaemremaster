@@ -745,7 +745,7 @@ export const sfx = {
   },
   bossRoar() {
     void loadSample(knightRoarAsset.url).then((buf) => {
-      if (buf) playPixelSample(knightRoarAsset.url, { vol: 0.9, bits: 5, rateDiv: 8, lp: 4200, maxDur: 3 });
+      if (buf) playPixelSample(knightRoarAsset.url, { vol: 0.9, bits: 5, rateDiv: 8, lp: 4200 });
     });
   },
   bossDrawPower() {
