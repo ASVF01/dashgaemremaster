@@ -46,8 +46,8 @@ export const LEVELS: LevelMeta[] = [
   { id: "aftermath-3", name: "FINAL DRAFT",    subtitle: "everything you've learned. one run.",      difficulty: 4, par: 75 },
   { id: "celestial-marathon", name: "CELESTIAL MARATHON", subtitle: "every level. one breath. invboi forever.", difficulty: 4, par: 9999 },
   { id: "mayhem-outside", name: "THE OUTSIDE", subtitle: "the tower is east. keep running.", difficulty: 2, par: 40, hidden: true },
-  { id: "mayhem-main",    name: "MAIN FLOOR",  subtitle: "clock in. talk to the checker.",   difficulty: 1, par: 90, hidden: true },
-  { id: "mayhem-floor-1", name: "FLOOR ONE",   subtitle: "the tower is bigger inside.",      difficulty: 2, par: 180, hidden: true },
+  { id: "mayhem-main",    name: "MAIN FLOOR",  subtitle: "check in at the reception desk.", difficulty: 1, par: 90, hidden: true },
+  { id: "mayhem-floor-1", name: "FLOOR ONE",   subtitle: "guest rooms stretch into the dark.", difficulty: 2, par: 180, hidden: true },
 ];
 
 export function buildLevel(id: LevelId = "scribble-1", opts: { marathon?: boolean } = {}): Level {
@@ -950,7 +950,7 @@ function buildMayhemOutside(): Level {
   };
 }
 
-// ---------- MAYHEM · MAIN FLOOR: the lobby. talk to the checker, ride up ----------
+// ---------- MAYHEM · MAIN FLOOR: hotel reception. check in, ride up ----------
 function buildMayhemMain(): Level {
   const W = 3400;
   const H = 720;
@@ -963,13 +963,13 @@ function buildMayhemMain(): Level {
     { x: -60, y: 0, w: 60, h: groundY, kind: "block" },
     // ceiling slab so the lobby reads as an interior
     { x: 0, y: 0, w: W, h: 60, kind: "block" },
-    // reception counter the checker stands behind
-    { x: 840, y: groundY - 70, w: 260, h: 70, kind: "block" },
-    // waiting benches / crates
+    // broad wooden reception counter
+    { x: 800, y: groundY - 78, w: 360, h: 78, kind: "block" },
+    // lobby couches, luggage and low tables
     { x: 1500, y: groundY - 44, w: 180, h: 44, kind: "block" },
     { x: 1900, y: groundY - 66, w: 120, h: 66, kind: "block" },
     { x: 2260, y: groundY - 40, w: 200, h: 40, kind: "block" },
-    // mezzanine ledge (optional airtime, nothing up there yet)
+    // balcony ledges above the lobby
     { x: 1400, y: groundY - 250, w: 320, h: 22, kind: "block" },
     { x: 2000, y: groundY - 320, w: 260, h: 22, kind: "block" },
     // elevator shaft wall at the east end; the goal sits in its doorway
@@ -986,17 +986,17 @@ function buildMayhemMain(): Level {
     enemies: [],
     pickups: [],
     npcs: [
-      { id: "checker", x: 980, y: groundY - 132, w: 34, h: 62, name: "CHECKER" },
+      { id: "checker", x: 920, y: groundY - 176, w: 112, h: 98, name: "THE RECEPTIONIST" },
     ],
     signs: [
-      { x: 300,     y: groundY - 130, text: "MAIN FLOOR · night shift" },
-      { x: 980,     y: groundY - 320, text: "RECEPTION" },
-      { x: 2700,    y: groundY - 130, text: "elevator →" },
+      { x: 300,     y: groundY - 130, text: "ROUGE HARES HOTEL" },
+      { x: 980,     y: groundY - 340, text: "RECEPTION" },
+      { x: 2700,    y: groundY - 130, text: "ELEVATORS →" },
     ],
   };
 }
 
-// ---------- MAYHEM · FLOOR ONE: big empty tower floor. platforms only ----------
+// ---------- MAYHEM · FLOOR ONE: guest corridor and service wing ----------
 function buildMayhemFloor1(): Level {
   const W = 16000;
   const H = 720;
@@ -1008,27 +1008,27 @@ function buildMayhemFloor1(): Level {
     { x: 0, y: 0, w: W, h: 50, kind: "block" },
   ];
 
-  // Section A — corridor steps: short blocks you can run straight over.
+  // Section A — luggage and low corridor furnishings.
   for (let x = 600; x < 3600; x += 420) {
     const i = Math.floor(x / 420);
     platforms.push({ x, y: groundY - 46 - (i % 3) * 22, w: 120, h: 46 + (i % 3) * 22, kind: "block" });
   }
-  // Section B — stacked shelving: rising then falling ledges.
+  // Section B — service carts and staggered maintenance balconies.
   for (let i = 0; i < 10; i++) {
     const x = 3900 + i * 380;
     const lift = 120 + (i < 5 ? i : 9 - i) * 78;
     platforms.push({ x, y: groundY - lift, w: 190, h: 20, kind: "block" });
   }
-  // Section C — pillar hall: tall thin pillars with caps to hop across.
+  // Section C — tall decorative columns between hotel wings.
   for (let i = 0; i < 8; i++) {
     const x = 7900 + i * 300;
     platforms.push({ x, y: groundY - 150 - (i % 2) * 90, w: 70, h: 150 + (i % 2) * 90, kind: "block" });
   }
-  // Section D — vent crawl: low overhangs to slide under, at speed.
+  // Section D — low collapsed ceiling panels in the service corridor.
   for (let x = 10500; x < 12600; x += 700) {
     platforms.push({ x, y: groundY - 90, w: 380, h: 26, kind: "block" });
   }
-  // Section E — the long gantry: floating catwalks toward the stairwell.
+  // Section E — broken upper hallway toward the stairwell.
   for (let i = 0; i < 9; i++) {
     const x = 12900 + i * 300;
     platforms.push({ x, y: groundY - 200 - (i % 3) * 70, w: 210, h: 20, kind: "block" });
@@ -1052,11 +1052,11 @@ function buildMayhemFloor1(): Level {
     pickups,
     signs: [
       { x: 320,   y: groundY - 130, text: "FLOOR 1" },
-      { x: 3700,  y: groundY - 130, text: "storage — keep moving" },
-      { x: 7700,  y: groundY - 130, text: "pillar hall" },
-      { x: 10400, y: groundY - 130, text: "vents. slide." },
-      { x: 12800, y: groundY - 130, text: "gantry" },
-      { x: 15500, y: groundY - 130, text: "stairwell →" },
+      { x: 3700,  y: groundY - 130, text: "ROOMS 101—112" },
+      { x: 7700,  y: groundY - 130, text: "EAST WING" },
+      { x: 10400, y: groundY - 130, text: "SERVICE HALL" },
+      { x: 12800, y: groundY - 130, text: "ROOMS 113—120" },
+      { x: 15500, y: groundY - 130, text: "STAIRWELL →" },
     ],
   };
 }
