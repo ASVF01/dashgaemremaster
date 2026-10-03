@@ -2258,8 +2258,27 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       // Semi-static arena camera: centered on the arena, nudged slightly toward the player.
       const visW = size.w / z, visH = size.h / z;
       const centerCam = (r.level.width - visW) / 2;
-      const targetCam = centerCam + (playerCenterX - r.level.width / 2) * 0.15;
-      r.cameraX += (targetCam - r.cameraX) * Math.min(1, dt * 3);
+      const combatCam = centerCam + (playerCenterX - r.level.width / 2) * 0.15;
+      let targetCam = combatCam;
+      let cameraRate = 3;
+      if (r.boss?.phase === "intro") {
+        const introT = r.boss.introT;
+        const playerCam = Math.max(0, playerCenterX - visW * 0.5);
+        const knightCam = Math.max(0, Math.min(r.level.width - visW, r.boss.worldX - visW * 0.68));
+        if (introT < 0.3) targetCam = playerCam;
+        else if (introT < KNIGHT_INTRO_PAN_END) {
+          const k = (introT - 0.3) / (KNIGHT_INTRO_PAN_END - 0.3);
+          const eased = k * k * (3 - 2 * k);
+          targetCam = playerCam + (knightCam - playerCam) * eased;
+        } else if (introT < KNIGHT_INTRO_EQUIP_END) targetCam = knightCam;
+        else {
+          const k = Math.min(1, (introT - KNIGHT_INTRO_EQUIP_END) / (KNIGHT_INTRO_END - KNIGHT_INTRO_EQUIP_END));
+          const eased = k * k * (3 - 2 * k);
+          targetCam = knightCam + (combatCam - knightCam) * eased;
+        }
+        cameraRate = 8;
+      }
+      r.cameraX += (targetCam - r.cameraX) * Math.min(1, dt * cameraRate);
       const minX = Math.min(0, centerCam), maxX = Math.max(r.level.width - visW, centerCam);
       if (r.cameraX < minX) r.cameraX = minX;
       if (r.cameraX > maxX) r.cameraX = maxX;
@@ -3481,29 +3500,28 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
   // un-sticks: we pin a world X at stagger time and convert it back to screen X
   // so the camera can scroll past him.
   function bossScreenAnchor(r: GameRefs, boss: Boss, screenW: number) {
-    const margin = 40;
     const drawW = KNIGHT_DRAW_H * (knightImg.naturalWidth && knightImg.naturalHeight
       ? knightImg.naturalWidth / knightImg.naturalHeight : 1);
-    const cameraBaseX = screenW - margin - drawW / 2;
+    const worldScreenX = boss.worldX - r.cameraX;
     // Keep the knight inside the arena vicinity (between ceiling block ~y=84
     // and ground top ~y=640). Hover up high; when staggered, drop into the
     // middle of the arena but still above the lower platform so the player
     // can dash-strike him from below or beside.
-    const baseY = 240;
+    const baseY = boss.worldY - r.cameraY;
     const hover = Math.sin(boss.hoverPhase) * 14;
 
     const wantLow = boss.worn > 0 && !boss.defeated;
     if (wantLow) {
       // Pin world X at the moment of stagger so he no longer follows the camera.
       if (!boss.wornAnchored) {
-        boss.wornWorldX = r.cameraX + (boss.screenX || cameraBaseX);
+        boss.wornWorldX = r.cameraX + (boss.screenX || worldScreenX);
         boss.wornAnchored = true;
       }
     } else {
       boss.wornAnchored = false;
     }
 
-    const targetScreenX = wantLow ? boss.wornWorldX - r.cameraX : cameraBaseX;
+    const targetScreenX = wantLow ? boss.wornWorldX - r.cameraX : worldScreenX;
     // Floating up-and-down (extra bob while staggered low). Vulnerable Y sits
     // around 470 — well above the ground (top y=640) so the dash hitbox lines
     // up with the player's reach.
@@ -3530,7 +3548,30 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
   }
 
   function updateBoss(r: GameRefs, dt: number, screenW: number) {
-    const boss = r.boss!;
+    const boss = r.boss;
+    if (!boss) return;
+    if (boss.phase === "intro") {
+      boss.introT += dt;
+      bossScreenAnchor(r, boss, screenW);
+      if (!boss.roarStarted && boss.introT >= KNIGHT_INTRO_PAN_END) {
+        boss.roarStarted = true;
+        sfx.bossRoar();
+      }
+      if (boss.introT >= KNIGHT_INTRO_PAN_END && boss.introT < KNIGHT_INTRO_ROAR_END) {
+        r.shake = Math.max(r.shake, 0.72);
+        boss.shakeT = Math.max(boss.shakeT, 0.2);
+      }
+      if (boss.introT >= KNIGHT_INTRO_END) {
+        boss.phase = "combat";
+        boss.attackTimer = 1.2;
+        r.startedAt = performance.now();
+        if (!boss.musicStarted) {
+          boss.musicStarted = true;
+          onBossIntroCompleteRef.current?.();
+        }
+      }
+      return;
+    }
     boss.hoverPhase += dt * 2.2;
     if (boss.hitFlash > 0) boss.hitFlash = Math.max(0, boss.hitFlash - dt * 4);
     if (boss.hurtT > 0) boss.hurtT = Math.max(0, boss.hurtT - dt);
@@ -3819,6 +3860,32 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     }
     const sx = boss.screenX + wx;
     const sy = boss.screenY + wy;
+    if (boss.phase === "intro") {
+      let strip = knightIdleStrip;
+      let frames = 3;
+      let frameW = 45;
+      let frameH = 39;
+      let frame = Math.floor(boss.introT * 5) % frames;
+      if (boss.introT >= KNIGHT_INTRO_PAN_END && boss.introT < KNIGHT_INTRO_ROAR_END) {
+        strip = knightRoaringStrip; frames = 2; frameW = 39; frameH = 38;
+        frame = Math.floor((boss.introT - KNIGHT_INTRO_PAN_END) * 8) % frames;
+      } else if (boss.introT >= KNIGHT_INTRO_ROAR_END && boss.introT < KNIGHT_INTRO_APPEAR_END) {
+        strip = knightSwordAppearStrip; frames = 3; frameW = 37; frameH = 43;
+        frame = Math.min(frames - 1, Math.floor((boss.introT - KNIGHT_INTRO_ROAR_END) / 0.15));
+      } else if (boss.introT >= KNIGHT_INTRO_APPEAR_END) {
+        strip = knightEquipSwordStrip; frames = 19; frameW = 55; frameH = 57;
+        frame = Math.min(frames - 1, Math.floor((boss.introT - KNIGHT_INTRO_APPEAR_END) / (1.6 / frames)));
+      }
+      if (strip.complete && strip.naturalWidth) {
+        const introH = 230;
+        const introW = introH * frameW / frameH;
+        ctx.save();
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(strip, frame * frameW, 0, frameW, frameH, sx - introW / 2, sy - introH / 2, introW, introH);
+        ctx.restore();
+      }
+      return;
+    }
     // Boss-defeat explosion rings: drawn at the boss's spawn point (anchored
     // to where he was when he died — sx/sy at defeat moment). We use the
     // current sx/sy approximately, since the boss only just started moving.
