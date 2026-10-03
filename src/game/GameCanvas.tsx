@@ -3896,15 +3896,37 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         ctx.save();
         ctx.imageSmoothingEnabled = false;
         const roaring = boss.introT >= KNIGHT_INTRO_ROAR_START && boss.introT < KNIGHT_INTRO_ROAR_END;
-        if (roaring) {
-          const pulse = ((boss.introT - KNIGHT_INTRO_ROAR_START) * 9) % 1;
-          ctx.strokeStyle = `rgba(255,255,255,${0.65 * (1 - pulse)})`;
-          ctx.lineWidth = 5;
+        if (windingUp) {
+          const windT = Math.min(1, Math.max(0, (boss.introT - KNIGHT_INTRO_PAN_END) / (KNIGHT_INTRO_ROAR_START - KNIGHT_INTRO_PAN_END)));
+          const radius = 310 - windT * 250;
+          const alpha = 0.2 + windT * 0.75;
+          ctx.strokeStyle = `rgba(42,164,255,${alpha})`;
+          ctx.lineWidth = 9 + windT * 7;
+          ctx.shadowColor = "rgb(42,164,255)";
+          ctx.shadowBlur = 22;
           ctx.beginPath();
-          ctx.arc(sx, sy, 35 + pulse * 145, 0, Math.PI * 2);
+          ctx.arc(sx, sy, radius, 0, Math.PI * 2);
           ctx.stroke();
+          ctx.shadowBlur = 0;
         }
-        ctx.drawImage(strip, frame * frameW, 0, frameW, frameH, sx - introW / 2, sy - introH / 2, introW, introH);
+        if (roaring) {
+          const roarT = boss.introT - KNIGHT_INTRO_ROAR_START;
+          ctx.shadowColor = "rgb(255,32,48)";
+          ctx.shadowBlur = 18;
+          for (let ring = 0; ring < 4; ring++) {
+            const pulse = (roarT * 2.35 - ring * 0.22 + 4) % 1;
+            ctx.strokeStyle = `rgba(255,32,48,${0.9 * (1 - pulse)})`;
+            ctx.lineWidth = 13 - pulse * 7;
+            ctx.beginPath();
+            ctx.arc(sx, sy, 55 + pulse * 360, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+          ctx.shadowBlur = 0;
+        }
+        const roarScale = roaring ? 1.72 + Math.sin((boss.introT - KNIGHT_INTRO_ROAR_START) * 24) * 0.04 : 1;
+        const poseW = introW * roarScale;
+        const poseH = introH * roarScale;
+        ctx.drawImage(strip, frame * frameW, 0, frameW, frameH, sx - poseW / 2, sy - poseH / 2, poseW, poseH);
         ctx.restore();
       }
       return;
