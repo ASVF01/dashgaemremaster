@@ -96,9 +96,10 @@ const KNIGHT_DRAW_H = 180; // rendered height in screen pixels (sprite is square
 const KNIGHT_INTRO_PAN_END = 1.25;
 const KNIGHT_INTRO_ROAR_START = KNIGHT_INTRO_PAN_END + 1.895;
 const KNIGHT_INTRO_ROAR_END = KNIGHT_INTRO_ROAR_START + 3;
-const KNIGHT_INTRO_APPEAR_END = KNIGHT_INTRO_ROAR_END + 0.45;
-const KNIGHT_INTRO_EQUIP_END = KNIGHT_INTRO_APPEAR_END + 1.6;
-const KNIGHT_INTRO_END = KNIGHT_INTRO_EQUIP_END + 0.9;
+const KNIGHT_INTRO_APPEAR_END = KNIGHT_INTRO_ROAR_END + 1.0;
+const KNIGHT_INTRO_EQUIP_END = KNIGHT_INTRO_APPEAR_END + 3.5;
+const KNIGHT_INTRO_SWING_END = KNIGHT_INTRO_EQUIP_END + 1.0;
+const KNIGHT_INTRO_END = KNIGHT_INTRO_SWING_END + 0.3;
 
 function makeBoss() {
   return {
@@ -110,6 +111,8 @@ function makeBoss() {
     introT: 0,
     drawPowerStarted: false,
     roarStarted: false,
+    swordFallStarted: false,
+    swordCutStarted: false,
     musicStarted: false,
     hoverPhase: 0,
     attackTimer: 2.0,         // grace period before first slash
