@@ -3897,9 +3897,16 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       } else if (boss.introT >= KNIGHT_INTRO_ROAR_END && boss.introT < KNIGHT_INTRO_APPEAR_END) {
         strip = knightSwordAppearStrip; frames = 3; frameW = 37; frameH = 43;
         frame = Math.min(frames - 1, Math.floor((boss.introT - KNIGHT_INTRO_ROAR_END) / 0.15));
-      } else if (boss.introT >= KNIGHT_INTRO_APPEAR_END) {
+      } else if (boss.introT >= KNIGHT_INTRO_APPEAR_END && boss.introT < KNIGHT_INTRO_EQUIP_END) {
+        // long overhead hold: creep slowly through the first frames
         strip = knightEquipSwordStrip; frames = 19; frameW = 55; frameH = 57;
-        frame = Math.min(frames - 1, Math.floor((boss.introT - KNIGHT_INTRO_APPEAR_END) / (1.6 / frames)));
+        const holdT = (boss.introT - KNIGHT_INTRO_APPEAR_END) / (KNIGHT_INTRO_EQUIP_END - KNIGHT_INTRO_APPEAR_END);
+        frame = Math.min(11, Math.floor(holdT * 12));
+      } else if (boss.introT >= KNIGHT_INTRO_EQUIP_END) {
+        // fast downswing into ready stance
+        strip = knightEquipSwordStrip; frames = 19; frameW = 55; frameH = 57;
+        const swingT = Math.min(1, (boss.introT - KNIGHT_INTRO_EQUIP_END) / (KNIGHT_INTRO_SWING_END - KNIGHT_INTRO_EQUIP_END));
+        frame = Math.min(frames - 1, 12 + Math.floor(swingT * 7));
       }
       if (strip.complete && strip.naturalWidth) {
         const introH = 230;
