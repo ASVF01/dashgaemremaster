@@ -334,9 +334,12 @@ const Index = () => {
       if (chaseIntroSeenKeyRef.current !== key) {
         chaseIntroSeenKeyRef.current = key;
         setChaseIntroOpen(true);
+        // Standalone chase: BP plays over the tutorial popup instead of the
+        // level track; RUN!! hands off to the real chase BGM.
+        if (marathonStep == null) playChaseIntroBgm();
       }
     }
-  }, [screen, levelId, resetKey]);
+  }, [screen, levelId, resetKey, marathonStep]);
 
   // On the win screen, pressing Enter advances to the next level (if any).
   useEffect(() => {
@@ -786,7 +789,10 @@ const Index = () => {
                   <li>✦ touching the chaser hurts. parry beats tanking. <b>always.</b></li>
                 </ul>
                 <button
-                  onClick={() => setChaseIntroOpen(false)}
+                  onClick={() => {
+                    setChaseIntroOpen(false);
+                    if (marathonStep == null) playBgmFor("chase", true);
+                  }}
                   className="scribble-border bg-[hsl(var(--accent))] text-accent-foreground font-marker text-3xl px-8 py-4 hover:rotate-2 transition-transform animate-jitter"
                 >
                   RUN!! →

@@ -12,6 +12,7 @@ import bgmMarathonStarman from "@/assets/audio/bgm_marathon_starman.mp3";
 import bgmSomSom from "@/assets/audio/a_lil_som_som.mp3";
 import bgmMap1 from "@/assets/audio/bgm_map1.mp3";
 import bgmBlackKnife from "@/assets/audio/black_knife.mp3";
+import bgmChaseIntroAsset from "@/assets/audio/bp.ogg.asset.json";
 import bgmMayhemAsset from "@/assets/audio/Level_Select_2.ogg.asset.json";
 import bgmInsomniaBluesAsset from "@/assets/audio/insomnia-blues.ogg.asset.json";
 import type { LevelId } from "@/game/level";
