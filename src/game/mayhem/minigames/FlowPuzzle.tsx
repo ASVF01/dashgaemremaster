@@ -89,15 +89,15 @@ export default function FlowPuzzle({ size, pairs, paused = false, onComplete }: 
 }
 
 export const GENERATOR_FLOW_PAIRS: Pair[] = [
-  { color: "#ef4444", start: [0, 0], end: [5, 0], solution: [[0,0],[1,0],[2,0],[3,0],[4,0],[5,0]] },
-  { color: "#38bdf8", start: [0, 2], end: [5, 2], solution: [[0,2],[1,2],[2,2],[3,2],[4,2],[5,2]] },
-  { color: "#facc15", start: [0, 4], end: [5, 4], solution: [[0,4],[1,4],[2,4],[3,4],[4,4],[5,4]] },
+  { color: "hsl(var(--flow-red))", start: [0, 0], end: [5, 0], solution: [[0,0],[1,0],[2,0],[3,0],[4,0],[5,0]] },
+  { color: "hsl(var(--flow-blue))", start: [0, 2], end: [5, 2], solution: [[0,2],[1,2],[2,2],[3,2],[4,2],[5,2]] },
+  { color: "hsl(var(--flow-yellow))", start: [0, 4], end: [5, 4], solution: [[0,4],[1,4],[2,4],[3,4],[4,4],[5,4]] },
 ];
 
 export const ERROR_FLOW_PAIRS: Pair[] = [
-  { color: "#ef4444", start: [0,0], end: [8,0], solution: Array.from({ length: 9 }, (_, x) => [x,0] as Point) },
-  { color: "#38bdf8", start: [0,2], end: [8,2], solution: Array.from({ length: 9 }, (_, x) => [x,2] as Point) },
-  { color: "#facc15", start: [0,4], end: [8,4], solution: Array.from({ length: 9 }, (_, x) => [x,4] as Point) },
-  { color: "#4ade80", start: [0,6], end: [8,6], solution: Array.from({ length: 9 }, (_, x) => [x,6] as Point) },
-  { color: "#f472b6", start: [0,8], end: [8,8], solution: Array.from({ length: 9 }, (_, x) => [x,8] as Point) },
+  { color: "hsl(var(--flow-red))", start: [0,0], end: [8,0], solution: Array.from({ length: 9 }, (_, x) => [x,0] as Point) },
+  { color: "hsl(var(--flow-blue))", start: [0,2], end: [8,2], solution: Array.from({ length: 9 }, (_, x) => [x,2] as Point) },
+  { color: "hsl(var(--flow-yellow))", start: [0,4], end: [8,4], solution: Array.from({ length: 9 }, (_, x) => [x,4] as Point) },
+  { color: "hsl(var(--flow-green))", start: [0,6], end: [8,6], solution: Array.from({ length: 9 }, (_, x) => [x,6] as Point) },
+  { color: "hsl(var(--flow-pink))", start: [0,8], end: [8,8], solution: Array.from({ length: 9 }, (_, x) => [x,8] as Point) },
 ];
