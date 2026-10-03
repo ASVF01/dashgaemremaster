@@ -940,13 +940,7 @@ function buildMayhemOutside(): Level {
     hazards: [],
     enemies: [],
     pickups,
-    signs: [
-      { x: 260,   y: groundY - 120, text: "the tower is east." },
-      { x: 2600,  y: groundY - 120, text: "keep running. don't look back." },
-      { x: 5600,  y: groundY - 120, text: "the lights are still on up there." },
-      { x: 8600,  y: groundY - 120, text: "she knows you're coming." },
-      { x: 10600, y: groundY - 120, text: "the door →" },
-    ],
+    signs: [],
   };
 }
 
@@ -988,11 +982,7 @@ function buildMayhemMain(): Level {
     npcs: [
       { id: "checker", x: 920, y: groundY - 176, w: 112, h: 98, name: "THE RECEPTIONIST" },
     ],
-    signs: [
-      { x: 300,     y: groundY - 130, text: "ROUGE HARES HOTEL" },
-      { x: 980,     y: groundY - 340, text: "RECEPTION" },
-      { x: 2700,    y: groundY - 130, text: "ELEVATORS →" },
-    ],
+    signs: [],
   };
 }
 
@@ -1050,13 +1040,6 @@ function buildMayhemFloor1(): Level {
     hazards: [],
     enemies: [],
     pickups,
-    signs: [
-      { x: 320,   y: groundY - 130, text: "FLOOR 1" },
-      { x: 3700,  y: groundY - 130, text: "ROOMS 101—112" },
-      { x: 7700,  y: groundY - 130, text: "EAST WING" },
-      { x: 10400, y: groundY - 130, text: "SERVICE HALL" },
-      { x: 12800, y: groundY - 130, text: "ROOMS 113—120" },
-      { x: 15500, y: groundY - 130, text: "STAIRWELL →" },
-    ],
+    signs: [],
   };
 }
