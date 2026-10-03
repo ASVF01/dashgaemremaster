@@ -268,7 +268,7 @@ function buildChase(): Level {
     {
       x: -260, y: groundY - 220, w: 90, h: 220,
       vx: 0, alive: true, kind: "chaser",
-      baseSpeed: 360, stunTimer: 0,
+      baseSpeed: 450, stunTimer: 0,
     },
   ];
 

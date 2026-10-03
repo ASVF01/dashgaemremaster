@@ -26,6 +26,7 @@ import bossBgUrl from "@/assets/boss_bg.gif";
 import bossBgSheetUrl from "@/assets/boss_bg_sheet.webp";
 import bossParryFlashUrl from "@/assets/boss_parry_flash.png";
 import sugarcoatSfxUrl from "@/assets/sugarcoat.mp3";
+import chaserHitAsset from "@/assets/chase/chaser-hit.png.asset.json";
 
 const bossParryFlashImg = new Image(); bossParryFlashImg.src = bossParryFlashUrl;
 let sugarcoatAudio: HTMLAudioElement | null = null;
@@ -49,6 +50,7 @@ const starCache = new Map<string, HTMLCanvasElement>();
 // is cached on first use for the trail ghosts.
 const spookImg = new Image(); spookImg.src = spookUrl;
 const spookHurtImg = new Image(); spookHurtImg.src = spookHurtUrl;
+const chaserHitImg = new Image(); chaserHitImg.src = chaserHitAsset.url;
 let spookRedTint: HTMLCanvasElement | null = null;
 function getSpookRedTint(): HTMLCanvasElement | null {
   if (!spookImg.complete || !spookImg.naturalWidth) return null;
@@ -269,6 +271,7 @@ interface GameRefs {
   afterTimer: number;
   chaserTrail: { x: number; y: number; w: number; h: number; life: number; maxLife: number }[];
   chaserTrailTimer: number;
+  chaserHitFlash: number;
   cameraX: number;
   cameraY: number;
   cameraZoom: number;
@@ -539,6 +542,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       afterTimer: 0,
       chaserTrail: [],
       chaserTrailTimer: 0,
+      chaserHitFlash: 0,
       cameraX: 0,
       cameraY: 0,
       cameraZoom: 1,
@@ -1706,6 +1710,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     r.afterimages = r.afterimages.filter((a) => a.life > 0);
     for (const ct of r.chaserTrail) ct.life -= dt;
     r.chaserTrail = r.chaserTrail.filter((c) => c.life > 0);
+    if (r.chaserHitFlash > 0) r.chaserHitFlash = Math.max(0, r.chaserHitFlash - dt);
 
     // Thin speed lines while running on the ground (any speed above a small threshold).
     if (p.onGround && !p.sliding && Math.abs(p.vx) > 140 && Math.random() < 0.55) {
@@ -1881,7 +1886,16 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
             parrySuccess(r, e.x + e.w / 2, e.y + e.h / 2);
             e.hitFlash = 0.2;
           } else if (p.invuln <= 0) {
-            damage(r, e.x + e.w / 2, e.y + e.h / 2);
+            damage(r, e.x + e.w / 2, e.y + e.h / 2, false);
+            // The hit separates both characters instead of letting the chaser
+            // sit inside the player's hurtbox for the whole i-frame window.
+            e.vx = -1150;
+            e.stunTimer = 0.42;
+            p.vx = Math.max(p.vx, 620);
+            p.vy = Math.min(p.vy, -260);
+            r.chaserHitFlash = 0.42;
+            r.shake = Math.max(r.shake, 1);
+            sfx.chaserHit();
           }
         } else if (p.vy > 80 && p.y + p.h - 20 < e.y) {
           // stomp
@@ -2236,7 +2250,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     }
   }
 
-  function damage(r: GameRefs, x: number, y: number) {
+  function damage(r: GameRefs, x: number, y: number, playHitSound = true) {
     const p = r.player;
     p.hp -= 1;
     p.invuln = 1.0;
@@ -2256,7 +2270,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     r.shake = 0.6;
     r.glitch = 0.5;
     burst(r, x, y, "#f5234c", 18, 240);
-    sfx.hit();
+    if (playHitSound) sfx.hit();
     if (p.hp <= 0) {
       // third/final hit — layer the impactful 3s stinger on top of the normal hit
       sfx.fatalHit();
@@ -3365,6 +3379,22 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       g.addColorStop(1, `rgba(0,0,0,${0.15 + vmach * 0.06})`);
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, w, h);
+      ctx.restore();
+    }
+
+    // THE CHASE contact sting: flash the supplied eye over the complete scene.
+    if (r.chaserHitFlash > 0 && chaserHitImg.complete && chaserHitImg.naturalWidth > 0) {
+      const progress = 1 - r.chaserHitFlash / 0.42;
+      const alpha = progress < 0.16 ? progress / 0.16 : 1 - (progress - 0.16) / 0.84;
+      const scale = 1.12 - progress * 0.12;
+      const drawW = w * scale;
+      const drawH = drawW * (chaserHitImg.naturalHeight / chaserHitImg.naturalWidth);
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, w, h);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(chaserHitImg, (w - drawW) / 2, (h - drawH) / 2, drawW, drawH);
       ctx.restore();
     }
 
