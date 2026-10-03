@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type Point = [number, number];
 type Pair = { color: string; start: Point; end: Point; solution: Point[] };
@@ -7,18 +7,35 @@ type FlowPuzzleProps = { size: number; pairs: Pair[]; paused?: boolean; onComple
 const keyOf = ([x, y]: Point) => `${x}:${y}`;
 const samePoint = (a: Point, b: Point) => a[0] === b[0] && a[1] === b[1];
 
+function isFlowSolved(pairs: Pair[], paths: Record<number, Point[]>) {
+  return pairs.every((pair, index) => {
+    const path = paths[index];
+    if (!path || path.length < 2) return false;
+    const first = path[0];
+    const last = path[path.length - 1];
+    return (samePoint(first, pair.start) && samePoint(last, pair.end))
+      || (samePoint(first, pair.end) && samePoint(last, pair.start));
+  });
+}
+
 export default function FlowPuzzle({ size, pairs, paused = false, onComplete }: FlowPuzzleProps) {
   const [paths, setPaths] = useState<Record<number, Point[]>>({});
   const active = useRef<number | null>(null);
+  const completed = useRef(false);
   const boardRef = useRef<HTMLDivElement | null>(null);
   const terminals = useMemo(() => new Map(pairs.flatMap((pair, index) => [[keyOf(pair.start), index], [keyOf(pair.end), index]] as const)), [pairs]);
 
+  useEffect(() => {
+    setPaths({});
+    active.current = null;
+    completed.current = false;
+  }, [pairs, size]);
+
   const finishIfDone = (next: Record<number, Point[]>) => {
-    const solved = pairs.every((pair, index) => {
-      const path = next[index];
-      return path?.length === pair.solution.length && path.every((point, step) => samePoint(point, pair.solution[step]));
-    });
-    if (solved) window.setTimeout(onComplete, 260);
+    if (!completed.current && isFlowSolved(pairs, next)) {
+      completed.current = true;
+      window.setTimeout(onComplete, 260);
+    }
   };
 
   const begin = (pairIndex: number, point: Point) => {
