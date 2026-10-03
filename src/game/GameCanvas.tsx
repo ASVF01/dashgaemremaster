@@ -918,7 +918,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
           // Still tick boss explosion VFX during freeze for snappy visual.
           for (const ex of r.bossExplosions) ex.t += dt;
         } else {
-          update(r, dt, keysRef.current);
+          // The entrance is a cutscene: physics may settle the player onto the
+          // floor, but keyboard/touch movement cannot interrupt the camera pan.
+          update(r, dt, r.boss?.phase === "intro" ? {} : keysRef.current);
         }
       } else if (!paused && r.deathFxT > 0) {
         // Player is dead but the death FX is still playing: keep particles,
@@ -951,7 +953,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
           score: r.score,
           combo: r.combo,
           progress: Math.min(1, r.player.x / r.level.width),
-          timeMs: r.finished ? r.finishTime : performance.now() - r.startedAt,
+          timeMs: r.boss?.phase === "intro" ? 0 : r.finished ? r.finishTime : performance.now() - r.startedAt,
           parryReady: r.player.starman ? true : r.player.parryCooldown <= 0,
           parryCooldown: r.player.starman ? 0 : Math.max(0, r.player.parryCooldown),
           dashCooldown: r.player.starman ? 0 : Math.max(0, r.player.dashCooldown),
