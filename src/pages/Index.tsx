@@ -42,7 +42,8 @@ const MARATHON_SEQUENCE: ReadonlyArray<LevelId> = [
   "scribble-3",
   "chase",
   "just-run-bro",
-  "roaring-knight",
+  // Locked while the Roaring Knight rework is pending — re-add when unlocked.
+  // "roaring-knight",
   "aftermath-1",
   "aftermath-2",
   "aftermath-3",
@@ -362,6 +363,8 @@ const Index = () => {
   }, [screen, levelId]);
 
   const startLevel = (id: LevelId) => {
+    // Locked levels can't be started from anywhere.
+    if (LEVELS.find((l) => l.id === id)?.locked) return;
     // CELESTIAL MARATHON: hijack into the chained sequence. Start the
     // starman BGM exactly once on entry; subsequent sub-level transitions
     // leave it playing.
