@@ -38,6 +38,11 @@ const TRACKS: Partial<Record<LevelId, string>> = {
   "aftermath-3": bgmChampionPlay,
 };
 
+// Per-track loudness boosts (multiplied on top of the normal envelope).
+const TRACK_GAIN: Partial<Record<string, number>> = {
+  [bgmChaseWind]: 1.4,
+};
+
 // Crossfade length in seconds for the seamless LOOP point inside one track.
 // Short enough to be inaudible, long enough to mask the loop seam.
 const CROSSFADE = 0.12;
@@ -89,6 +94,8 @@ type Playing = {
   // playbackRate/detune applied to the source (used to sync visual timers)
   rate: number;
   detune: number;
+  // Per-track loudness multiplier (kept across loop re-arms)
+  gainScale: number;
 };
 
 let playing: Playing | null = null;
@@ -147,6 +154,7 @@ function scheduleSource(
   rate = 1,
   detune = 0,
   muffleHz = 0,
+  gainScale = 1,
 ) {
   const src = c.createBufferSource();
   src.buffer = buffer;
@@ -158,9 +166,9 @@ function scheduleSource(
   const g = c.createGain();
   if (fadeIn) {
     g.gain.setValueAtTime(0.0001, when);
-    g.gain.linearRampToValueAtTime(1, when + CROSSFADE);
+    g.gain.linearRampToValueAtTime(gainScale, when + CROSSFADE);
   } else {
-    g.gain.setValueAtTime(1, when);
+    g.gain.setValueAtTime(gainScale, when);
   }
   if (muffleHz > 0) {
     const lp = c.createBiquadFilter();
@@ -177,12 +185,12 @@ function scheduleSource(
 }
 
 // Schedule the crossfade-out for the currently playing source, ending at `endAt`.
-function scheduleFadeOut(g: GainNode, endAt: number) {
+function scheduleFadeOut(g: GainNode, endAt: number, from = 1) {
   // Hold full volume until the crossfade window starts, then ramp to 0
   // by the time the next source has fully faded in.
   const startFade = endAt - CROSSFADE;
   g.gain.cancelScheduledValues(startFade);
-  g.gain.setValueAtTime(1, startFade);
+  g.gain.setValueAtTime(from, startFade);
   g.gain.linearRampToValueAtTime(0.0001, endAt);
 }
 
@@ -198,8 +206,8 @@ function armNextLoop(c: AudioContext) {
   const nextStart = loopBoundary - CROSSFADE;
 
   // Schedule the next source (fade in) and the current source's fade out
-  const next = scheduleSource(c, buffer, nextStart, true);
-  scheduleFadeOut(gain, loopBoundary);
+  const next = scheduleSource(c, buffer, nextStart, true, 1, 0, 0, playing.gainScale);
+  scheduleFadeOut(gain, loopBoundary, playing.gainScale);
 
   playing.nextSource = next.src;
   playing.nextGain = next.g;
@@ -275,12 +283,13 @@ function playSrc(src: string, restart = false) {
     const rate = invboi ? INVBOI_RATE : 1;
     const detune = invboi ? INVBOI_DETUNE : 0;
     const muffle = invboi ? INVBOI_MUFFLE : 0;
-    const first = scheduleSource(c, buffer, startAt, hadPrevious, rate, detune, muffle);
+    const gainScale = TRACK_GAIN[src] ?? 1;
+    const first = scheduleSource(c, buffer, startAt, hadPrevious, rate, detune, muffle, gainScale);
     // If we're crossfading in, stretch the fade-in to match TRACK_FADE
     if (hadPrevious) {
       first.g.gain.cancelScheduledValues(startAt);
       first.g.gain.setValueAtTime(0.0001, startAt);
-      first.g.gain.linearRampToValueAtTime(1, startAt + fadeDur);
+      first.g.gain.linearRampToValueAtTime(gainScale, startAt + fadeDur);
     }
     // "just run bro" intro: start the track slowed down, then ramp back up
     // to original speed over 0.5s for a tape-spinning-up effect.
@@ -305,6 +314,7 @@ function playSrc(src: string, restart = false) {
       stopped: false,
       rate,
       detune,
+      gainScale,
     };
     // Native loop is on the source itself; no scheduler needed.
   }).catch(() => { /* decode failed; stay silent */ });
@@ -378,7 +388,7 @@ export function playChaseIntroBgm() {
     lp.type = "lowpass";
     lp.frequency.value = 3200;
     const g = c.createGain();
-    g.gain.value = 1;
+    g.gain.value = 1.5; // bitcrush + lowpass eats energy; compensate louder
     source.connect(crush);
     crush.connect(lp);
     lp.connect(g);
@@ -398,6 +408,7 @@ export function playChaseIntroBgm() {
       stopped: false,
       rate: 1,
       detune: 0,
+      gainScale: 1,
     };
   }).catch(() => { /* ignore */ });
 }
