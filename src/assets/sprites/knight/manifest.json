@@ -1,0 +1,362 @@
+{
+ "turning": {
+  "frames": 10,
+  "w": 31,
+  "h": 36
+ },
+ "droop": {
+  "frames": 10,
+  "w": 27,
+  "h": 36
+ },
+ "idle": {
+  "frames": 3,
+  "w": 45,
+  "h": 39
+ },
+ "ball": {
+  "frames": 5,
+  "w": 45,
+  "h": 40
+ },
+ "ball_transition": {
+  "frames": 4,
+  "w": 45,
+  "h": 40
+ },
+ "static": {
+  "frames": 3,
+  "w": 48,
+  "h": 40
+ },
+ "roaring": {
+  "frames": 2,
+  "w": 39,
+  "h": 38
+ },
+ "sword_appear": {
+  "frames": 3,
+  "w": 37,
+  "h": 43
+ },
+ "equip_sword": {
+  "frames": 19,
+  "w": 55,
+  "h": 57
+ },
+ "point": {
+  "frames": 5,
+  "w": 45,
+  "h": 39
+ },
+ "slash_attack": {
+  "frames": 5,
+  "w": 53,
+  "h": 52
+ },
+ "flurry_prep": {
+  "frames": 1,
+  "w": 50,
+  "h": 42
+ },
+ "flurry_attack": {
+  "frames": 3,
+  "w": 51,
+  "h": 34
+ },
+ "flourish": {
+  "frames": 7,
+  "w": 32,
+  "h": 37
+ },
+ "front_roar": {
+  "frames": 2,
+  "w": 31,
+  "h": 35
+ },
+ "front_slash": {
+  "frames": 6,
+  "w": 60,
+  "h": 63
+ },
+ "pull_back": {
+  "frames": 2,
+  "w": 73,
+  "h": 49
+ },
+ "reach_with_sword": {
+  "frames": 1,
+  "w": 45,
+  "h": 39
+ },
+ "look_down": {
+  "frames": 1,
+  "w": 45,
+  "h": 39
+ },
+ "fly_transition": {
+  "frames": 17,
+  "w": 45,
+  "h": 39
+ },
+ "fly": {
+  "frames": 4,
+  "w": 43,
+  "h": 19
+ },
+ "lift_head": {
+  "frames": 5,
+  "w": 35,
+  "h": 32
+ },
+ "looking": {
+  "frames": 4,
+  "w": 17,
+  "h": 30
+ },
+ "turn_around": {
+  "frames": 7,
+  "w": 19,
+  "h": 32
+ },
+ "slosh": {
+  "frames": 12,
+  "w": 20,
+  "h": 32
+ },
+ "slosh_flash": {
+  "frames": 2,
+  "w": 20,
+  "h": 32
+ },
+ "arm_cross": {
+  "frames": 1,
+  "w": 44,
+  "h": 39
+ },
+ "ball_transition_pose": {
+  "frames": 5,
+  "w": 28,
+  "h": 32
+ },
+ "ball_transition_down": {
+  "frames": 5,
+  "w": 31,
+  "h": 41
+ },
+ "slosh_sword": {
+  "frames": 17,
+  "w": 31,
+  "h": 35
+ },
+ "slosh_sword_2": {
+  "frames": 9,
+  "w": 31,
+  "h": 35
+ },
+ "slosh_sword_3": {
+  "frames": 7,
+  "w": 31,
+  "h": 35
+ },
+ "laugh_body": {
+  "frames": 2,
+  "w": 30,
+  "h": 35
+ },
+ "laugh_stop": {
+  "frames": 1,
+  "w": 30,
+  "h": 35
+ },
+ "throw_swords": {
+  "frames": 20,
+  "w": 33,
+  "h": 42
+ },
+ "fly_faster": {
+  "frames": 4,
+  "w": 54,
+  "h": 15
+ },
+ "fly_wind": {
+  "frames": 4,
+  "w": 54,
+  "h": 15
+ },
+ "hitting_wall": {
+  "frames": 9,
+  "w": 56,
+  "h": 32
+ },
+ "down_grab": {
+  "frames": 7,
+  "w": 23,
+  "h": 32
+ },
+ "down_look_up": {
+  "frames": 5,
+  "w": 25,
+  "h": 25
+ },
+ "conflict_swipe": {
+  "frames": 11,
+  "w": 47,
+  "h": 37
+ },
+ "bullet_star": {
+  "frames": 19,
+  "w": 29,
+  "h": 28
+ },
+ "bullet_starchild": {
+  "frames": 4,
+  "w": 15,
+  "h": 14
+ },
+ "bullet_tooth": {
+  "frames": 2,
+  "w": 16,
+  "h": 16
+ },
+ "bullet_sword": {
+  "frames": 2,
+  "w": 44,
+  "h": 14
+ },
+ "bullet_sword_vertical": {
+  "frames": 1,
+  "w": 14,
+  "h": 33
+ },
+ "vfx_bullet_flow": {
+  "frames": 3,
+  "w": 146,
+  "h": 108
+ },
+ "vfx_quickslash": {
+  "frames": 4,
+  "w": 114,
+  "h": 21
+ },
+ "vfx_quickslash_upper": {
+  "frames": 4,
+  "w": 113,
+  "h": 12
+ },
+ "vfx_split_flame": {
+  "frames": 6,
+  "w": 33,
+  "h": 22
+ },
+ "vfx_split_flame_alt": {
+  "frames": 6,
+  "w": 34,
+  "h": 22
+ },
+ "vfx_split_flame_edge": {
+  "frames": 5,
+  "w": 33,
+  "h": 21
+ },
+ "vfx_starchild_trail": {
+  "frames": 2,
+  "w": 14,
+  "h": 13
+ },
+ "unused_clash": {
+  "frames": 3,
+  "w": 73,
+  "h": 49
+ },
+ "unused_big_slash": {
+  "frames": 1,
+  "w": 53,
+  "h": 51
+ },
+ "unused_block": {
+  "frames": 1,
+  "w": 37,
+  "h": 34
+ },
+ "unused_sword_break": {
+  "frames": 2,
+  "w": 53,
+  "h": 51
+ },
+ "unused_sword_glow": {
+  "frames": 5,
+  "w": 45,
+  "h": 39
+ },
+ "unused_sword_form": {
+  "frames": 10,
+  "w": 33,
+  "h": 35
+ },
+ "unused_recoil_crescent": {
+  "frames": 19,
+  "w": 43,
+  "h": 41
+ },
+ "unused_lift_arm_beckon": {
+  "frames": 12,
+  "w": 35,
+  "h": 32
+ },
+ "unused_beckon_old": {
+  "frames": 2,
+  "w": 50,
+  "h": 36
+ },
+ "unused_bubble_blow": {
+  "frames": 12,
+  "w": 88,
+  "h": 68
+ },
+ "unused_bubble_blow_b": {
+  "frames": 12,
+  "w": 88,
+  "h": 68
+ },
+ "unused_swords": {
+  "frames": 11,
+  "w": 44,
+  "h": 17
+ },
+ "unused_crescent_bullets": {
+  "frames": 4,
+  "w": 29,
+  "h": 28
+ },
+ "unused_fire": {
+  "frames": 7,
+  "w": 16,
+  "h": 15
+ },
+ "unused_fountain": {
+  "frames": 4,
+  "w": 20,
+  "h": 32
+ },
+ "vfx_sword_break": {
+  "frames": 7,
+  "w": 143,
+  "h": 103
+ },
+ "vfx_red_slash": {
+  "frames": 18,
+  "w": 36,
+  "h": 54
+ },
+ "vfx_block": {
+  "frames": 7,
+  "w": 17,
+  "h": 17
+ },
+ "vfx_quickslash_marker": {
+  "frames": 3,
+  "w": 113,
+  "h": 20
+ }
+}
