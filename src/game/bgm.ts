@@ -346,6 +346,9 @@ export function playMenuBgm() {
 // then RUN!! hands off to the real chase track.
 export function playChaseIntroBgm() {
   loadBuffer(bgmChaseIntro).catch(() => { /* ignore */ });
+  // Hard cut: kill whatever is playing instantly, then start BP with no
+  // crossfade — the tutorial card snaps the music over.
+  stopBgm();
   playSrc(bgmChaseIntro);
 }
 
