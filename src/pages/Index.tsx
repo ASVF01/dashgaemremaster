@@ -703,15 +703,18 @@ const Index = () => {
           {mayhem && mayhemPaused && (
             <MayhemPause onResume={() => setMayhemPaused(false)} onQuit={quitMayhem} />
           )}
-          {mayhem && mayhemNight && <NightRooms paused={mayhemPaused} />}
+          {mayhem && mayhemNight && <NightRooms paused={mayhemPaused} onNightComplete={() => {
+            setMayhemNight(false);
+            setMayhemCleared(true);
+          }} />}
           {mayhem && mayhemCleared && (
             <div className="absolute inset-0 z-[60] overflow-hidden">
               <div aria-hidden="true" className="mayhem-menu-grid absolute inset-0" />
               <div aria-hidden="true" className="hell-static absolute inset-0" />
               <div className="mayhem-menu absolute inset-0 z-10 flex flex-col items-center justify-center px-6 text-center">
-                <div className="hell-title font-pixel text-[clamp(16px,3vw,34px)]">THE TOWER</div>
+                <div className="hell-title font-pixel text-[clamp(16px,3vw,34px)]">NIGHT COMPLETE</div>
                 <p className="mt-4 max-w-md font-pixel text-[10px] leading-relaxed text-[hsl(var(--hell-muted))]">
-                  YOU REACHED THE DOOR. THE FLOORS INSIDE ARE STILL BEING BUILT.
+                  THE GENERATOR IS FULLY RESTORED. YOUR SHIFT IS OVER.
                 </p>
                 <div className="mt-5 flex w-full max-w-sm flex-col gap-2.5">
                   <button type="button" onClick={retryMayhem} className="mayhem-menu-button mayhem-menu-primary">
