@@ -2540,22 +2540,25 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         ctx.restore();
       }
     } else if (isMayhemLevel) {
-      // True-black sky with a faint industrial haze and slow red warning glow.
-      ctx.fillStyle = "#000";
+      const isOutside = levelIdRef.current === "mayhem-outside";
+      // The approach opens beneath a heavy grey sky; hotel interiors remain dark.
+      ctx.fillStyle = isOutside ? "#596068" : "#000";
       ctx.fillRect(0, 0, w, h);
       const haze = ctx.createLinearGradient(0, 0, 0, h);
-      haze.addColorStop(0, "rgba(8,10,14,0.2)");
-      haze.addColorStop(0.58, "rgba(15,18,23,0.58)");
-      haze.addColorStop(1, "rgba(0,0,0,0.9)");
+      haze.addColorStop(0, isOutside ? "rgba(205,210,214,0.18)" : "rgba(8,10,14,0.2)");
+      haze.addColorStop(0.58, isOutside ? "rgba(84,91,98,0.45)" : "rgba(15,18,23,0.58)");
+      haze.addColorStop(1, isOutside ? "rgba(42,48,51,0.72)" : "rgba(0,0,0,0.9)");
       ctx.fillStyle = haze;
       ctx.fillRect(0, 0, w, h);
-      const pulse = 0.35 + Math.sin(r.time * 1.7) * 0.12;
-      const glow = ctx.createRadialGradient(w * 0.82, h * 0.28, 20, w * 0.82, h * 0.28, w * 0.5);
-      glow.addColorStop(0, `rgba(110,18,24,${pulse * 0.28})`);
-      glow.addColorStop(0.4, `rgba(50,10,14,${pulse * 0.16})`);
-      glow.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = glow;
-      ctx.fillRect(0, 0, w, h);
+      if (!isOutside) {
+        const pulse = 0.35 + Math.sin(r.time * 1.7) * 0.12;
+        const glow = ctx.createRadialGradient(w * 0.82, h * 0.28, 20, w * 0.82, h * 0.28, w * 0.5);
+        glow.addColorStop(0, `rgba(110,18,24,${pulse * 0.28})`);
+        glow.addColorStop(0.4, `rgba(50,10,14,${pulse * 0.16})`);
+        glow.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, w, h);
+      }
     } else if (isChaseLevel && bgT <= 0 && !postImpact) {
       const forestSky = ctx.createLinearGradient(0, 0, 0, h);
       forestSky.addColorStop(0, "#111b18");
@@ -2937,16 +2940,19 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       const visR = Math.min(pl.x + pl.w, camX + w + 40);
       const visW = visR - visX;
       const mayhemHotel = levelIdRef.current === "mayhem-main" || levelIdRef.current === "mayhem-floor-1";
+      const mayhemOutside = levelIdRef.current === "mayhem-outside";
       const fill = isMayhemLevel
         ? mayhemHotel
           ? (isGround ? "#241b20" : "#47333a")
-          : (isGround ? "#15191f" : "#20262e")
+          : mayhemOutside
+            ? (isGround ? "#283a26" : "#34383b")
+            : (isGround ? "#15191f" : "#20262e")
         : bossPlatforms ? "#000000"
         : levelIdRef.current === "chase" ? (isGround ? "#26351f" : "#49331f")
         : (isGround ? "#e5dfc2" : "#f7f1dc");
-      const stroke = isMayhemLevel ? (mayhemHotel ? "#b4936c" : "#9aa5ad") : bossPlatforms ? "#ffffff" : levelIdRef.current === "chase" ? "#101a0f" : INK;
+      const stroke = isMayhemLevel ? (mayhemHotel ? "#b4936c" : mayhemOutside ? "#172318" : "#9aa5ad") : bossPlatforms ? "#ffffff" : levelIdRef.current === "chase" ? "#101a0f" : INK;
       sketchRect(ctx, visX, pl.y, visW, pl.h, fill, stroke, isGround ? 3 : 2.6, isMayhemLevel ? 0.55 : isGround ? 1.6 : 1.2);
-      if (isMayhemLevel) {
+      if (isMayhemLevel && !mayhemOutside) {
         // Brushed metal outside; dark timber and brass trim inside the hotel.
         ctx.save();
         ctx.strokeStyle = mayhemHotel ? "rgba(232,199,148,0.62)" : "rgba(220,230,235,0.55)";
@@ -4235,6 +4241,64 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       ctx.strokeStyle = "rgba(218,171,95,0.38)"; ctx.lineWidth = 2;
       for (let x = Math.floor((camX - 100) / 80) * 80; x < camX + w + 100; x += 80) {
         ctx.beginPath(); ctx.moveTo(x, groundY - 20); ctx.lineTo(x + 40, groundY); ctx.lineTo(x + 80, groundY - 20); ctx.stroke();
+      }
+      ctx.restore();
+      return;
+    }
+
+    if (levelIdRef.current === "mayhem-outside") {
+      // Layered tree line behind a long, flat lawn.
+      ctx.fillStyle = "rgba(31,40,37,0.5)";
+      const farTree = Math.floor((camX - 300) / 260) * 260;
+      for (let x = farTree; x < camX + w + 320; x += 260) {
+        const crownY = groundY - 120 - (Math.abs(Math.floor(x / 260)) % 3) * 24;
+        ctx.beginPath();
+        ctx.arc(x + 70, crownY, 76, 0, Math.PI * 2);
+        ctx.arc(x + 140, crownY - 18, 92, 0, Math.PI * 2);
+        ctx.arc(x + 220, crownY + 8, 70, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Windblown grass along the playable ground edge.
+      ctx.strokeStyle = "rgba(110,139,94,0.72)";
+      ctx.lineWidth = 2;
+      const grassStart = Math.floor((camX - 40) / 18) * 18;
+      for (let x = grassStart; x < camX + w + 40; x += 18) {
+        const blade = 9 + (Math.abs(Math.floor(x / 18)) % 5) * 3;
+        ctx.beginPath();
+        ctx.moveTo(x, groundY + 2);
+        ctx.quadraticCurveTo(x + Math.sin(time * 2.4 + x * 0.03) * 5, groundY - blade * 0.55, x + 3, groundY - blade);
+        ctx.stroke();
+      }
+
+      // Hotel facade comes into view at the eastern end of the lawn.
+      const hotelX = 10620;
+      ctx.fillStyle = "#333538";
+      ctx.fillRect(hotelX, 38, 580, groundY - 38);
+      ctx.fillStyle = "#48494b";
+      for (let row = 0; row < 3; row++) for (let col = 0; col < 4; col++) {
+        const wx = hotelX + 54 + col * 126;
+        const wy = 82 + row * 116;
+        ctx.fillRect(wx, wy, 62, 70);
+        ctx.fillStyle = "rgba(224,196,133,0.2)";
+        ctx.fillRect(wx + 6, wy + 6, 50, 58);
+        ctx.fillStyle = "#48494b";
+      }
+      ctx.fillStyle = "#202124";
+      ctx.fillRect(10910, groundY - 300, 210, 300);
+      ctx.strokeStyle = "#77787a";
+      ctx.lineWidth = 8;
+      ctx.strokeRect(10910, groundY - 300, 210, 300);
+      ctx.fillStyle = "#25272a";
+      ctx.beginPath(); ctx.moveTo(10870, groundY - 300); ctx.lineTo(11015, groundY - 390); ctx.lineTo(11160, groundY - 300); ctx.closePath(); ctx.fill();
+
+      // Dense slanted rain in front of the landscape.
+      ctx.strokeStyle = "rgba(220,229,233,0.48)";
+      ctx.lineWidth = 1.4;
+      for (let i = 0; i < 150; i++) {
+        const rx = camX - 80 + ((i * 89 + time * 430) % (w + 220));
+        const ry = ((i * 137 + time * 760) % (groundY + 120)) - 80;
+        ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx - 10, ry + 30); ctx.stroke();
       }
       ctx.restore();
       return;
