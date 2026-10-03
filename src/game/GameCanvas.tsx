@@ -27,6 +27,7 @@ import bossBgSheetUrl from "@/assets/boss_bg_sheet.webp";
 import bossParryFlashUrl from "@/assets/boss_parry_flash.png";
 import sugarcoatSfxUrl from "@/assets/sugarcoat.mp3";
 import chaserHitUrl from "@/assets/chase/chaser-hit.png";
+import chaserHitInvboiUrl from "@/assets/chase/chaser-hit-invboi.png";
 
 const bossParryFlashImg = new Image(); bossParryFlashImg.src = bossParryFlashUrl;
 let sugarcoatAudio: HTMLAudioElement | null = null;
@@ -51,6 +52,7 @@ const starCache = new Map<string, HTMLCanvasElement>();
 const spookImg = new Image(); spookImg.src = spookUrl;
 const spookHurtImg = new Image(); spookHurtImg.src = spookHurtUrl;
 const chaserHitImg = new Image(); chaserHitImg.src = chaserHitUrl;
+const chaserHitInvboiImg = new Image(); chaserHitInvboiImg.src = chaserHitInvboiUrl;
 let spookRedTint: HTMLCanvasElement | null = null;
 function getSpookRedTint(): HTMLCanvasElement | null {
   if (!spookImg.complete || !spookImg.naturalWidth) return null;
@@ -272,6 +274,7 @@ interface GameRefs {
   chaserTrail: { x: number; y: number; w: number; h: number; life: number; maxLife: number }[];
   chaserTrailTimer: number;
   chaserHitFlash: number;
+  chaserHitWasInvboi: boolean;
   cameraX: number;
   cameraY: number;
   cameraZoom: number;
@@ -543,6 +546,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       chaserTrail: [],
       chaserTrailTimer: 0,
       chaserHitFlash: 0,
+      chaserHitWasInvboi: false,
       cameraX: 0,
       cameraY: 0,
       cameraZoom: 1,
@@ -1893,6 +1897,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
             e.stunTimer = 0.42;
             p.vx = Math.max(p.vx, 620);
             p.vy = Math.min(p.vy, -260);
+            r.chaserHitWasInvboi = p.starman;
             r.chaserHitFlash = 0.42;
             r.shake = Math.max(r.shake, 1);
             sfx.chaserHit();
@@ -3382,19 +3387,21 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       ctx.restore();
     }
 
-    // THE CHASE contact sting: flash the supplied eye over the complete scene.
-    if (r.chaserHitFlash > 0 && chaserHitImg.complete && chaserHitImg.naturalWidth > 0) {
+    // THE CHASE contact sting: normal players see the original eye; INVBOI
+    // gets the alternate "Really bro?" reaction image.
+    const activeChaserHitImg = r.chaserHitWasInvboi ? chaserHitInvboiImg : chaserHitImg;
+    if (r.chaserHitFlash > 0 && activeChaserHitImg.complete && activeChaserHitImg.naturalWidth > 0) {
       const progress = 1 - r.chaserHitFlash / 0.42;
       const alpha = progress < 0.16 ? progress / 0.16 : 1 - (progress - 0.16) / 0.84;
       const scale = 1.12 - progress * 0.12;
       const drawW = w * scale;
-      const drawH = drawW * (chaserHitImg.naturalHeight / chaserHitImg.naturalWidth);
+      const drawH = drawW * (activeChaserHitImg.naturalHeight / activeChaserHitImg.naturalWidth);
       ctx.save();
       ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
       ctx.fillStyle = "#000";
       ctx.fillRect(0, 0, w, h);
       ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(chaserHitImg, (w - drawW) / 2, (h - drawH) / 2, drawW, drawH);
+      ctx.drawImage(activeChaserHitImg, (w - drawW) / 2, (h - drawH) / 2, drawW, drawH);
       ctx.restore();
     }
 
