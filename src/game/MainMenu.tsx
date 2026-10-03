@@ -404,7 +404,7 @@ function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
     const onKey = (e: KeyboardEvent) => {
       if (e.code === "ArrowLeft")  { e.preventDefault(); go(-1); }
       if (e.code === "ArrowRight") { e.preventDefault(); go(1); }
-      if (e.code === "Enter")      { e.preventDefault(); onPlay(visible[index].id); }
+      if (e.code === "Enter")      { e.preventDefault(); if (!visible[index].locked) onPlay(visible[index].id); }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -566,6 +566,13 @@ function Thumbnail({ lvl, large = false }: { lvl: LevelMeta; large?: boolean }) 
       <div className="absolute top-2 right-2 scribble-border bg-paper px-2 py-0.5 font-bungee text-xs text-ink">
         PAR {lvl.par >= 9999 ? "∞" : `${lvl.par}s`}
       </div>
+      {/* locked chip */}
+      {lvl.locked && (
+        <div className="absolute top-2 left-2 scribble-border bg-ink px-2 py-0.5 font-bungee text-xs text-paper">
+          LOCKED
+        </div>
+      )}
+      {lvl.locked && <div className="absolute inset-0 bg-paper/40" />}
     </div>
   );
 }
