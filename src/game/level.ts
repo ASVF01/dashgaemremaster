@@ -630,19 +630,22 @@ function buildLevel3(): Level {
 // handles it via its own `boss` runtime state. We just provide an arena
 // for the player to maneuver in.
 function buildRoaringKnight(): Level {
-  // Endless hallway — boss is screen-anchored so the camera can scroll forever.
-  // Single huge ground + ceiling slab; the renderer already clips long platforms
-  // to the visible window so this stays cheap.
-  const W = 360000;
+  // Enclosed fighting arena: walled floor plus three dodge platforms
+  // (left-low, center-high, right-low). Camera is semi-static over it.
+  const W = 1600;
   const H = 720;
   const groundY = H - 80;
   const platforms: Platform[] = [
     { x: 0, y: groundY, w: W, h: 80, kind: "ground" },
-    { x: 0, y: 60, w: W, h: 24, kind: "block" },
+    { x: -40, y: 0, w: 60, h: H, kind: "block" },
+    { x: W - 20, y: 0, w: 60, h: H, kind: "block" },
+    { x: 260, y: groundY - 140, w: 320, h: 20, kind: "block" },
+    { x: 640, y: groundY - 280, w: 320, h: 20, kind: "block" },
+    { x: 1020, y: groundY - 140, w: 320, h: 20, kind: "block" },
   ];
   return {
     width: W, height: H,
-    spawn: { x: 120, y: groundY - 80 },
+    spawn: { x: 160, y: groundY - 80 },
     goal: { x: -9999, y: -9999, w: 1, h: 1 },
     platforms, hazards: [], enemies: [], pickups: [],
   };

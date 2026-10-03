@@ -2221,7 +2221,21 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     const playerCenterX = p.x + p.w / 2;
     const playerCenterY = p.y + p.h / 2;
 
-    if (levelIdRef.current === "just-run-bro") {
+    if (levelIdRef.current === "roaring-knight") {
+      // Semi-static arena camera: centered on the arena, nudged slightly toward the player.
+      const visW = size.w / z, visH = size.h / z;
+      const centerCam = (r.level.width - visW) / 2;
+      const targetCam = centerCam + (playerCenterX - r.level.width / 2) * 0.15;
+      r.cameraX += (targetCam - r.cameraX) * Math.min(1, dt * 3);
+      const minX = Math.min(0, centerCam), maxX = Math.max(r.level.width - visW, centerCam);
+      if (r.cameraX < minX) r.cameraX = minX;
+      if (r.cameraX > maxX) r.cameraX = maxX;
+      const targetCamY = Math.max(0, r.level.height - visH) + (playerCenterY - r.level.height * 0.7) * 0.08;
+      r.cameraY += (targetCamY - r.cameraY) * Math.min(1, dt * 3);
+      const maxCamY = Math.max(0, r.level.height - visH);
+      if (r.cameraY < 0) r.cameraY = 0;
+      if (r.cameraY > maxCamY) r.cameraY = maxCamY;
+    } else if (levelIdRef.current === "just-run-bro") {
       const speedNow = Math.abs(p.vx);
       const shift = 80;
       const targetCam = playerCenterX - size.w * 0.5 + shift + p.facing * 40 + p.vx * 0.06;
