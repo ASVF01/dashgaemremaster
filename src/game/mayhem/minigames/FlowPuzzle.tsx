@@ -7,7 +7,7 @@ type FlowPuzzleProps = { size: number; pairs: Pair[]; paused?: boolean; onComple
 const keyOf = ([x, y]: Point) => `${x}:${y}`;
 const samePoint = (a: Point, b: Point) => a[0] === b[0] && a[1] === b[1];
 
-function isFlowSolved(size: number, pairs: Pair[], paths: Record<number, Point[]>) {
+function isFlowSolved(pairs: Pair[], paths: Record<number, Point[]>) {
   return pairs.every((pair, index) => {
     const path = paths[index];
     if (!path || path.length < 2) return false;
@@ -32,7 +32,7 @@ export default function FlowPuzzle({ size, pairs, paused = false, onComplete }: 
   }, [pairs, size]);
 
   const finishIfDone = (next: Record<number, Point[]>) => {
-    if (!completed.current && isFlowSolved(size, pairs, next)) {
+    if (!completed.current && isFlowSolved(pairs, next)) {
       completed.current = true;
       window.setTimeout(onComplete, 260);
     }
