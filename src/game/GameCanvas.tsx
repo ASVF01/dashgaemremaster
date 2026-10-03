@@ -92,7 +92,8 @@ const BOSS_BG_FH = 180;
 const BOSS_BG_FPS = 18;
 const KNIGHT_DRAW_H = 180; // rendered height in screen pixels (sprite is square-ish)
 const KNIGHT_INTRO_PAN_END = 1.25;
-const KNIGHT_INTRO_ROAR_END = KNIGHT_INTRO_PAN_END + 8.53;
+const KNIGHT_INTRO_ROAR_START = KNIGHT_INTRO_PAN_END + 1.8;
+const KNIGHT_INTRO_ROAR_END = KNIGHT_INTRO_ROAR_START + 3;
 const KNIGHT_INTRO_APPEAR_END = KNIGHT_INTRO_ROAR_END + 0.45;
 const KNIGHT_INTRO_EQUIP_END = KNIGHT_INTRO_APPEAR_END + 1.6;
 const KNIGHT_INTRO_END = KNIGHT_INTRO_EQUIP_END + 0.9;
@@ -3555,11 +3556,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     if (boss.phase === "intro") {
       boss.introT += dt;
       bossScreenAnchor(r, boss, screenW);
-      if (!boss.roarStarted && boss.introT >= KNIGHT_INTRO_PAN_END) {
+      if (!boss.roarStarted && boss.introT >= KNIGHT_INTRO_ROAR_START) {
         boss.roarStarted = true;
         sfx.bossRoar();
       }
-      if (boss.introT >= KNIGHT_INTRO_PAN_END && boss.introT < KNIGHT_INTRO_ROAR_END) {
+      if (boss.introT >= KNIGHT_INTRO_ROAR_START && boss.introT < KNIGHT_INTRO_ROAR_END) {
         r.shake = Math.max(r.shake, 0.72);
         boss.shakeT = Math.max(boss.shakeT, 0.2);
       }
@@ -3868,9 +3869,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       let frameW = 45;
       let frameH = 39;
       let frame = Math.floor(boss.introT * 5) % frames;
-      if (boss.introT >= KNIGHT_INTRO_PAN_END && boss.introT < KNIGHT_INTRO_ROAR_END) {
+      const windingUp = boss.introT >= KNIGHT_INTRO_PAN_END && boss.introT < KNIGHT_INTRO_ROAR_START;
+      if (windingUp) {
+        strip = knightRoaringStrip; frames = 2; frameW = 39; frameH = 38; frame = 0;
+      } else if (boss.introT >= KNIGHT_INTRO_ROAR_START && boss.introT < KNIGHT_INTRO_ROAR_END) {
         strip = knightRoaringStrip; frames = 2; frameW = 39; frameH = 38;
-        frame = Math.floor((boss.introT - KNIGHT_INTRO_PAN_END) * 8) % frames;
+        frame = Math.floor((boss.introT - KNIGHT_INTRO_ROAR_START) * 8) % frames;
       } else if (boss.introT >= KNIGHT_INTRO_ROAR_END && boss.introT < KNIGHT_INTRO_APPEAR_END) {
         strip = knightSwordAppearStrip; frames = 3; frameW = 37; frameH = 43;
         frame = Math.min(frames - 1, Math.floor((boss.introT - KNIGHT_INTRO_ROAR_END) / 0.15));
@@ -3883,6 +3887,23 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         const introW = introH * frameW / frameH;
         ctx.save();
         ctx.imageSmoothingEnabled = false;
+        if (windingUp) {
+          const k = (boss.introT - KNIGHT_INTRO_PAN_END) / (KNIGHT_INTRO_ROAR_START - KNIGHT_INTRO_PAN_END);
+          const pulse = (boss.introT * 9) % 1;
+          ctx.strokeStyle = `rgba(255,255,255,${0.65 * (1 - pulse)})`;
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          ctx.arc(sx, sy, 35 + pulse * 145, 0, Math.PI * 2);
+          ctx.stroke();
+          for (let i = 7; i >= 1; i--) {
+            ctx.globalAlpha = 0.06 + k * 0.055;
+            const trailScale = 1 + i * 0.055;
+            const trailW = introW * trailScale;
+            const trailH = introH * trailScale;
+            ctx.drawImage(strip, 0, 0, frameW, frameH, sx - trailW / 2 + i * 13, sy - trailH / 2, trailW, trailH);
+          }
+          ctx.globalAlpha = 1;
+        }
         ctx.drawImage(strip, frame * frameW, 0, frameW, frameH, sx - introW / 2, sy - introH / 2, introW, introH);
         ctx.restore();
       }
