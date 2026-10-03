@@ -28,6 +28,10 @@ import bossParryFlashUrl from "@/assets/boss_parry_flash.png";
 import sugarcoatSfxUrl from "@/assets/sugarcoat.mp3";
 import chaserHitUrl from "@/assets/chase/chaser-hit.png";
 import chaserHitInvboiUrl from "@/assets/chase/chaser-hit-invboi.png";
+import knightIdleUrl from "@/assets/sprites/knight/idle.png";
+import knightRoaringUrl from "@/assets/sprites/knight/roaring.png";
+import knightSwordAppearUrl from "@/assets/sprites/knight/sword_appear.png";
+import knightEquipSwordUrl from "@/assets/sprites/knight/equip_sword.png";
 
 const bossParryFlashImg = new Image(); bossParryFlashImg.src = bossParryFlashUrl;
 let sugarcoatAudio: HTMLAudioElement | null = null;
@@ -74,6 +78,10 @@ function getSpookRedTint(): HTMLCanvasElement | null {
 const knightImg = new Image(); knightImg.src = roaringKnightUrl;
 const knightVulnImg = new Image(); knightVulnImg.src = roaringKnightVulnUrl;
 const knightHurtImg = new Image(); knightHurtImg.src = roaringKnightHurtUrl;
+const knightIdleStrip = new Image(); knightIdleStrip.src = knightIdleUrl;
+const knightRoaringStrip = new Image(); knightRoaringStrip.src = knightRoaringUrl;
+const knightSwordAppearStrip = new Image(); knightSwordAppearStrip.src = knightSwordAppearUrl;
+const knightEquipSwordStrip = new Image(); knightEquipSwordStrip.src = knightEquipSwordUrl;
 const bossBgImg = new Image(); bossBgImg.src = bossBgUrl;
 // Animated boss bg: 31 frames, 6 cols × 6 rows, each 320×180.
 const bossBgSheet = new Image(); bossBgSheet.src = bossBgSheetUrl;
@@ -83,12 +91,22 @@ const BOSS_BG_FW = 320;
 const BOSS_BG_FH = 180;
 const BOSS_BG_FPS = 18;
 const KNIGHT_DRAW_H = 180; // rendered height in screen pixels (sprite is square-ish)
+const KNIGHT_INTRO_PAN_END = 1.25;
+const KNIGHT_INTRO_ROAR_END = KNIGHT_INTRO_PAN_END + 8.53;
+const KNIGHT_INTRO_APPEAR_END = KNIGHT_INTRO_ROAR_END + 0.45;
+const KNIGHT_INTRO_EQUIP_END = KNIGHT_INTRO_APPEAR_END + 1.6;
+const KNIGHT_INTRO_END = KNIGHT_INTRO_EQUIP_END + 0.9;
 
 function makeBoss() {
   return {
     hp: 5,
     maxHp: 5,
     screenX: 0, screenY: 0,
+    worldX: 1280, worldY: 250,
+    phase: "intro" as "intro" | "combat",
+    introT: 0,
+    roarStarted: false,
+    musicStarted: false,
     hoverPhase: 0,
     attackTimer: 2.0,         // grace period before first slash
     attacksRemaining: 3,      // slashes per burst
@@ -339,6 +357,12 @@ interface Boss {
   // Screen-space anchor (camera-locked). Drawn at this position.
   screenX: number;
   screenY: number;
+  worldX: number;
+  worldY: number;
+  phase: "intro" | "combat";
+  introT: number;
+  roarStarted: boolean;
+  musicStarted: boolean;
   hoverPhase: number;
   // attack cycle
   attackTimer: number; // counts down to next attack burst
@@ -372,6 +396,7 @@ interface Props {
   onInvboiPickup?: () => void;
   /** Fired when the player presses the interact key next to a level NPC. */
   onNpcInteract?: (id: string) => void;
+  onBossIntroComplete?: () => void;
   /** When true, touching the goal does nothing (e.g. locked MAYHEM elevator). */
   goalLocked?: boolean;
   paused: boolean;
@@ -416,7 +441,7 @@ function nearbyNpc(r: GameRefs) {
 
 
 
-export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, onNpcInteract, goalLocked = false, paused, keepAudio = false, startAsInvboi = false, resetKey, levelId = "scribble-1" }: Props) {
+export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, onNpcInteract, onBossIntroComplete, goalLocked = false, paused, keepAudio = false, startAsInvboi = false, resetKey, levelId = "scribble-1" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const deathTimeoutRef = useRef<number | null>(null);
   const refs = useRef<GameRefs | null>(null);
@@ -427,6 +452,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
   onInvboiPickupRef.current = onInvboiPickup;
   const onNpcInteractRef = useRef<((id: string) => void) | undefined>(onNpcInteract);
   onNpcInteractRef.current = onNpcInteract;
+  const onBossIntroCompleteRef = useRef<(() => void) | undefined>(onBossIntroComplete);
+  onBossIntroCompleteRef.current = onBossIntroComplete;
   const goalLockedRef = useRef(goalLocked);
   goalLockedRef.current = goalLocked;
   // True while CELESTIAL MARATHON is running. Used to keep the marathon
@@ -622,6 +649,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       setCelestialMode(false);
       setThunderMode(false);
     }
+    if (levelId === "roaring-knight") sfx.preloadBossRoar();
   }, [resetKey, levelId, startAsInvboi]);
 
   // BGM: stop on unmount only. The parent (Index) decides which track to
@@ -662,6 +690,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     };
     const down = (e: KeyboardEvent) => {
       keysRef.current[e.code] = true;
+      if (refs.current?.boss?.phase === "intro") {
+        e.preventDefault();
+        keysRef.current[e.code] = false;
+        return;
+      }
       // cheat code: type "invboi" to enter starman mode
       if (e.key && e.key.length === 1 && /[a-zA-Z]/.test(e.key)) {
         cheatBuf = (cheatBuf + e.key.toLowerCase()).slice(-12);
