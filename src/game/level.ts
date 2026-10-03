@@ -234,7 +234,7 @@ function buildMeetInvboi(): Level {
     invboiStart: { x: starX, y: starY, facing: 1 },
   };
 }
-// A long, mostly flat hallway. A "chaser" enemy spawns just behind the
+// A long forest trail. A "chaser" enemy spawns just behind the
 // player's start and pursues forever. Touching it = damage. Parrying it
 // blasts it back and stuns it briefly so you can recover ground.
 function buildChase(): Level {
@@ -244,15 +244,13 @@ function buildChase(): Level {
 
   const platforms: Platform[] = [
     { x: 0, y: groundY, w: W, h: 80, kind: "ground" },
-    // ceiling slab to keep it a hallway
-    { x: 0, y: 80, w: W, h: 30, kind: "block" },
   ];
 
-  // sparse low ceilings to force slides (keep momentum)
+  // Fallen trunks force slides while keeping the route recognizably wooded.
   for (let x = 1400; x < W - 1000; x += 1800) {
-    platforms.push({ x, y: groundY - 80, w: 320, h: 26, kind: "block" });
+    platforms.push({ x, y: groundY - 82, w: 320, h: 30, kind: "block" });
   }
-  // small step blocks for rhythm
+  // Low stumps and roots provide jump rhythm.
   for (let x = 2200; x < W - 800; x += 1300) {
     platforms.push({ x, y: groundY - 50, w: 90, h: 50, kind: "block" });
   }
