@@ -347,7 +347,7 @@ export function playMenuBgm() {
 // then RUN!! hands off to the real chase track.
 /** Bitcrusher curve: quantizes the signal to coarse steps for a pixelated,
  * chiptune-like crunch. */
-function makeBitcrushCurve(steps = 6): Float32Array {
+function makeBitcrushCurve(steps = 6): Float32Array<ArrayBuffer> {
   const n = 8192;
   const curve = new Float32Array(n);
   for (let i = 0; i < n; i++) {
