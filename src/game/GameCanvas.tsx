@@ -1835,8 +1835,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
           sfx.shoot();
         }
       } else if (e.kind === "chaser") {
-        // Pursue forward at base speed; if the player gets too far ahead,
-        // catch up faster. Stay glued to the floor.
+        // Pursue faster as the run goes on; distance-based catch-up keeps the
+        // threat close without replacing the continuous time ramp.
         const stunned = (e.stunTimer ?? 0) > 0;
         if (stunned) {
           e.stunTimer = (e.stunTimer ?? 0) - dt;
@@ -1844,7 +1844,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
           e.x += e.vx * dt;
           e.vx *= 1 - Math.min(1, dt * 2.5);
         } else {
-          const base = e.baseSpeed ?? 360;
+          const ramp = Math.min(360, r.time * 7.5);
+          const base = (e.baseSpeed ?? 360) + ramp;
           const gap = (p.x) - (e.x + e.w);
           // if player pulls ahead, accelerate up to +60% to catch up
           const catchup = Math.max(1, Math.min(1.6, gap / 600));
@@ -2402,6 +2403,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     const bgT = starmanFx ? Math.min(1, (starElapsed - 3.20) / 0.6) : 0;
     const isBossLevel = levelIdRef.current === "roaring-knight";
     const isMayhemLevel = levelIdRef.current.startsWith("mayhem");
+    const isChaseLevel = levelIdRef.current === "chase";
     // paper bg (or black during starman fx, OLED black post-impact for som som,
     // the boss-level cyan-flame backdrop, or MAYHEM's pitch-black industrial night)
     if (isBossLevel) {
@@ -2454,6 +2456,18 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       glow.addColorStop(0.4, `rgba(50,10,14,${pulse * 0.16})`);
       glow.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, w, h);
+    } else if (isChaseLevel && bgT <= 0 && !postImpact) {
+      const forestSky = ctx.createLinearGradient(0, 0, 0, h);
+      forestSky.addColorStop(0, "#111b18");
+      forestSky.addColorStop(0.58, "#263c2d");
+      forestSky.addColorStop(1, "#66724b");
+      ctx.fillStyle = forestSky;
+      ctx.fillRect(0, 0, w, h);
+      const moonGlow = ctx.createRadialGradient(w * 0.78, h * 0.18, 8, w * 0.78, h * 0.18, h * 0.42);
+      moonGlow.addColorStop(0, "rgba(221,229,188,0.26)");
+      moonGlow.addColorStop(1, "rgba(221,229,188,0)");
+      ctx.fillStyle = moonGlow;
       ctx.fillRect(0, 0, w, h);
     } else {
       if (postImpact) {
@@ -2812,6 +2826,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
 
     // distant scribbled clouds / scenery — MAYHEM gets black industrial silhouettes
     if (isMayhemLevel) drawMayhemScenery(ctx, camX, w, r.level.height, r.time);
+    else if (levelIdRef.current === "chase") drawChaseScenery(ctx, camX, w, r.level.height, r.time);
     else drawScenery(ctx, camX, w, r.level.height);
 
     // platforms
@@ -2824,8 +2839,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       const visW = visR - visX;
       const fill = isMayhemLevel
         ? (isGround ? "#15191f" : "#20262e")
-        : bossPlatforms ? "#000000" : (isGround ? "#e5dfc2" : "#f7f1dc");
-      const stroke = isMayhemLevel ? "#9aa5ad" : bossPlatforms ? "#ffffff" : INK;
+        : bossPlatforms ? "#000000"
+        : levelIdRef.current === "chase" ? (isGround ? "#26351f" : "#49331f")
+        : (isGround ? "#e5dfc2" : "#f7f1dc");
+      const stroke = isMayhemLevel ? "#9aa5ad" : bossPlatforms ? "#ffffff" : levelIdRef.current === "chase" ? "#101a0f" : INK;
       sketchRect(ctx, visX, pl.y, visW, pl.h, fill, stroke, isGround ? 3 : 2.6, isMayhemLevel ? 0.55 : isGround ? 1.6 : 1.2);
       if (isMayhemLevel) {
         // Brushed top edge + panel seams/rivets make every walkable surface read as metal.
@@ -3893,6 +3910,70 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     ctx.fillStyle = fog;
     ctx.fillRect(camX - 60, groundY - 130, w + 120, 160);
 
+    ctx.restore();
+  }
+
+  function drawChaseScenery(ctx: CanvasRenderingContext2D, camX: number, w: number, levelH: number, time: number) {
+    const groundY = levelH - 80;
+    ctx.save();
+
+    // Distant pine wall moves slowly for depth.
+    const farOffset = camX * 0.22;
+    const farStart = Math.floor((camX - 300 - farOffset) / 150) * 150;
+    for (let x = farStart; x < camX + w + 350; x += 150) {
+      const worldX = x + farOffset;
+      const n = Math.abs(Math.floor(x / 150));
+      const treeH = 190 + (n % 5) * 24;
+      ctx.fillStyle = n % 2 ? "rgba(13,31,24,0.62)" : "rgba(19,42,29,0.68)";
+      ctx.beginPath();
+      ctx.moveTo(worldX, groundY - treeH);
+      ctx.lineTo(worldX - 72, groundY);
+      ctx.lineTo(worldX + 72, groundY);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Foreground trunks and branch silhouettes rush past the player.
+    const treeStep = 520;
+    const firstTree = Math.floor((camX - 220) / treeStep) * treeStep;
+    for (let x = firstTree; x < camX + w + 300; x += treeStep) {
+      const n = Math.abs(Math.floor(x / treeStep));
+      const trunkW = 48 + (n % 3) * 12;
+      const trunkH = 360 + (n % 4) * 48;
+      ctx.fillStyle = n % 2 ? "#182016" : "#111a12";
+      ctx.fillRect(x, groundY - trunkH, trunkW, trunkH);
+      ctx.strokeStyle = "rgba(110,126,78,0.35)";
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.moveTo(x + trunkW * 0.5, groundY - trunkH * 0.55);
+      ctx.lineTo(x - 105, groundY - trunkH * 0.72);
+      ctx.moveTo(x + trunkW * 0.55, groundY - trunkH * 0.7);
+      ctx.lineTo(x + 125, groundY - trunkH * 0.88);
+      ctx.stroke();
+      ctx.fillStyle = "rgba(20,43,24,0.9)";
+      for (let k = 0; k < 5; k++) {
+        const leafX = x - 105 + k * 52;
+        const leafY = groundY - trunkH + 18 + (k % 2) * 42;
+        ctx.beginPath();
+        ctx.arc(leafX, leafY, 58 + (k % 3) * 8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Ground mist and firefly specks keep the forest alive without hiding hazards.
+    const mist = ctx.createLinearGradient(0, groundY - 120, 0, groundY + 20);
+    mist.addColorStop(0, "rgba(183,198,154,0)");
+    mist.addColorStop(1, "rgba(183,198,154,0.18)");
+    ctx.fillStyle = mist;
+    ctx.fillRect(camX - 40, groundY - 120, w + 80, 140);
+    ctx.fillStyle = "rgba(219,232,146,0.65)";
+    for (let i = 0; i < 18; i++) {
+      const fx = camX + ((i * 173 + Math.sin(time * 0.7 + i) * 32) % (w + 100));
+      const fy = groundY - 90 - (i % 6) * 58 + Math.sin(time * 1.4 + i) * 12;
+      ctx.beginPath();
+      ctx.arc(fx, fy, 1.5 + (i % 2), 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.restore();
   }
 
