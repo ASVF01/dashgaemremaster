@@ -26,7 +26,7 @@ import bossBgUrl from "@/assets/boss_bg.gif";
 import bossBgSheetUrl from "@/assets/boss_bg_sheet.webp";
 import bossParryFlashUrl from "@/assets/boss_parry_flash.png";
 import sugarcoatSfxUrl from "@/assets/sugarcoat.mp3";
-import chaserHitAsset from "@/assets/chase/chaser-hit.png.asset.json";
+import chaserHitUrl from "@/assets/chase/chaser-hit.png";
 
 const bossParryFlashImg = new Image(); bossParryFlashImg.src = bossParryFlashUrl;
 let sugarcoatAudio: HTMLAudioElement | null = null;
@@ -50,7 +50,7 @@ const starCache = new Map<string, HTMLCanvasElement>();
 // is cached on first use for the trail ghosts.
 const spookImg = new Image(); spookImg.src = spookUrl;
 const spookHurtImg = new Image(); spookHurtImg.src = spookHurtUrl;
-const chaserHitImg = new Image(); chaserHitImg.src = chaserHitAsset.url;
+const chaserHitImg = new Image(); chaserHitImg.src = chaserHitUrl;
 let spookRedTint: HTMLCanvasElement | null = null;
 function getSpookRedTint(): HTMLCanvasElement | null {
   if (!spookImg.complete || !spookImg.naturalWidth) return null;
