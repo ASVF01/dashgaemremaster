@@ -2542,12 +2542,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     } else if (isMayhemLevel) {
       const isOutside = levelIdRef.current === "mayhem-outside";
       // The approach opens beneath a heavy grey sky; hotel interiors remain dark.
-      ctx.fillStyle = isOutside ? "#596068" : "#000";
+      ctx.fillStyle = isOutside ? "#1b2228" : "#000";
       ctx.fillRect(0, 0, w, h);
       const haze = ctx.createLinearGradient(0, 0, 0, h);
-      haze.addColorStop(0, isOutside ? "rgba(205,210,214,0.18)" : "rgba(8,10,14,0.2)");
-      haze.addColorStop(0.58, isOutside ? "rgba(84,91,98,0.45)" : "rgba(15,18,23,0.58)");
-      haze.addColorStop(1, isOutside ? "rgba(42,48,51,0.72)" : "rgba(0,0,0,0.9)");
+      haze.addColorStop(0, isOutside ? "rgba(8,12,16,0.62)" : "rgba(8,10,14,0.2)");
+      haze.addColorStop(0.62, isOutside ? "rgba(42,50,56,0.72)" : "rgba(15,18,23,0.58)");
+      haze.addColorStop(1, isOutside ? "rgba(18,25,28,0.92)" : "rgba(0,0,0,0.9)");
       ctx.fillStyle = haze;
       ctx.fillRect(0, 0, w, h);
       if (!isOutside) {
@@ -4247,27 +4247,55 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     }
 
     if (levelIdRef.current === "mayhem-outside") {
+      // High storm shelf: broad, irregular cloud banks stay well above the tree line.
+      const cloudStart = Math.floor((camX * 0.18 - 420) / 520) * 520;
+      ctx.fillStyle = "rgba(9,14,18,0.58)";
+      for (let x = cloudStart; x < camX * 0.18 + w + 620; x += 520) {
+        const cx = x + camX * 0.82;
+        const variation = Math.abs(Math.floor(x / 520)) % 3;
+        ctx.beginPath();
+        ctx.ellipse(cx + 80, 50 + variation * 10, 190, 62, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx + 245, 38 + variation * 8, 230, 76, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx + 430, 58 + variation * 12, 185, 58, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = "rgba(76,86,92,0.18)";
+      ctx.fillRect(camX - 80, 112, w + 160, 34);
+
       // Layered tree line behind a long, flat lawn.
-      ctx.fillStyle = "rgba(31,40,37,0.5)";
+      ctx.fillStyle = "rgba(18,29,26,0.78)";
       const farTree = Math.floor((camX - 300) / 260) * 260;
       for (let x = farTree; x < camX + w + 320; x += 260) {
-        const crownY = groundY - 120 - (Math.abs(Math.floor(x / 260)) % 3) * 24;
+        const crownY = groundY - 104 - (Math.abs(Math.floor(x / 260)) % 3) * 18;
         ctx.beginPath();
-        ctx.arc(x + 70, crownY, 76, 0, Math.PI * 2);
-        ctx.arc(x + 140, crownY - 18, 92, 0, Math.PI * 2);
-        ctx.arc(x + 220, crownY + 8, 70, 0, Math.PI * 2);
+        ctx.arc(x + 70, crownY, 68, 0, Math.PI * 2);
+        ctx.arc(x + 140, crownY - 16, 84, 0, Math.PI * 2);
+        ctx.arc(x + 220, crownY + 8, 64, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Windblown grass along the playable ground edge.
-      ctx.strokeStyle = "rgba(110,139,94,0.72)";
-      ctx.lineWidth = 2;
-      const grassStart = Math.floor((camX - 40) / 18) * 18;
-      for (let x = grassStart; x < camX + w + 40; x += 18) {
-        const blade = 9 + (Math.abs(Math.floor(x / 18)) % 5) * 3;
+      // Deep wet soil extends beyond the world bounds, so nothing shows below the lawn.
+      ctx.fillStyle = "#111b16";
+      ctx.fillRect(camX - 100, groundY, w + 200, levelH - groundY + 240);
+      ctx.fillStyle = "#243725";
+      ctx.fillRect(camX - 100, groundY - 10, w + 200, 28);
+      ctx.fillStyle = "rgba(77,101,62,0.52)";
+      ctx.fillRect(camX - 100, groundY - 10, w + 200, 5);
+
+      // Dense, uneven clumps of windblown grass instead of evenly spaced spikes.
+      const grassStart = Math.floor((camX - 40) / 11) * 11;
+      for (let x = grassStart; x < camX + w + 40; x += 11) {
+        const seed = Math.abs(Math.floor(x / 11));
+        const blade = 8 + (seed % 7) * 2;
+        ctx.strokeStyle = seed % 3 === 0 ? "rgba(116,139,83,0.78)" : "rgba(65,91,56,0.9)";
+        ctx.lineWidth = seed % 4 === 0 ? 2.2 : 1.35;
         ctx.beginPath();
         ctx.moveTo(x, groundY + 2);
-        ctx.quadraticCurveTo(x + Math.sin(time * 2.4 + x * 0.03) * 5, groundY - blade * 0.55, x + 3, groundY - blade);
+        ctx.quadraticCurveTo(x + 5 + Math.sin(time * 1.7 + x * 0.025) * 3, groundY - blade * 0.55, x + 7, groundY - blade);
+        if (seed % 3 === 0) {
+          ctx.moveTo(x + 2, groundY + 2);
+          ctx.quadraticCurveTo(x - 3, groundY - blade * 0.45, x - 5, groundY - blade * 0.72);
+        }
         ctx.stroke();
       }
 
@@ -4292,13 +4320,18 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       ctx.fillStyle = "#25272a";
       ctx.beginPath(); ctx.moveTo(10870, groundY - 300); ctx.lineTo(11015, groundY - 390); ctx.lineTo(11160, groundY - 300); ctx.closePath(); ctx.fill();
 
-      // Dense slanted rain in front of the landscape.
-      ctx.strokeStyle = "rgba(220,229,233,0.48)";
-      ctx.lineWidth = 1.4;
-      for (let i = 0; i < 150; i++) {
-        const rx = camX - 80 + ((i * 89 + time * 430) % (w + 220));
-        const ry = ((i * 137 + time * 760) % (groundY + 120)) - 80;
-        ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx - 10, ry + 30); ctx.stroke();
+      // Layered rain: short distant streaks and sharper foreground drops at varied speeds.
+      for (let layer = 0; layer < 2; layer++) {
+        const count = layer === 0 ? 120 : 72;
+        const speed = layer === 0 ? 520 : 860;
+        ctx.strokeStyle = layer === 0 ? "rgba(188,202,210,0.25)" : "rgba(220,232,238,0.52)";
+        ctx.lineWidth = layer === 0 ? 0.8 : 1.35;
+        for (let i = 0; i < count; i++) {
+          const rx = camX - 100 + ((i * (83 + layer * 28) + time * (170 + layer * 120)) % (w + 260));
+          const ry = ((i * (127 + layer * 18) + time * speed) % (groundY + 150)) - 100;
+          const len = 10 + ((i * 7) % (layer === 0 ? 12 : 24));
+          ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx - len * 0.28, ry + len); ctx.stroke();
+        }
       }
       ctx.restore();
       return;
