@@ -791,7 +791,11 @@ const Index = () => {
                 <button
                   onClick={() => {
                     setChaseIntroOpen(false);
-                    if (marathonStep == null) playBgmFor("chase", true);
+                    if (marathonStep == null) {
+                      // Hard cut: BP stops dead, the chase track snaps in.
+                      stopBgm();
+                      playBgmFor("chase", true);
+                    }
                   }}
                   className="scribble-border bg-[hsl(var(--accent))] text-accent-foreground font-marker text-3xl px-8 py-4 hover:rotate-2 transition-transform animate-jitter"
                 >

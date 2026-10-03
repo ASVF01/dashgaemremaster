@@ -6,6 +6,7 @@ import bgmJustRunBro from "@/assets/audio/bgm_just_run_bro_ts.wav";
 import bgmMenu from "@/assets/audio/bgm_menu.mp3";
 import bgmChampionPlay from "@/assets/audio/bgm_champion_play.mp3";
 import bgmChampionDuel2 from "@/assets/audio/bgm_champion_duel2.mp3";
+import bgmChaseWind from "@/assets/audio/Flying_Lights_of_the_Wind.ogg";
 import bgmTutorial from "@/assets/audio/bgm_tutorial.mp3";
 import bgmStarman from "@/assets/audio/bgm_starman.mp3";
 import bgmMarathonStarman from "@/assets/audio/bgm_marathon_starman.mp3";
@@ -28,7 +29,7 @@ const TRACKS: Partial<Record<LevelId, string>> = {
   "scribble-2": bgmChampionPlay,
   "scribble-3": bgmChampionPlay,
   "speed-test": bgmMap1,
-  chase: bgmChampionDuel2,
+  chase: bgmChaseWind,
   "just-run-bro": bgmJustRunBro,
   "roaring-knight": bgmBlackKnife,
   // Post-boss act: reuse the same track as scribble 1-3.
@@ -344,12 +345,61 @@ export function playMenuBgm() {
 
 // THE CHASE tutorial popup theme ("BP") — plays while the intro card is up,
 // then RUN!! hands off to the real chase track.
+/** Bitcrusher curve: quantizes the signal to coarse steps for a pixelated,
+ * chiptune-like crunch. */
+function makeBitcrushCurve(steps = 6): Float32Array<ArrayBuffer> {
+  const n = 8192;
+  const curve = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const x = (i / (n - 1)) * 2 - 1;
+    curve[i] = Math.round(x * steps) / steps;
+  }
+  return curve;
+}
+
 export function playChaseIntroBgm() {
   loadBuffer(bgmChaseIntro).catch(() => { /* ignore */ });
   // Hard cut: kill whatever is playing instantly, then start BP with no
   // crossfade — the tutorial card snaps the music over.
   stopBgm();
-  playSrc(bgmChaseIntro);
+  const c = ac();
+  if (!c || !masterGain) return;
+  const requestId = ++playRequestId;
+  loadBuffer(bgmChaseIntro).then((buf) => {
+    if (requestId !== playRequestId || !masterGain) return;
+    const source = c.createBufferSource();
+    source.buffer = buf;
+    source.loop = true;
+    // Pixelated chain: bitcrush waveshaper + lowpass to shave the fizz.
+    const crush = c.createWaveShaper();
+    crush.curve = makeBitcrushCurve();
+    crush.oversample = "none";
+    const lp = c.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.value = 3200;
+    const g = c.createGain();
+    g.gain.value = 1;
+    source.connect(crush);
+    crush.connect(lp);
+    lp.connect(g);
+    g.connect(masterGain);
+    source.start();
+    // Register as the current track so stopBgm()/playSrc() can kill it.
+    playing = {
+      src: bgmChaseIntro,
+      buffer: buf,
+      source,
+      gain: g,
+      nextSource: null,
+      nextGain: null,
+      startedAt: c.currentTime,
+      nextLoopAt: 0,
+      rafId: null,
+      stopped: false,
+      rate: 1,
+      detune: 0,
+    };
+  }).catch(() => { /* ignore */ });
 }
 
 export function playMayhemBgm(fadeMs = 1200) {
