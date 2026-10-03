@@ -3918,32 +3918,50 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         ctx.save();
         ctx.imageSmoothingEnabled = false;
         const roaring = boss.introT >= KNIGHT_INTRO_ROAR_START && boss.introT < KNIGHT_INTRO_ROAR_END;
+        // --- wind-up: a soft pale-blue ORB contracts into the knight (1:1 with reference) ---
         if (windingUp) {
           const windT = Math.min(1, Math.max(0, (boss.introT - KNIGHT_INTRO_PAN_END) / (KNIGHT_INTRO_ROAR_START - KNIGHT_INTRO_PAN_END)));
-          const radius = 310 - windT * 250;
-          const alpha = 0.2 + windT * 0.75;
-          ctx.strokeStyle = `rgba(42,164,255,${alpha})`;
-          ctx.lineWidth = 9 + windT * 7;
-          ctx.shadowColor = "rgb(42,164,255)";
-          ctx.shadowBlur = 22;
-          ctx.beginPath();
-          ctx.arc(sx, sy, radius, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.shadowBlur = 0;
+          const radius = 330 - windT * 265; // huge soft sphere shrinking down onto him
+          const heat = windT * windT; // brightens nonlinearly as it collapses
+          const orb = ctx.createRadialGradient(sx, sy, 2, sx, sy, Math.max(8, radius));
+          orb.addColorStop(0, `rgba(${190 + heat * 65},${195 + heat * 60},${235 + heat * 20},${0.55 + heat * 0.45})`);
+          orb.addColorStop(0.55, `rgba(130,138,205,${0.4 + heat * 0.35})`);
+          orb.addColorStop(1, "rgba(90,95,160,0)");
+          ctx.fillStyle = orb;
+          ctx.fillRect(sx - radius - 4, sy - radius - 4, radius * 2 + 8, radius * 2 + 8);
+          // tiny white sparkles drifting around the orb
+          for (let sp = 0; sp < 9; sp++) {
+            const a = sp * 2.4 + boss.introT * (1.1 + sp * 0.13);
+            const rr = radius * (0.35 + ((sp * 37) % 60) / 100);
+            const px = sx + Math.cos(a) * rr;
+            const py = sy + Math.sin(a) * rr * 0.8;
+            ctx.fillStyle = `rgba(255,255,255,${0.35 + 0.5 * Math.abs(Math.sin(boss.introT * 5 + sp))})`;
+            ctx.fillRect(px - 1.5, py - 1.5, 3, 3);
+          }
+          // final collapse: white-hot flash + thin vertical beam
+          if (windT > 0.88) {
+            const f = (windT - 0.88) / 0.12;
+            ctx.fillStyle = `rgba(255,255,255,${f * 0.9})`;
+            ctx.fillRect(sx - 60, sy - 60, 120, 120);
+            ctx.fillStyle = `rgba(255,255,255,${f})`;
+            ctx.fillRect(sx - 2, 0, 4, ctx.canvas.height);
+          }
         }
+        // --- roar: a colossal soft red glow floods the whole screen, then dies down ---
         if (roaring) {
           const roarT = boss.introT - KNIGHT_INTRO_ROAR_START;
-          ctx.shadowColor = "rgb(255,32,48)";
-          ctx.shadowBlur = 18;
-          for (let ring = 0; ring < 4; ring++) {
-            const pulse = (roarT * 2.35 - ring * 0.22 + 4) % 1;
-            ctx.strokeStyle = `rgba(255,32,48,${0.9 * (1 - pulse)})`;
-            ctx.lineWidth = 13 - pulse * 7;
-            ctx.beginPath();
-            ctx.arc(sx, sy, 55 + pulse * 360, 0, Math.PI * 2);
-            ctx.stroke();
-          }
-          ctx.shadowBlur = 0;
+          const roarDur = KNIGHT_INTRO_ROAR_END - KNIGHT_INTRO_ROAR_START;
+          const k = Math.min(1, roarT / roarDur);
+          const burst = Math.min(1, roarT / 0.25); // fast explosion at the start
+          const fade = 1 - k * k * 0.85; // slow decay, still glowing near the end
+          const reach = (0.35 + burst * 0.75) * Math.max(ctx.canvas.width, ctx.canvas.height);
+          const glow = ctx.createRadialGradient(sx, sy, 4, sx, sy, reach);
+          glow.addColorStop(0, `rgba(255,205,205,${0.95 * burst * fade})`);
+          glow.addColorStop(0.25, `rgba(235,90,95,${0.85 * burst * fade})`);
+          glow.addColorStop(0.6, `rgba(150,15,35,${0.7 * burst * fade})`);
+          glow.addColorStop(1, "rgba(40,0,8,0)");
+          ctx.fillStyle = glow;
+          ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         }
         // --- post-roar VFX, matching the reference footage ---
         const cw = ctx.canvas.width, ch = ctx.canvas.height;
