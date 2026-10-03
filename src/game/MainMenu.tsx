@@ -617,14 +617,15 @@ function FeaturedCard({
         <button
           onClick={onPlay}
           onMouseEnter={() => sfx.menuHover()}
+          disabled={lvl.locked}
           className={[
-            "scribble-border font-marker text-xl px-4 py-1 hover:-rotate-2 transition-transform",
-            isMarathon
-              ? "bg-ink text-paper"
-              : "bg-[hsl(var(--accent))] text-accent-foreground",
+            "scribble-border font-marker text-xl px-4 py-1 transition-transform",
+            lvl.locked
+              ? "bg-paper text-ink/40 cursor-not-allowed"
+              : "hover:-rotate-2 bg-[hsl(var(--accent))] text-accent-foreground",
           ].join(" ")}
         >
-          ▶ PLAY
+          {lvl.locked ? "LOCKED" : "▶ PLAY"}
         </button>
       </div>
     </div>
@@ -633,7 +634,7 @@ function FeaturedCard({
 
 const MiniCard = forwardRef<HTMLDivElement, { lvl: LevelMeta }>(function MiniCard({ lvl }, ref) {
   return (
-    <div ref={ref} className="scribble-border bg-paper p-2">
+    <div ref={ref} className={["scribble-border bg-paper p-2", lvl.locked ? "opacity-70 grayscale" : ""].join(" ")}>
       <Thumbnail lvl={lvl} />
       <div className="font-marker text-xl text-ink mt-1 truncate">{lvl.name}</div>
       <div className="font-scribble text-sm text-ink/60 truncate">{lvl.subtitle}</div>
