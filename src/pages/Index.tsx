@@ -81,6 +81,7 @@ const Index = () => {
   // handed over the elevator ticket yet (the main-floor elevator needs it).
   const [mayhemDialogue, setMayhemDialogue] = useState<string | null>(null);
   const [mayhemTicket, setMayhemTicket] = useState(false);
+  const [receptionistWaveKey, setReceptionistWaveKey] = useState(0);
   const mayhemRef = useRef(false);
   mayhemRef.current = mayhem;
   const [binds] = useKeybinds();
@@ -484,7 +485,10 @@ const Index = () => {
   }, []);
   const handleDialogueDone = useCallback(() => {
     setMayhemDialogue((cur) => {
-      if (cur === "checker") setMayhemTicket(true);
+      if (cur === "checker") {
+        setMayhemTicket(true);
+        setReceptionistWaveKey((key) => key + 1);
+      }
       return null;
     });
   }, []);
@@ -670,6 +674,7 @@ const Index = () => {
             onDeath={handleDeath}
             onInvboiPickup={handleInvboiPickup}
             onNpcInteract={handleNpcInteract}
+            receptionistWaveKey={receptionistWaveKey}
             onBossIntroComplete={() => {
               if (marathonStep == null) playBgmFor("roaring-knight", true);
             }}
