@@ -28,6 +28,10 @@ import bossParryFlashUrl from "@/assets/boss_parry_flash.png";
 import sugarcoatSfxUrl from "@/assets/sugarcoat.mp3";
 import chaserHitUrl from "@/assets/chase/chaser-hit.png";
 import chaserHitInvboiUrl from "@/assets/chase/chaser-hit-invboi.png";
+import knightIdleUrl from "@/assets/sprites/knight/idle.png";
+import knightRoaringUrl from "@/assets/sprites/knight/roaring.png";
+import knightSwordAppearUrl from "@/assets/sprites/knight/sword_appear.png";
+import knightEquipSwordUrl from "@/assets/sprites/knight/equip_sword.png";
 
 const bossParryFlashImg = new Image(); bossParryFlashImg.src = bossParryFlashUrl;
 let sugarcoatAudio: HTMLAudioElement | null = null;
@@ -74,6 +78,10 @@ function getSpookRedTint(): HTMLCanvasElement | null {
 const knightImg = new Image(); knightImg.src = roaringKnightUrl;
 const knightVulnImg = new Image(); knightVulnImg.src = roaringKnightVulnUrl;
 const knightHurtImg = new Image(); knightHurtImg.src = roaringKnightHurtUrl;
+const knightIdleStrip = new Image(); knightIdleStrip.src = knightIdleUrl;
+const knightRoaringStrip = new Image(); knightRoaringStrip.src = knightRoaringUrl;
+const knightSwordAppearStrip = new Image(); knightSwordAppearStrip.src = knightSwordAppearUrl;
+const knightEquipSwordStrip = new Image(); knightEquipSwordStrip.src = knightEquipSwordUrl;
 const bossBgImg = new Image(); bossBgImg.src = bossBgUrl;
 // Animated boss bg: 31 frames, 6 cols × 6 rows, each 320×180.
 const bossBgSheet = new Image(); bossBgSheet.src = bossBgSheetUrl;
@@ -83,12 +91,22 @@ const BOSS_BG_FW = 320;
 const BOSS_BG_FH = 180;
 const BOSS_BG_FPS = 18;
 const KNIGHT_DRAW_H = 180; // rendered height in screen pixels (sprite is square-ish)
+const KNIGHT_INTRO_PAN_END = 1.25;
+const KNIGHT_INTRO_ROAR_END = KNIGHT_INTRO_PAN_END + 8.53;
+const KNIGHT_INTRO_APPEAR_END = KNIGHT_INTRO_ROAR_END + 0.45;
+const KNIGHT_INTRO_EQUIP_END = KNIGHT_INTRO_APPEAR_END + 1.6;
+const KNIGHT_INTRO_END = KNIGHT_INTRO_EQUIP_END + 0.9;
 
 function makeBoss() {
   return {
     hp: 5,
     maxHp: 5,
     screenX: 0, screenY: 0,
+    worldX: 1280, worldY: 250,
+    phase: "intro" as "intro" | "combat",
+    introT: 0,
+    roarStarted: false,
+    musicStarted: false,
     hoverPhase: 0,
     attackTimer: 2.0,         // grace period before first slash
     attacksRemaining: 3,      // slashes per burst
@@ -339,6 +357,12 @@ interface Boss {
   // Screen-space anchor (camera-locked). Drawn at this position.
   screenX: number;
   screenY: number;
+  worldX: number;
+  worldY: number;
+  phase: "intro" | "combat";
+  introT: number;
+  roarStarted: boolean;
+  musicStarted: boolean;
   hoverPhase: number;
   // attack cycle
   attackTimer: number; // counts down to next attack burst
@@ -372,6 +396,7 @@ interface Props {
   onInvboiPickup?: () => void;
   /** Fired when the player presses the interact key next to a level NPC. */
   onNpcInteract?: (id: string) => void;
+  onBossIntroComplete?: () => void;
   /** When true, touching the goal does nothing (e.g. locked MAYHEM elevator). */
   goalLocked?: boolean;
   paused: boolean;
@@ -416,7 +441,7 @@ function nearbyNpc(r: GameRefs) {
 
 
 
-export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, onNpcInteract, goalLocked = false, paused, keepAudio = false, startAsInvboi = false, resetKey, levelId = "scribble-1" }: Props) {
+export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, onNpcInteract, onBossIntroComplete, goalLocked = false, paused, keepAudio = false, startAsInvboi = false, resetKey, levelId = "scribble-1" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const deathTimeoutRef = useRef<number | null>(null);
   const refs = useRef<GameRefs | null>(null);
@@ -427,6 +452,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
   onInvboiPickupRef.current = onInvboiPickup;
   const onNpcInteractRef = useRef<((id: string) => void) | undefined>(onNpcInteract);
   onNpcInteractRef.current = onNpcInteract;
+  const onBossIntroCompleteRef = useRef<(() => void) | undefined>(onBossIntroComplete);
+  onBossIntroCompleteRef.current = onBossIntroComplete;
   const goalLockedRef = useRef(goalLocked);
   goalLockedRef.current = goalLocked;
   // True while CELESTIAL MARATHON is running. Used to keep the marathon
@@ -622,6 +649,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       setCelestialMode(false);
       setThunderMode(false);
     }
+    if (levelId === "roaring-knight") sfx.preloadBossRoar();
   }, [resetKey, levelId, startAsInvboi]);
 
   // BGM: stop on unmount only. The parent (Index) decides which track to
@@ -662,6 +690,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     };
     const down = (e: KeyboardEvent) => {
       keysRef.current[e.code] = true;
+      if (refs.current?.boss?.phase === "intro") {
+        e.preventDefault();
+        keysRef.current[e.code] = false;
+        return;
+      }
       // cheat code: type "invboi" to enter starman mode
       if (e.key && e.key.length === 1 && /[a-zA-Z]/.test(e.key)) {
         cheatBuf = (cheatBuf + e.key.toLowerCase()).slice(-12);
@@ -885,7 +918,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
           // Still tick boss explosion VFX during freeze for snappy visual.
           for (const ex of r.bossExplosions) ex.t += dt;
         } else {
-          update(r, dt, keysRef.current);
+          // The entrance is a cutscene: physics may settle the player onto the
+          // floor, but keyboard/touch movement cannot interrupt the camera pan.
+          update(r, dt, r.boss?.phase === "intro" ? {} : keysRef.current);
         }
       } else if (!paused && r.deathFxT > 0) {
         // Player is dead but the death FX is still playing: keep particles,
@@ -918,7 +953,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
           score: r.score,
           combo: r.combo,
           progress: Math.min(1, r.player.x / r.level.width),
-          timeMs: r.finished ? r.finishTime : performance.now() - r.startedAt,
+          timeMs: r.boss?.phase === "intro" ? 0 : r.finished ? r.finishTime : performance.now() - r.startedAt,
           parryReady: r.player.starman ? true : r.player.parryCooldown <= 0,
           parryCooldown: r.player.starman ? 0 : Math.max(0, r.player.parryCooldown),
           dashCooldown: r.player.starman ? 0 : Math.max(0, r.player.dashCooldown),
@@ -2225,8 +2260,27 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       // Semi-static arena camera: centered on the arena, nudged slightly toward the player.
       const visW = size.w / z, visH = size.h / z;
       const centerCam = (r.level.width - visW) / 2;
-      const targetCam = centerCam + (playerCenterX - r.level.width / 2) * 0.15;
-      r.cameraX += (targetCam - r.cameraX) * Math.min(1, dt * 3);
+      const combatCam = centerCam + (playerCenterX - r.level.width / 2) * 0.15;
+      let targetCam = combatCam;
+      let cameraRate = 3;
+      if (r.boss?.phase === "intro") {
+        const introT = r.boss.introT;
+        const playerCam = Math.max(0, playerCenterX - visW * 0.5);
+        const knightCam = Math.max(0, Math.min(r.level.width - visW, r.boss.worldX - visW * 0.68));
+        if (introT < 0.3) targetCam = playerCam;
+        else if (introT < KNIGHT_INTRO_PAN_END) {
+          const k = (introT - 0.3) / (KNIGHT_INTRO_PAN_END - 0.3);
+          const eased = k * k * (3 - 2 * k);
+          targetCam = playerCam + (knightCam - playerCam) * eased;
+        } else if (introT < KNIGHT_INTRO_EQUIP_END) targetCam = knightCam;
+        else {
+          const k = Math.min(1, (introT - KNIGHT_INTRO_EQUIP_END) / (KNIGHT_INTRO_END - KNIGHT_INTRO_EQUIP_END));
+          const eased = k * k * (3 - 2 * k);
+          targetCam = knightCam + (combatCam - knightCam) * eased;
+        }
+        cameraRate = 8;
+      }
+      r.cameraX += (targetCam - r.cameraX) * Math.min(1, dt * cameraRate);
       const minX = Math.min(0, centerCam), maxX = Math.max(r.level.width - visW, centerCam);
       if (r.cameraX < minX) r.cameraX = minX;
       if (r.cameraX > maxX) r.cameraX = maxX;
@@ -3447,30 +3501,29 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
   // Normally camera-locked (top-right). When staggered (`worn > 0`), the boss
   // un-sticks: we pin a world X at stagger time and convert it back to screen X
   // so the camera can scroll past him.
-  function bossScreenAnchor(r: GameRefs, boss: Boss, screenW: number) {
-    const margin = 40;
+  function bossScreenAnchor(r: GameRefs, boss: Boss, _screenW: number) {
     const drawW = KNIGHT_DRAW_H * (knightImg.naturalWidth && knightImg.naturalHeight
       ? knightImg.naturalWidth / knightImg.naturalHeight : 1);
-    const cameraBaseX = screenW - margin - drawW / 2;
+    const worldScreenX = boss.worldX - r.cameraX;
     // Keep the knight inside the arena vicinity (between ceiling block ~y=84
     // and ground top ~y=640). Hover up high; when staggered, drop into the
     // middle of the arena but still above the lower platform so the player
     // can dash-strike him from below or beside.
-    const baseY = 240;
+    const baseY = boss.worldY - r.cameraY;
     const hover = Math.sin(boss.hoverPhase) * 14;
 
     const wantLow = boss.worn > 0 && !boss.defeated;
     if (wantLow) {
       // Pin world X at the moment of stagger so he no longer follows the camera.
       if (!boss.wornAnchored) {
-        boss.wornWorldX = r.cameraX + (boss.screenX || cameraBaseX);
+        boss.wornWorldX = r.cameraX + (boss.screenX || worldScreenX);
         boss.wornAnchored = true;
       }
     } else {
       boss.wornAnchored = false;
     }
 
-    const targetScreenX = wantLow ? boss.wornWorldX - r.cameraX : cameraBaseX;
+    const targetScreenX = wantLow ? boss.wornWorldX - r.cameraX : worldScreenX;
     // Floating up-and-down (extra bob while staggered low). Vulnerable Y sits
     // around 470 — well above the ground (top y=640) so the dash hitbox lines
     // up with the player's reach.
@@ -3497,7 +3550,30 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
   }
 
   function updateBoss(r: GameRefs, dt: number, screenW: number) {
-    const boss = r.boss!;
+    const boss = r.boss;
+    if (!boss) return;
+    if (boss.phase === "intro") {
+      boss.introT += dt;
+      bossScreenAnchor(r, boss, screenW);
+      if (!boss.roarStarted && boss.introT >= KNIGHT_INTRO_PAN_END) {
+        boss.roarStarted = true;
+        sfx.bossRoar();
+      }
+      if (boss.introT >= KNIGHT_INTRO_PAN_END && boss.introT < KNIGHT_INTRO_ROAR_END) {
+        r.shake = Math.max(r.shake, 0.72);
+        boss.shakeT = Math.max(boss.shakeT, 0.2);
+      }
+      if (boss.introT >= KNIGHT_INTRO_END) {
+        boss.phase = "combat";
+        boss.attackTimer = 1.2;
+        r.startedAt = performance.now();
+        if (!boss.musicStarted) {
+          boss.musicStarted = true;
+          onBossIntroCompleteRef.current?.();
+        }
+      }
+      return;
+    }
     boss.hoverPhase += dt * 2.2;
     if (boss.hitFlash > 0) boss.hitFlash = Math.max(0, boss.hitFlash - dt * 4);
     if (boss.hurtT > 0) boss.hurtT = Math.max(0, boss.hurtT - dt);
@@ -3786,6 +3862,32 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     }
     const sx = boss.screenX + wx;
     const sy = boss.screenY + wy;
+    if (boss.phase === "intro") {
+      let strip = knightIdleStrip;
+      let frames = 3;
+      let frameW = 45;
+      let frameH = 39;
+      let frame = Math.floor(boss.introT * 5) % frames;
+      if (boss.introT >= KNIGHT_INTRO_PAN_END && boss.introT < KNIGHT_INTRO_ROAR_END) {
+        strip = knightRoaringStrip; frames = 2; frameW = 39; frameH = 38;
+        frame = Math.floor((boss.introT - KNIGHT_INTRO_PAN_END) * 8) % frames;
+      } else if (boss.introT >= KNIGHT_INTRO_ROAR_END && boss.introT < KNIGHT_INTRO_APPEAR_END) {
+        strip = knightSwordAppearStrip; frames = 3; frameW = 37; frameH = 43;
+        frame = Math.min(frames - 1, Math.floor((boss.introT - KNIGHT_INTRO_ROAR_END) / 0.15));
+      } else if (boss.introT >= KNIGHT_INTRO_APPEAR_END) {
+        strip = knightEquipSwordStrip; frames = 19; frameW = 55; frameH = 57;
+        frame = Math.min(frames - 1, Math.floor((boss.introT - KNIGHT_INTRO_APPEAR_END) / (1.6 / frames)));
+      }
+      if (strip.complete && strip.naturalWidth) {
+        const introH = 230;
+        const introW = introH * frameW / frameH;
+        ctx.save();
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(strip, frame * frameW, 0, frameW, frameH, sx - introW / 2, sy - introH / 2, introW, introH);
+        ctx.restore();
+      }
+      return;
+    }
     // Boss-defeat explosion rings: drawn at the boss's spawn point (anchored
     // to where he was when he died — sx/sy at defeat moment). We use the
     // current sx/sy approximately, since the boss only just started moving.
