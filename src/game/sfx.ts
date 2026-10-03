@@ -91,7 +91,7 @@ function getPixelated(url: string, bits: number, rateDiv: number): AudioBuffer |
   return px;
 }
 
-function playPixelSample(url: string, opts: { vol?: number; bits?: number; rateDiv?: number; lp?: number } = {}) {
+function playPixelSample(url: string, opts: { vol?: number; bits?: number; rateDiv?: number; lp?: number; maxDur?: number } = {}) {
   const c = ac(); if (!c || !master) return;
   const buf = getPixelated(url, opts.bits ?? 5, opts.rateDiv ?? 8);
   if (!buf) {
@@ -109,6 +109,7 @@ function playPixelSample(url: string, opts: { vol?: number; bits?: number; rateD
   g.gain.value = opts.vol ?? 0.5;
   src.connect(lpf).connect(g).connect(master);
   src.start(t0);
+  if (opts.maxDur) src.stop(t0 + opts.maxDur);
 }
 
 function playSample(url: string, opts: { vol?: number; rate?: number } = {}) {
@@ -743,7 +744,7 @@ export const sfx = {
   },
   bossRoar() {
     void loadSample(knightRoarAsset.url).then((buf) => {
-      if (buf) playPixelSample(knightRoarAsset.url, { vol: 0.9, bits: 5, rateDiv: 8, lp: 4200 });
+      if (buf) playPixelSample(knightRoarAsset.url, { vol: 0.9, bits: 5, rateDiv: 8, lp: 4200, maxDur: 3 });
     });
   },
   preloadBossRoar() {
