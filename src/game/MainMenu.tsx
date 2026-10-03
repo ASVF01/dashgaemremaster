@@ -375,7 +375,7 @@ const LEVEL_THEME: Record<LevelId, LevelTheme> = {
   "aftermath-2":        { description: "Shooters in the gaps. Mind the rips. Keep your line clean.", accent: "10 60% 50%", glyph: "▣" },
   "aftermath-3":        { description: "Final draft. Everything you've learned, all in one breath.", accent: "0 70% 45%", glyph: "✗" },
   "celestial-marathon": { description: "Every level. One breath. Invboi forever. The ultimate run.", accent: "300 80% 60%", glyph: "✦" },
-  "mayhem-outside":     { description: "The approach. Dead ground, dead lights, and a tower to the east.", accent: "0 78% 52%", glyph: "▮" },
+  "mayhem-outside":     { description: "Cross the rain-soaked hotel grounds and reach the front door.", accent: "0 78% 52%", glyph: "▮" },
   "mayhem-main":        { description: "The lobby. Clock in with the checker and take the elevator.", accent: "45 80% 52%", glyph: "▤" },
   "mayhem-floor-1":     { description: "Floor one. Long, cold, and empty — for now.", accent: "0 60% 45%", glyph: "❶" },
 };
