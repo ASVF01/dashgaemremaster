@@ -52,6 +52,7 @@ export default function GeneratorPanel({ paused, progress, onProgress, onClose, 
   const simon = useMemo(() => seededValues(progress.seed, 5, 4), [progress.seed]);
   const deck = useMemo(() => shuffledDeck(progress.seed), [progress.seed]);
   const flowPairs = useMemo(() => makeRandomFlowPairs(6, 3, progress.seed), [progress.seed]);
+  const matchedCards = progress.memoryMatched ?? Array(6).fill(false);
 
   useEffect(() => {
     setShowing(progress.kind === "simon");
@@ -101,14 +102,15 @@ export default function GeneratorPanel({ paused, progress, onProgress, onClose, 
   };
 
   const flipCard = (index: number) => {
-    if (paused || lock || progress.memoryMatched[index] || cards.includes(index)) return;
+    if (paused || lock || matchedCards[index] || cards.includes(index)) return;
     const next = [...cards, index]; setCards(next); mayhemSfx.terminalSelect();
     if (next.length < 2) return;
     setLock(true);
     window.setTimeout(() => {
       if (deck[next[0]] === deck[next[1]]) {
-        const matched = [...progress.memoryMatched]; matched[next[0]] = true; matched[next[1]] = true;
+        const matched = [...matchedCards]; matched[next[0]] = true; matched[next[1]] = true;
         if (matched.every(Boolean)) finishRound();
+        else onProgress({ ...progress, memoryMatched: matched });
       }
       setCards([]); setLock(false);
     }, 520);
@@ -132,7 +134,7 @@ export default function GeneratorPanel({ paused, progress, onProgress, onClose, 
         {progress.kind === "memory" && <div>
           <p className="mb-4 text-center font-pixel text-[9px] text-[hsl(var(--hell-muted))]">MATCH THE THREE SIGNAL PAIRS</p>
           <div className="mx-auto grid max-w-md grid-cols-3 gap-3">{deck.map((value, index) => {
-            const visible = cards.includes(index);
+            const visible = cards.includes(index) || matchedCards[index];
             return <button key={index} type="button" onClick={() => flipCard(index)} className="aspect-[4/3] border-2 border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))] font-pixel text-2xl text-[hsl(var(--hell-terminal))]">{visible ? PAD_LABELS[value] : "?"}</button>;
           })}</div>
         </div>}
