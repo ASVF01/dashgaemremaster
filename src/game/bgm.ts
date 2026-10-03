@@ -101,6 +101,35 @@ type Playing = {
 let playing: Playing | null = null;
 let playRequestId = 0;
 
+// THE CHASE keeps its main track when INVBOI activates. The INVBOI theme is
+// mixed underneath as a deliberately quiet, bit-crushed secondary layer.
+let chaseInvboiLayer: { source: AudioBufferSourceNode; gain: GainNode; startedAt: number; rate: number } | null = null;
+let crushedStarmanBuffer: AudioBuffer | null = null;
+
+function stopChaseInvboiLayer() {
+  const layer = chaseInvboiLayer;
+  chaseInvboiLayer = null;
+  if (!layer) return;
+  try { layer.source.stop(); } catch { /* already stopped */ }
+}
+
+function bitCrushBuffer(c: AudioContext, input: AudioBuffer, bits = 6, holdSamples = 5) {
+  if (crushedStarmanBuffer) return crushedStarmanBuffer;
+  const output = c.createBuffer(input.numberOfChannels, input.length, input.sampleRate);
+  const levels = 2 ** (bits - 1);
+  for (let channel = 0; channel < input.numberOfChannels; channel++) {
+    const source = input.getChannelData(channel);
+    const target = output.getChannelData(channel);
+    let held = 0;
+    for (let i = 0; i < source.length; i++) {
+      if (i % holdSamples === 0) held = Math.round(source[i] * levels) / levels;
+      target[i] = held;
+    }
+  }
+  crushedStarmanBuffer = output;
+  return output;
+}
+
 // "Open" lowpass cutoff — effectively bypasses filtering.
 const LP_OPEN = 20000;
 // Cutoff used when the level ends — ~50% perceived openness.
@@ -266,6 +295,7 @@ function playSrc(src: string, restart = false) {
     return;
   }
   const requestId = ++playRequestId;
+  stopChaseInvboiLayer();
   resetLevelEndFx();
   const c = ac();
   if (!c) return;
@@ -457,12 +487,40 @@ export function playStarmanBgm() {
   }
 }
 
+// Chase-only INVBOI mix: the chase song remains the primary BGM while a
+// genuinely quieter crushed version of INVBOI plays beneath it.
+export function playChaseStarmanLayer() {
+  const c = ac();
+  if (!c || !masterGain) return;
+  stopChaseInvboiLayer();
+  loadBuffer(bgmStarman).then((buffer) => {
+    if (!masterGain || chaseInvboiLayer) return;
+    const startAt = c.currentTime + 0.01;
+    const source = c.createBufferSource();
+    source.buffer = bitCrushBuffer(c, buffer);
+    source.loop = true;
+    const slightMuffle = c.createBiquadFilter();
+    slightMuffle.type = "lowpass";
+    slightMuffle.frequency.setValueAtTime(8200, startAt);
+    slightMuffle.Q.value = 0.35;
+    const gain = c.createGain();
+    // Kept far below the chase track: audible texture, never a replacement.
+    gain.gain.setValueAtTime(0.12, startAt);
+    source.connect(slightMuffle).connect(gain).connect(masterGain);
+    source.start(startAt);
+    chaseInvboiLayer = { source, gain, startedAt: startAt, rate: 1 };
+    starmanStartCtxTime = startAt;
+  }).catch(() => { /* stay with chase music only */ });
+}
+
 // Seconds elapsed since the Starman track started playing, or null if it
 // isn't currently playing. Also returns elapsed for the marathon variant
 // so the starman cinematic timing keeps working in CELESTIAL MARATHON.
 export function getStarmanElapsed(): number | null {
   const c = ac();
-  if (!c || !playing || playing.stopped) return null;
+  if (!c) return null;
+  if (chaseInvboiLayer) return (c.currentTime - chaseInvboiLayer.startedAt) * chaseInvboiLayer.rate;
+  if (!playing || playing.stopped) return null;
   const r = playing.rate || 1;
   if (playing.src === bgmStarman) {
     if (starmanStartCtxTime == null) return null;
@@ -533,6 +591,7 @@ export function getSomSomElapsed(): number | null {
 
 export function stopBgm(fade = 0) {
   playRequestId++;
+  stopChaseInvboiLayer();
   if (!playing) return;
   const c = ac();
   if (fade > 0 && c) {
