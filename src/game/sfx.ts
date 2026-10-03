@@ -23,6 +23,7 @@ import animKeyholeAsset from "@/assets/audio/AnimKeyhole.ogg.asset.json";
 import animMove1Asset from "@/assets/audio/AnimMove1.wav.asset.json";
 import animMove4Asset from "@/assets/audio/AnimMove4.wav.asset.json";
 import jumpscareAsset from "@/assets/audio/JumpscareRevised3.ogg.asset.json";
+import chaserHitUrl from "@/assets/audio/trtf-5-jumpscare.mp3";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -227,6 +228,7 @@ export function unlockAudio() {
   loadSample(auraUrl);
   loadSample(swingSwipeUrl);
   loadSample(laserBeamUrl);
+  loadSample(chaserHitUrl);
   void preloadMayhemSfx();
 }
 let baseVol = 0.35;
@@ -513,6 +515,9 @@ export const sfx = {
     // little punchy hit on top
     tone({ freq: 220, to: 70, dur: 0.16, type: "sawtooth", vol: 0.3 });
     noise(0.14, 0.28, 250, 3200);
+  },
+  chaserHit() {
+    playSample(chaserHitUrl, { vol: 0.9 });
   },
   fatalHit() {
     // ~3s cinematic "final hit" stinger — layered impact + long rumble tail.
