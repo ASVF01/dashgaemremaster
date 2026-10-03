@@ -4276,7 +4276,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
 
       // Deep wet soil extends beyond the world bounds, so nothing shows below the lawn.
       ctx.fillStyle = "#111b16";
-      ctx.fillRect(camX - 100, groundY, w + 200, levelH + h);
+      ctx.fillRect(camX - 100, groundY, w + 200, levelH - groundY + 240);
       ctx.fillStyle = "#243725";
       ctx.fillRect(camX - 100, groundY - 10, w + 200, 28);
       ctx.fillStyle = "rgba(77,101,62,0.52)";
