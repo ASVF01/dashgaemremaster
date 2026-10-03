@@ -99,6 +99,8 @@ const KNIGHT_INTRO_ROAR_END = KNIGHT_INTRO_ROAR_START + 3;
 const KNIGHT_INTRO_APPEAR_END = KNIGHT_INTRO_ROAR_END + 1.0;
 const KNIGHT_INTRO_EQUIP_END = KNIGHT_INTRO_APPEAR_END + 3.5;
 const KNIGHT_INTRO_SWING_END = KNIGHT_INTRO_EQUIP_END + 1.0;
+// cut 2 lands as the blade strikes down into ready stance, partway through the swing
+const KNIGHT_INTRO_CUT_AT = KNIGHT_INTRO_EQUIP_END + 0.42;
 const KNIGHT_INTRO_END = KNIGHT_INTRO_SWING_END + 0.3;
 
 function makeBoss() {
@@ -3581,7 +3583,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         boss.swordFallStarted = true;
         sfx.bossSwordFall();
       }
-      if (!boss.swordCutStarted && boss.introT >= KNIGHT_INTRO_EQUIP_END) {
+      if (!boss.swordCutStarted && boss.introT >= KNIGHT_INTRO_CUT_AT) {
         boss.swordCutStarted = true;
         sfx.bossSwordCut();
       }
