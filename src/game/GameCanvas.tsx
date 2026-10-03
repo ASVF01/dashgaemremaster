@@ -370,6 +370,8 @@ interface Boss {
   introT: number;
   drawPowerStarted: boolean;
   roarStarted: boolean;
+  swordFallStarted: boolean;
+  swordCutStarted: boolean;
   musicStarted: boolean;
   hoverPhase: number;
   // attack cycle
