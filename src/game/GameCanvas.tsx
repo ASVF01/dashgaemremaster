@@ -2910,7 +2910,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     }
     ctx.translate(-camX, -camY);
 
-    // distant scribbled clouds / scenery — MAYHEM gets black industrial silhouettes
+    // distant scribbled clouds / scenery — MAYHEM hotel levels use bespoke interiors
     if (isMayhemLevel) drawMayhemScenery(ctx, camX, w, r.level.height, r.time);
     else if (levelIdRef.current === "chase") drawChaseScenery(ctx, camX, w, r.level.height, r.time);
     else drawScenery(ctx, camX, w, r.level.height);
@@ -2999,7 +2999,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       ctx.restore();
     }
 
-    // interactable NPCs (MAYHEM) — a lanky steel-lit figure + [E] prompt
+    // interactable NPCs (MAYHEM) — supplied receptionist art + [E] prompt
     if (r.level.npcs) {
       const nearId = nearbyNpc(r)?.id;
       for (const n of r.level.npcs) {
