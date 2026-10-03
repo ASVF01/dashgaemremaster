@@ -3499,7 +3499,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
   // Normally camera-locked (top-right). When staggered (`worn > 0`), the boss
   // un-sticks: we pin a world X at stagger time and convert it back to screen X
   // so the camera can scroll past him.
-  function bossScreenAnchor(r: GameRefs, boss: Boss, screenW: number) {
+  function bossScreenAnchor(r: GameRefs, boss: Boss, _screenW: number) {
     const drawW = KNIGHT_DRAW_H * (knightImg.naturalWidth && knightImg.naturalHeight
       ? knightImg.naturalWidth / knightImg.naturalHeight : 1);
     const worldScreenX = boss.worldX - r.cameraX;

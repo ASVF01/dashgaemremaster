@@ -273,7 +273,10 @@ const Index = () => {
     }
     else if (screen === "playing") {
       // The Knight's theme begins only after his entrance animation finishes.
-      if (levelId === "roaring-knight" && marathonStep == null) return;
+      if (levelId === "roaring-knight" && marathonStep == null) {
+        stopBgm();
+        return;
+      }
       const fromDeath = cameFromDeathRef.current;
       cameFromDeathRef.current = false;
       // Never reset BGM on a death-retry: if the same track is already
