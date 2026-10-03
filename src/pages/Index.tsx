@@ -7,7 +7,7 @@ import FpsOverlay from "@/game/FpsOverlay";
 import MainMenu from "@/game/MainMenu";
 import { LEVELS, type LevelId } from "@/game/level";
 import { useKeybinds, keyLabel, type ActionId } from "@/game/keybinds";
-import { playMenuBgm, playMenuBgmFadeIn, playBgmFor, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor, isSameTrackAs, setBgmVolume, bgmLevelEnd, playMarathonBgm, resetBgmLevelEndFx, playMayhemMainBgm, setMayhemMix } from "@/game/bgm";
+import { playMenuBgm, playMenuBgmFadeIn, playBgmFor, playChaseIntroBgm, setBgmMuted, isBgmMuted, initBgmMutedFromStorage, stopBgm, preloadBgmFor, isSameTrackAs, setBgmVolume, bgmLevelEnd, playMarathonBgm, resetBgmLevelEndFx, playMayhemMainBgm, setMayhemMix } from "@/game/bgm";
 import { setNightBgmVolume } from "@/game/mayhem/nightAudio";
 import cutsceneJustRunBro from "@/assets/video/mcdonalds_sprite_2.mp4";
 import cutsceneBossDeath from "@/assets/video/boss_death_cutscene.mp4";
@@ -334,9 +334,12 @@ const Index = () => {
       if (chaseIntroSeenKeyRef.current !== key) {
         chaseIntroSeenKeyRef.current = key;
         setChaseIntroOpen(true);
+        // Standalone chase: BP plays over the tutorial popup instead of the
+        // level track; RUN!! hands off to the real chase BGM.
+        if (marathonStep == null) playChaseIntroBgm();
       }
     }
-  }, [screen, levelId, resetKey]);
+  }, [screen, levelId, resetKey, marathonStep]);
 
   // On the win screen, pressing Enter advances to the next level (if any).
   useEffect(() => {
@@ -786,7 +789,10 @@ const Index = () => {
                   <li>✦ touching the chaser hurts. parry beats tanking. <b>always.</b></li>
                 </ul>
                 <button
-                  onClick={() => setChaseIntroOpen(false)}
+                  onClick={() => {
+                    setChaseIntroOpen(false);
+                    if (marathonStep == null) playBgmFor("chase", true);
+                  }}
                   className="scribble-border bg-[hsl(var(--accent))] text-accent-foreground font-marker text-3xl px-8 py-4 hover:rotate-2 transition-transform animate-jitter"
                 >
                   RUN!! →
