@@ -34,6 +34,8 @@ import knightSwordAppearUrl from "@/assets/sprites/knight/sword_appear.png";
 import knightEquipSwordUrl from "@/assets/sprites/knight/equip_sword.png";
 import knightRoarWindupAsset from "@/assets/sprites/knight/roar-windup.png.asset.json";
 import receptionistAsset from "@/assets/mayhem/The_Receptionist.png.asset.json";
+import receptionistWave1Asset from "@/assets/mayhem/The_Receptionist_Wave_1.png.asset.json";
+import receptionistWave2Asset from "@/assets/mayhem/The_Receptionist_Wave_2.png.asset.json";
 
 const bossParryFlashImg = new Image(); bossParryFlashImg.src = bossParryFlashUrl;
 let sugarcoatAudio: HTMLAudioElement | null = null;
@@ -86,6 +88,8 @@ const knightSwordAppearStrip = new Image(); knightSwordAppearStrip.src = knightS
 const knightEquipSwordStrip = new Image(); knightEquipSwordStrip.src = knightEquipSwordUrl;
 const knightRoarWindupImg = new Image(); knightRoarWindupImg.src = knightRoarWindupAsset.url;
 const receptionistImg = new Image(); receptionistImg.src = receptionistAsset.url;
+const receptionistWave1Img = new Image(); receptionistWave1Img.src = receptionistWave1Asset.url;
+const receptionistWave2Img = new Image(); receptionistWave2Img.src = receptionistWave2Asset.url;
 const bossBgImg = new Image(); bossBgImg.src = bossBgUrl;
 // Animated boss bg: 31 frames, 6 cols × 6 rows, each 320×180.
 const bossBgSheet = new Image(); bossBgSheet.src = bossBgSheetUrl;
@@ -304,6 +308,7 @@ interface GameRefs {
   chaserTrailTimer: number;
   chaserHitFlash: number;
   chaserHitWasInvboi: boolean;
+  receptionistWaveStart: number | null;
   cameraX: number;
   cameraY: number;
   cameraZoom: number;
@@ -410,6 +415,8 @@ interface Props {
   onInvboiPickup?: () => void;
   /** Fired when the player presses the interact key next to a level NPC. */
   onNpcInteract?: (id: string) => void;
+  /** Incremented when the receptionist should play her post-conversation wave. */
+  receptionistWaveKey?: number;
   onBossIntroComplete?: () => void;
   /** When true, touching the goal does nothing (e.g. locked MAYHEM elevator). */
   goalLocked?: boolean;
@@ -455,7 +462,7 @@ function nearbyNpc(r: GameRefs) {
 
 
 
-export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, onNpcInteract, onBossIntroComplete, goalLocked = false, paused, keepAudio = false, startAsInvboi = false, resetKey, levelId = "scribble-1" }: Props) {
+export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, onNpcInteract, onBossIntroComplete, receptionistWaveKey = 0, goalLocked = false, paused, keepAudio = false, startAsInvboi = false, resetKey, levelId = "scribble-1" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const deathTimeoutRef = useRef<number | null>(null);
   const refs = useRef<GameRefs | null>(null);
@@ -588,6 +595,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       chaserTrailTimer: 0,
       chaserHitFlash: 0,
       chaserHitWasInvboi: false,
+      receptionistWaveStart: null,
       cameraX: 0,
       cameraY: 0,
       cameraZoom: 1,
@@ -1043,6 +1051,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       }
     };
   }, [size.w, size.h, paused, onHud, onDeath, onFinish]);
+
+  useEffect(() => {
+    const r = refs.current;
+    if (r && receptionistWaveKey > 0) r.receptionistWaveStart = r.time;
+  }, [receptionistWaveKey]);
 
   return (
     <div className="relative mx-auto" style={{ width: size.dw, height: size.dh }}>
@@ -3009,10 +3022,16 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         ctx.save();
         if (n.id === "checker" && receptionistImg.complete && receptionistImg.naturalWidth > 0) {
           ctx.imageSmoothingEnabled = false;
-          const ratio = receptionistImg.naturalWidth / receptionistImg.naturalHeight;
+          const waveElapsed = r.receptionistWaveStart == null ? Infinity : r.time - r.receptionistWaveStart;
+          const waveFrame = Math.floor(waveElapsed * 7) % 2;
+          const waveImg = waveFrame === 0 ? receptionistWave1Img : receptionistWave2Img;
+          const activeImg = waveElapsed < 2.6 && waveImg.complete && waveImg.naturalWidth > 0
+            ? waveImg
+            : receptionistImg;
+          const ratio = activeImg.naturalWidth / activeImg.naturalHeight;
           const drawH = n.h;
           const drawW = drawH * ratio;
-          ctx.drawImage(receptionistImg, cx - drawW / 2, n.y + bob, drawW, drawH);
+          ctx.drawImage(activeImg, cx - drawW / 2, n.y + bob, drawW, drawH);
         } else {
           sketchRect(ctx, n.x, n.y + bob, n.w, n.h, "#1b2128", "#9aa6ae", 2.2, 0.5);
           sketchCircle(ctx, cx, n.y - 14 + bob, 13, "#20272f", "#9aa6ae", 2.2, 0.5);
