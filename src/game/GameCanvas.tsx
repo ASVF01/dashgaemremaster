@@ -2939,7 +2939,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       const visX = Math.max(pl.x, camX - 40);
       const visR = Math.min(pl.x + pl.w, camX + w + 40);
       const visW = visR - visX;
-      const mayhemHotel = levelIdRef.current === "mayhem-main" || levelIdRef.current === "mayhem-floor-1";
+      const mayhemHotel = levelIdRef.current === "mayhem-main" || levelIdRef.current === "mayhem-floor-1" || levelIdRef.current === "mayhem-floor-2";
       const mayhemOutside = levelIdRef.current === "mayhem-outside";
       const fill = isMayhemLevel
         ? mayhemHotel
@@ -4214,20 +4214,21 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       return;
     }
 
-    if (levelIdRef.current === "mayhem-floor-1") {
+    if (levelIdRef.current === "mayhem-floor-1" || levelIdRef.current === "mayhem-floor-2") {
+      const floor2 = levelIdRef.current === "mayhem-floor-2";
       // An impossibly long hotel hallway, with repeating guest rooms and weak sconces.
       ctx.fillStyle = "#181417";
       ctx.fillRect(camX - 80, 48, w + 160, groundY - 48);
-      ctx.fillStyle = "#2d2025";
+      ctx.fillStyle = floor2 ? "#1c2925" : "#2d2025";
       ctx.fillRect(camX - 80, 78, w + 160, groundY - 190);
       ctx.fillStyle = "#121012";
       ctx.fillRect(camX - 80, groundY - 112, w + 160, 112);
       const firstDoor = Math.floor((camX - 400) / 520) * 520;
       for (let x = firstDoor; x < camX + w + 520; x += 520) {
-        const room = 101 + Math.floor(x / 520);
+        const room = (floor2 ? 201 : 101) + Math.floor(x / 520);
         ctx.fillStyle = "#120d10"; ctx.fillRect(x + 120, groundY - 330, 182, 330);
         ctx.strokeStyle = "#76543b"; ctx.lineWidth = 7; ctx.strokeRect(x + 120, groundY - 330, 182, 330);
-        ctx.fillStyle = "#39262b"; ctx.fillRect(x + 138, groundY - 311, 146, 292);
+        ctx.fillStyle = floor2 ? "#26332d" : "#39262b"; ctx.fillRect(x + 138, groundY - 311, 146, 292);
         ctx.strokeStyle = "rgba(171,127,75,0.42)"; ctx.lineWidth = 2; ctx.strokeRect(x + 157, groundY - 282, 108, 100); ctx.strokeRect(x + 157, groundY - 151, 108, 105);
         ctx.fillStyle = "#c09858"; ctx.beginPath(); ctx.arc(x + 258, groundY - 162, 5, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = "#120d10"; ctx.fillRect(x + 180, groundY - 357, 62, 25);
@@ -4237,7 +4238,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         ctx.fillStyle = glow; ctx.fillRect(x - 22, 184, 148, 148);
         ctx.fillStyle = "#aa7d48"; ctx.fillRect(x + 48, 226, 8, 44); ctx.beginPath(); ctx.arc(x + 52, 221, 18, Math.PI, 0); ctx.fill();
       }
-      ctx.fillStyle = "#553039"; ctx.fillRect(camX - 80, groundY - 20, w + 160, 20);
+      ctx.fillStyle = floor2 ? "#2b4136" : "#553039"; ctx.fillRect(camX - 80, groundY - 20, w + 160, 20);
       ctx.strokeStyle = "rgba(218,171,95,0.38)"; ctx.lineWidth = 2;
       for (let x = Math.floor((camX - 100) / 80) * 80; x < camX + w + 100; x += 80) {
         ctx.beginPath(); ctx.moveTo(x, groundY - 20); ctx.lineTo(x + 40, groundY); ctx.lineTo(x + 80, groundY - 20); ctx.stroke();

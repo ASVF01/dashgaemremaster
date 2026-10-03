@@ -469,6 +469,17 @@ const Index = () => {
     setResetKey((k) => k + 1);
     setScreen("playing");
   };
+  // After night 1: climb to Floor 2, whose stairwell door starts night 2.
+  const goToFloor2 = () => {
+    setMayhemCleared(false);
+    setMayhemNight(false);
+    setMayhemPaused(false);
+    setMayhemDialogue(null);
+    setLevelId("mayhem-floor-2");
+    setResetKey((k) => k + 1);
+    resetBgmLevelEndFx();
+    setScreen("playing");
+  };
   const quitMayhem = () => {
     setMayhem(false);
     setMayhemNight(false);
@@ -717,6 +728,11 @@ const Index = () => {
                   THE GENERATOR IS FULLY RESTORED. YOUR SHIFT IS OVER.
                 </p>
                 <div className="mt-5 flex w-full max-w-sm flex-col gap-2.5">
+                  {levelId === "mayhem-floor-1" && (
+                    <button type="button" onClick={goToFloor2} className="mayhem-menu-button mayhem-menu-primary">
+                      TAKE THE STAIRS TO FLOOR 2
+                    </button>
+                  )}
                   <button type="button" onClick={retryMayhem} className="mayhem-menu-button mayhem-menu-primary">
                     RUN IT AGAIN
                   </button>
