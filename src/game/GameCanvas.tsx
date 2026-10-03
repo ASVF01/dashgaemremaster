@@ -96,9 +96,10 @@ const KNIGHT_DRAW_H = 180; // rendered height in screen pixels (sprite is square
 const KNIGHT_INTRO_PAN_END = 1.25;
 const KNIGHT_INTRO_ROAR_START = KNIGHT_INTRO_PAN_END + 1.895;
 const KNIGHT_INTRO_ROAR_END = KNIGHT_INTRO_ROAR_START + 3;
-const KNIGHT_INTRO_APPEAR_END = KNIGHT_INTRO_ROAR_END + 0.45;
-const KNIGHT_INTRO_EQUIP_END = KNIGHT_INTRO_APPEAR_END + 1.6;
-const KNIGHT_INTRO_END = KNIGHT_INTRO_EQUIP_END + 0.9;
+const KNIGHT_INTRO_APPEAR_END = KNIGHT_INTRO_ROAR_END + 1.0;
+const KNIGHT_INTRO_EQUIP_END = KNIGHT_INTRO_APPEAR_END + 3.5;
+const KNIGHT_INTRO_SWING_END = KNIGHT_INTRO_EQUIP_END + 1.0;
+const KNIGHT_INTRO_END = KNIGHT_INTRO_SWING_END + 0.3;
 
 function makeBoss() {
   return {
@@ -110,6 +111,8 @@ function makeBoss() {
     introT: 0,
     drawPowerStarted: false,
     roarStarted: false,
+    swordFallStarted: false,
+    swordCutStarted: false,
     musicStarted: false,
     hoverPhase: 0,
     attackTimer: 2.0,         // grace period before first slash
@@ -367,6 +370,8 @@ interface Boss {
   introT: number;
   drawPowerStarted: boolean;
   roarStarted: boolean;
+  swordFallStarted: boolean;
+  swordCutStarted: boolean;
   musicStarted: boolean;
   hoverPhase: number;
   // attack cycle
@@ -3572,6 +3577,14 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         r.shake = Math.max(r.shake, 0.72);
         boss.shakeT = Math.max(boss.shakeT, 0.2);
       }
+      if (!boss.swordFallStarted && boss.introT >= KNIGHT_INTRO_ROAR_END) {
+        boss.swordFallStarted = true;
+        sfx.bossSwordFall();
+      }
+      if (!boss.swordCutStarted && boss.introT >= KNIGHT_INTRO_EQUIP_END) {
+        boss.swordCutStarted = true;
+        sfx.bossSwordCut();
+      }
       if (boss.introT >= KNIGHT_INTRO_END) {
         boss.phase = "combat";
         boss.attackTimer = 1.2;
@@ -3886,9 +3899,16 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       } else if (boss.introT >= KNIGHT_INTRO_ROAR_END && boss.introT < KNIGHT_INTRO_APPEAR_END) {
         strip = knightSwordAppearStrip; frames = 3; frameW = 37; frameH = 43;
         frame = Math.min(frames - 1, Math.floor((boss.introT - KNIGHT_INTRO_ROAR_END) / 0.15));
-      } else if (boss.introT >= KNIGHT_INTRO_APPEAR_END) {
+      } else if (boss.introT >= KNIGHT_INTRO_APPEAR_END && boss.introT < KNIGHT_INTRO_EQUIP_END) {
+        // long overhead hold: creep slowly through the first frames
         strip = knightEquipSwordStrip; frames = 19; frameW = 55; frameH = 57;
-        frame = Math.min(frames - 1, Math.floor((boss.introT - KNIGHT_INTRO_APPEAR_END) / (1.6 / frames)));
+        const holdT = (boss.introT - KNIGHT_INTRO_APPEAR_END) / (KNIGHT_INTRO_EQUIP_END - KNIGHT_INTRO_APPEAR_END);
+        frame = Math.min(11, Math.floor(holdT * 12));
+      } else if (boss.introT >= KNIGHT_INTRO_EQUIP_END) {
+        // fast downswing into ready stance
+        strip = knightEquipSwordStrip; frames = 19; frameW = 55; frameH = 57;
+        const swingT = Math.min(1, (boss.introT - KNIGHT_INTRO_EQUIP_END) / (KNIGHT_INTRO_SWING_END - KNIGHT_INTRO_EQUIP_END));
+        frame = Math.min(frames - 1, 12 + Math.floor(swingT * 7));
       }
       if (strip.complete && strip.naturalWidth) {
         const introH = 230;

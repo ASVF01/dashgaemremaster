@@ -26,6 +26,8 @@ import jumpscareAsset from "@/assets/audio/JumpscareRevised3.ogg.asset.json";
 import chaserHitUrl from "@/assets/audio/trtf-5-jumpscare.mp3";
 import knightRoarAsset from "@/assets/audio/snd_knightroar.wav.asset.json";
 import knightDrawPowerAsset from "@/assets/audio/snd_knight_drawpower.wav.asset.json";
+import knightSwordFallAsset from "@/assets/audio/snd_knight_fallingsword_big.wav.asset.json";
+import knightSwordCutAsset from "@/assets/audio/snd_knight_cut2.wav.asset.json";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -753,9 +755,21 @@ export const sfx = {
       if (buf) playSample(knightDrawPowerAsset.url, { vol: 0.9 });
     });
   },
+  bossSwordFall() {
+    void loadSample(knightSwordFallAsset.url).then((buf) => {
+      if (buf) playSample(knightSwordFallAsset.url, { vol: 0.95 });
+    });
+  },
+  bossSwordCut() {
+    void loadSample(knightSwordCutAsset.url).then((buf) => {
+      if (buf) playSample(knightSwordCutAsset.url, { vol: 0.95 });
+    });
+  },
   preloadBossRoar() {
     void loadSample(knightRoarAsset.url);
     void loadSample(knightDrawPowerAsset.url);
+    void loadSample(knightSwordFallAsset.url);
+    void loadSample(knightSwordCutAsset.url);
   },
   bossDefeat() {
     // Fire both victory stings simultaneously when a boss is beaten.
