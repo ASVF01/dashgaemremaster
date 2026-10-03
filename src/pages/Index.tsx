@@ -272,6 +272,8 @@ const Index = () => {
       return;
     }
     else if (screen === "playing") {
+      // The Knight's theme begins only after his entrance animation finishes.
+      if (levelId === "roaring-knight" && marathonStep == null) return;
       const fromDeath = cameFromDeathRef.current;
       cameFromDeathRef.current = false;
       // Never reset BGM on a death-retry: if the same track is already
@@ -662,6 +664,9 @@ const Index = () => {
             onDeath={handleDeath}
             onInvboiPickup={handleInvboiPickup}
             onNpcInteract={handleNpcInteract}
+            onBossIntroComplete={() => {
+              if (marathonStep == null) playBgmFor("roaring-knight", true);
+            }}
             goalLocked={mayhem && levelId === "mayhem-main" && !mayhemTicket}
             paused={screen !== "playing" || invboiIntroOpen || chaseIntroOpen || mayhemPaused || mayhemCleared || mayhemNight || mayhemDialogue != null}
             keepAudio={screen === "dead" || screen === "win" || invboiIntroOpen || chaseIntroOpen || marathonStep != null || mayhem}
