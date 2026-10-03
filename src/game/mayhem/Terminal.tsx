@@ -1,7 +1,7 @@
 // MAYHEM — the COMPANY PANEL terminal and its recoverable fault states.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { mayhemSfx } from "@/game/sfx";
-import FlowPuzzle, { ERROR_FLOW_PAIRS } from "./minigames/FlowPuzzle";
+import FlowPuzzle, { makeRandomFlowPairs } from "./minigames/FlowPuzzle";
 import loadingArt from "@/assets/mayhem/terminal/TERMINAL_Loading.png.asset.json";
 import homeArt from "@/assets/mayhem/terminal/TERMINAL_Home_Page.png.asset.json";
 import rcsArt from "@/assets/mayhem/terminal/TERMINAL_RCS.png.asset.json";
@@ -13,7 +13,7 @@ import whichArt from "@/assets/mayhem/terminal/TERMINAL_W.png.asset.json";
 
 type Screen = "loading" | "home" | "rcs" | "which" | "wait1" | "wait2" | "wait3" | "done";
 export type TerminalError = "273" | "104" | null;
-export type TerminalSession = { initialized: boolean; error: TerminalError; videoTime: number; videoDone: boolean };
+export type TerminalSession = { initialized: boolean; error: TerminalError; videoTime: number; videoDone: boolean; puzzleSeed: number };
 
 const ART: Record<Screen, string> = { loading: loadingArt.url, home: homeArt.url, rcs: rcsArt.url, which: whichArt.url, wait1: wait1Art.url, wait2: wait2Art.url, wait3: wait3Art.url, done: doneArt.url };
 export const TERMINAL_ASSET_URLS = Object.values(ART);
@@ -23,7 +23,7 @@ const DONE_MS = 1200;
 
 export function makeTerminalSession(): TerminalSession {
   const roll = Math.random();
-  return { initialized: true, error: roll < 0.02 ? "104" : roll < 0.07 ? "273" : null, videoTime: 0, videoDone: false };
+  return { initialized: true, error: roll < 0.02 ? "104" : roll < 0.07 ? "273" : null, videoTime: 0, videoDone: false, puzzleSeed: Math.floor(Math.random() * 0xFFFFFFFF) };
 }
 
 export default function Terminal({ paused, session, onSessionChange, onClose }: {
@@ -36,6 +36,7 @@ export default function Terminal({ paused, session, onSessionChange, onClose }: 
   const timer = useRef<number | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const latestTime = useRef(session.videoTime);
+  const errorFlowPairs = useMemo(() => makeRandomFlowPairs(9, 5, session.puzzleSeed), [session.puzzleSeed]);
 
   const sendVideo = (func: "playVideo" | "pauseVideo" | "seekTo", args: number[] = []) => {
     iframeRef.current?.contentWindow?.postMessage(JSON.stringify({ event: "command", func, args }), "https://www.youtube.com");
@@ -109,7 +110,7 @@ export default function Terminal({ paused, session, onSessionChange, onClose }: 
             <div className="flex h-full flex-col p-5 text-[hsl(var(--hell-terminal))]">
               <div className="mb-3 border-b border-[hsl(var(--hell-terminal))]/50 pb-2 font-pixel text-[clamp(13px,2vw,22px)]">FATAL ERROR // ERR_273</div>
               <p className="mb-3 font-pixel text-[8px] leading-relaxed text-[hsl(var(--hell-muted))]">SIGNAL PATHS CORRUPTED. CONNECT EVERY MATCHING NODE TO RESTORE COMPANY PANEL ACCESS.</p>
-              <div className="mx-auto min-h-0 w-[min(390px,70vh)] flex-1"><FlowPuzzle size={9} pairs={ERROR_FLOW_PAIRS} paused={paused} onComplete={clearError} /></div>
+              <div className="mx-auto min-h-0 w-[min(390px,70vh)] flex-1"><FlowPuzzle size={9} pairs={errorFlowPairs} paused={paused} onComplete={clearError} /></div>
             </div>
           ) : session.error === "104" ? (
             <div className="flex h-full flex-col p-5 text-[hsl(var(--hell-warning))]">
