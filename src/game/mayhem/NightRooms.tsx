@@ -11,7 +11,9 @@ import packArt from "@/assets/mayhem/storage_pack.png.asset.json";
 import packUsedArt from "@/assets/mayhem/storage_used.png.asset.json";
 
 import Terminal, { TERMINAL_ASSET_URLS } from "./Terminal";
+import { makeTerminalSession, type TerminalSession } from "./Terminal";
 import CameraSystem, { CAMERA_ASSET_URLS } from "./CameraSystem";
+import GeneratorPanel, { type GeneratorProgress } from "./GeneratorPanel";
 import { useAnimatronic } from "./useAnimatronic";
 import { preloadNightBgm, startNightBgm, stopNightBgm } from "./nightAudio";
 import { getMayhemNight, mayhemAiLevel, setMayhemNight } from "@/game/progress";
@@ -20,7 +22,7 @@ import { isBgmMuted, setBgmMuted, stopBgm } from "@/game/bgm";
 import { useSettings } from "@/game/settings";
 
 
-type View = "office" | "door" | "keyhole" | "hallway" | "storage" | "storageKeyhole";
+type View = "office" | "door" | "keyhole" | "hallway" | "storage" | "storageKeyhole" | "storageDoor";
 
 const HOLD_MS = 3000;
 const NIGHT_MS = 6 * 60 * 1000;
@@ -69,10 +71,14 @@ function nextView(v: View, k: string): View {
       return v;
     case "storage":
       if (k === "e") return "storageKeyhole";
+      if (k === "a") return "storageDoor";
       if (k === "d" || k === "w") return "hallway";
       return v;
     case "storageKeyhole":
       if (k === "e" || k === "d" || k === "s") return "storage";
+      return v;
+    case "storageDoor":
+      if (k === "d" || k === "s") return "storage";
       return v;
     default:
       return v;
@@ -106,6 +112,11 @@ export default function NightRooms({ paused = false }: { paused?: boolean }) {
   const [settings] = useSettings();
   const [view, setView] = useState<View>("office");
   const [terminalOpen, setTerminalOpen] = useState(false);
+  const [terminalSession, setTerminalSession] = useState<TerminalSession>(() => ({ initialized: false, error: null, videoTime: 0, videoDone: false }));
+  const [generatorOpen, setGeneratorOpen] = useState(false);
+  const [generatorProgress, setGeneratorProgress] = useState<GeneratorProgress>({ stage: "simon", memoryMatched: Array(6).fill(false) });
+  const [generatorOnline, setGeneratorOnline] = useState(false);
+  const [storageDoorClosed, setStorageDoorClosed] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraEntry, setCameraEntry] = useState<"idle" | "pullback" | "rush">("idle");
   const [redGuyMeowing, setRedGuyMeowing] = useState(false);
@@ -125,6 +136,8 @@ export default function NightRooms({ paused = false }: { paused?: boolean }) {
   viewRef.current = view;
   const terminalOpenRef = useRef(terminalOpen);
   terminalOpenRef.current = terminalOpen;
+  const generatorOpenRef = useRef(generatorOpen);
+  generatorOpenRef.current = generatorOpen;
   const cameraOpenRef = useRef(cameraOpen);
   cameraOpenRef.current = cameraOpen;
   const cameraEntryRef = useRef(cameraEntry);
@@ -238,7 +251,7 @@ export default function NightRooms({ paused = false }: { paused?: boolean }) {
     const onKey = (e: KeyboardEvent) => {
       if (e.repeat || pausedRef.current) return;
       const k = e.key.toLowerCase();
-      if (!["a", "d", "w", "s", "e"].includes(k)) return;
+      if (!["a", "d", "w", "s", "e", "g"].includes(k)) return;
       e.preventDefault();
       if (cameraOpenRef.current) {
         if (k === "w" || k === "s") {
@@ -248,6 +261,10 @@ export default function NightRooms({ paused = false }: { paused?: boolean }) {
         return;
       }
       if (cameraEntryRef.current !== "idle") return;
+      if (generatorOpenRef.current) {
+        if (k === "g" || k === "s") setGeneratorOpen(false);
+        return;
+      }
       // terminal: s toggles it; while open, navigation keys are ignored
       if (k === "s") {
         if (terminalOpenRef.current) {
@@ -258,11 +275,22 @@ export default function NightRooms({ paused = false }: { paused?: boolean }) {
         // the terminal lives in the storage room only
         if (viewRef.current === "storage") {
           mayhemSfx.terminalOpen();
+          setTerminalSession((current) => current.initialized ? current : makeTerminalSession());
           setTerminalOpen(true);
           return;
         }
       }
       if (terminalOpenRef.current) return;
+      if (k === "g" && viewRef.current === "office" && !generatorOnline) {
+        mayhemSfx.terminalOpen();
+        setGeneratorOpen(true);
+        return;
+      }
+      if (k === "e" && viewRef.current === "storageDoor") {
+        mayhemSfx.terminalSelect();
+        setStorageDoorClosed((closed) => !closed);
+        return;
+      }
       if (k === "w" && viewRef.current === "office") {
         openCamera();
         return;
@@ -385,25 +413,30 @@ export default function NightRooms({ paused = false }: { paused?: boolean }) {
     view === "office" ? (redGuyMeowing ? officeMeowArt.url : officeArt.url) :
     view === "door" ? doorArt.url :
     view === "keyhole" || view === "storageKeyhole" ? keyholeArt.url :
+    view === "storageDoor" ? doorArt.url :
     view === "hallway" ? hallwayArt.url :
     packUsed ? packUsedArt.url : packArt.url;
 
   const monitorSpot = { left: "37.5%", top: "39%", width: "25%", height: "22%" };
   const redGuySpot = { left: "65.5%", top: "46%", width: "12%", height: "27%" };
   const packSpot = { left: "59%", top: "40%", width: "16%", height: "26%" };
+  const generatorSpot = { left: "7%", top: "35%", width: "18%", height: "34%" };
+  const storageDoorControlSpot = { left: "76%", top: "38%", width: "12%", height: "24%" };
 
   const hint =
-    view === "office" ? "[ W ] CCTV SYSTEM   [ A ] TURN TO THE DOOR" :
+    view === "office" ? `[ W ] CCTV SYSTEM   [ A ] TURN TO THE DOOR${generatorOnline ? "   GENERATOR ONLINE" : "   [ G ] GENERATOR"}` :
     view === "door" ? "[ E ] KEYHOLE   [ W ] HALLWAY   [ D ] TURN BACK" :
     view === "keyhole" ? "[ E ] STOP LOOKING" :
     view === "hallway" ? "[ A ] STORAGE   [ D ] OFFICE" :
-    view === "storage" ? (packUsed ? "[ S ] TERMINAL   [ E ] KEYHOLE   [ D ] HALLWAY" : "HOLD THE HEALTH PACK   [ S ] TERMINAL   [ E ] KEYHOLE   [ D ] HALLWAY") :
+    view === "storage" ? (packUsed ? "[ S ] TERMINAL   [ A ] THE DOOR   [ E ] KEYHOLE   [ D ] HALLWAY" : "HOLD THE HEALTH PACK   [ S ] TERMINAL   [ A ] THE DOOR   [ E ] KEYHOLE   [ D ] HALLWAY") :
+    view === "storageDoor" ? `[ E ] ${storageDoorClosed ? "OPEN" : "CLOSE"} METAL DOOR   [ D ] STORAGE` :
     "[ E ] STOP LOOKING";
 
   const label =
     view === "office" ? "THE OFFICE" :
     view === "door" ? "THE DOOR" :
     view === "keyhole" || view === "storageKeyhole" ? "THE KEYHOLE" :
+    view === "storageDoor" ? "THE DOOR" :
     view === "hallway" ? "THE HALLWAY" :
     "THE STORAGE";
 
@@ -513,6 +546,13 @@ export default function NightRooms({ paused = false }: { paused?: boolean }) {
               className="absolute border-2 border-transparent hover:border-white/60"
               style={monitorSpot}
             />
+            {!generatorOnline && <button
+              type="button"
+              aria-label="Open generator station"
+              onClick={() => { mayhemSfx.terminalOpen(); setGeneratorOpen(true); }}
+              className="absolute border-2 border-transparent hover:border-[hsl(var(--hell-terminal))]/60"
+              style={generatorSpot}
+            />}
             <button
               type="button"
               aria-label="Pet the little red guy"
@@ -536,6 +576,19 @@ export default function NightRooms({ paused = false }: { paused?: boolean }) {
             className="absolute border-2 border-transparent hover:border-[hsl(var(--hell-warning))]/60"
             style={packSpot}
           />
+        )}
+
+        {view === "storageDoor" && (
+          <>
+            <div className={`pointer-events-none absolute inset-y-0 left-1/2 w-[42%] -translate-x-1/2 border-x-8 border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))] transition-transform duration-500 ${storageDoorClosed ? "translate-y-0" : "-translate-y-[82%]"}`} />
+            <button
+              type="button"
+              aria-label={storageDoorClosed ? "Open storage door" : "Close storage door"}
+              onClick={() => { mayhemSfx.terminalSelect(); setStorageDoorClosed((closed) => !closed); }}
+              className="absolute border-2 border-transparent hover:border-[hsl(var(--hell-warning))]/70"
+              style={storageDoorControlSpot}
+            />
+          </>
         )}
 
         {view !== "keyhole" && view !== "storageKeyhole" && (
@@ -619,7 +672,8 @@ export default function NightRooms({ paused = false }: { paused?: boolean }) {
         <div className="font-pixel text-[9px] text-[hsl(var(--hell-muted))]">{hint}</div>
       </div>
 
-      {terminalOpen && <Terminal onClose={() => setTerminalOpen(false)} />}
+      {terminalOpen && <Terminal paused={paused} session={terminalSession} onSessionChange={setTerminalSession} onClose={() => { mayhemSfx.terminalClose(); setTerminalOpen(false); }} />}
+      {generatorOpen && <GeneratorPanel paused={paused} progress={generatorProgress} onProgress={setGeneratorProgress} onClose={() => { mayhemSfx.terminalClose(); setGeneratorOpen(false); }} onComplete={() => { setGeneratorOnline(true); setGeneratorOpen(false); }} />}
       {cameraOpen && <CameraSystem onClose={() => setCameraOpen(false)} enemyCam={enemy.enemyCam} enemyMoveCount={enemy.moveCount} />}
     </div>
   );
