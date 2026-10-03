@@ -1863,9 +1863,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
 
       // enemy vs player
       if (rectOverlap(p.x, p.y, p.w, p.h, e.x, e.y, e.w, e.h)) {
-        // INVBOI (starman) — touching anything obliterates it, chaser
-        // included. Big rainbow burst + combo bump for style.
-        if (p.starman) {
+        // INVBOI (starman) obliterates ordinary enemies on touch. The chaser
+        // is immune and still resolves its normal contact jumpscare below.
+        if (p.starman && e.kind !== "chaser") {
           e.alive = false;
           r.combo += 1;
           r.comboTimer = 2.5;
@@ -1885,7 +1885,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
             e.stunTimer = 0.9;
             parrySuccess(r, e.x + e.w / 2, e.y + e.h / 2);
             e.hitFlash = 0.2;
-          } else if (p.invuln <= 0) {
+          } else if (p.starman || p.invuln <= 0) {
             damage(r, e.x + e.w / 2, e.y + e.h / 2, false);
             // The hit separates both characters instead of letting the chaser
             // sit inside the player's hurtbox for the whole i-frame window.
