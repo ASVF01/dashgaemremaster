@@ -355,17 +355,6 @@ export function playMenuBgm() {
 
 // THE CHASE tutorial popup theme ("BP") — plays while the intro card is up,
 // then RUN!! hands off to the real chase track.
-/** Bitcrusher curve: quantizes the signal to coarse steps for a pixelated,
- * chiptune-like crunch. */
-function makeBitcrushCurve(steps = 6): Float32Array<ArrayBuffer> {
-  const n = 8192;
-  const curve = new Float32Array(n);
-  for (let i = 0; i < n; i++) {
-    const x = (i / (n - 1)) * 2 - 1;
-    curve[i] = Math.round(x * steps) / steps;
-  }
-  return curve;
-}
 
 export function playChaseIntroBgm() {
   loadBuffer(bgmChaseIntro).catch(() => { /* ignore */ });
@@ -380,18 +369,9 @@ export function playChaseIntroBgm() {
     const source = c.createBufferSource();
     source.buffer = buf;
     source.loop = true;
-    // Pixelated chain: bitcrush waveshaper + lowpass to shave the fizz.
-    const crush = c.createWaveShaper();
-    crush.curve = makeBitcrushCurve();
-    crush.oversample = "none";
-    const lp = c.createBiquadFilter();
-    lp.type = "lowpass";
-    lp.frequency.value = 3200;
     const g = c.createGain();
-    g.gain.value = 1.5; // bitcrush + lowpass eats energy; compensate louder
-    source.connect(crush);
-    crush.connect(lp);
-    lp.connect(g);
+    g.gain.value = 1.3; // a little louder than default
+    source.connect(g);
     g.connect(masterGain);
     source.start();
     // Register as the current track so stopBgm()/playSrc() can kill it.
