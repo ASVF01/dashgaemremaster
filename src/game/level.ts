@@ -19,7 +19,7 @@ export type Level = {
   invboiStart?: { x: number; y: number; facing: 1 | -1 };
 };
 
-export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "chase" | "speed-test" | "just-run-bro" | "meet-invboi" | "roaring-knight" | "aftermath-1" | "aftermath-2" | "aftermath-3" | "celestial-marathon" | "mayhem-outside" | "mayhem-main" | "mayhem-floor-1";
+export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "chase" | "speed-test" | "just-run-bro" | "meet-invboi" | "roaring-knight" | "aftermath-1" | "aftermath-2" | "aftermath-3" | "celestial-marathon" | "mayhem-outside" | "mayhem-main" | "mayhem-floor-1" | "mayhem-floor-2";
 
 export type LevelMeta = {
   id: LevelId;
@@ -48,6 +48,7 @@ export const LEVELS: LevelMeta[] = [
   { id: "mayhem-outside", name: "THE OUTSIDE", subtitle: "the hotel waits through the rain.", difficulty: 2, par: 40, hidden: true },
   { id: "mayhem-main",    name: "MAIN FLOOR",  subtitle: "check in at the reception desk.", difficulty: 1, par: 90, hidden: true },
   { id: "mayhem-floor-1", name: "FLOOR ONE",   subtitle: "guest rooms stretch into the dark.", difficulty: 2, par: 180, hidden: true },
+  { id: "mayhem-floor-2", name: "FLOOR TWO",   subtitle: "the second shift starts upstairs.", difficulty: 3, par: 200, hidden: true },
 ];
 
 export function buildLevel(id: LevelId = "scribble-1", opts: { marathon?: boolean } = {}): Level {
@@ -68,6 +69,7 @@ export function buildLevel(id: LevelId = "scribble-1", opts: { marathon?: boolea
     case "mayhem-outside": lv = buildMayhemOutside(); break;
     case "mayhem-main": lv = buildMayhemMain(); break;
     case "mayhem-floor-1": lv = buildMayhemFloor1(); break;
+    case "mayhem-floor-2": lv = buildMayhemFloor2(); break;
     // Marathon is a meta-level handled by Index (chains all levels back-to-back).
     // If it ever loads as a real level, fall back to tutorial.
     case "celestial-marathon": lv = buildTutorial(); break;
@@ -965,6 +967,57 @@ function buildMayhemMain(): Level {
       { id: "checker", x: 920, y: groundY - 176, w: 112, h: 98, name: "THE RECEPTIONIST" },
     ],
     signs: [],
+  };
+}
+
+// ---------- MAYHEM · FLOOR TWO: suites wing, harder route to the night ----------
+function buildMayhemFloor2(): Level {
+  const W = 17000;
+  const H = 720;
+  const groundY = H - 80;
+  const platforms: Platform[] = [
+    { x: 0, y: groundY, w: W, h: 80, kind: "ground" },
+    { x: -60, y: 0, w: 60, h: groundY, kind: "block" },
+    { x: 0, y: 0, w: W, h: 50, kind: "block" },
+  ];
+  // Section A — stacked suitcases, rising in steps.
+  for (let i = 0; i < 8; i++) {
+    const x = 700 + i * 360;
+    const hgt = 50 + (i % 4) * 34;
+    platforms.push({ x, y: groundY - hgt, w: 110, h: hgt, kind: "block" });
+  }
+  // Section B — a zigzag of broken balconies.
+  for (let i = 0; i < 12; i++) {
+    const x = 3900 + i * 340;
+    platforms.push({ x, y: groundY - 140 - (i % 2 ? 150 : 40) - Math.min(i, 6) * 12, w: 170, h: 20, kind: "block" });
+  }
+  // Section C — toppled wardrobes to vault over.
+  for (let i = 0; i < 9; i++) {
+    const x = 8300 + i * 330;
+    const hgt = 120 + (i % 3) * 70;
+    platforms.push({ x, y: groundY - hgt, w: 80, h: hgt, kind: "block" });
+  }
+  // Section D — low sagging ceiling to slide under.
+  for (let x = 11500; x < 13600; x += 600) {
+    platforms.push({ x, y: groundY - 84, w: 400, h: 26, kind: "block" });
+  }
+  // Section E — high chandelier ledges toward the stairwell.
+  for (let i = 0; i < 10; i++) {
+    const x = 13900 + i * 270;
+    platforms.push({ x, y: groundY - 180 - (i % 3) * 80, w: 180, h: 20, kind: "block" });
+  }
+  platforms.push({ x: W - 320, y: 0, w: 60, h: groundY - 220, kind: "block" });
+  platforms.push({ x: W - 200, y: 0, w: 200, h: groundY - 230, kind: "block" });
+
+  const pickups: Pickup[] = [];
+  for (let x = 500; x < W - 600; x += 300) {
+    pickups.push({ x, y: groundY - 150 - ((x / 300) % 3) * 50, collected: false });
+  }
+  return {
+    width: W, height: H,
+    spawn: { x: 120, y: groundY - 80 },
+    goal: { x: W - 240, y: groundY - 220, w: 46, h: 220 },
+    platforms, hazards: [], enemies: [], pickups, signs: [],
   };
 }
 

@@ -378,6 +378,7 @@ const LEVEL_THEME: Record<LevelId, LevelTheme> = {
   "mayhem-outside":     { description: "Cross the rain-soaked hotel grounds and reach the front door.", accent: "0 78% 52%", glyph: "▮" },
   "mayhem-main":        { description: "The lobby. Clock in with the checker and take the elevator.", accent: "45 80% 52%", glyph: "▤" },
   "mayhem-floor-1":     { description: "Floor one. Long, cold, and empty — for now.", accent: "0 60% 45%", glyph: "❶" },
+  "mayhem-floor-2":     { description: "Floor two. The suites wing, and the second night.", accent: "150 40% 35%", glyph: "❷" },
 };
 
 function PlayTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
