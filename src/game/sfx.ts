@@ -717,6 +717,8 @@ export const sfx = {
   laserStop() { stopLaser(); },
   rainStart() { startRain(); },
   rainStop() { stopRain(); },
+  windStart() { startWind(); },
+  windStop() { stopWind(); },
   slideStart() { slideActive = true; if (!shimmerReplaces()) startSlideLoop(); },
   slideStop() { slideActive = false; stopSlideLoop(); },
   slideIntensity(v: number) { setSlideIntensity(v); },
@@ -942,6 +944,54 @@ function stopRain() {
     r.out.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
   } catch { /* noop */ }
   try { r.src.stop(t + 0.45); } catch { /* noop */ }
+}
+
+// ---------- looping storm wind (slow filtered gusts) ----------
+let wind: { src: AudioBufferSourceNode; out: GainNode; lfo: OscillatorNode } | null = null;
+
+function startWind() {
+  const c = ac(); if (!c || !master || wind) return;
+  const t0 = c.currentTime;
+  const len = Math.floor(c.sampleRate * 4);
+  const buf = c.createBuffer(1, len, c.sampleRate);
+  const data = buf.getChannelData(0);
+  let smooth = 0;
+  for (let i = 0; i < len; i++) {
+    smooth += ((Math.random() * 2 - 1) - smooth) * 0.035;
+    data[i] = smooth;
+  }
+  const src = c.createBufferSource();
+  src.buffer = buf;
+  src.loop = true;
+  const hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 110;
+  const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 1150;
+  const out = c.createGain();
+  out.gain.setValueAtTime(0.0001, t0);
+  out.gain.exponentialRampToValueAtTime(0.18, t0 + 1.1);
+  const lfo = c.createOscillator();
+  const gust = c.createGain();
+  lfo.type = "sine";
+  lfo.frequency.value = 0.12;
+  gust.gain.value = 0.09;
+  lfo.connect(gust).connect(out.gain);
+  src.connect(hp).connect(lp).connect(out).connect(master);
+  src.start(t0);
+  lfo.start(t0);
+  wind = { src, out, lfo };
+}
+
+function stopWind() {
+  const c = ac(); if (!c || !wind) return;
+  const t = c.currentTime;
+  const current = wind;
+  wind = null;
+  try {
+    current.out.gain.cancelScheduledValues(t);
+    current.out.gain.setValueAtTime(Math.max(0.0001, current.out.gain.value), t);
+    current.out.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+  } catch { /* noop */ }
+  try { current.src.stop(t + 0.55); } catch { /* noop */ }
+  try { current.lfo.stop(t + 0.55); } catch { /* noop */ }
 }
 
 // ---------- looping slide sound (filtered noise + low rumble) ----------
