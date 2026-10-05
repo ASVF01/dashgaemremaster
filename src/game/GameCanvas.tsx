@@ -636,10 +636,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       bossParryFlash: 0,
       punchZoom: 1,
     };
-    // MAYHEM walks/runs on industrial metal instead of paper.
-    setMetalMode(levelId.startsWith("mayhem"));
-    // THE CHASE uses its own forest-floor movement foley.
-    setGrassMode(levelId === "chase");
+    const isMayhemOutside = levelId === "mayhem-outside";
+    // MAYHEM hotel interiors use industrial movement sounds; the outdoor
+    // approach shares THE CHASE's grass foley instead.
+    setMetalMode(levelId.startsWith("mayhem") && !isMayhemOutside);
+    setGrassMode(levelId === "chase" || isMayhemOutside);
     // Pre-place the invboi star if this level configures one (e.g. meet-invboi).
     if (level.invboiStart) {
       refs.current.invboiPickup = {
@@ -654,7 +655,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       };
     }
     // Any reset/level change cancels the starman shimmer too.
-    sfx.shineStop(); sfx.rainStop(); sfx.slideStop(); sfx.laserStop();
+    sfx.shineStop(); sfx.rainStop(); sfx.windStop(); sfx.slideStop(); sfx.laserStop();
+    if (isMayhemOutside) {
+      sfx.rainStart();
+      sfx.windStart();
+    }
     if (startAsInvboi) {
       // Marathon mode: stay invboi across level transitions. Don't reset
       // celestial mode and don't restart BGM — Index keeps the starman
@@ -679,7 +684,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
   // with the menu music here. Restart on retry is also driven by the
   // parent via screen/levelId/resetKey transitions.
   useEffect(() => {
-    return () => { stopBgm(); sfx.shineStop(); sfx.rainStop(); sfx.slideStop(); sfx.laserStop(); setCelestialMode(false); setThunderMode(false); setMetalMode(false); setGrassMode(false); };
+    return () => { stopBgm(); sfx.shineStop(); sfx.rainStop(); sfx.windStop(); sfx.slideStop(); sfx.laserStop(); setCelestialMode(false); setThunderMode(false); setMetalMode(false); setGrassMode(false); };
   }, []);
 
   // BGM: pause/resume with the game's pause state — but keep playing when
