@@ -4730,10 +4730,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         drawW = p.w * slideScale;
         drawH = drawW / ratio;
       } else if (wide) {
-        drawH = p.w * 1.6 / ratio;
-        drawW = p.w * 1.6;
+        drawH = p.w * 2.1 / ratio;
+        drawW = p.w * 2.1;
       } else {
-        drawH = p.h;
+        // New hand-drawn sprites read small at AABB height — draw them
+        // bigger than the hitbox so the character feels substantial.
+        drawH = p.h * 1.55;
         drawW = drawH * ratio;
       }
       const dx = p.w / 2 - drawW / 2;
