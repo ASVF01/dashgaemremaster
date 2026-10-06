@@ -14,8 +14,6 @@ import runFast2 from "@/assets/sprites/run_fast_2.png";
 import runFast3 from "@/assets/sprites/run_fast_3.png";
 import runFast4 from "@/assets/sprites/run_fast_4.png";
 import superDash1 from "@/assets/sprites/super_dash_1.png";
-import superDash2 from "@/assets/sprites/super_dash_2.png";
-import superDash3 from "@/assets/sprites/super_dash_3.png";
 import beamAtkUrl from "@/assets/sprites/beam_atk.png";
 import beamAtkJumpUrl from "@/assets/sprites/beam_atk_jump.png";
 import greenStandUrl from "@/assets/sprites/green/stand.png";
@@ -76,7 +74,7 @@ const URLS: Partial<Record<SpriteState, string>> = {
 // Animation cycles — array of frame URLs, played in order.
 const CYCLES: Partial<Record<SpriteState, string[]>> = {
   runFast: [runFast1, runFast2, runFast3, runFast4],
-  superDash: [superDash1, superDash2, superDash3],
+  superDash: [superDash1],
 };
 
 // Per-character sprite overrides. Missing states fall back to the default
@@ -192,8 +190,6 @@ export const SPRITE_GALLERY: GallerySprite[] = [
   { id: "dash",       label: "DASH",         url: dashUrl },
   { id: "skid",       label: "SKID",         url: skidUrl },
   { id: "superDash-1",label: "SUPER DASH 1", url: superDash1 },
-  { id: "superDash-2",label: "SUPER DASH 2", url: superDash2 },
-  { id: "superDash-3",label: "SUPER DASH 3", url: superDash3 },
   { id: "hurt",       label: "HURT",         url: hurtUrl },
   { id: "beam",       label: "BEAM ATK",     url: beamAtkUrl },
   { id: "beamJump",   label: "BEAM JUMP",    url: beamAtkJumpUrl },
