@@ -366,9 +366,9 @@ const Index = () => {
   const startLevel = (id: LevelId) => {
     // Locked levels can't be started from anywhere.
     if (LEVELS.find((l) => l.id === id)?.locked) return;
-    // Selecting a level cuts the old music immediately; the preloaded level
-    // track starts without a crossfade when loading finishes.
-    stopBgm();
+    // Level-select entries hard-cut; NEXT LEVEL keeps a shared soundtrack
+    // running at its current position instead of restarting it.
+    if (screen !== "win" || !isSameTrackAs(id)) stopBgm();
     // CELESTIAL MARATHON: hijack into the chained sequence. Start the
     // starman BGM exactly once on entry; subsequent sub-level transitions
     // leave it playing.
