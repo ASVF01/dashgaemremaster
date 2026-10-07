@@ -16,6 +16,7 @@ import bgmBlackKnife from "@/assets/audio/black_knife.mp3";
 import bgmChaseIntro from "@/assets/audio/BP.ogg";
 import bgmMayhemAsset from "@/assets/audio/Level_Select_2.ogg.asset.json";
 import bgmInsomniaBluesAsset from "@/assets/audio/insomnia-blues.ogg.asset.json";
+import bgmLoudVisitorAsset from "@/assets/audio/loud-visitor.mp3.asset.json";
 import type { LevelId } from "@/game/level";
 
 const bgmMayhem = bgmMayhemAsset.url;
@@ -32,10 +33,10 @@ const TRACKS: Partial<Record<LevelId, string>> = {
   chase: bgmChaseWind,
   "just-run-bro": bgmJustRunBro,
   "roaring-knight": bgmBlackKnife,
-  // Post-boss act: reuse the same track as scribble 1-3.
-  "aftermath-1": bgmChampionPlay,
-  "aftermath-2": bgmChampionPlay,
-  "aftermath-3": bgmChampionPlay,
+  // Post-boss act: Loud Visitor.
+  "aftermath-1": bgmLoudVisitorAsset.url,
+  "aftermath-2": bgmLoudVisitorAsset.url,
+  "aftermath-3": bgmLoudVisitorAsset.url,
 };
 
 // Per-track loudness boosts (multiplied on top of the normal envelope).
