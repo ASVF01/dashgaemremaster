@@ -3,13 +3,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { mayhemSfx } from "@/game/sfx";
 import FlowPuzzle, { makeRandomFlowPairs } from "./minigames/FlowPuzzle";
 import loadingArt from "@/assets/mayhem/terminal/TERMINAL_Loading.png.asset.json";
-import homeArt from "@/assets/mayhem/terminal/TERMINAL_Home_Page.png.asset.json";
+import homeArt from "@/assets/mayhem/terminal/TERMINAL_Home_Page_v2.png.asset.json";
 import rcsArt from "@/assets/mayhem/terminal/TERMINAL_RCS.png.asset.json";
 import wait1Art from "@/assets/mayhem/terminal/TERMINAL_Wait_1.png.asset.json";
 import wait2Art from "@/assets/mayhem/terminal/TERMINAL_Wait_2.png.asset.json";
 import wait3Art from "@/assets/mayhem/terminal/TERMINAL_Wait_3.png.asset.json";
 import doneArt from "@/assets/mayhem/terminal/TERMINAL_DONE.png.asset.json";
-import whichArt from "@/assets/mayhem/terminal/TERMINAL_W.png.asset.json";
+import whichArt from "@/assets/mayhem/terminal/TERMINAL_W_v2.png.asset.json";
 
 type Screen = "loading" | "home" | "rcs" | "which" | "wait1" | "wait2" | "wait3" | "done";
 export type TerminalError = "273" | "104" | null;
@@ -26,7 +26,8 @@ export function makeTerminalSession(): TerminalSession {
   return { initialized: true, error: roll < 0.02 ? "104" : roll < 0.07 ? "273" : null, videoTime: 0, videoDone: false, puzzleSeed: Math.floor(Math.random() * 0xFFFFFFFF) };
 }
 
-export default function Terminal({ paused, session, onSessionChange, onClose }: {
+export default function Terminal({ paused, session, onSessionChange, onClose, onResetGrid }: {
+  onResetGrid?: () => void;
   paused: boolean;
   session: TerminalSession;
   onSessionChange: (next: TerminalSession) => void;
@@ -34,6 +35,8 @@ export default function Terminal({ paused, session, onSessionChange, onClose }: 
 }) {
   const [screen, setScreen] = useState<Screen>("loading");
   const timer = useRef<number | null>(null);
+  const task = useRef<"grid" | "generator">("grid");
+  const pick = (t: "grid" | "generator") => { task.current = t; go("which"); };
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const latestTime = useRef(session.videoTime);
   const errorFlowPairs = useMemo(() => makeRandomFlowPairs(9, 5, session.puzzleSeed), [session.puzzleSeed]);
@@ -55,14 +58,14 @@ export default function Terminal({ paused, session, onSessionChange, onClose }: 
     if (screen === "wait1") later(() => setScreen("wait2"), WAIT_MS);
     else if (screen === "wait2") later(() => setScreen("wait3"), WAIT_MS);
     else if (screen === "wait3") later(() => setScreen("done"), WAIT_MS);
-    else if (screen === "done") { mayhemSfx.terminalDone(); later(() => setScreen("home"), DONE_MS); }
+    else if (screen === "done") { mayhemSfx.terminalDone(); if (task.current === "grid") onResetGrid?.(); later(() => setScreen("home"), DONE_MS); }
   }, [screen, paused]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
       if (screen === "rcs") { if (key === "y") go("wait1"); else if (key === "n") go("home"); }
-      else if (screen === "which" && ["1", "2", "3", "4", "5"].includes(key)) go("wait1");
+      else if (screen === "which") { if (key === "y") go("wait1"); else if (key === "n") go("home"); }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -122,11 +125,11 @@ export default function Terminal({ paused, session, onSessionChange, onClose }: 
             <>
               <img key={screen} src={ART[screen]} alt="Company panel terminal" draggable={false} className="h-full w-full object-fill [image-rendering:pixelated]" />
               {screen === "home" && <>
-                <button type="button" aria-label="Reset camera system" onClick={() => go("rcs")} className="absolute border-2 border-transparent hover:border-[hsl(var(--hell-terminal))]/70" style={{ left: "2%", top: "46%", width: "47%", height: "52%" }} />
-                <button type="button" aria-label="Reset individual camera" onClick={() => go("which")} className="absolute border-2 border-transparent hover:border-[hsl(var(--hell-terminal))]/70" style={{ left: "50%", top: "46%", width: "48%", height: "52%" }} />
+                <button type="button" aria-label="Reset grid" onClick={() => pick("grid")} className="absolute border-2 border-transparent hover:border-[hsl(var(--hell-terminal))]/70" style={{ left: "2%", top: "46%", width: "47%", height: "52%" }} />
+                <button type="button" aria-label="Reboot generator" onClick={() => pick("generator")} className="absolute border-2 border-transparent hover:border-[hsl(var(--hell-terminal))]/70" style={{ left: "50%", top: "46%", width: "48%", height: "52%" }} />
               </>}
               {screen === "rcs" && <><button type="button" aria-label="Yes" onClick={() => go("wait1")} className="absolute border-2 border-transparent hover:border-[hsl(var(--hell-terminal))]/70" style={{ left: "38%", top: "55%", width: "10%", height: "20%" }} /><button type="button" aria-label="No" onClick={() => go("home")} className="absolute border-2 border-transparent hover:border-[hsl(var(--hell-terminal))]/70" style={{ left: "50%", top: "55%", width: "10%", height: "20%" }} /></>}
-              {screen === "which" && <div className="absolute flex" style={{ left: "37%", top: "62%", width: "26%", height: "16%" }}>{["1","2","3","4","5"].map((number) => <button key={number} type="button" aria-label={`Camera ${number}`} onClick={() => go("wait1")} className="h-full flex-1 border border-transparent hover:border-[hsl(var(--hell-terminal))]/70" />)}</div>}
+              {screen === "which" && <><button type="button" aria-label="Yes" onClick={() => go("wait1")} className="absolute border-2 border-transparent hover:border-[hsl(var(--hell-terminal))]/70" style={{ left: "40%", top: "72%", width: "8%", height: "14%" }} /><button type="button" aria-label="No" onClick={() => go("home")} className="absolute border-2 border-transparent hover:border-[hsl(var(--hell-terminal))]/70" style={{ left: "48%", top: "72%", width: "8%", height: "14%" }} /></>}
             </>
           )}
           <div className="pointer-events-none absolute inset-0 hell-static opacity-20" />
