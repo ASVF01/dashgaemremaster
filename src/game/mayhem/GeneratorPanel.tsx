@@ -4,7 +4,6 @@ import FlowPuzzle, { makeRandomFlowPairs } from "./minigames/FlowPuzzle";
 import { advanceGenerator } from "./generatorGain";
 import generatorArt from "@/assets/mayhem/generator-panel.png.asset.json";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
 
 type PuzzleKind = "simon" | "memory" | "flow";
 type GeneratorProgress = { percent: number; round: number; kind: PuzzleKind; seed: number; memoryMatched: boolean[] };
@@ -130,7 +129,6 @@ export default function GeneratorPanel({ night, paused, progress, onProgress, on
     <div className="gen-overlay absolute inset-0 z-[78] flex items-center justify-center">
       <div className="gen-panel">
         <img className="gen-art" src={generatorArt.url} alt="Stevenson’s Ultra Power Generator 9000, COMPANY PACE" draggable={false} />
-        <Button variant="ghost" size="icon" onClick={onClose} className="gen-close" aria-label="Close generator" title="Close generator"><X /></Button>
         <output className="gen-percent" aria-label="Generator progress">{progress.percent}%</output>
         <div className="gen-progress" role="progressbar" aria-label="Generator power" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress.percent}>
           <div className="gen-progress-fill" style={{ width: `${progress.percent}%` }} />
