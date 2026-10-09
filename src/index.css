@@ -767,7 +767,7 @@
 .gen-progress-fill { height: 100%; background: hsl(var(--generator-fill)); }
 .gen-completion-view { position: relative; width: 100%; height: 100%; }
 .gen-completion-view.gen-rewarding { animation: genRewardZoom 600ms linear; }
-@keyframes genRewardZoom { 0% { transform: scale(1.2); animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); } 65% { transform: scale(0.97); animation-timing-function: ease-out; } 100% { transform: scale(1); } }
+@keyframes genRewardZoom { 0% { transform: scale(1.2); animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); } 100% { transform: scale(1); } }
 @media (prefers-reduced-motion: reduce) { .gen-completion-view.gen-rewarding { animation: none; } }
 .gen-task { position: absolute; left: 8%; top: 31%; width: 84%; height: 59%; container-type: size; }
 .gen-puzzle-layout { height: 100%; display: flex; flex-direction: column; align-items: center; gap: 2cqh; }
