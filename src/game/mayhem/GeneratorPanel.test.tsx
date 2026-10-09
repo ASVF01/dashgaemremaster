@@ -17,8 +17,9 @@ describe("generator hover cues", () => {
     render(<GeneratorPanel {...props} />);
     const buttons = screen.getAllByRole("button");
     fireEvent.pointerOver(buttons[0]);
-    fireEvent.pointerOver(buttons[0], { relatedTarget: buttons[0] });
-    fireEvent.pointerOver(buttons[1], { relatedTarget: buttons[0] });
+    // jsdom lacks PointerEvent; MouseEvent preserves relatedTarget for React's pointer handler.
+    fireEvent(buttons[0], new MouseEvent("pointerover", { bubbles: true, relatedTarget: buttons[0] }));
+    fireEvent(buttons[1], new MouseEvent("pointerover", { bubbles: true, relatedTarget: buttons[0] }));
     expect(mayhemSfx.generatorHover).toHaveBeenCalledTimes(2);
   });
 
