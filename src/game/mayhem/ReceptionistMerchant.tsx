@@ -59,18 +59,23 @@ export default function ReceptionistMerchant({ seen, freeUsed, purchased, paused
     {phase === "comic" ? <div className="merchant-comic">
       <img src={comic.url} alt="The tutorial of madness" />
       <Button className="mayhem-menu-button" onClick={() => setPhase("thanks")} disabled={paused}>CONTINUE</Button>
-    </div> : phase === "shop" ? <section className="merchant-shop">
-      <header className="merchant-header"><div><h2 className="font-pixel">THE RECEPTIONIST</h2><p>{freeUsed ? `${getShop().tokens} T` : `FIRST ONE’S ON ME · ${getShop().tokens} T`}</p></div>
+    </div> : phase === "shop" ? <div className="merchant-stall">
+      <div className="merchant-bubbles" aria-hidden="true">{Array.from({ length: 14 }, (_, i) =>
+        <span key={i} style={{ left: `${(i * 37) % 100}%`, width: 14 + (i * 7) % 34, height: 14 + (i * 7) % 34, animationDelay: `${-(i * 1.3) % 9}s`, animationDuration: `${7 + (i % 5)}s` }} />)}</div>
+      <img className="merchant-stall-portrait" src={MERCHANT_EXPRESSIONS.offer[1].url} alt="The Receptionist" draggable={false} />
+      <div className="merchant-counter" aria-hidden="true" />
+      <section className="merchant-shop">
+      <header className="merchant-header"><span className="merchant-tab font-pixel">SHOP</span><p>{freeUsed ? `${getShop().tokens} T` : `FIRST ONE’S ON ME · ${getShop().tokens} T`}</p>
         <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close shop" title="Close shop" disabled={paused}><X /></Button></header>
       <div className="merchant-items">{MERCHANT_UPGRADES.map((item) => {
         const owned = purchased.includes(item.id);
         const cost = upgradeCost(item.id, freeUsed);
         return <article className="merchant-item" key={item.id}><ShoppingBag aria-hidden="true" /><h3>{item.name}</h3><p>{item.description}</p>
-          <Button className="mayhem-menu-button" disabled={paused || owned || item.unavailable || getShop().tokens < cost} onClick={() => buy(item.id)}>
+          <Button className="merchant-buy" disabled={paused || owned || item.unavailable || getShop().tokens < cost} onClick={() => buy(item.id)}>
             {item.unavailable ? "AWAITING SPRITES" : owned ? "READY THIS NIGHT" : cost === 0 ? "TAKE FREE" : `${cost} T`}
           </Button></article>;
       })}</div>
-    </section> : <><img className="merchant-portrait" src={expression.url} alt="The Receptionist" draggable={false} />
+    </section></div> : <><img className="merchant-portrait" src={expression.url} alt="The Receptionist" draggable={false} />
       {phase !== "bag" && !paused && <div className="merchant-dialogue"><DialogueBox key={phase} allowSkip={false} onLineChange={setLineIndex}
         script={MERCHANT_DIALOGUE[phase === "intro" ? 0 : phase === "thanks" ? 1 : 2]}
         onDone={() => { setLineIndex(0); phase === "intro" ? setPhase("comic") : phase === "thanks" ? setPhase("bag") : openShop(); }} /></div>}
