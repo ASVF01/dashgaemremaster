@@ -27,3 +27,5 @@
 
 - [x] Apply the supplied Receptionist shop-UI expression as the shop portrait (counter kept as drawn, white keyed out).
 - [x] Shop stall portrait: keep the corner-table doodle on white (the blue-box drawing stays only in the post-bag dialogue).
+
+- [ ] Post-bag dialogue: use the newly supplied Receptionist expression (Recep_Shop_UI_Dialouge-2.png); shop stall keeps the counter doodle.
