@@ -6,9 +6,12 @@ import surprised from "@/assets/mayhem/receptionist/The_Receptionist_surprised_d
 import unsurprised from "@/assets/mayhem/receptionist/The_Receptionist_Unsurprised_dialouge.png.asset.json";
 import realise from "@/assets/mayhem/receptionist/The_Receptionist_Realise_dialouge.png.asset.json";
 import bag from "@/assets/mayhem/receptionist/The_Receptionist_Bag_dialouge_l.png.asset.json";
+import greet from "@/assets/mayhem/receptionist/Recep_Greet_Dialouge.png.asset.json";
+import question from "@/assets/mayhem/receptionist/Recep_Worry_or_Question_Dialouge.png.asset.json";
+import paper from "@/assets/mayhem/receptionist/The_Receptionist_Paper_Give_dialouge.png.asset.json";
 
 export const MERCHANT_EXPRESSIONS = {
-  intro: [neutral, neutral, surprised, surprised, neutral2, surprised, unsurprised, unsurprised, neutral2, neutral],
+  intro: [greet, greet, question, question, neutral2, surprised, unsurprised, unsurprised, paper, paper],
   thanks: [neutral, neutral2, realise],
   offer: [neutral2, neutral],
   bag,

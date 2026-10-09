@@ -183,7 +183,13 @@ export default function GeneratorPanel({ night, upgrades = {}, paused, closing =
         <div className="gen-progress" role="progressbar" aria-label="Generator power" aria-valuemin={0} aria-valuemax={100} aria-valuenow={displayPercent}>
           <div className="gen-progress-fill" style={{ width: `${displayPercent}%` }} />
         </div>
-        <div ref={beatRef} className="gen-task">
+        <div ref={beatRef} className="gen-task" onPointerOver={(event) => {
+          if (paused || closing || !(event.target instanceof Element)) return;
+          const control = event.target.closest("button");
+          if (!control || control.disabled) return;
+          if (event.relatedTarget instanceof Node && control.contains(event.relatedTarget)) return;
+          mayhemSfx.generatorHover();
+        }}>
           {progress.kind === "simon" && <div className="gen-puzzle-layout">
             <p className="gen-task-label">SIMON · {showing ? "SIGNAL" : `${simonInput.length} / ${simon.length}`}</p>
             <div className="gen-simon-grid">{PAD_LABELS.map((label, index) => {
