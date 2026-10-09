@@ -90,7 +90,6 @@ export default function GeneratorPanel({ night, paused, closing = false, progres
         if (fraction >= 1) {
           rewardingRef.current = false;
           setRewarding(false);
-          rewardChangeRef.current?.(false);
           if (target >= 100) completeRef.current();
           return;
         }
