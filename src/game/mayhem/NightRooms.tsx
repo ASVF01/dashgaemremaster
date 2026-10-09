@@ -465,7 +465,7 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
         }
         const keyhole = p > 1; // pressed against the door: narrow the FOV
         const cameraEntryState = cameraEntryRef.current;
-        const zoomT = cameraEntryState === "pullback" ? 1.05 : cameraEntryState === "rush" ? 3.0 : zoomed ? 1.3 : keyhole ? 1.55 : 1.5;
+        const zoomT = cameraEntryState === "pullback" ? 1.05 : cameraEntryState === "rush" ? 3.0 : zoomed ? 1.3 : keyhole ? 1.55 : 1.22;
         const zoomEase = cameraEntryState === "rush" ? 0.16 : 0.075;
         zoomCur.current += (zoomT - zoomCur.current) * zoomEase;
         const scale = zoomCur.current + zoomNudge.current;
