@@ -32,10 +32,13 @@ export function mayhemAiLevel(night: number): number {
   return table[Math.min(Math.max(night, 1), 5) - 1];
 }
 
+// Only Nights 1–4 exist; Night 5 is a separate scenario pending art/rules.
+const MAX_BUILT_NIGHT = 4;
+
 export function getMayhemNight(): number {
   try {
     const n = Number(localStorage.getItem(NIGHT_KEY));
-    return Number.isFinite(n) && n >= 1 ? Math.floor(n) : 1;
+    return Number.isFinite(n) && n >= 1 ? Math.min(Math.floor(n), MAX_BUILT_NIGHT) : 1;
   } catch {
     return 1;
   }
