@@ -4,6 +4,8 @@ import FlowPuzzle, { makeRandomFlowPairs } from "./minigames/FlowPuzzle";
 import { advanceGenerator } from "./generatorGain";
 import generatorArt from "@/assets/mayhem/generator-panel.png.asset.json";
 import { Button } from "@/components/ui/button";
+import { useSettings } from "@/game/settings";
+import { useGeneratorMusic } from "./useGeneratorMusic";
 
 type PuzzleKind = "simon" | "memory" | "flow";
 type GeneratorProgress = { percent: number; round: number; kind: PuzzleKind; seed: number; memoryMatched: boolean[] };
@@ -57,6 +59,8 @@ export default function GeneratorPanel({ night, paused, closing = false, progres
   const [replay, setReplay] = useState(0);
   const [displayPercent, setDisplayPercent] = useState(progress.percent);
   const displayPercentRef = useRef(progress.percent);
+  const [settings] = useSettings();
+  useGeneratorMusic(displayPercent, !closing, paused && !closing, settings.bgmVolume);
   const [rewarding, setRewarding] = useState(false);
   const rewardingRef = useRef(false);
   const completeRef = useRef(onComplete); completeRef.current = onComplete;

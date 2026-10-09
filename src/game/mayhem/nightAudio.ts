@@ -15,6 +15,12 @@ let element: HTMLAudioElement | null = null;
 let token = 0;
 // User-controlled music volume (0..1), mirrors the settings slider live.
 let userVolume = 1;
+let duck = 1;
+
+export function setNightBgmDuck(value: number) {
+  duck = Math.max(0, Math.min(1, value));
+  setNightBgmVolume(userVolume);
+}
 
 export async function preloadNightBgm(): Promise<void> {
   const c = ac();
@@ -30,7 +36,7 @@ export function setNightBgmVolume(v: number) {
   if (ctx && master) {
     const now = ctx.currentTime;
     master.gain.cancelScheduledValues(now);
-    master.gain.setTargetAtTime(VOLUME * userVolume, now, 0.05);
+    master.gain.setTargetAtTime(VOLUME * userVolume * duck, now, 0.2);
   }
 }
 
@@ -106,7 +112,7 @@ export function startNightBgm() {
 
     const now = c.currentTime;
     out.gain.setValueAtTime(0.0001, now);
-    out.gain.linearRampToValueAtTime(VOLUME * userVolume, now + 1.2);
+    out.gain.linearRampToValueAtTime(VOLUME * userVolume * duck, now + 1.2);
 
     src.start(now);
     source = src;
@@ -133,7 +139,7 @@ function fallback(id: number) {
     lp.type = "lowpass";
     lp.frequency.value = MUFFLE;
     const out = c.createGain();
-    out.gain.value = VOLUME * userVolume;
+    out.gain.value = VOLUME * userVolume * duck;
     node.connect(lp);
     lp.connect(out);
     out.connect(c.destination);
