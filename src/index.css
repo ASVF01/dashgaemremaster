@@ -797,11 +797,10 @@
 @media (prefers-reduced-motion: reduce) { .gen-progress-fill { transition: none; } .gen-overlay .gen-panel { animation: none; } }
 
 .merchant-overlay { position: absolute; inset: 0; z-index: 45; background: hsl(var(--hell-black) / 0.92); color: hsl(var(--hell-muted)); display: flex; align-items: center; justify-content: center; padding: 20px; }
-.merchant-stall { --stall-sky: 194 58% 73%; --stall-pane: 213 100% 88%; --stall-edge: 214 34% 61%; --stall-wood: 22 41% 53%; --stall-ink: 214 40% 25%; position: absolute; inset: 0; overflow: hidden; background: hsl(var(--stall-sky)); display: flex; align-items: center; justify-content: flex-end; padding: 4% 4% 4% 38%; }
+.merchant-stall { --stall-sky: 194 58% 73%; --stall-pane: 213 100% 88%; --stall-edge: 214 34% 61%; --stall-ink: 214 40% 25%; position: absolute; inset: 0; overflow: hidden; background: hsl(var(--stall-sky)); display: flex; align-items: center; justify-content: flex-end; padding: 4% 4% 4% 48%; }
 .merchant-bubbles span { position: absolute; bottom: -60px; border-radius: 9999px; border: 4px solid hsl(var(--stall-edge)); background: hsl(var(--stall-pane)); animation: merchantBubble linear infinite; }
 @keyframes merchantBubble { from { transform: translate(0, 0); } 50% { transform: translate(14px, -60vh); } to { transform: translate(-6px, -120vh); } }
-.merchant-stall-portrait { position: absolute; left: 1%; bottom: 8%; height: 72%; max-width: 40%; object-fit: contain; object-position: bottom; image-rendering: pixelated; z-index: 1; }
-.merchant-counter { position: absolute; left: 0; bottom: 0; width: 43%; height: 15%; background: hsl(var(--stall-wood)); border: 6px solid hsl(var(--hell-black)); border-left: 0; border-bottom: 0; z-index: 2; }
+.merchant-stall-portrait { position: absolute; left: 0; bottom: 0; height: 58%; max-width: 46%; object-fit: contain; object-position: bottom left; image-rendering: pixelated; z-index: 1; }
 .merchant-shop { position: relative; z-index: 3; width: min(820px, 100%); max-height: 88%; overflow-y: auto; font-family: monospace; background: hsl(var(--stall-pane)); border: 7px solid hsl(var(--stall-edge)); color: hsl(var(--stall-ink)); }
 .merchant-header { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 16px; background: hsl(var(--stall-pane)); border-bottom: 4px solid hsl(var(--stall-edge)); padding: 6px; }
 .merchant-header p { flex: 1; margin: 0; }
