@@ -471,12 +471,10 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
         const scale = zoomCur.current + zoomNudge.current;
         const damp = zoomed ? 0 : 1;
         const entrySlide = cameraEntryState === "rush" ? Math.min(1, Math.max(0, (scale - 1.1) / 4.1)) : 0;
-        // Flat 2D pan: scale + translate only, clamped inside the overscan.
-        const margin = Math.max(0, (scale - 1) / (2 * scale)) * 0.9;
-        const horizontalTravel = el.clientWidth * Math.min(0.085 * p, margin);
-        const verticalTravel = el.clientHeight * Math.min(0.035 * p, margin);
-        const tx = (reducedMotion.matches ? 0 : -cur.current.x * horizontalTravel * damp) - 18 * entrySlide;
-        const ty = (reducedMotion.matches ? 0 : -cur.current.y * verticalTravel * damp) + 34 * entrySlide;
+        // Flat 2D pan: scale + translate only (original generator-era look).
+        const tyOff = 0;
+        const tx = (reducedMotion.matches ? 0 : -cur.current.x * 34 * p * damp) - 18 * entrySlide;
+        const ty = (reducedMotion.matches ? 0 : -cur.current.y * 12 * p * damp + tyOff * (scale - 1.1)) + 34 * entrySlide;
         el.style.transform =
           `scale(${scale}) translate(${tx}px, ${ty}px)`;
       }
