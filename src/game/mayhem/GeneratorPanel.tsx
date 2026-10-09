@@ -6,9 +6,11 @@ import generatorArt from "@/assets/mayhem/generator-panel.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { useSettings } from "@/game/settings";
 import { useGeneratorMusic } from "./useGeneratorMusic";
+import { generatorReward } from "./generatorReward";
+import doubleChargeArt from "@/assets/mayhem/generator-double-charge.png.asset.json";
 
 type PuzzleKind = "simon" | "memory" | "flow";
-type GeneratorProgress = { percent: number; round: number; kind: PuzzleKind; seed: number; memoryMatched: boolean[] };
+type GeneratorProgress = { percent: number; round: number; kind: PuzzleKind; seed: number; memoryMatched: boolean[]; doubled?: boolean };
 
 const PAD_LABELS = ["A", "B", "C", "D"];
 
@@ -78,7 +80,8 @@ export default function GeneratorPanel({ night, upgrades = {}, paused, closing =
     if (target <= from) return;
     rewardingRef.current = true;
     setRewarding(true);
-    mayhemSfx.generatorImpact();
+    mayhemSfx.generatorImpact(progress.doubled);
+    if (progress.doubled) mayhemSfx.generatorParry();
 
     let elapsed = 0;
     let previous = performance.now();
@@ -132,13 +135,15 @@ export default function GeneratorPanel({ night, upgrades = {}, paused, closing =
 
   const finishRound = () => {
     if (rewardingRef.current) return;
-    const percent = upgradedProgress(progress.percent, night, progress.round, upgrades);
+    rewardingRef.current = true;
+    const { percent, doubled } = generatorReward(progress.percent, upgradedProgress(0, night, progress.round, upgrades), Math.random());
     if (percent >= 100) {
-      onProgress({ ...progress, percent: 100 });
+      onProgress({ ...progress, percent: 100, doubled });
       return;
     }
     onProgress({
       percent,
+      doubled,
       round: progress.round + 1,
       kind: upgrades.puzzle ?? randomKind(progress.kind),
       seed: Math.floor(Math.random() * 0xFFFFFFFF),
@@ -175,9 +180,10 @@ export default function GeneratorPanel({ night, upgrades = {}, paused, closing =
 
   return (
     <div className={`gen-overlay absolute inset-0 z-[78] flex items-center justify-center ${closing ? "gen-closing" : ""}`}>
+      {rewarding && progress.doubled && <img className="gen-double-charge-art" src={doubleChargeArt.url} alt="" aria-hidden="true" draggable={false} style={{ animationPlayState: paused ? "paused" : "running" }} />}
       <div ref={lookRef} className="gen-look-layer">
       <div className="gen-panel">
-        <div className={`gen-completion-view ${rewarding ? "gen-rewarding" : ""}`} style={{ animationPlayState: paused ? "paused" : "running" }}>
+        <div className={`gen-completion-view ${rewarding ? "gen-rewarding" : ""} ${rewarding && progress.doubled ? "gen-double-reward" : ""}`} style={{ animationPlayState: paused ? "paused" : "running" }}>
         <img className="gen-art" src={generatorArt.url} alt="Stevenson’s Ultra Power Generator 9000, COMPANY PACE" draggable={false} />
         <output className="gen-percent" aria-label="Generator progress">{Number(displayPercent.toFixed(1))}%</output>
         <div className="gen-progress" role="progressbar" aria-label="Generator power" aria-valuemin={0} aria-valuemax={100} aria-valuenow={displayPercent}>

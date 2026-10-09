@@ -11,6 +11,7 @@
 - Boss cinematics live in boss runtime state and signal the page-level audio owner when combat begins, preventing visual and music timing drift.
 - MAYHEM night-clear cinematics own their media lifecycle and derive picture beats and the shared sound/picture fade from the completion audio clock; separate descent and pulse transform layers preserve both motions, while the page prepares the next available floor and keeps gameplay frozen until reveal finishes.
 - Generator progress gains use a pure helper fed by the active night captured in NightRooms, keeping all puzzle types consistent and the completion cap testable.
+- Generator double-charge rewards use a pure helper with an explicit random roll and persist the bonus flag in owned progress; award feedback reads that flag and routes the boss parry sample through the night bus so muted platformer audio cannot suppress it.
 - Generator completion feedback animates displayed progress independently from owned progress, starting layered impact audio with the reward and count audio on the rise clock; final night completion waits for the rise.
 - NightRooms drives generator and flip-tab look offsets from the existing smoothed gaze through separate transform layers, preserving independent flip and reward animations.
 - MAYHEM room looking is a flat 2D pan (scale + translate only); no perspective, rotation, or displacement distortion — the user rejected the FNAF-style curved effect.
