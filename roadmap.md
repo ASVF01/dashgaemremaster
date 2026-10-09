@@ -8,3 +8,5 @@
 - [x] Randomize the generator and ERR_273 Flow Free solutions.
 - [x] Verify randomized generator rounds and both Flow Free boards.
 - [x] Add rain, wind, grass movement, and normal dash audio to the hotel exterior.
+- [ ] Add the supplied night-clear picture and sound with frozen gameplay and a synchronized fade into the next available floor.
+- [ ] Verify night-clear timing and floor transition.
