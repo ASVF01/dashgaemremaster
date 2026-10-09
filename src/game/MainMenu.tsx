@@ -10,7 +10,7 @@ import mvAsset from "@/assets/audio/MV.ogg.asset.json";
 import { sfx, setSfxVolume, unlockAudio } from "@/game/sfx";
 import { setBgmVolume, pauseBgm, resumeBgm, playMenuBgm, stopBgm, playMayhemBgm } from "@/game/bgm";
 import { setNightBgmVolume } from "@/game/mayhem/nightAudio";
-import { resetAllProgress } from "@/game/progress";
+import { resetAllProgress, getMayhemCheckpoint, getMayhemNight } from "@/game/progress";
 import exploseAsset from "@/assets/audio/explose1.mp3.asset.json";
 import BgmPlayer from "@/game/BgmPlayer";
 import StarVanisher from "@/game/StarVanisher";
