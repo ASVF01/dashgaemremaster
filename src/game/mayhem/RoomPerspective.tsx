@@ -5,7 +5,7 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 export function roomPerspectiveOffset(x: number, y: number) {
   if (x === 0.5 || y === 0.5) return 0;
   const angle = (x - 0.5) * 1.7;
-  return (y - 0.5) * (Math.cos(angle) - 1);
+  return 0.27 * (y - 0.5) * (Math.cos(angle) - 1);
 }
 
 export default function RoomPerspective({ children }: { children: ReactNode }) {

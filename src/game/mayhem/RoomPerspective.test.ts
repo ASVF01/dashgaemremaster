@@ -8,8 +8,9 @@ describe("cylindrical room perspective", () => {
     expect(roomPerspectiveOffset(0, 0.5)).toBe(0);
   });
   it("curves the ceiling and floor symmetrically at both edges", () => {
-    expect(roomPerspectiveOffset(0, 0)).toBeGreaterThan(0.16);
-    expect(roomPerspectiveOffset(0, 1)).toBeLessThan(-0.16);
+    expect(roomPerspectiveOffset(0, 0)).toBeGreaterThan(0.03);
+    expect(roomPerspectiveOffset(0, 1)).toBeLessThan(-0.03);
     expect(roomPerspectiveOffset(0, 0)).toBeCloseTo(roomPerspectiveOffset(1, 0));
+    expect(roomPerspectiveOffset(0, 0)).toBeLessThan(0.06);
   });
 });
