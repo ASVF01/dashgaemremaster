@@ -734,80 +734,27 @@
   .night-clear-art { animation: none; }
 }
 
-/* ---- MAYHEM generator console (company-panel style: black + green outlines) ---- */
+/* MAYHEM generator: original supplied artwork with aligned interactive overlays. */
+:root { --generator-ink: 0 0% 100%; --generator-fill: 138 76% 39%; }
+.gen-overlay { background: hsl(var(--hell-black) / 0.9); }
 .gen-panel {
   position: relative;
-  border: 6px solid hsl(var(--hell-terminal));
-  background: hsl(var(--hell-black));
-  box-shadow: 0 0 0 2px hsl(var(--hell-black)), 0 24px 70px hsl(var(--hell-black));
-}
-.gen-panel * {
+  width: min(1000px, 94vw, calc(88vh * 686 / 389));
+  aspect-ratio: 686 / 389;
+  color: hsl(var(--foreground));
   font-family: "Courier New", ui-monospace, monospace;
 }
-.gen-box {
-  border: 6px solid hsl(var(--hell-terminal));
-  background: hsl(var(--hell-black));
-}
-.gen-screen {
-  position: relative;
-  overflow: hidden;
-  border: 4px solid hsl(var(--hell-terminal));
-  background: hsl(var(--hell-black));
-}
-.gen-screen::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: repeating-linear-gradient(0deg, transparent 0 3px, hsl(var(--hell-terminal) / 0.05) 3px 4px);
-}
-.gen-seg {
-  flex: 1;
-  height: 100%;
-  background: hsl(var(--hell-black));
-  border: 2px solid hsl(var(--hell-terminal) / 0.4);
-}
-.gen-seg-on {
-  background: hsl(var(--hell-terminal));
-  border-color: hsl(var(--hell-terminal));
-}
-.gen-seg-hot {
-  background: hsl(var(--hell-terminal));
-  border-color: hsl(var(--hell-terminal));
-  animation: genSegBlink 0.6s steps(2) infinite;
-}
-@keyframes genSegBlink {
-  0%, 60% { opacity: 1; }
-  61%, 100% { opacity: 0.35; }
-}
-.gen-pad {
-  position: relative;
-  border: 4px solid hsl(var(--hell-terminal));
-  background: hsl(var(--hell-black));
-  color: hsl(var(--hell-terminal));
-}
-.gen-pad:active {
-  background: hsl(var(--hell-terminal));
-  color: hsl(var(--hell-black));
-}
-.gen-card {
-  border: 4px solid hsl(var(--hell-terminal));
-  background: hsl(var(--hell-black));
-  color: hsl(var(--hell-terminal));
-}
-.gen-card:active {
-  background: hsl(var(--hell-terminal));
-  color: hsl(var(--hell-black));
-}
-.gen-close {
-  border: 4px solid hsl(var(--hell-terminal));
-  background: hsl(var(--hell-black));
-  color: hsl(var(--hell-terminal));
-}
-.gen-close:active {
-  background: hsl(var(--hell-terminal));
-  color: hsl(var(--hell-black));
-}
-@media (prefers-reduced-motion: reduce) {
-  .gen-seg-hot { animation: none; }
-}
+.gen-art { display: block; width: 100%; height: 100%; user-select: none; }
+.gen-close { position: absolute; right: 1.8%; bottom: 2.8%; width: 24px; height: 24px; padding: 2px; border-radius: 0; color: hsl(var(--foreground)); background: hsl(var(--hell-black)); }
+.gen-percent { position: absolute; left: 14.4%; bottom: 80.5%; font-size: 14px; line-height: 1; color: hsl(var(--generator-ink)); }
+.gen-progress { position: absolute; left: 14.43%; top: 20.82%; width: 63.7%; height: 4.1%; overflow: hidden; }
+.gen-progress-fill { height: 100%; background: hsl(var(--generator-fill)); transition: width 260ms ease; }
+.gen-task { position: absolute; left: 8%; top: 31%; width: 84%; height: 59%; container-type: size; }
+.gen-puzzle-layout { height: 100%; display: flex; flex-direction: column; align-items: center; gap: 2cqh; }
+.gen-task-label { font-size: 12px; line-height: 16px; margin: 0; color: hsl(var(--generator-ink)); }
+.gen-simon-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 3cqh; width: min(76cqh, 90cqw); height: 76cqh; }
+.gen-memory-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); gap: 3cqh; width: min(120cqh, 90cqw); height: 76cqh; }
+.gen-flow-board { width: min(86cqh, 90cqw); }
+.gen-pad, .gen-card { width: 100%; height: 100%; min-height: 0; padding: 0; border: 2px solid hsl(var(--generator-ink)); border-radius: 0; background: hsl(var(--hell-black)); color: hsl(var(--generator-ink)); font-size: 20px; }
+.gen-pad:active, .gen-card:active, .gen-control-on { background: hsl(var(--generator-ink)); color: hsl(var(--hell-black)); transform: translateY(1px); }
+@media (prefers-reduced-motion: reduce) { .gen-progress-fill { transition: none; } }

@@ -2,6 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { mayhemSfx } from "@/game/sfx";
 import FlowPuzzle, { makeRandomFlowPairs } from "./minigames/FlowPuzzle";
 import { advanceGenerator } from "./generatorGain";
+import generatorArt from "@/assets/mayhem/generator-panel.png.asset.json";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 type PuzzleKind = "simon" | "memory" | "flow";
 type GeneratorProgress = { percent: number; round: number; kind: PuzzleKind; seed: number; memoryMatched: boolean[] };
@@ -123,51 +126,31 @@ export default function GeneratorPanel({ night, paused, progress, onProgress, on
     }, 520);
   };
 
-  const SEGMENTS = 20;
-  const litSegments = Math.round((progress.percent / 100) * SEGMENTS);
-
   return (
-    <div className="absolute inset-0 z-[78] flex items-center justify-center bg-[hsl(var(--hell-black))]/90 p-4">
-      <div className="gen-panel w-[min(680px,94vw)] p-5 text-[hsl(var(--hell-terminal))]">
-        <div className="flex items-start justify-between">
-          <div className="leading-tight">
-            <div className="text-[15px] tracking-[0.15em]">GENERATOR PANEL</div>
-            <div className="text-[15px] tracking-[0.15em]">VER 1.0</div>
-            <div className="mt-1 text-[10px] tracking-[0.1em] opacity-80">TASK_{progress.kind.toUpperCase()}.EXE · ROUND {progress.round}</div>
-          </div>
-          <button type="button" onClick={onClose} className="gen-close px-3 py-1 text-[11px] tracking-[0.2em]">CLOSE</button>
+    <div className="gen-overlay absolute inset-0 z-[78] flex items-center justify-center">
+      <div className="gen-panel">
+        <img className="gen-art" src={generatorArt.url} alt="Stevenson’s Ultra Power Generator 9000, COMPANY PACE" draggable={false} />
+        <Button variant="ghost" size="icon" onClick={onClose} className="gen-close" aria-label="Close generator" title="Close generator"><X /></Button>
+        <output className="gen-percent" aria-label="Generator progress">{progress.percent}%</output>
+        <div className="gen-progress" role="progressbar" aria-label="Generator power" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress.percent}>
+          <div className="gen-progress-fill" style={{ width: `${progress.percent}%` }} />
         </div>
-
-        <div className="gen-box mt-4 px-4 py-3">
-          <div className="mb-2 flex items-end justify-between">
-            <span className="text-[11px] tracking-[0.25em]">RESTORE POWER</span>
-            <span className="text-[20px] leading-none">{progress.percent}<span className="text-[11px]">%</span></span>
-          </div>
-          <div className="flex h-4 gap-[3px]">
-            {Array.from({ length: SEGMENTS }, (_, i) => (
-              <span key={i} className={`gen-seg ${i < litSegments ? (progress.percent >= 90 ? "gen-seg-hot" : "gen-seg-on") : ""} transition-all duration-300`} />
-            ))}
-          </div>
-        </div>
-
-        <div className="gen-screen mt-4 p-5">
-          {progress.kind === "simon" && <div>
-            <p className="mb-4 text-center text-[11px] tracking-[0.25em]">{showing ? "▸ WATCH THE SIGNAL ◂" : `REPEAT IT BACK · ${simonInput.length} / ${simon.length}`}</p>
-            <div className="mx-auto grid max-w-sm grid-cols-2 gap-3">{PAD_LABELS.map((label, index) => {
+        <div className="gen-task">
+          {progress.kind === "simon" && <div className="gen-puzzle-layout">
+            <p className="gen-task-label">SIMON · {showing ? "SIGNAL" : `${simonInput.length} / ${simon.length}`}</p>
+            <div className="gen-simon-grid">{PAD_LABELS.map((label, index) => {
               const on = lit === index;
-              return <button key={label} type="button" onClick={() => pressSimon(index)} className="gen-pad aspect-square text-2xl transition-colors duration-75"
-                style={on ? { background: "hsl(var(--hell-terminal))", color: "hsl(var(--hell-black))" } : undefined}>{label}</button>;
+              return <Button variant="ghost" key={label} type="button" onClick={() => pressSimon(index)} className={`gen-pad ${on ? "gen-control-on" : ""}`}>{label}</Button>;
             })}</div>
           </div>}
-          {progress.kind === "memory" && <div>
-            <p className="mb-4 text-center text-[11px] tracking-[0.25em]">MATCH THE THREE SIGNAL PAIRS</p>
-            <div className="mx-auto grid max-w-md grid-cols-3 gap-3">{deck.map((value, index) => {
+          {progress.kind === "memory" && <div className="gen-puzzle-layout">
+            <p className="gen-task-label">MEMORY</p>
+            <div className="gen-memory-grid">{deck.map((value, index) => {
               const visible = cards.includes(index) || matchedCards[index];
-              return <button key={index} type="button" onClick={() => flipCard(index)} className="gen-card aspect-[4/3] text-2xl transition-colors duration-100"
-                style={visible ? { background: "hsl(var(--hell-terminal))", color: "hsl(var(--hell-black))" } : undefined}>{visible ? PAD_LABELS[value] : "?"}</button>;
+              return <Button variant="ghost" key={index} type="button" onClick={() => flipCard(index)} className={`gen-card ${visible ? "gen-control-on" : ""}`}>{visible ? PAD_LABELS[value] : "?"}</Button>;
             })}</div>
           </div>}
-          {progress.kind === "flow" && <div className="mx-auto max-w-[460px]"><p className="mb-3 text-center text-[11px] tracking-[0.25em]">CONNECT MATCHING SIGNALS</p><FlowPuzzle key={progress.seed} size={6} pairs={flowPairs} paused={paused} onComplete={finishRound} /></div>}
+          {progress.kind === "flow" && <div className="gen-puzzle-layout"><p className="gen-task-label">FLOW</p><div className="gen-flow-board"><FlowPuzzle key={progress.seed} size={6} pairs={flowPairs} paused={paused} onComplete={finishRound} /></div></div>}
         </div>
       </div>
     </div>
