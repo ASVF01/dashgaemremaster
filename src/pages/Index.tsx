@@ -566,7 +566,7 @@ const Index = () => {
       e.preventDefault();
       setMayhem(true); setMayhemNight(false); setMayhemPaused(false); setMayhemDialogue(null);
       setLevelId("mayhem-floor-2"); setResetKey((k) => k + 1); setScreen("playing");
-      setMerchantOpen(true);
+      setMerchantOpen(true); setMerchantSeen(true);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
