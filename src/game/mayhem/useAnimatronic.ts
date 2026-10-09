@@ -67,7 +67,14 @@ export function useAnimatronic(view: string, aiLevel: number, active = true, pau
   };
   const scheduleLeave = () => {
     clearLeaveTimer();
-    leaveTimer.current = window.setTimeout(() => { leaveTimer.current = null; leave(); }, PRESENCE_MS);
+    const tick = (ms: number) => {
+      leaveTimer.current = window.setTimeout(() => {
+        // Paused: hold the countdown and check again once the game resumes.
+        if (pausedRef.current) { tick(400); return; }
+        leaveTimer.current = null; leave();
+      }, ms);
+    };
+    tick(PRESENCE_MS);
   };
 
   const startScare = () => {
@@ -114,7 +121,9 @@ export function useAnimatronic(view: string, aiLevel: number, active = true, pau
     timers.current = [];
   };
   const at = (ms: number, fn: () => void) => {
-    timers.current.push(window.setTimeout(fn, ms));
+    // Pause-aware: a timer that comes due while paused waits until resume.
+    const run = () => { if (pausedRef.current) { timers.current.push(window.setTimeout(run, 200)); return; } fn(); };
+    timers.current.push(window.setTimeout(run, ms));
   };
 
   const spawn = () => {
