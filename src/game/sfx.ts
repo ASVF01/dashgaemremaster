@@ -17,6 +17,7 @@ import firewallOpenAsset from "@/assets/audio/FirewallOpenV2.ogg.asset.json";
 import firewallCloseAsset from "@/assets/audio/FirewallClosev2.ogg.asset.json";
 import terminalDoneAsset from "@/assets/audio/Tlure_FixedSound.wav.asset.json";
 import countupAsset from "@/assets/audio/countup.mp3.asset.json";
+import generatorHoverAsset from "@/assets/audio/generator-hover.mp3.asset.json";
 import generatorImpactW from "@/assets/audio/generator-impact-w.ogg.asset.json";
 import generatorImpact28 from "@/assets/audio/generator-impact-28.ogg.asset.json";
 import generatorImpact8d from "@/assets/audio/generator-impact-8d.ogg.asset.json";
@@ -87,6 +88,7 @@ function pixelateBuffer(c: AudioContext, src: AudioBuffer, bits: number, rateDiv
 
 const pixelCache = new Map<string, AudioBuffer>();
 const GENERATOR_IMPACT_URLS = [generatorImpactW.url, generatorImpact28.url, generatorImpact8d.url];
+let generatorHoverSource: AudioBufferSourceNode | null = null;
 function getPixelated(url: string, bits: number, rateDiv: number): AudioBuffer | null {
   const c = ac(); if (!c) return null;
   const key = `${url}|${bits}|${rateDiv}`;
@@ -216,6 +218,7 @@ const MAYHEM_SAMPLE_URLS = [
   firewallCloseAsset.url,
   terminalDoneAsset.url,
   countupAsset.url,
+  generatorHoverAsset.url,
   ...GENERATOR_IMPACT_URLS,
   keyholeEnterAsset.url,
   animInHallAsset.url,
@@ -230,6 +233,7 @@ export function preloadMayhemSfx(): Promise<void> {
   ac();
   return Promise.all(MAYHEM_SAMPLE_URLS.map((url) => loadSample(url))).then(() => {
     GENERATOR_IMPACT_URLS.forEach((url) => getPixelated(url, 8, 2));
+    getPixelated(generatorHoverAsset.url, 6, 4);
   });
 }
 
@@ -1306,6 +1310,27 @@ export const mayhemSfx = {
   },
   generatorCount() {
     nSample(countupAsset.url, { vol: 0.55, rate: 0.7 });
+  },
+  generatorHover() {
+    const c = ac(); const b = nbus();
+    if (!c || !b) return;
+    const buffer = getPixelated(generatorHoverAsset.url, 6, 4);
+    if (!buffer) { void loadSample(generatorHoverAsset.url); return; }
+    // Replace the previous cue rather than piling up a full counting sample.
+    if (generatorHoverSource) generatorHoverSource.stop();
+    const source = c.createBufferSource();
+    source.buffer = buffer;
+    source.playbackRate.value = 0.9;
+    const gain = c.createGain();
+    gain.gain.setValueAtTime(0, c.currentTime);
+    gain.gain.linearRampToValueAtTime(0.3, c.currentTime + 0.008);
+    source.connect(gain).connect(b);
+    generatorHoverSource = source;
+    source.onended = () => {
+      source.disconnect(); gain.disconnect();
+      if (generatorHoverSource === source) generatorHoverSource = null;
+    };
+    source.start();
   },
   generatorImpact() {
     const c = ac(); const b = nbus();
