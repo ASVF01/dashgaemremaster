@@ -19,6 +19,7 @@ import { getSettings } from "@/game/settings";
 import { recordLevelResult } from "@/game/levelStats";
 import MayhemPause from "@/game/mayhem/MayhemPause";
 import NightRooms from "@/game/mayhem/NightRooms";
+import NightClear from "@/game/mayhem/NightClear";
 import DialogueBox from "@/game/mayhem/DialogueBox";
 import { MAYHEM_SCRIPTS } from "@/game/mayhem/dialogue";
 
@@ -75,6 +76,8 @@ const Index = () => {
   const [mayhem, setMayhem] = useState(false);
   const [mayhemPaused, setMayhemPaused] = useState(false);
   const [mayhemCleared, setMayhemCleared] = useState(false);
+  const [nightClearActive, setNightClearActive] = useState(false);
+  const nightClearOrigin = useRef<LevelId>("mayhem-floor-1");
   // MAYHEM night shift: first-person room navigation after floor one.
   const [mayhemNight, setMayhemNight] = useState(false);
   // Which MAYHEM conversation is on screen, and whether the checker has
@@ -474,7 +477,6 @@ const Index = () => {
   };
   // After night 1: climb to Floor 2, whose stairwell door starts night 2.
   const goToFloor2 = () => {
-    setMayhemCleared(false);
     setMayhemNight(false);
     setMayhemPaused(false);
     setMayhemDialogue(null);
@@ -484,6 +486,7 @@ const Index = () => {
     setScreen("playing");
   };
   const quitMayhem = () => {
+    setNightClearActive(false);
     setMayhem(false);
     setMayhemNight(false);
     setMayhemPaused(false);
@@ -720,10 +723,20 @@ const Index = () => {
             <MayhemPause onResume={() => setMayhemPaused(false)} onQuit={quitMayhem} />
           )}
           {mayhem && mayhemNight && <NightRooms paused={mayhemPaused} onNightComplete={() => {
+             nightClearOrigin.current = levelId;
             setMayhemNight(false);
             setMayhemCleared(true);
+             setMayhemPaused(false);
+             setNightClearActive(true);
           }} />}
-          {mayhem && mayhemCleared && (
+           {mayhem && nightClearActive && <NightClear
+              onReveal={() => { if (nightClearOrigin.current === "mayhem-floor-1") goToFloor2(); }}
+             onDone={() => {
+               setNightClearActive(false);
+                if (nightClearOrigin.current === "mayhem-floor-1") setMayhemCleared(false);
+             }}
+           />}
+           {mayhem && mayhemCleared && !nightClearActive && (
             <div className="absolute inset-0 z-[60] overflow-hidden">
               <div aria-hidden="true" className="mayhem-menu-grid absolute inset-0" />
               <div aria-hidden="true" className="hell-static absolute inset-0" />
@@ -733,11 +746,6 @@ const Index = () => {
                   THE GENERATOR IS FULLY RESTORED. YOUR SHIFT IS OVER.
                 </p>
                 <div className="mt-5 flex w-full max-w-sm flex-col gap-2.5">
-                  {levelId === "mayhem-floor-1" && (
-                    <button type="button" onClick={goToFloor2} className="mayhem-menu-button mayhem-menu-primary">
-                      TAKE THE STAIRS TO FLOOR 2
-                    </button>
-                  )}
                   <button type="button" onClick={retryMayhem} className="mayhem-menu-button mayhem-menu-primary">
                     RUN IT AGAIN
                   </button>
