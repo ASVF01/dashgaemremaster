@@ -1,6 +1,7 @@
 # Roadmap
 
-- [ ] Add the supplied lower-pitched, bitcrushed generator hover sound and new Receptionist greeting/question poses.
+- [x] Add the supplied lower-pitched, bitcrushed generator hover sound and new Receptionist greeting/question poses.
+- [ ] Apply the supplied paper-giving pose when the Receptionist offers the tutorial paper.
 
 - [x] Add Floor 2 Receptionist dialogue, tutorial comic, bag sound, shop music, free first upgrade and generator upgrades.
 - [ ] Place the merchant on Floors 3–4 when those floors are supplied; replacement enemy sprites await the user's art. Existing enemies remain disabled.
