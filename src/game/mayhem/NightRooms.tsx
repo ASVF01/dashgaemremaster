@@ -13,6 +13,7 @@ import packUsedArt from "@/assets/mayhem/storage_used.png.asset.json";
 import Terminal, { TERMINAL_ASSET_URLS } from "./Terminal";
 import { makeTerminalSession, type TerminalSession } from "./Terminal";
 import GridMap from "./GridMap";
+import RoomPerspective from "./RoomPerspective";
 import gridShutdownSfx from "@/assets/audio/grid-shutdown.ogg.asset.json";
 
 const GRID_MAX_VIEW_MS = 20000;
@@ -506,7 +507,7 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
       )}
 
       {/* mouse-look layer: the room drifts opposite the cursor */}
-      <div>
+      <RoomPerspective>
 
       <div
         ref={lookRef}
@@ -594,7 +595,7 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
       </div>
 
       <div aria-hidden="true" className="mayhem-pov-vignette pointer-events-none absolute inset-0" />
-      </div>
+      </RoomPerspective>
 
 
 
