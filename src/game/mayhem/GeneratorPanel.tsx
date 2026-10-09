@@ -123,29 +123,70 @@ export default function GeneratorPanel({ night, paused, progress, onProgress, on
     }, 520);
   };
 
+  const SEGMENTS = 20;
+  const litSegments = Math.round((progress.percent / 100) * SEGMENTS);
+  const padHues = [0, 45, 139, 210];
+
   return (
     <div className="absolute inset-0 z-[78] flex items-center justify-center bg-[hsl(var(--hell-black))]/90 p-4">
-      <div className="relative w-[min(660px,94vw)] border-4 border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-panel))] p-4 shadow-[0_0_50px_hsl(var(--hell-black))]">
-        <div className="mb-4 flex items-center justify-between border-b border-[hsl(var(--hell-steel))] pb-3 font-pixel text-[hsl(var(--hell-muted))]">
-          <span>GENERATOR // {progress.kind.toUpperCase()}</span>
-          <button type="button" onClick={onClose} className="border border-[hsl(var(--hell-steel))] px-3 py-2 text-[9px]">CLOSE</button>
+      <div className="gen-panel w-[min(680px,94vw)]">
+        <span className="gen-rivet left-2 top-2"><span className="gen-screw-slot" /></span>
+        <span className="gen-rivet right-2 top-2"><span className="gen-screw-slot" /></span>
+        <span className="gen-rivet bottom-2 left-2"><span className="gen-screw-slot" /></span>
+        <span className="gen-rivet bottom-2 right-2"><span className="gen-screw-slot" /></span>
+
+        <div className="gen-hazard" />
+
+        <div className="flex items-center justify-between px-5 py-3">
+          <div className="flex items-center gap-3">
+            <span className={`gen-lamp ${progress.percent >= 100 ? "gen-lamp-on" : "gen-lamp-warn"}`} />
+            <div>
+              <div className="font-pixel text-[11px] tracking-[0.25em] text-[hsl(var(--hell-muted))]">AUX GENERATOR · MK-II</div>
+              <div className="font-pixel text-[8px] tracking-[0.2em] text-[hsl(var(--hell-steel))]">TASK_{progress.kind.toUpperCase()}.EXE · ROUND {progress.round}</div>
+            </div>
+          </div>
+          <button type="button" onClick={onClose} className="gen-close px-3 py-2 font-pixel text-[9px] tracking-[0.2em]">CLOSE</button>
         </div>
-        <div className="mb-5">
-          <div className="mb-2 flex justify-between font-pixel text-[9px] text-[hsl(var(--hell-muted))]"><span>RESTORE POWER</span><span>{progress.percent}%</span></div>
-          <div className="h-4 border-2 border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))] p-0.5"><div className="h-full bg-[hsl(var(--hell-terminal))] transition-[width] duration-300" style={{ width: `${progress.percent}%` }} /></div>
+
+        <div className="mx-5 mb-4 border border-[hsl(var(--hell-steel))]/50 bg-[hsl(var(--hell-black))]/60 px-4 py-3">
+          <div className="mb-2 flex items-end justify-between font-pixel">
+            <span className="text-[9px] tracking-[0.3em] text-[hsl(var(--hell-muted))]">RESTORE POWER</span>
+            <span className="text-[18px] leading-none text-[hsl(var(--hell-terminal))]" style={{ textShadow: "0 0 10px hsl(var(--hell-terminal) / 0.7)" }}>{progress.percent}<span className="text-[10px]">%</span></span>
+          </div>
+          <div className="flex h-4 gap-[3px] border border-[hsl(var(--hell-steel))]/60 bg-[hsl(var(--hell-black))] p-[3px]">
+            {Array.from({ length: SEGMENTS }, (_, i) => (
+              <span key={i} className={`gen-seg ${i < litSegments ? (progress.percent >= 90 ? "gen-seg-hot" : "gen-seg-on") : ""} transition-all duration-300`} />
+            ))}
+          </div>
         </div>
-        {progress.kind === "simon" && <div>
-          <p className="mb-4 text-center font-pixel text-[9px] text-[hsl(var(--hell-muted))]">{showing ? "WATCH THE SIGNAL" : `${simonInput.length} / ${simon.length}`}</p>
-          <div className="mx-auto grid max-w-sm grid-cols-2 gap-3">{PAD_LABELS.map((label, index) => <button key={label} type="button" onClick={() => pressSimon(index)} className={`aspect-square border-2 font-pixel text-2xl transition duration-75 active:scale-95 active:translate-y-0.5 hover:brightness-125 ${lit === index ? "border-[hsl(var(--hell-terminal))] bg-[hsl(var(--hell-terminal))] text-[hsl(var(--hell-black))]" : "border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))] text-[hsl(var(--hell-muted))]"}`}>{label}</button>)}</div>
-        </div>}
-        {progress.kind === "memory" && <div>
-          <p className="mb-4 text-center font-pixel text-[9px] text-[hsl(var(--hell-muted))]">MATCH THE THREE SIGNAL PAIRS</p>
-          <div className="mx-auto grid max-w-md grid-cols-3 gap-3">{deck.map((value, index) => {
-            const visible = cards.includes(index) || matchedCards[index];
-            return <button key={index} type="button" onClick={() => flipCard(index)} className="aspect-[4/3] border-2 transition duration-100 active:scale-95 active:translate-y-0.5 hover:border-[hsl(var(--hell-terminal))] border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))] font-pixel text-2xl text-[hsl(var(--hell-terminal))]">{visible ? PAD_LABELS[value] : "?"}</button>;
-          })}</div>
-        </div>}
-        {progress.kind === "flow" && <div className="mx-auto max-w-[460px]"><p className="mb-3 text-center font-pixel text-[9px] text-[hsl(var(--hell-muted))]">CONNECT MATCHING SIGNALS</p><FlowPuzzle key={progress.seed} size={6} pairs={flowPairs} paused={paused} onComplete={finishRound} /></div>}
+
+        <div className="gen-screen mx-5 mb-5 p-5">
+          {progress.kind === "simon" && <div>
+            <p className="mb-4 text-center font-pixel text-[9px] tracking-[0.3em] text-[hsl(var(--hell-muted))]">{showing ? "▸ WATCH THE SIGNAL ◂" : `REPEAT IT BACK · ${simonInput.length} / ${simon.length}`}</p>
+            <div className="mx-auto grid max-w-sm grid-cols-2 gap-3">{PAD_LABELS.map((label, index) => {
+              const hue = padHues[index];
+              const on = lit === index;
+              return <button key={label} type="button" onClick={() => pressSimon(index)} className="gen-pad aspect-square font-pixel text-2xl transition-[filter,box-shadow] duration-75"
+                style={{
+                  color: on ? `hsl(${hue} 90% 65%)` : "hsl(var(--hell-steel))",
+                  borderColor: on ? `hsl(${hue} 90% 55%)` : undefined,
+                  boxShadow: on ? `inset 0 0 24px hsl(${hue} 90% 50% / 0.45), 0 0 22px hsl(${hue} 90% 50% / 0.6), 0 4px 0 hsl(var(--hell-black))` : undefined,
+                  textShadow: on ? `0 0 12px hsl(${hue} 90% 60%)` : undefined,
+                }}>{label}</button>;
+            })}</div>
+          </div>}
+          {progress.kind === "memory" && <div>
+            <p className="mb-4 text-center font-pixel text-[9px] tracking-[0.3em] text-[hsl(var(--hell-muted))]">MATCH THE THREE SIGNAL PAIRS</p>
+            <div className="mx-auto grid max-w-md grid-cols-3 gap-3">{deck.map((value, index) => {
+              const visible = cards.includes(index) || matchedCards[index];
+              return <button key={index} type="button" onClick={() => flipCard(index)} className="gen-card aspect-[4/3] font-pixel text-2xl transition-colors duration-100"
+                style={visible ? { color: "hsl(var(--hell-terminal))", borderColor: "hsl(var(--hell-terminal))", textShadow: "0 0 12px hsl(var(--hell-terminal) / 0.8)", boxShadow: "inset 0 0 18px hsl(var(--hell-terminal) / 0.25), 0 3px 0 hsl(var(--hell-black))" } : { color: "hsl(var(--hell-steel))" }}>{visible ? PAD_LABELS[value] : "?"}</button>;
+            })}</div>
+          </div>}
+          {progress.kind === "flow" && <div className="mx-auto max-w-[460px]"><p className="mb-3 text-center font-pixel text-[9px] tracking-[0.3em] text-[hsl(var(--hell-muted))]">CONNECT MATCHING SIGNALS</p><FlowPuzzle key={progress.seed} size={6} pairs={flowPairs} paused={paused} onComplete={finishRound} /></div>}
+        </div>
+
+        <div className="gen-hazard" />
       </div>
     </div>
   );
