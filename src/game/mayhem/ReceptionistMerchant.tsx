@@ -2,11 +2,10 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { X, ShoppingBag } from "lucide-react";
 import DialogueBox from "./DialogueBox";
-import { MERCHANT_DIALOGUE } from "./merchantDialogue";
+import { MERCHANT_DIALOGUE, MERCHANT_EXPRESSIONS } from "./merchantDialogue";
 import { MERCHANT_UPGRADES, upgradeCost, type UpgradeId } from "./merchantRules";
 import comic from "@/assets/mayhem/later/The_tutorial_of_madness-2.png.asset.json";
 import music from "@/assets/audio/receptionist-shop.mp3.asset.json";
-import receptionist from "@/assets/mayhem/The_Receptionist.png.asset.json";
 import { addTokens, getShop, subscribeShop } from "@/game/shop";
 import { getSettings, useSettings } from "@/game/settings";
 import { sfx } from "@/game/sfx";
@@ -18,6 +17,11 @@ export default function ReceptionistMerchant({ seen, freeUsed, purchased, paused
   onSeen: () => void; onBuy: (id: UpgradeId) => void; onClose: () => void;
 }) {
   const [phase, setPhase] = useState<Phase>(seen ? "shop" : "intro");
+  const [lineIndex, setLineIndex] = useState(0);
+  const expression = phase === "bag" ? MERCHANT_EXPRESSIONS.bag
+    : phase === "thanks" ? MERCHANT_EXPRESSIONS.thanks[lineIndex] ?? MERCHANT_EXPRESSIONS.thanks[0]
+    : phase === "offer" ? MERCHANT_EXPRESSIONS.offer[lineIndex] ?? MERCHANT_EXPRESSIONS.offer[0]
+    : MERCHANT_EXPRESSIONS.intro[lineIndex] ?? MERCHANT_EXPRESSIONS.intro[0];
   const [, refresh] = useState(0);
   const [settings] = useSettings();
   useEffect(() => subscribeShop(() => refresh((n) => n + 1)), []);
@@ -66,10 +70,10 @@ export default function ReceptionistMerchant({ seen, freeUsed, purchased, paused
             {item.unavailable ? "AWAITING SPRITES" : owned ? "READY THIS NIGHT" : cost === 0 ? "TAKE FREE" : `${cost} T`}
           </Button></article>;
       })}</div>
-    </section> : <><img className="merchant-portrait" src={receptionist.url} alt="The Receptionist" />
-      {phase !== "bag" && !paused && <div className="merchant-dialogue"><DialogueBox allowSkip={false}
+    </section> : <><img className="merchant-portrait" src={expression.url} alt="The Receptionist" draggable={false} />
+      {phase !== "bag" && !paused && <div className="merchant-dialogue"><DialogueBox key={phase} allowSkip={false} onLineChange={setLineIndex}
         script={MERCHANT_DIALOGUE[phase === "intro" ? 0 : phase === "thanks" ? 1 : 2]}
-        onDone={() => phase === "intro" ? setPhase("comic") : phase === "thanks" ? setPhase("bag") : openShop()} /></div>}
+        onDone={() => { setLineIndex(0); phase === "intro" ? setPhase("comic") : phase === "thanks" ? setPhase("bag") : openShop(); }} /></div>}
     </>}
   </div>;
 }

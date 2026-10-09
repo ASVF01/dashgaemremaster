@@ -18,17 +18,20 @@ const DEFAULT_SPEED = 34;
 export type DialogueBoxProps = {
   script: DialogueScript;
   onDone?: () => void;
+  onLineChange?: (index: number) => void;
   /** Hide the SKIP control (e.g. mandatory story beats). */
   allowSkip?: boolean;
   className?: string;
 };
 
-export default function DialogueBox({ script, onDone, allowSkip = true, className }: DialogueBoxProps) {
+export default function DialogueBox({ script, onDone, onLineChange, allowSkip = true, className }: DialogueBoxProps) {
   const [index, setIndex] = useState(0);
   const [shown, setShown] = useState(0);
   const line: DialogueLine | undefined = script.lines[index];
   const full = line?.text ?? "";
   const typing = shown < full.length;
+
+  useEffect(() => { onLineChange?.(index); }, [index, script.id, onLineChange]);
 
   const doneRef = useRef(false);
   const finish = useCallback(() => {
