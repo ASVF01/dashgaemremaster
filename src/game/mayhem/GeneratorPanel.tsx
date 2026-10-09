@@ -52,7 +52,7 @@ export default function GeneratorPanel({ paused, progress, onProgress, onClose, 
   const pausedRef = useRef(paused); pausedRef.current = paused;
   const simon = useMemo(() => seededValues(progress.seed, 5, 4), [progress.seed]);
   const deck = useMemo(() => shuffledDeck(progress.seed), [progress.seed]);
-  const flowPairs = useMemo(() => makeRandomFlowPairs(6, 3, progress.seed), [progress.seed]);
+  const flowPairs = useMemo(() => makeRandomFlowPairs(6, 4, progress.seed), [progress.seed]);
   const matchedCards = progress.memoryMatched ?? Array(6).fill(false);
 
   useEffect(() => {
