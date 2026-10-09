@@ -540,8 +540,8 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
               draggable={false}
               className="pointer-events-none absolute inset-0 h-full w-full object-cover"
               style={{
-                WebkitMaskImage: "linear-gradient(to bottom, transparent 30%, black 44%)",
-                maskImage: "linear-gradient(to bottom, transparent 30%, black 44%)",
+                WebkitMaskImage: "linear-gradient(to bottom, transparent 55%, black 70%)",
+                maskImage: "linear-gradient(to bottom, transparent 55%, black 70%)",
               }}
             />
             {!cameraOpen && cameraEntry === "idle" && (
