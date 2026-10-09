@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { mayhemSfx } from "@/game/sfx";
 import FlowPuzzle, { makeRandomFlowPairs } from "./minigames/FlowPuzzle";
+import { advanceGenerator } from "./generatorGain";
 
 type PuzzleKind = "simon" | "memory" | "flow";
 type GeneratorProgress = { percent: number; round: number; kind: PuzzleKind; seed: number; memoryMatched: boolean[] };
@@ -36,7 +37,8 @@ export function makeGeneratorProgress(): GeneratorProgress {
   return { percent: 0, round: 1, kind: randomKind(), seed: Math.floor(Math.random() * 0xFFFFFFFF), memoryMatched: Array(6).fill(false) };
 }
 
-export default function GeneratorPanel({ paused, progress, onProgress, onClose, onComplete }: {
+export default function GeneratorPanel({ night, paused, progress, onProgress, onClose, onComplete }: {
+  night: number;
   paused: boolean;
   progress: GeneratorProgress;
   onProgress: (next: GeneratorProgress) => void;
@@ -78,7 +80,7 @@ export default function GeneratorPanel({ paused, progress, onProgress, onClose, 
   }, [progress.kind, progress.round, simon, replay]);
 
   const finishRound = () => {
-    const percent = Math.min(100, progress.percent + 3);
+    const percent = advanceGenerator(progress.percent, night);
     mayhemSfx.terminalDone();
     if (percent >= 100) {
       onProgress({ ...progress, percent: 100 });
