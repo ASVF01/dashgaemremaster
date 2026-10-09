@@ -493,7 +493,8 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
       )}
 
       {/* mouse-look layer: the room drifts opposite the cursor */}
-      <div className={`absolute inset-0 gen-room-completion ${generatorRewarding ? "gen-rewarding" : ""}`} style={{ animationPlayState: paused || generatorClosing ? "paused" : "running" }}>
+      <div>
+
       <div
         ref={lookRef}
         className={`absolute inset-0 will-change-transform transition-[filter] duration-300 ${terminalOpen ? "blur-[3px] brightness-75" : "blur-0 brightness-100"}`}
