@@ -219,6 +219,7 @@ const MAYHEM_SAMPLE_URLS = [
   terminalDoneAsset.url,
   countupAsset.url,
   generatorHoverAsset.url,
+  nySampleUrl,
   ...GENERATOR_IMPACT_URLS,
   keyholeEnterAsset.url,
   animInHallAsset.url,
@@ -1332,7 +1333,19 @@ export const mayhemSfx = {
     };
     source.start();
   },
-  generatorImpact() {
+  generatorParry() {
+    const c = ac(); const b = nbus();
+    if (!c || !b) return;
+    const buffer = getPixelated(nySampleUrl, 8, 4);
+    if (!buffer) { void loadSample(nySampleUrl); return; }
+    const source = c.createBufferSource(); source.buffer = buffer;
+    const filter = c.createBiquadFilter(); filter.type = "lowpass"; filter.frequency.value = 8000;
+    const gain = c.createGain(); gain.gain.value = 0.55;
+    source.connect(filter).connect(gain).connect(b);
+    source.onended = () => { source.disconnect(); filter.disconnect(); gain.disconnect(); };
+    source.start();
+  },
+  generatorImpact(doubled = false) {
     const c = ac(); const b = nbus();
     if (!c || !b) return;
     const buffers = GENERATOR_IMPACT_URLS.map((url) => getPixelated(url, 8, 2));
@@ -1344,7 +1357,7 @@ export const mayhemSfx = {
       source.buffer = buffer;
       source.playbackRate.value = 0.92;
       const gain = c.createGain();
-      gain.gain.value = 0.4;
+      gain.gain.value = doubled ? 0.6 : 0.4;
       source.connect(gain).connect(b);
       source.onended = () => { source.disconnect(); gain.disconnect(); };
       source.start(startAt);
