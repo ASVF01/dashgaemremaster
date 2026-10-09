@@ -483,8 +483,8 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
         const desk = deskRef.current;
         if (desk) {
           // Near plane moves further than the wall: flat parallax depth, no warping.
-          const dx = reducedMotion.matches ? 0 : -cur.current.x * el.clientWidth * 0.022 * p * damp;
-          const dy = reducedMotion.matches ? 0 : -cur.current.y * el.clientHeight * 0.012 * p * damp;
+          const dx = reducedMotion.matches ? 0 : -cur.current.x * el.clientWidth * 0.016 * p * damp;
+          const dy = reducedMotion.matches ? 0 : -cur.current.y * el.clientHeight * 0.008 * p * damp;
           desk.style.transform = `translate(${dx}px, ${dy}px)`;
         }
       }
@@ -540,8 +540,8 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
               draggable={false}
               className="pointer-events-none absolute inset-0 h-full w-full object-cover"
               style={{
-                WebkitMaskImage: "linear-gradient(to bottom, transparent 30%, black 44%)",
-                maskImage: "linear-gradient(to bottom, transparent 30%, black 44%)",
+                WebkitMaskImage: "linear-gradient(to bottom, transparent 55%, black 70%)",
+                maskImage: "linear-gradient(to bottom, transparent 55%, black 70%)",
               }}
             />
             {!cameraOpen && cameraEntry === "idle" && (
