@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Add 25% double-charge rewards with stronger impact, boss parry audio, and the supplied fading picture; verify chance, gains, and completion cap.
+- [x] Add 25% double-charge rewards with stronger impact, boss parry audio, and the supplied fading picture; verify chance, gains, and completion cap.
 
 - [x] Add the supplied lower-pitched, bitcrushed generator hover sound and new Receptionist greeting/question poses.
 - [x] Apply the supplied paper-giving pose when the Receptionist offers the tutorial paper.
