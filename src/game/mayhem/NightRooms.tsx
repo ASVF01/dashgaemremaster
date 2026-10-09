@@ -15,7 +15,7 @@ import { makeTerminalSession, type TerminalSession } from "./Terminal";
 import GridMap from "./GridMap";
 import gridShutdownSfx from "@/assets/audio/grid-shutdown.ogg.asset.json";
 
-const GRID_MAX_VIEW_MS = 12000;
+const GRID_MAX_VIEW_MS = 20000;
 import GeneratorPanel, { makeGeneratorProgress, type GeneratorProgress } from "./GeneratorPanel";
 import { useGridRoster } from "./useGridRoster";
 import { preloadNightBgm, startNightBgm, stopNightBgm } from "./nightAudio";
@@ -169,16 +169,24 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
   const [gridDown, setGridDown] = useState(false);
   const gridDownRef = useRef(false);
   gridDownRef.current = gridDown;
+  // Accumulated grid viewing time. It persists when the grid is closed (never
+  // cools down or resets) and only stops counting while paused.
+  const [gridUseMs, setGridUseMs] = useState(0);
+  const gridUseRef = useRef(0);
   useEffect(() => {
-    if (!cameraOpen || paused) return;
-    const id = window.setTimeout(() => {
-      try { const a = new Audio(gridShutdownSfx.url); a.volume = 0.8; void a.play().catch(() => {}); } catch { /* noop */ }
-      setGridDown(true);
-      cameraOpenRef.current = false;
-      setCameraOpen(false);
-    }, GRID_MAX_VIEW_MS);
-    return () => window.clearTimeout(id);
-  }, [cameraOpen, paused]);
+    if (!cameraOpen || paused || gridDown) return;
+    const id = window.setInterval(() => {
+      gridUseRef.current = Math.min(GRID_MAX_VIEW_MS, gridUseRef.current + 100);
+      setGridUseMs(gridUseRef.current);
+      if (gridUseRef.current >= GRID_MAX_VIEW_MS) {
+        try { const a = new Audio(gridShutdownSfx.url); a.volume = 0.8; void a.play().catch(() => {}); } catch { /* noop */ }
+        setGridDown(true);
+        cameraOpenRef.current = false;
+        setCameraOpen(false);
+      }
+    }, 100);
+    return () => window.clearInterval(id);
+  }, [cameraOpen, paused, gridDown]);
 
   const openCamera = () => {
     if (gridDownRef.current) { mayhemSfx.puzzleMiss(); return; }
@@ -598,7 +606,7 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
         setMayhemNight(getMayhemNight() + 1);
         onNightComplete();
       }} />}
-      {cameraOpen && <GridMap onClose={() => setCameraOpen(false)} characters={grid.characters} moveCount={grid.moveCount} />}
+      {cameraOpen && <GridMap onClose={() => setCameraOpen(false)} characters={grid.characters} moveCount={grid.moveCount} heat={gridUseMs / GRID_MAX_VIEW_MS} />}
     </div>
   );
 }
