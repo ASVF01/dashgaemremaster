@@ -16,6 +16,7 @@ import crtAmbientAsset from "@/assets/audio/CRT_Ambient_kyles.ogg.asset.json";
 import firewallOpenAsset from "@/assets/audio/FirewallOpenV2.ogg.asset.json";
 import firewallCloseAsset from "@/assets/audio/FirewallClosev2.ogg.asset.json";
 import terminalDoneAsset from "@/assets/audio/Tlure_FixedSound.wav.asset.json";
+import countupAsset from "@/assets/audio/countup.mp3.asset.json";
 import keyholeEnterAsset from "@/assets/audio/keyhole-enter.wav.asset.json";
 import animInHallAsset from "@/assets/audio/NewAnimInHall.wav.asset.json";
 import animGrowlAsset from "@/assets/audio/TealerGrowl.wav.asset.json";
@@ -210,6 +211,7 @@ const MAYHEM_SAMPLE_URLS = [
   firewallOpenAsset.url,
   firewallCloseAsset.url,
   terminalDoneAsset.url,
+  countupAsset.url,
   keyholeEnterAsset.url,
   animInHallAsset.url,
   animGrowlAsset.url,
@@ -1294,6 +1296,9 @@ export const mayhemSfx = {
   // terminal sequence completes and the DONE screen appears
   terminalDone() {
     nSample(terminalDoneAsset.url, { vol: 0.75 });
+  },
+  generatorCount() {
+    nSample(countupAsset.url, { vol: 0.55, rate: 0.7 });
   },
   // boot hum + two soft confirm blips
   terminalBoot() {

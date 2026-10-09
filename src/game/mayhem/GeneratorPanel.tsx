@@ -54,11 +54,50 @@ export default function GeneratorPanel({ night, paused, closing = false, progres
   const [cards, setCards] = useState<number[]>([]);
   const [lock, setLock] = useState(false);
   const [replay, setReplay] = useState(0);
+  const [displayPercent, setDisplayPercent] = useState(progress.percent);
+  const displayPercentRef = useRef(progress.percent);
+  const [rewarding, setRewarding] = useState(false);
+  const rewardingRef = useRef(false);
+  const completeRef = useRef(onComplete); completeRef.current = onComplete;
   const pausedRef = useRef(paused); pausedRef.current = paused;
   const simon = useMemo(() => seededValues(progress.seed, 5, 4), [progress.seed]);
   const deck = useMemo(() => shuffledDeck(progress.seed), [progress.seed]);
   const flowPairs = useMemo(() => makeRandomFlowPairs(6, 4, progress.seed), [progress.seed]);
   const matchedCards = progress.memoryMatched ?? Array(6).fill(false);
+
+  useEffect(() => {
+    const from = displayPercentRef.current;
+    const target = progress.percent;
+    if (target <= from) return;
+    rewardingRef.current = true;
+    setRewarding(true);
+    let elapsed = 0;
+    let previous = performance.now();
+    let lastTick = -1;
+    let frame = 0;
+    const tick = (now: number) => {
+      const delta = now - previous;
+      previous = now;
+      if (!pausedRef.current) {
+        elapsed = Math.min(600, elapsed + delta);
+        const fraction = Math.min(1, elapsed / 600);
+        const value = from + (target - from) * fraction;
+        displayPercentRef.current = value;
+        setDisplayPercent(value);
+        const soundTick = Math.min(5, Math.floor(elapsed / 100));
+        if (soundTick !== lastTick) { mayhemSfx.generatorCount(); lastTick = soundTick; }
+        if (fraction >= 1) {
+          rewardingRef.current = false;
+          setRewarding(false);
+          if (target >= 100) completeRef.current();
+          return;
+        }
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [progress.percent]);
 
   useEffect(() => {
     setShowing(progress.kind === "simon");
@@ -83,11 +122,11 @@ export default function GeneratorPanel({ night, paused, closing = false, progres
   }, [progress.kind, progress.round, simon, replay]);
 
   const finishRound = () => {
+    if (rewardingRef.current) return;
     const percent = advanceGenerator(progress.percent, night);
     mayhemSfx.terminalDone();
     if (percent >= 100) {
       onProgress({ ...progress, percent: 100 });
-      onComplete();
       return;
     }
     onProgress({
@@ -100,7 +139,7 @@ export default function GeneratorPanel({ night, paused, closing = false, progres
   };
 
   const pressSimon = (pad: number) => {
-    if (paused || showing) return;
+    if (paused || rewarding || showing) return;
     mayhemSfx.puzzlePad(pad);
     setLit(pad); window.setTimeout(() => setLit(null), 140);
     const next = [...simonInput, pad];
@@ -110,7 +149,7 @@ export default function GeneratorPanel({ night, paused, closing = false, progres
   };
 
   const flipCard = (index: number) => {
-    if (paused || lock || matchedCards[index] || cards.includes(index)) return;
+    if (paused || rewarding || lock || matchedCards[index] || cards.includes(index)) return;
     const next = [...cards, index]; setCards(next); mayhemSfx.puzzleFlip();
     if (next.length < 2) return;
     setLock(true);
@@ -129,10 +168,11 @@ export default function GeneratorPanel({ night, paused, closing = false, progres
   return (
     <div className={`gen-overlay absolute inset-0 z-[78] flex items-center justify-center ${closing ? "gen-closing" : ""}`}>
       <div className="gen-panel">
+        <div className={`gen-completion-view ${rewarding ? "gen-rewarding" : ""}`} style={{ animationPlayState: paused ? "paused" : "running" }}>
         <img className="gen-art" src={generatorArt.url} alt="Stevenson’s Ultra Power Generator 9000, COMPANY PACE" draggable={false} />
-        <output className="gen-percent" aria-label="Generator progress">{progress.percent}%</output>
-        <div className="gen-progress" role="progressbar" aria-label="Generator power" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress.percent}>
-          <div className="gen-progress-fill" style={{ width: `${progress.percent}%` }} />
+        <output className="gen-percent" aria-label="Generator progress">{Number(displayPercent.toFixed(1))}%</output>
+        <div className="gen-progress" role="progressbar" aria-label="Generator power" aria-valuemin={0} aria-valuemax={100} aria-valuenow={displayPercent}>
+          <div className="gen-progress-fill" style={{ width: `${displayPercent}%` }} />
         </div>
         <div className="gen-task">
           {progress.kind === "simon" && <div className="gen-puzzle-layout">
@@ -149,7 +189,8 @@ export default function GeneratorPanel({ night, paused, closing = false, progres
               return <Button variant="ghost" key={index} type="button" onClick={() => flipCard(index)} className={`gen-card ${visible ? "gen-control-on" : ""}`}>{visible ? PAD_LABELS[value] : "?"}</Button>;
             })}</div>
           </div>}
-          {progress.kind === "flow" && <div className="gen-puzzle-layout"><p className="gen-task-label">FLOW</p><div className="gen-flow-board"><FlowPuzzle key={progress.seed} size={6} pairs={flowPairs} paused={paused} onComplete={finishRound} /></div></div>}
+          {progress.kind === "flow" && <div className="gen-puzzle-layout"><p className="gen-task-label">FLOW</p><div className="gen-flow-board"><FlowPuzzle key={progress.seed} size={6} pairs={flowPairs} paused={paused || rewarding} onComplete={finishRound} /></div></div>}
+        </div>
         </div>
       </div>
     </div>
