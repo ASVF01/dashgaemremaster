@@ -5,7 +5,7 @@ import DialogueBox from "./DialogueBox";
 import { MERCHANT_DIALOGUE, MERCHANT_EXPRESSIONS } from "./merchantDialogue";
 import { MERCHANT_UPGRADES, upgradeCost, type UpgradeId } from "./merchantRules";
 import comic from "@/assets/mayhem/later/The_tutorial_of_madness-2.png.asset.json";
-import shopPortrait from "@/assets/mayhem/receptionist/Reception_in_shop_corner_table_white.png.asset.json";
+import shopPortrait from "@/assets/mayhem/receptionist/Recep_Shop_UI_corner_table_white.png.asset.json";
 import music from "@/assets/audio/receptionist-shop.mp3.asset.json";
 import { addTokens, getShop, subscribeShop } from "@/game/shop";
 import { getSettings, useSettings } from "@/game/settings";
@@ -72,7 +72,7 @@ export default function ReceptionistMerchant({ seen, freeUsed, purchased, paused
         const cost = upgradeCost(item.id, freeUsed);
         return <article className="merchant-item" key={item.id}><ShoppingBag aria-hidden="true" /><h3>{item.name}</h3><p>{item.description}</p>
           <Button className="merchant-buy" disabled={paused || owned || item.unavailable || getShop().tokens < cost} onClick={() => buy(item.id)}>
-            {item.unavailable ? "AWAITING SPRITES" : owned ? "READY THIS NIGHT" : cost === 0 ? "TAKE FREE" : `${cost} T`}
+            {item.unavailable ? "AWAITING SPRITES" : owned ? "READY THIS NIGHT" : freeUsed ? `${cost} T` : "FREE FIRST"}
           </Button></article>;
       })}</div>
     </section></div> : <><img className="merchant-portrait" src={expression.url} alt="The Receptionist" draggable={false} />
