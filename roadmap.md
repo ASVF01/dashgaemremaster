@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Add supplied crushed generator loops, fade on opening/closing, accelerate to original speed at 50%, switch to Fury, and verify audio lifecycle.
+- [x] Add supplied crushed generator loops, fade on opening/closing, accelerate to original speed at 50%, switch to Fury, and verify audio lifecycle.
 
 - [x] Match the reference generator snap, add subtle looking movement to panel and flip tab, remove the table square, and layer the three supplied impact sounds.
 
