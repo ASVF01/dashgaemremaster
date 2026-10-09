@@ -1307,6 +1307,41 @@ export const mayhemSfx = {
     nNoise(0.018, 0.3, 1400, 8000);
     nTone({ freq: 620, dur: 0.035, type: "sine", vol: 0.10, attack: 0.002, release: 0.04, delay: 0.008 });
   },
+  // ---- generator puzzle feedback ----
+  puzzleGrab(pitch = 1) {
+    nNoise(0.02, 0.22, 900, 5000);
+    nTone({ freq: 330 * pitch, to: 440 * pitch, dur: 0.07, type: "square", vol: 0.06, attack: 0.002, release: 0.05 });
+  },
+  puzzleStep(step = 0) {
+    const f = 520 + (step % 12) * 38;
+    nTone({ freq: f, dur: 0.03, type: "triangle", vol: 0.07, attack: 0.002, release: 0.03 });
+  },
+  puzzleConnect() {
+    nTone({ freq: 660, dur: 0.06, type: "square", vol: 0.07, attack: 0.002, release: 0.05 });
+    nTone({ freq: 990, dur: 0.09, type: "square", vol: 0.07, attack: 0.002, release: 0.07, delay: 0.06 });
+  },
+  puzzleRelease() {
+    nNoise(0.015, 0.12, 600, 3000);
+  },
+  puzzlePad(pad = 0) {
+    const f = [262, 330, 392, 523][pad % 4];
+    nTone({ freq: f, dur: 0.16, type: "square", vol: 0.08, attack: 0.003, release: 0.1 });
+  },
+  puzzleWrong() {
+    nTone({ freq: 160, to: 90, dur: 0.3, type: "sawtooth", vol: 0.1, attack: 0.004, release: 0.15 });
+    nNoise(0.12, 0.1, 200, 1500);
+  },
+  puzzleFlip() {
+    nNoise(0.04, 0.2, 1800, 7000);
+    nTone({ freq: 480, to: 720, dur: 0.05, type: "sine", vol: 0.06, attack: 0.002, release: 0.04 });
+  },
+  puzzleMatch() {
+    nTone({ freq: 784, dur: 0.08, type: "triangle", vol: 0.09, attack: 0.002, release: 0.06 });
+    nTone({ freq: 1046, dur: 0.12, type: "triangle", vol: 0.09, attack: 0.002, release: 0.08, delay: 0.08 });
+  },
+  puzzleMiss() {
+    nTone({ freq: 300, to: 220, dur: 0.14, type: "square", vol: 0.06, attack: 0.002, release: 0.08 });
+  },
   cameraOpen() {
     // Procedural pullback/rush transition texture — the CRT power-on sample
     // is triggered separately when the camera scene actually appears.

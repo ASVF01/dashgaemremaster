@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { mayhemSfx } from "@/game/sfx";
 
 type Point = [number, number];
 type Pair = { color: string; start: Point; end: Point; solution: Point[] };
@@ -20,6 +21,7 @@ function isFlowSolved(pairs: Pair[], paths: Record<number, Point[]>) {
 
 export default function FlowPuzzle({ size, pairs, paused = false, onComplete }: FlowPuzzleProps) {
   const [paths, setPaths] = useState<Record<number, Point[]>>({});
+  const [held, setHeld] = useState<number | null>(null);
   const active = useRef<number | null>(null);
   const completed = useRef(false);
   const boardRef = useRef<HTMLDivElement | null>(null);
@@ -41,6 +43,8 @@ export default function FlowPuzzle({ size, pairs, paused = false, onComplete }: 
   const begin = (pairIndex: number, point: Point) => {
     if (paused) return;
     active.current = pairIndex;
+    setHeld(pairIndex);
+    mayhemSfx.puzzleGrab(1 + pairIndex * 0.12);
     setPaths((current) => ({ ...current, [pairIndex]: [point] }));
   };
 
@@ -57,12 +61,17 @@ export default function FlowPuzzle({ size, pairs, paused = false, onComplete }: 
       const occupied = Object.entries(current).some(([index, points]) => Number(index) !== pairIndex && points.some((item) => samePoint(item, point)));
       if (occupied) return current;
       const next = { ...current, [pairIndex]: [...path, point] };
+      const pr = pairs[pairIndex];
+      const first = path[0];
+      const endsAt = first && (samePoint(first, pr.start) ? pr.end : pr.start);
+      if (endsAt && samePoint(point, endsAt)) mayhemSfx.puzzleConnect();
+      else mayhemSfx.puzzleStep(path.length);
       finishIfDone(next);
       return next;
     });
   };
 
-  const stop = () => { active.current = null; };
+  const stop = () => { if (active.current != null) mayhemSfx.puzzleRelease(); active.current = null; setHeld(null); };
   const pathCells = useMemo(() => {
     const cells = new Map<string, { color: string; pair: number }>();
     Object.entries(paths).forEach(([index, points]) => points.forEach((point) => cells.set(keyOf(point), { color: pairs[Number(index)].color, pair: Number(index) })));
@@ -94,10 +103,10 @@ export default function FlowPuzzle({ size, pairs, paused = false, onComplete }: 
               else enter(point);
             }}
             onPointerEnter={(event) => { if (event.buttons === 1 || active.current != null) enter(point); }}
-            className="relative aspect-square border border-[hsl(var(--hell-steel))]/25"
+            className="relative aspect-square border border-[hsl(var(--hell-steel))]/25 transition-colors hover:bg-[hsl(var(--hell-steel))]/15"
           >
-            {filled && <i className="absolute inset-[18%] opacity-70" style={{ backgroundColor: color }} />}
-            {terminal != null && <i className="absolute inset-[22%] rounded-full border-2 border-[hsl(var(--hell-black))]" style={{ backgroundColor: color, boxShadow: `0 0 10px ${color}` }} />}
+            {filled && <i className={`absolute inset-[18%] transition-opacity ${held === pairIndex ? "opacity-90" : "opacity-70"}`} style={{ backgroundColor: color }} />}
+            {terminal != null && <i className={`absolute inset-[22%] rounded-full border-2 border-[hsl(var(--hell-black))] transition-transform duration-75 ${held === terminal ? "scale-75 brightness-75" : "scale-100"}`} style={{ backgroundColor: color, boxShadow: held === terminal ? `inset 0 3px 6px hsl(var(--hell-black)), 0 0 18px ${color}` : `0 0 10px ${color}` }} />}
           </button>
         );
       })}

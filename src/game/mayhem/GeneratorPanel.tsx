@@ -94,25 +94,27 @@ export default function GeneratorPanel({ paused, progress, onProgress, onClose, 
 
   const pressSimon = (pad: number) => {
     if (paused || showing) return;
-    mayhemSfx.terminalSelect();
+    mayhemSfx.puzzlePad(pad);
     setLit(pad); window.setTimeout(() => setLit(null), 140);
     const next = [...simonInput, pad];
-    if (pad !== simon[next.length - 1]) { setSimonInput([]); setShowing(true); setLit(null); window.setTimeout(() => setReplay((r) => r + 1), 500); return; }
+    if (pad !== simon[next.length - 1]) { mayhemSfx.puzzleWrong(); setSimonInput([]); setShowing(true); setLit(null); window.setTimeout(() => setReplay((r) => r + 1), 500); return; }
     if (next.length === simon.length) { setSimonInput([]); finishRound(); return; }
     setSimonInput(next);
   };
 
   const flipCard = (index: number) => {
     if (paused || lock || matchedCards[index] || cards.includes(index)) return;
-    const next = [...cards, index]; setCards(next); mayhemSfx.terminalSelect();
+    const next = [...cards, index]; setCards(next); mayhemSfx.puzzleFlip();
     if (next.length < 2) return;
     setLock(true);
     window.setTimeout(() => {
       if (deck[next[0]] === deck[next[1]]) {
+        mayhemSfx.puzzleMatch();
         const matched = [...matchedCards]; matched[next[0]] = true; matched[next[1]] = true;
         if (matched.every(Boolean)) finishRound();
         else onProgress({ ...progress, memoryMatched: matched });
       }
+      else mayhemSfx.puzzleMiss();
       setCards([]); setLock(false);
     }, 520);
   };
@@ -130,13 +132,13 @@ export default function GeneratorPanel({ paused, progress, onProgress, onClose, 
         </div>
         {progress.kind === "simon" && <div>
           <p className="mb-4 text-center font-pixel text-[9px] text-[hsl(var(--hell-muted))]">{showing ? "WATCH THE SIGNAL" : `${simonInput.length} / ${simon.length}`}</p>
-          <div className="mx-auto grid max-w-sm grid-cols-2 gap-3">{PAD_LABELS.map((label, index) => <button key={label} type="button" onClick={() => pressSimon(index)} className={`aspect-square border-2 font-pixel text-2xl transition ${lit === index ? "border-[hsl(var(--hell-terminal))] bg-[hsl(var(--hell-terminal))] text-[hsl(var(--hell-black))]" : "border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))] text-[hsl(var(--hell-muted))]"}`}>{label}</button>)}</div>
+          <div className="mx-auto grid max-w-sm grid-cols-2 gap-3">{PAD_LABELS.map((label, index) => <button key={label} type="button" onClick={() => pressSimon(index)} className={`aspect-square border-2 font-pixel text-2xl transition duration-75 active:scale-95 active:translate-y-0.5 hover:brightness-125 ${lit === index ? "border-[hsl(var(--hell-terminal))] bg-[hsl(var(--hell-terminal))] text-[hsl(var(--hell-black))]" : "border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))] text-[hsl(var(--hell-muted))]"}`}>{label}</button>)}</div>
         </div>}
         {progress.kind === "memory" && <div>
           <p className="mb-4 text-center font-pixel text-[9px] text-[hsl(var(--hell-muted))]">MATCH THE THREE SIGNAL PAIRS</p>
           <div className="mx-auto grid max-w-md grid-cols-3 gap-3">{deck.map((value, index) => {
             const visible = cards.includes(index) || matchedCards[index];
-            return <button key={index} type="button" onClick={() => flipCard(index)} className="aspect-[4/3] border-2 border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))] font-pixel text-2xl text-[hsl(var(--hell-terminal))]">{visible ? PAD_LABELS[value] : "?"}</button>;
+            return <button key={index} type="button" onClick={() => flipCard(index)} className="aspect-[4/3] border-2 transition duration-100 active:scale-95 active:translate-y-0.5 hover:border-[hsl(var(--hell-terminal))] border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))] font-pixel text-2xl text-[hsl(var(--hell-terminal))]">{visible ? PAD_LABELS[value] : "?"}</button>;
           })}</div>
         </div>}
         {progress.kind === "flow" && <div className="mx-auto max-w-[460px]"><p className="mb-3 text-center font-pixel text-[9px] text-[hsl(var(--hell-muted))]">CONNECT MATCHING SIGNALS</p><FlowPuzzle key={progress.seed} size={6} pairs={flowPairs} paused={paused} onComplete={finishRound} /></div>}
