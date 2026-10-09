@@ -442,13 +442,13 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
       if (pausedRef.current) { id = requestAnimationFrame(tick); return; }
       cur.current.x += (target.current.x - cur.current.x) * 0.08;
       cur.current.y += (target.current.y - cur.current.y) * 0.08;
-      const gx = reducedMotion.matches ? 0 : -cur.current.x * 20;
-      const gy = reducedMotion.matches ? 0 : -cur.current.y * 10;
+      const gx = reducedMotion.matches ? 0 : -cur.current.x * 14;
+      const gy = reducedMotion.matches ? 0 : -cur.current.y * 5;
       if (generatorLookRef.current) {
-        generatorLookRef.current.style.transform = `translate3d(${gx}px, ${gy}px, 0) rotateX(${gy * 0.04}deg) rotateY(${-gx * 0.035}deg)`;
+        generatorLookRef.current.style.transform = `translate(${gx}px, ${gy}px)`;
       }
       if (flipTabRef.current) {
-        flipTabRef.current.style.transform = `translateX(-50%) translate3d(${gx * 0.6}px, ${gy * 0.4}px, 0)`;
+        flipTabRef.current.style.transform = `translateX(-50%) translate(${gx * 0.6}px, ${gy * 0.4}px)`;
       }
       // ease the zoom nudge back to center
       zoomNudge.current *= 0.86;
@@ -472,12 +472,10 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
         const damp = zoomed ? 0 : 1;
         const tyOff = 0;
         const entrySlide = cameraEntryState === "rush" ? Math.min(1, Math.max(0, (scale - 1.1) / 4.1)) : 0;
-        const tx = (-cur.current.x * 34 * p * damp) - 18 * entrySlide;
-        const ty = (-cur.current.y * 18 * p * damp) + tyOff * (scale - 1.1) + 34 * entrySlide;
-        const rx = -cur.current.y * 1.6 * damp;
-        const ry = cur.current.x * 2.4 * damp;
+        const tx = (reducedMotion.matches ? 0 : -cur.current.x * 34 * p * damp) - 18 * entrySlide;
+        const ty = (reducedMotion.matches ? 0 : -cur.current.y * 12 * p * damp) + tyOff * (scale - 1.1) + 34 * entrySlide;
         el.style.transform =
-          `scale(${scale}) translate3d(${tx}px, ${ty}px, 0) rotateX(${rx}deg) rotateY(${ry}deg)`;
+          `scale(${scale}) translate(${tx}px, ${ty}px)`;
       }
       id = requestAnimationFrame(tick);
     };
