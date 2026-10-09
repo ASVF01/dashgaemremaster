@@ -2150,6 +2150,7 @@ const WIP_CHARACTERS: WipCharacter[] = [
   },
   { id: "dasher",  name: "Blue Blur",       blurb: "Dashes faster. Thinks slower.", art: blueBlurArtAsset.url },
   { id: "shadow",  name: "Shark Gal",      blurb: "A rumor in pencil form. Hard to pin down.", art: sharkGalArtAsset.url },
+  { id: "mmguy",   name: "M&M's Guy",      blurb: "Yehihehu! BOIII THIS CHARACTER SO TUFF. Sprite and sounds on the way." },
   { id: "x3mode",  name: "THE ALTERNATE",       blurb: "TO ACHIVE SUCH FORM, YOU MUST UNLOCK THE MARK, MANIPULATE IT'S FACE AND RE-COMPLETE YOUR GENISIS WITH YOUR NEW FOUND POWER.", art: theAlternateArtAsset.url, locked: true },
 ];
 
@@ -2159,6 +2160,7 @@ const CARD_TINT: Record<string, string> = {
   green:  "hsl(var(--green-machine))",
   dasher: "#1a1a1a",
   shadow: "#1a1a1a",
+  mmguy:  "#1a1a1a",
   x3mode: "#1a1a1a",
 };
 
@@ -2169,7 +2171,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   const [infoOpen, setInfoOpen] = useState(false);
   const [shakingId, setShakingId] = useState<string | null>(null);
   const selected = WIP_CHARACTERS.find((c) => c.id === picked) ?? WIP_CHARACTERS[0];
-  const isNotYet = (id: string) => id === "dasher" || id === "shadow";
+  const isNotYet = (id: string) => id === "dasher" || id === "shadow" || id === "mmguy";
   const isCharLocked = (id: string) =>
     isNotYet(id) ? true :
     (id === "stick" || id === "green" || id === "x3mode")
