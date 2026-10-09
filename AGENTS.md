@@ -1,6 +1,6 @@
 # Project Architecture Rules
 
-- Generator-only music uses an isolated audio lifecycle with a pure progress-to-track/rate rule and displayed progress as its clock; duck the night soundtrack while audible and release all sources on dismissal so timing, pause, and room audio stay independent.
+- Generator-only music uses an isolated audio lifecycle with a pure progress-to-track/rate rule and displayed progress as its clock; start both loops on one audio-clock boundary with matching rate and loop length, switch their gains rather than restart, and derive button beats from that audio clock. Duck the night soundtrack while audible and release all sources on dismissal so timing, pause, and room audio stay independent.
 
 - Playable character variants use `CharacterId` plus per-character sprite overrides; variants without gameplay branches inherit The Player mechanics to prevent physics drift.
 - Distinct level environments use dedicated canvas scenery renderers while shared collisions stay data-driven in `level.ts`, keeping visuals isolated from physics.

@@ -1,3 +1,12 @@
+export const GENERATOR_BPM = 170;
+export const GENERATOR_BEAT_SECONDS = 60 / GENERATOR_BPM;
+
+export function generatorBeatPulse(percent: number, musicSeconds: number) {
+  if (percent < 50) return 0;
+  const phase = (Math.max(0, musicSeconds) / GENERATOR_BEAT_SECONDS) % 1;
+  return Math.max(0, 1 - phase / 0.45);
+}
+
 export function generatorMusicState(percent: number) {
   const progress = Math.max(0, Math.min(100, percent));
   return {

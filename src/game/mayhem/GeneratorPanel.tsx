@@ -60,7 +60,8 @@ export default function GeneratorPanel({ night, paused, closing = false, progres
   const [displayPercent, setDisplayPercent] = useState(progress.percent);
   const displayPercentRef = useRef(progress.percent);
   const [settings] = useSettings();
-  useGeneratorMusic(displayPercent, !closing, paused && !closing, settings.bgmVolume);
+  const beatRef = useRef<HTMLDivElement>(null);
+  useGeneratorMusic(displayPercent, !closing, paused && !closing, settings.bgmVolume, beatRef);
   const [rewarding, setRewarding] = useState(false);
   const rewardingRef = useRef(false);
   const completeRef = useRef(onComplete); completeRef.current = onComplete;
@@ -181,7 +182,7 @@ export default function GeneratorPanel({ night, paused, closing = false, progres
         <div className="gen-progress" role="progressbar" aria-label="Generator power" aria-valuemin={0} aria-valuemax={100} aria-valuenow={displayPercent}>
           <div className="gen-progress-fill" style={{ width: `${displayPercent}%` }} />
         </div>
-        <div className="gen-task">
+        <div ref={beatRef} className="gen-task">
           {progress.kind === "simon" && <div className="gen-puzzle-layout">
             <p className="gen-task-label">SIMON · {showing ? "SIGNAL" : `${simonInput.length} / ${simon.length}`}</p>
             <div className="gen-simon-grid">{PAD_LABELS.map((label, index) => {
