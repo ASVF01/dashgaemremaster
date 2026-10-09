@@ -23,6 +23,8 @@ import { getMayhemNight, mayhemAiLevel, setMayhemNight } from "@/game/progress";
 import { isMuted, setMuted, setNightSfxVolume, mayhemSfx, preloadMayhemSfx } from "@/game/sfx";
 import { isBgmMuted, setBgmMuted, stopBgm } from "@/game/bgm";
 import { useSettings } from "@/game/settings";
+import { Button } from "@/components/ui/button";
+import { ChevronsDown, ChevronsUp } from "lucide-react";
 
 
 type View = "office" | "door" | "keyhole" | "hallway" | "storage" | "storageKeyhole" | "storageDoor";
@@ -607,6 +609,28 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
         onNightComplete();
       }} />}
       {cameraOpen && <GridMap onClose={() => setCameraOpen(false)} characters={grid.characters} moveCount={grid.moveCount} heat={gridUseMs / GRID_MAX_VIEW_MS} />}
+      {view === "office" && nightReady && !paused && !generatorOnline && !cameraOpen && cameraEntry === "idle" && !terminalOpen && (
+        <Button
+          variant="ghost"
+          className="gen-hover-tab"
+          aria-label={generatorOpen ? "Lower generator" : "Raise generator"}
+          aria-expanded={generatorOpen}
+          onMouseEnter={() => {
+            if (generatorOpenRef.current) mayhemSfx.terminalClose();
+            else mayhemSfx.terminalOpen();
+            setGeneratorOpen((open) => !open);
+          }}
+          onClick={(event) => {
+            // Mouse entry already toggles the panel; retain keyboard/touch access.
+            if (event.detail !== 0 && window.matchMedia("(hover: hover)").matches) return;
+            if (generatorOpenRef.current) mayhemSfx.terminalClose();
+            else mayhemSfx.terminalOpen();
+            setGeneratorOpen((open) => !open);
+          }}
+        >
+          {generatorOpen ? <ChevronsDown /> : <ChevronsUp />}
+        </Button>
+      )}
     </div>
   );
 }
