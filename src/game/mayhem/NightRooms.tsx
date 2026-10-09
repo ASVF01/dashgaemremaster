@@ -424,7 +424,7 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
   const cur = useRef({ x: 0, y: 0 });
   // Zoom nudge for the hallway→door step-back — eased back to center.
   const zoomNudge = useRef(0);
-  const zoomCur = useRef(1.5);
+  const zoomCur = useRef(1.22);
   const peek = view === "keyhole" || view === "storageKeyhole" ? 1.22 : 1;
   const peekRef = useRef(peek);
   peekRef.current = peek;
