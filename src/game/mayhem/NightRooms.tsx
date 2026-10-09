@@ -117,6 +117,7 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [terminalSession, setTerminalSession] = useState<TerminalSession>(() => ({ initialized: false, error: null, videoTime: 0, videoDone: false, puzzleSeed: Math.floor(Math.random() * 0xFFFFFFFF) }));
   const [generatorOpen, setGeneratorOpen] = useState(false);
+  const [generatorRewarding, setGeneratorRewarding] = useState(false);
   const [generatorClosing, setGeneratorClosing] = useState(false);
   const generatorClosingRef = useRef(false);
   generatorClosingRef.current = generatorClosing;
@@ -493,6 +494,7 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
       )}
 
       {/* mouse-look layer: the room drifts opposite the cursor */}
+      <div className={`absolute inset-0 gen-room-completion ${generatorRewarding ? "gen-rewarding" : ""}`} style={{ animationPlayState: paused || generatorClosing ? "paused" : "running" }}>
       <div
         ref={lookRef}
         className={`absolute inset-0 will-change-transform transition-[filter] duration-300 ${terminalOpen ? "blur-[3px] brightness-75" : "blur-0 brightness-100"}`}
@@ -586,6 +588,7 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
       </div>
 
       <div aria-hidden="true" className="mayhem-pov-vignette pointer-events-none absolute inset-0" />
+      </div>
 
 
 
@@ -621,7 +624,7 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
       </div>
 
       {terminalOpen && <Terminal paused={paused} session={terminalSession} onSessionChange={setTerminalSession} onClose={() => { mayhemSfx.terminalClose(); setTerminalOpen(false); }} onResetGrid={() => setGridDown(false)} />}
-      {generatorOpen && <GeneratorPanel night={night} paused={paused || generatorClosing} closing={generatorClosing} progress={generatorProgress} onProgress={setGeneratorProgress} onClose={closeGenerator} onComplete={() => {
+      {generatorOpen && <GeneratorPanel night={night} paused={paused || generatorClosing} closing={generatorClosing} progress={generatorProgress} onProgress={setGeneratorProgress} onRewardChange={setGeneratorRewarding} onClose={closeGenerator} onComplete={() => {
         setGeneratorOnline(true);
         setGeneratorOpen(false);
         setMayhemNight(getMayhemNight() + 1);
