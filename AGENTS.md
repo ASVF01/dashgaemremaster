@@ -5,7 +5,7 @@
 - Playable character variants use `CharacterId` plus per-character sprite overrides; variants without gameplay branches inherit The Player mechanics to prevent physics drift.
 - Distinct level environments use dedicated canvas scenery renderers while shared collisions stay data-driven in `level.ts`, keeping visuals isolated from physics.
 - Boss cinematics live in boss runtime state and signal the page-level audio owner when combat begins, preventing visual and music timing drift.
-- MAYHEM night-clear cinematics own their media lifecycle and use one playback envelope for sound and picture; the page prepares the next available floor beneath the fade and keeps gameplay frozen until reveal finishes.
+- MAYHEM night-clear cinematics own their media lifecycle and derive picture beats and the shared sound/picture fade from the completion audio clock; separate descent and pulse transform layers preserve both motions, while the page prepares the next available floor and keeps gameplay frozen until reveal finishes.
 - Generator progress gains use a pure helper fed by the active night captured in NightRooms, keeping all puzzle types consistent and the completion cap testable.
 - Generator completion feedback animates displayed progress independently from owned progress, starting layered impact audio with the reward and count audio on the rise clock; final night completion waits for the rise.
 - NightRooms drives generator and flip-tab look offsets from the existing smoothed gaze through separate transform layers, preserving independent flip and reward animations.
