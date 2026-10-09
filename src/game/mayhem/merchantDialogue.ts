@@ -9,11 +9,12 @@ import bag from "@/assets/mayhem/receptionist/The_Receptionist_Bag_dialouge_l.pn
 import greet from "@/assets/mayhem/receptionist/Recep_Greet_Dialouge.png.asset.json";
 import question from "@/assets/mayhem/receptionist/Recep_Worry_or_Question_Dialouge.png.asset.json";
 import paper from "@/assets/mayhem/receptionist/The_Receptionist_Paper_Give_dialouge.png.asset.json";
+import shopUi from "@/assets/mayhem/receptionist/Recep_Shop_UI_Dialouge.png.asset.json";
 
 export const MERCHANT_EXPRESSIONS = {
   intro: [greet, greet, question, question, neutral2, surprised, unsurprised, unsurprised, paper, paper],
   thanks: [neutral, neutral2, realise],
-  offer: [neutral2, neutral],
+  offer: [shopUi, shopUi],
   bag,
 };
 const rec = (text: string) => ({ speaker: "RECEPTIONIST", text, color: MAYHEM_VOICE.intercom });

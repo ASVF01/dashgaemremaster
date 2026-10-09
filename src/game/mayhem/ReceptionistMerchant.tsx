@@ -5,7 +5,7 @@ import DialogueBox from "./DialogueBox";
 import { MERCHANT_DIALOGUE, MERCHANT_EXPRESSIONS } from "./merchantDialogue";
 import { MERCHANT_UPGRADES, upgradeCost, type UpgradeId } from "./merchantRules";
 import comic from "@/assets/mayhem/later/The_tutorial_of_madness-2.png.asset.json";
-import shopPortrait from "@/assets/mayhem/receptionist/Recep_Shop_UI_Dialouge.png.asset.json";
+import shopPortrait from "@/assets/mayhem/receptionist/Reception_in_shop_corner_table.png.asset.json";
 import music from "@/assets/audio/receptionist-shop.mp3.asset.json";
 import { addTokens, getShop, subscribeShop } from "@/game/shop";
 import { getSettings, useSettings } from "@/game/settings";
