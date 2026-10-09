@@ -69,7 +69,9 @@ export default function GeneratorPanel({ paused, progress, onProgress, onClose, 
     const timer = window.setInterval(() => {
       if (pausedRef.current) return;
       if (step >= simon.length * 2) { window.clearInterval(timer); setLit(null); setShowing(false); return; }
-      setLit(step % 2 === 0 ? simon[Math.floor(step / 2)] : null);
+      const litPad = step % 2 === 0 ? simon[Math.floor(step / 2)] : null;
+      setLit(litPad);
+      if (litPad !== null) mayhemSfx.puzzleSignal(litPad);
       step += 1;
     }, 440);
     return () => window.clearInterval(timer);
