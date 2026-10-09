@@ -48,6 +48,7 @@ export default function GeneratorPanel({ paused, progress, onProgress, onClose, 
   const [simonInput, setSimonInput] = useState<number[]>([]);
   const [cards, setCards] = useState<number[]>([]);
   const [lock, setLock] = useState(false);
+  const [replay, setReplay] = useState(0);
   const pausedRef = useRef(paused); pausedRef.current = paused;
   const simon = useMemo(() => seededValues(progress.seed, 5, 4), [progress.seed]);
   const deck = useMemo(() => shuffledDeck(progress.seed), [progress.seed]);
@@ -72,7 +73,7 @@ export default function GeneratorPanel({ paused, progress, onProgress, onClose, 
       step += 1;
     }, 440);
     return () => window.clearInterval(timer);
-  }, [progress.kind, progress.round, simon]);
+  }, [progress.kind, progress.round, simon, replay]);
 
   const finishRound = () => {
     const percent = Math.min(100, progress.percent + 3);
@@ -96,7 +97,7 @@ export default function GeneratorPanel({ paused, progress, onProgress, onClose, 
     mayhemSfx.terminalSelect();
     setLit(pad); window.setTimeout(() => setLit(null), 140);
     const next = [...simonInput, pad];
-    if (pad !== simon[next.length - 1]) { setSimonInput([]); setShowing(true); window.setTimeout(() => setShowing(false), 700); return; }
+    if (pad !== simon[next.length - 1]) { setSimonInput([]); setShowing(true); setLit(null); window.setTimeout(() => setReplay((r) => r + 1), 500); return; }
     if (next.length === simon.length) { setSimonInput([]); finishRound(); return; }
     setSimonInput(next);
   };

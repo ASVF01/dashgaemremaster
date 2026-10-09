@@ -490,6 +490,8 @@ const Index = () => {
     setMayhemCleared(false);
     setMayhemDialogue(null);
     stopBgm(0.25);
+    sfx.rainStop();
+    sfx.windStop();
     setScreen("menu");
   };
   // Talking to someone in the tower. The checker's script hands over the
