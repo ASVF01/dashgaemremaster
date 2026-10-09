@@ -1,5 +1,6 @@
 // Tiny WebAudio SFX engine — procedural, no assets.
 import nySampleUrl from "@/assets/audio/ny.ogg";
+import sugarcoatSampleUrl from "@/assets/sugarcoat.mp3";
 import beamCriticalUrl from "@/assets/audio/beam_critical2.mp3";
 import wwHitUrl from "@/assets/audio/ww.ogg";
 import notBadUrl from "@/assets/audio/not_bad.ogg";
@@ -89,6 +90,7 @@ function pixelateBuffer(c: AudioContext, src: AudioBuffer, bits: number, rateDiv
 const pixelCache = new Map<string, AudioBuffer>();
 const GENERATOR_IMPACT_URLS = [generatorImpactW.url, generatorImpact28.url, generatorImpact8d.url];
 let generatorHoverSource: AudioBufferSourceNode | null = null;
+let generatorSugarcoatSource: AudioBufferSourceNode | null = null;
 function getPixelated(url: string, bits: number, rateDiv: number): AudioBuffer | null {
   const c = ac(); if (!c) return null;
   const key = `${url}|${bits}|${rateDiv}`;
@@ -220,6 +222,7 @@ const MAYHEM_SAMPLE_URLS = [
   countupAsset.url,
   generatorHoverAsset.url,
   nySampleUrl,
+  sugarcoatSampleUrl,
   ...GENERATOR_IMPACT_URLS,
   keyholeEnterAsset.url,
   animInHallAsset.url,
@@ -1343,6 +1346,26 @@ export const mayhemSfx = {
     const gain = c.createGain(); gain.gain.value = 0.55;
     source.connect(filter).connect(gain).connect(b);
     source.onended = () => { source.disconnect(); filter.disconnect(); gain.disconnect(); };
+    source.start();
+  },
+  // "I'm not gonna sugarcoat it" callout — plays on a doubled generator charge.
+  generatorSugarcoat() {
+    const c = ac(); const b = nbus();
+    if (!c || !b) return;
+    const buffer = sampleCache.get(sugarcoatSampleUrl);
+    if (!buffer) { void loadSample(sugarcoatSampleUrl); return; }
+    // A fresh reward replaces the previous callout instead of stacking voices.
+    if (generatorSugarcoatSource) generatorSugarcoatSource.stop();
+    const source = c.createBufferSource();
+    source.buffer = buffer;
+    const gain = c.createGain();
+    gain.gain.value = 0.7;
+    source.connect(gain).connect(b);
+    generatorSugarcoatSource = source;
+    source.onended = () => {
+      source.disconnect(); gain.disconnect();
+      if (generatorSugarcoatSource === source) generatorSugarcoatSource = null;
+    };
     source.start();
   },
   generatorImpact(doubled = false) {

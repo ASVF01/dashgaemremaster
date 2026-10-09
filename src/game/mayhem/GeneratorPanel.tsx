@@ -81,7 +81,7 @@ export default function GeneratorPanel({ night, upgrades = {}, paused, closing =
     rewardingRef.current = true;
     setRewarding(true);
     mayhemSfx.generatorImpact(progress.doubled);
-    if (progress.doubled) mayhemSfx.generatorParry();
+    if (progress.doubled) { mayhemSfx.generatorParry(); mayhemSfx.generatorSugarcoat(); }
 
     let elapsed = 0;
     let previous = performance.now();
