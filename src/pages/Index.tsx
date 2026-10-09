@@ -188,7 +188,8 @@ const Index = () => {
         resetBgmLevelEndFx();
         return;
       }
-      saveMayhemNight(1);
+      // The stairwell door on each floor starts that floor's night.
+      saveMayhemNight(levelId === "mayhem-floor-2" ? 2 : 1);
       setMayhemNight(true);
       return;
     }
