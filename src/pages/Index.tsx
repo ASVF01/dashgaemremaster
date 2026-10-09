@@ -22,7 +22,7 @@ import NightRooms from "@/game/mayhem/NightRooms";
 import NightClear from "@/game/mayhem/NightClear";
 import DialogueBox from "@/game/mayhem/DialogueBox";
 import { MAYHEM_SCRIPTS } from "@/game/mayhem/dialogue";
-import { setMayhemNight } from "@/game/progress";
+import { setMayhemNight as saveMayhemNight } from "@/game/progress";
 
 
 type Screen = "menu" | "loading" | "playing" | "dead" | "win" | "cutscene" | "death-cutscene";
@@ -188,7 +188,7 @@ const Index = () => {
         resetBgmLevelEndFx();
         return;
       }
-      setMayhemNight(1);
+      saveMayhemNight(1);
       setMayhemNight(true);
       return;
     }
@@ -530,7 +530,7 @@ const Index = () => {
       setLevelId("mayhem-floor-1");
       setResetKey((k) => k + 1);
       setScreen("playing");
-      setMayhemNight(1);
+      saveMayhemNight(1);
       setMayhemNight(true);
     };
     window.addEventListener("keydown", onKey);
