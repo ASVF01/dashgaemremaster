@@ -23,6 +23,8 @@ import NightClear from "@/game/mayhem/NightClear";
 import DialogueBox from "@/game/mayhem/DialogueBox";
 import { MAYHEM_SCRIPTS } from "@/game/mayhem/dialogue";
 import { setMayhemNight as saveMayhemNight } from "@/game/progress";
+import ReceptionistMerchant from "@/game/mayhem/ReceptionistMerchant";
+import { applyUpgrade, type NightUpgrades, type UpgradeId } from "@/game/mayhem/merchantRules";
 
 
 type Screen = "menu" | "loading" | "playing" | "dead" | "win" | "cutscene" | "death-cutscene";
@@ -86,6 +88,11 @@ const Index = () => {
   const [mayhemDialogue, setMayhemDialogue] = useState<string | null>(null);
   const [mayhemTicket, setMayhemTicket] = useState(false);
   const [receptionistWaveKey, setReceptionistWaveKey] = useState(0);
+  const [merchantOpen, setMerchantOpen] = useState(false);
+  const [merchantSeen, setMerchantSeen] = useState(false);
+  const [merchantFreeUsed, setMerchantFreeUsed] = useState(false);
+  const [merchantPurchased, setMerchantPurchased] = useState<UpgradeId[]>([]);
+  const [nightUpgrades, setNightUpgrades] = useState<NightUpgrades>({});
   const mayhemRef = useRef(false);
   mayhemRef.current = mayhem;
   const [binds] = useKeybinds();
@@ -456,6 +463,8 @@ const Index = () => {
 
   // ---- MAYHEM mode session control ----
   const startMayhem = () => {
+    setMerchantOpen(false); setMerchantSeen(false); setMerchantFreeUsed(false);
+    setMerchantPurchased([]); setNightUpgrades({});
     setMarathonStep(null);
     marathonStartRef.current = null;
     setMarathonFinalMs(null);
@@ -480,6 +489,7 @@ const Index = () => {
   };
   // After night 1: climb to Floor 2, whose stairwell door starts night 2.
   const goToFloor2 = () => {
+    setMerchantPurchased([]); setNightUpgrades({});
     setMayhemNight(false);
     setMayhemPaused(false);
     setMayhemDialogue(null);
@@ -489,6 +499,7 @@ const Index = () => {
     setScreen("playing");
   };
   const quitMayhem = () => {
+    setMerchantOpen(false);
     setNightClearActive(false);
     setMayhem(false);
     setMayhemNight(false);
@@ -504,6 +515,7 @@ const Index = () => {
   // elevator ticket, which unlocks the main-floor elevator.
   const handleNpcInteract = useCallback((id: string) => {
     if (id === "checker") setMayhemDialogue("checker");
+    if (id === "merchant") setMerchantOpen(true);
   }, []);
   const handleDialogueDone = useCallback(() => {
     setMayhemDialogue((cur) => {
@@ -702,7 +714,7 @@ const Index = () => {
               if (marathonStep == null) playBgmFor("roaring-knight", true);
             }}
             goalLocked={mayhem && levelId === "mayhem-main" && !mayhemTicket}
-            paused={screen !== "playing" || invboiIntroOpen || chaseIntroOpen || mayhemPaused || mayhemCleared || mayhemNight || mayhemDialogue != null}
+             paused={screen !== "playing" || invboiIntroOpen || chaseIntroOpen || mayhemPaused || mayhemCleared || mayhemNight || mayhemDialogue != null || merchantOpen}
             keepAudio={screen === "dead" || screen === "win" || invboiIntroOpen || chaseIntroOpen || marathonStep != null || mayhem}
             startAsInvboi={marathonStep != null}
             resetKey={resetKey}
@@ -726,7 +738,12 @@ const Index = () => {
           {mayhem && mayhemPaused && (
             <MayhemPause onResume={() => setMayhemPaused(false)} onQuit={quitMayhem} />
           )}
-          {mayhem && mayhemNight && <NightRooms paused={mayhemPaused} onNightComplete={() => {
+          {mayhem && merchantOpen && <ReceptionistMerchant seen={merchantSeen} freeUsed={merchantFreeUsed} purchased={merchantPurchased} paused={mayhemPaused}
+            onSeen={() => setMerchantSeen(true)} onClose={() => setMerchantOpen(false)} onBuy={(id) => {
+              setMerchantFreeUsed(true); setMerchantPurchased((list) => [...list, id]);
+              setNightUpgrades((current) => applyUpgrade(current, id));
+            }} />}
+          {mayhem && mayhemNight && <NightRooms upgrades={nightUpgrades} paused={mayhemPaused} onNightComplete={() => {
              nightClearOrigin.current = levelId;
             setMayhemNight(false);
             setMayhemCleared(true);

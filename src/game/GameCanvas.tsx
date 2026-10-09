@@ -3031,7 +3031,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         const cx = n.x + n.w / 2;
         const bob = Math.sin(r.time * 1.8 + n.x) * 2;
         ctx.save();
-        if (n.id === "checker" && receptionistImg.complete && receptionistImg.naturalWidth > 0) {
+        if ((n.id === "checker" || n.id === "merchant") && receptionistImg.complete && receptionistImg.naturalWidth > 0) {
           ctx.imageSmoothingEnabled = false;
           const waveElapsed = r.receptionistWaveStart == null ? Infinity : r.time - r.receptionistWaveStart;
           const waveFrame = Math.floor(waveElapsed * 7) % 2;

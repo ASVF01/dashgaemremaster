@@ -1018,6 +1018,7 @@ function buildMayhemFloor2(): Level {
     spawn: { x: 120, y: groundY - 80 },
     goal: { x: W - 240, y: groundY - 220, w: 46, h: 220 },
     platforms, hazards: [], enemies: [], pickups, signs: [],
+    npcs: [{ id: "merchant", x: 350, y: groundY - 150, w: 112, h: 150, name: "THE RECEPTIONIST" }],
   };
 }
 

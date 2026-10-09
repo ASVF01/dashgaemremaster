@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { mayhemSfx } from "@/game/sfx";
 import FlowPuzzle, { makeRandomFlowPairs } from "./minigames/FlowPuzzle";
-import { advanceGenerator } from "./generatorGain";
+import { startingPower, upgradedProgress, type NightUpgrades } from "./merchantRules";
 import generatorArt from "@/assets/mayhem/generator-panel.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { useSettings } from "@/game/settings";
@@ -37,12 +37,13 @@ function randomKind(previous?: PuzzleKind): PuzzleKind {
   return choices[Math.floor(Math.random() * choices.length)];
 }
 
-export function makeGeneratorProgress(): GeneratorProgress {
-  return { percent: 0, round: 1, kind: randomKind(), seed: Math.floor(Math.random() * 0xFFFFFFFF), memoryMatched: Array(6).fill(false) };
+export function makeGeneratorProgress(upgrades: NightUpgrades = {}): GeneratorProgress {
+  return { percent: startingPower(upgrades), round: 1, kind: upgrades.puzzle ?? randomKind(), seed: Math.floor(Math.random() * 0xFFFFFFFF), memoryMatched: Array(6).fill(false) };
 }
 
-export default function GeneratorPanel({ night, paused, closing = false, progress, onProgress, onClose, onComplete, lookRef }: {
+export default function GeneratorPanel({ night, upgrades = {}, paused, closing = false, progress, onProgress, onClose, onComplete, lookRef }: {
   night: number;
+  upgrades?: NightUpgrades;
   paused: boolean;
   closing?: boolean;
   lookRef?: RefObject<HTMLDivElement>;
@@ -131,7 +132,7 @@ export default function GeneratorPanel({ night, paused, closing = false, progres
 
   const finishRound = () => {
     if (rewardingRef.current) return;
-    const percent = advanceGenerator(progress.percent, night);
+    const percent = upgradedProgress(progress.percent, night, progress.round, upgrades);
     if (percent >= 100) {
       onProgress({ ...progress, percent: 100 });
       return;
@@ -139,7 +140,7 @@ export default function GeneratorPanel({ night, paused, closing = false, progres
     onProgress({
       percent,
       round: progress.round + 1,
-      kind: randomKind(progress.kind),
+      kind: upgrades.puzzle ?? randomKind(progress.kind),
       seed: Math.floor(Math.random() * 0xFFFFFFFF),
       memoryMatched: Array(6).fill(false),
     });
