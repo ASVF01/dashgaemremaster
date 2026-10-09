@@ -71,7 +71,7 @@ export default function GeneratorPanel({ night, paused, closing = false, progres
     if (target <= from) return;
     rewardingRef.current = true;
     setRewarding(true);
-    rewardChangeRef.current?.(true);
+
     let elapsed = 0;
     let previous = performance.now();
     let lastTick = -1;
