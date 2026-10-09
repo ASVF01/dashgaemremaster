@@ -10,7 +10,7 @@ import mvAsset from "@/assets/audio/MV.ogg.asset.json";
 import { sfx, setSfxVolume, unlockAudio } from "@/game/sfx";
 import { setBgmVolume, pauseBgm, resumeBgm, playMenuBgm, stopBgm, playMayhemBgm } from "@/game/bgm";
 import { setNightBgmVolume } from "@/game/mayhem/nightAudio";
-import { resetAllProgress } from "@/game/progress";
+import { resetAllProgress, getMayhemCheckpoint, getMayhemNight } from "@/game/progress";
 import exploseAsset from "@/assets/audio/explose1.mp3.asset.json";
 import BgmPlayer from "@/game/BgmPlayer";
 import StarVanisher from "@/game/StarVanisher";
@@ -30,9 +30,10 @@ interface Props {
   onPlayAsAlternate?: () => void;
   /** Launches the fullscreen MAYHEM mode (the outside run into the tower). */
   onCommenceMayhem?: () => void;
+  onContinueMayhem?: () => void;
 }
 
-export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAlternate, onCommenceMayhem }: Props) {
+export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAlternate, onCommenceMayhem, onContinueMayhem }: Props) {
   const [tab, setTab] = useState<MenuTab>("play");
   const [charSelectOpen, setCharSelectOpen] = useState(false);
   const [bestiaryOpen, setBestiaryOpen] = useState(false);
@@ -129,7 +130,7 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
           {tab === "credits"  && <CreditsTab />}
           {tab === "youtube"  && <YouTubeTab />}
           {tab === "starvanisher" && <StarVanisher onBack={() => setTab("play")} />}
-          {tab === "hell" && <HellPreview onCommence={onCommenceMayhem} />}
+          {tab === "hell" && <HellPreview onCommence={onCommenceMayhem} onContinue={onContinueMayhem} />}
         </div>
       </div>
 
@@ -214,8 +215,10 @@ type MayhemRainStyle = CSSProperties & {
   "--rain-drift": string;
 };
 
-function HellPreview({ onCommence }: { onCommence?: () => void }) {
+function HellPreview({ onCommence, onContinue }: { onCommence?: () => void; onContinue?: () => void }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [checkpoint] = useState(getMayhemCheckpoint);
+  const savedNight = useState(getMayhemNight)[0];
 
   useEffect(() => {
     unlockAudio();
@@ -236,6 +239,16 @@ function HellPreview({ onCommence }: { onCommence?: () => void }) {
         <div className="mayhem-menu absolute inset-0 z-30 flex flex-col items-center justify-center px-4">
           <div className="hell-title font-pixel text-[clamp(24px,5vw,58px)]">MAYHEM</div>
           <div className="mt-5 flex w-full max-w-sm flex-col gap-2.5">
+            {checkpoint && onContinue && (
+              <button
+                type="button"
+                onClick={() => { sfx.menuConfirm(); onContinue(); }}
+                onMouseEnter={() => sfx.menuHover()}
+                className="mayhem-menu-button mayhem-menu-primary"
+              >
+                {checkpoint.night ? `CONTINUE — NIGHT ${savedNight}` : `CONTINUE — FLOOR ${checkpoint.level.replace("mayhem-floor-", "")}`}
+              </button>
+            )}
             <button
               type="button"
               onClick={() => { sfx.menuConfirm(); onCommence?.(); }}
