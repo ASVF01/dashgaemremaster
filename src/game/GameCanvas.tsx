@@ -34,6 +34,7 @@ import knightSwordAppearUrl from "@/assets/sprites/knight/sword_appear.png";
 import knightEquipSwordUrl from "@/assets/sprites/knight/equip_sword.png";
 import knightRoarWindupAsset from "@/assets/sprites/knight/roar-windup.png.asset.json";
 import receptionistAsset from "@/assets/mayhem/The_Receptionist.png.asset.json";
+import receptionistFullAsset from "@/assets/mayhem/receptionist/The_Receptionist_Full.png.asset.json";
 import receptionistWave1Asset from "@/assets/mayhem/The_Receptionist_Wave_1.png.asset.json";
 import receptionistWave2Asset from "@/assets/mayhem/The_Receptionist_Wave_2.png.asset.json";
 
@@ -88,6 +89,7 @@ const knightSwordAppearStrip = new Image(); knightSwordAppearStrip.src = knightS
 const knightEquipSwordStrip = new Image(); knightEquipSwordStrip.src = knightEquipSwordUrl;
 const knightRoarWindupImg = new Image(); knightRoarWindupImg.src = knightRoarWindupAsset.url;
 const receptionistImg = new Image(); receptionistImg.src = receptionistAsset.url;
+const receptionistFullImg = new Image(); receptionistFullImg.src = receptionistFullAsset.url;
 const receptionistWave1Img = new Image(); receptionistWave1Img.src = receptionistWave1Asset.url;
 const receptionistWave2Img = new Image(); receptionistWave2Img.src = receptionistWave2Asset.url;
 const bossBgImg = new Image(); bossBgImg.src = bossBgUrl;
@@ -3030,15 +3032,16 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         if (n.x + n.w < camX - 120 || n.x > camX + w + 120) continue;
         const cx = n.x + n.w / 2;
         const bob = Math.sin(r.time * 1.8 + n.x) * 2;
+        const floorPortrait = n.id === "merchant" ? receptionistFullImg : receptionistImg;
         ctx.save();
-        if ((n.id === "checker" || n.id === "merchant") && receptionistImg.complete && receptionistImg.naturalWidth > 0) {
+        if ((n.id === "checker" || n.id === "merchant") && floorPortrait.complete && floorPortrait.naturalWidth > 0) {
           ctx.imageSmoothingEnabled = false;
           const waveElapsed = r.receptionistWaveStart == null ? Infinity : r.time - r.receptionistWaveStart;
           const waveFrame = Math.floor(waveElapsed * 7) % 2;
           const waveImg = waveFrame === 0 ? receptionistWave1Img : receptionistWave2Img;
-          const activeImg = waveElapsed < 2.6 && waveImg.complete && waveImg.naturalWidth > 0
+          const activeImg = n.id === "checker" && waveElapsed < 2.6 && waveImg.complete && waveImg.naturalWidth > 0
             ? waveImg
-            : receptionistImg;
+            : floorPortrait;
           const ratio = activeImg.naturalWidth / activeImg.naturalHeight;
           const drawH = n.h;
           const drawW = drawH * ratio;
