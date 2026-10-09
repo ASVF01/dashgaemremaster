@@ -624,7 +624,7 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
       </div>
 
       {terminalOpen && <Terminal paused={paused} session={terminalSession} onSessionChange={setTerminalSession} onClose={() => { mayhemSfx.terminalClose(); setTerminalOpen(false); }} onResetGrid={() => setGridDown(false)} />}
-      {generatorOpen && <GeneratorPanel night={night} paused={paused || generatorClosing} closing={generatorClosing} progress={generatorProgress} onProgress={setGeneratorProgress} onRewardChange={setGeneratorRewarding} onClose={closeGenerator} onComplete={() => {
+      {generatorOpen && <GeneratorPanel night={night} paused={paused || generatorClosing} closing={generatorClosing} progress={generatorProgress} onProgress={setGeneratorProgress} onClose={closeGenerator} onComplete={() => {
         setGeneratorOnline(true);
         setGeneratorOpen(false);
         setMayhemNight(getMayhemNight() + 1);
