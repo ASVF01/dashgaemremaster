@@ -12,6 +12,7 @@ export default function RoomPerspective({ children }: { children: ReactNode }) {
   const id = `room-perspective-${useId().replace(/:/g, "")}`;
   const host = useRef<HTMLDivElement>(null);
   const displacement = useRef<SVGFEDisplacementMapElement>(null);
+  const mapImage = useRef<SVGFEImageElement>(null);
   const [map, setMap] = useState("");
 
   useEffect(() => {
@@ -34,7 +35,11 @@ export default function RoomPerspective({ children }: { children: ReactNode }) {
     setMap(canvas.toDataURL());
     const el = host.current;
     if (!el) return;
-    const resize = () => displacement.current?.setAttribute("scale", String(el.clientHeight));
+    const resize = () => {
+      displacement.current?.setAttribute("scale", String(el.clientHeight));
+      mapImage.current?.setAttribute("width", String(el.clientWidth));
+      mapImage.current?.setAttribute("height", String(el.clientHeight));
+    };
     const observer = new ResizeObserver(resize);
     observer.observe(el);
     resize();
@@ -45,8 +50,8 @@ export default function RoomPerspective({ children }: { children: ReactNode }) {
     <>
       <svg aria-hidden="true" className="pointer-events-none absolute h-0 w-0">
         <defs>
-          <filter id={id} x="0" y="0" width="100%" height="100%" colorInterpolationFilters="sRGB">
-            <feImage href={map || undefined} result="panorama-map" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" />
+          <filter id={id} x="0" y="0" width="100%" height="100%" primitiveUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+            <feImage ref={mapImage} href={map || undefined} xlinkHref={map || undefined} result="panorama-map" x="0" y="0" preserveAspectRatio="none" />
             <feDisplacementMap ref={displacement} in="SourceGraphic" in2="panorama-map" xChannelSelector="R" yChannelSelector="G" />
           </filter>
         </defs>
