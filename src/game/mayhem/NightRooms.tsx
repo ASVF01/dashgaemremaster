@@ -12,9 +12,9 @@ import packUsedArt from "@/assets/mayhem/storage_used.png.asset.json";
 
 import Terminal, { TERMINAL_ASSET_URLS } from "./Terminal";
 import { makeTerminalSession, type TerminalSession } from "./Terminal";
-import CameraSystem, { CAMERA_ASSET_URLS } from "./CameraSystem";
+import GridMap from "./GridMap";
 import GeneratorPanel, { makeGeneratorProgress, type GeneratorProgress } from "./GeneratorPanel";
-import { useAnimatronic } from "./useAnimatronic";
+import { useGridRoster } from "./useGridRoster";
 import { preloadNightBgm, startNightBgm, stopNightBgm } from "./nightAudio";
 import { getMayhemNight, mayhemAiLevel, setMayhemNight } from "@/game/progress";
 import { isMuted, setMuted, setNightSfxVolume, mayhemSfx, preloadMayhemSfx } from "@/game/sfx";
@@ -35,7 +35,6 @@ const NIGHT_IMAGE_URLS = [
   hallwayArt.url,
   packArt.url,
   packUsedArt.url,
-  ...CAMERA_ASSET_URLS,
   ...TERMINAL_ASSET_URLS,
 ];
 
@@ -138,25 +137,12 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
   cameraEntryRef.current = cameraEntry;
   const cameraEntryTimers = useRef<number[]>([]);
   const meowTimer = useRef<number | null>(null);
-  const keyholeAppearTimer = useRef<number | null>(null);
-  const seenKeyholeEncounter = useRef(0);
-  const [keyholeAppearing, setKeyholeAppearing] = useState(false);
   const [dust, setDust] = useState(makeDust);
   const [night] = useState(getMayhemNight);
   const pausedRef = useRef(paused);
   pausedRef.current = paused;
-  const enemy = useAnimatronic(view, mayhemAiLevel(night), nightReady, paused);
+  const grid = useGridRoster(mayhemAiLevel(night), nightReady, paused);
 
-  useEffect(() => {
-    if (view !== "keyhole" || !enemy.atKeyhole || seenKeyholeEncounter.current === enemy.encounterId) return;
-    seenKeyholeEncounter.current = enemy.encounterId;
-    setKeyholeAppearing(true);
-    if (keyholeAppearTimer.current != null) window.clearTimeout(keyholeAppearTimer.current);
-    keyholeAppearTimer.current = window.setTimeout(() => {
-      setKeyholeAppearing(false);
-      keyholeAppearTimer.current = null;
-    }, 780);
-  }, [view, enemy.atKeyhole, enemy.encounterId]);
 
   // The title card doubles as the loader. It remains visible long enough to
   // read while room art, camera feeds, terminal art, SFX, and music decode.
@@ -198,7 +184,6 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
   useEffect(() => () => {
     cameraEntryTimers.current.forEach((timer) => window.clearTimeout(timer));
     if (meowTimer.current != null) window.clearTimeout(meowTimer.current);
-    if (keyholeAppearTimer.current != null) window.clearTimeout(keyholeAppearTimer.current);
   }, []);
 
   const meowRedGuy = () => {
@@ -480,7 +465,7 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
           <>
             <button
               type="button"
-              aria-label="Open CCTV camera system"
+              aria-label="Open tracking grid"
               onClick={openCamera}
               className="absolute border-2 border-transparent hover:border-white/60"
               style={monitorSpot}
@@ -555,14 +540,6 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
 
       <div aria-hidden="true" className="mayhem-pov-vignette pointer-events-none absolute inset-0" />
 
-      {enemy.caught && (
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-[95] bg-[hsl(var(--hell-warning))]/25 mix-blend-screen" />
-      )}
-
-      {/* Jumpscare: black shake while the scream plays, then a clean fade. */}
-      {enemy.scare != null && (
-        <div aria-hidden="true" className={`pointer-events-none absolute inset-0 z-[96] ${enemy.scare === "shake" ? "bg-black mayhem-scare-shake" : "bg-black mayhem-scare-fade"}`} />
-      )}
 
 
       {hold > 0 && (
@@ -603,7 +580,7 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
         setMayhemNight(getMayhemNight() + 1);
         onNightComplete();
       }} />}
-      {cameraOpen && <CameraSystem onClose={() => setCameraOpen(false)} enemyCam={enemy.enemyCam} enemyMoveCount={enemy.moveCount} />}
+      {cameraOpen && <GridMap onClose={() => setCameraOpen(false)} characters={grid.characters} moveCount={grid.moveCount} />}
     </div>
   );
 }
