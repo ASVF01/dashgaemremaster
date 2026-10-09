@@ -750,6 +750,11 @@
 .gen-hover-tab svg { width: 30px; height: 30px; }
 .gen-overlay { perspective: 1200px; }
 .gen-overlay .gen-panel { transform-origin: center bottom; animation: genFlipUp 220ms ease-out; }
+.gen-overlay.gen-closing { animation: genBackdropDown 220ms ease-in forwards; }
+.gen-overlay.gen-closing .gen-panel { pointer-events: none; animation: genFlipDown 220ms ease-in forwards; }
+@keyframes genFlipDown { from { transform: rotateX(0deg) translateY(0); opacity: 1; } to { transform: rotateX(75deg) translateY(35%); opacity: 0; } }
+@keyframes genBackdropDown { from { background: hsl(var(--hell-black) / 0.9); } to { background: hsl(var(--hell-black) / 0); } }
+@media (prefers-reduced-motion: reduce) { .gen-overlay.gen-closing, .gen-overlay.gen-closing .gen-panel { animation: none; } }
 @keyframes genFlipUp { from { transform: rotateX(75deg) translateY(35%); opacity: 0; } to { transform: rotateX(0deg) translateY(0); opacity: 1; } }
 .gen-percent { position: absolute; left: 14.4%; bottom: 80.5%; font-size: 14px; line-height: 1; color: hsl(var(--generator-ink)); }
 .gen-progress { position: absolute; left: 14.43%; top: 20.82%; width: 63.7%; height: 4.1%; overflow: hidden; }
