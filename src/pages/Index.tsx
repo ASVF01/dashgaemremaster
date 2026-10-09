@@ -22,7 +22,7 @@ import NightRooms from "@/game/mayhem/NightRooms";
 import NightClear from "@/game/mayhem/NightClear";
 import DialogueBox from "@/game/mayhem/DialogueBox";
 import { MAYHEM_SCRIPTS } from "@/game/mayhem/dialogue";
-import { setMayhemNight as saveMayhemNight } from "@/game/progress";
+import { setMayhemNight as saveMayhemNight, getMayhemCheckpoint, setMayhemCheckpoint } from "@/game/progress";
 import ReceptionistMerchant from "@/game/mayhem/ReceptionistMerchant";
 import { applyUpgrade, type NightUpgrades, type UpgradeId } from "@/game/mayhem/merchantRules";
 
@@ -479,6 +479,15 @@ const Index = () => {
     setResetKey((k) => k + 1);
     setScreen("playing");
   };
+  // Resume at the last floor reached — straight back into its night if one was underway.
+  const continueMayhem = () => {
+    const cp = getMayhemCheckpoint();
+    if (!cp) { startMayhem(); return; }
+    startMayhem();
+    setMayhemTicket(true);
+    setLevelId(cp.level);
+    if (cp.night) setMayhemNight(true);
+  };
   const retryMayhem = () => {
     setMayhemCleared(false);
     setMayhemNight(false);
@@ -549,6 +558,12 @@ const Index = () => {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+
+  // Checkpoint the current floor (and whether its night is running) so quitting resumes here.
+  useEffect(() => {
+    if (!mayhem || !levelId.startsWith("mayhem-floor-") || nightClearActive) return;
+    setMayhemCheckpoint({ level: levelId, night: mayhemNight });
+  }, [mayhem, levelId, mayhemNight, nightClearActive]);
 
   // ESC pauses / unpauses MAYHEM (its pause menu is the only way out).
   useEffect(() => {
@@ -885,6 +900,7 @@ const Index = () => {
                   startLevel("tutorial");
                 }}
                 onCommenceMayhem={startMayhem}
+                onContinueMayhem={continueMayhem}
               />
             </Overlay>
           )}

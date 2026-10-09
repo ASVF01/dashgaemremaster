@@ -65,3 +65,21 @@ export function resetAllProgress() {
   resetSettings();
   try { window.dispatchEvent(new CustomEvent("dashgaem-level-stats")); } catch { /* noop */ }
 }
+
+// ---- MAYHEM checkpoint: last floor reached and whether its night was underway ----
+const CHECKPOINT_KEY = "dashgaem_mayhem_checkpoint_v1";
+export type MayhemCheckpoint = { level: string; night: boolean };
+
+export function getMayhemCheckpoint(): MayhemCheckpoint | null {
+  try {
+    const raw = JSON.parse(localStorage.getItem(CHECKPOINT_KEY) ?? "null");
+    if (raw && typeof raw.level === "string" && raw.level.startsWith("mayhem-floor-")) {
+      return { level: raw.level, night: !!raw.night };
+    }
+  } catch { /* noop */ }
+  return null;
+}
+
+export function setMayhemCheckpoint(cp: MayhemCheckpoint) {
+  try { localStorage.setItem(CHECKPOINT_KEY, JSON.stringify(cp)); } catch { /* noop */ }
+}
