@@ -2,13 +2,13 @@ import { MAYHEM_VOICE, type DialogueScript } from "./dialogue";
 import neutral from "@/assets/mayhem/receptionist/The_Receptionist_Neutral_dialouge.png.asset.json";
 import neutral2 from "@/assets/mayhem/receptionist/The_Receptionist_Neutral_2_dialouge.png.asset.json";
 import surprised from "@/assets/mayhem/receptionist/The_Receptionist_surprised_dialouge.png.asset.json";
-import disbelief from "@/assets/mayhem/receptionist/The_Receptionist_Disbelief_dialouge.png.asset.json";
+
 import unsurprised from "@/assets/mayhem/receptionist/The_Receptionist_Unsurprised_dialouge.png.asset.json";
 import realise from "@/assets/mayhem/receptionist/The_Receptionist_Realise_dialouge.png.asset.json";
 import bag from "@/assets/mayhem/receptionist/The_Receptionist_Bag_dialouge_l.png.asset.json";
 
 export const MERCHANT_EXPRESSIONS = {
-  intro: [neutral, neutral, surprised, surprised, neutral2, unsurprised, disbelief, unsurprised, neutral2, neutral],
+  intro: [neutral, neutral, surprised, surprised, neutral2, surprised, unsurprised, unsurprised, neutral2, neutral],
   thanks: [neutral, neutral2, realise],
   offer: [neutral2, neutral],
   bag,
