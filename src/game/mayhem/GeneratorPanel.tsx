@@ -39,7 +39,7 @@ export function makeGeneratorProgress(): GeneratorProgress {
   return { percent: 0, round: 1, kind: randomKind(), seed: Math.floor(Math.random() * 0xFFFFFFFF), memoryMatched: Array(6).fill(false) };
 }
 
-export default function GeneratorPanel({ night, paused, closing = false, progress, onProgress, onClose, onComplete, onRewardChange }: {
+export default function GeneratorPanel({ night, paused, closing = false, progress, onProgress, onClose, onComplete }: {
   night: number;
   paused: boolean;
   closing?: boolean;
@@ -47,7 +47,6 @@ export default function GeneratorPanel({ night, paused, closing = false, progres
   onProgress: (next: GeneratorProgress) => void;
   onClose: () => void;
   onComplete: () => void;
-  onRewardChange?: (active: boolean) => void;
 }) {
   const [showing, setShowing] = useState(progress.kind === "simon");
   const [lit, setLit] = useState<number | null>(null);
@@ -60,7 +59,6 @@ export default function GeneratorPanel({ night, paused, closing = false, progres
   const [rewarding, setRewarding] = useState(false);
   const rewardingRef = useRef(false);
   const completeRef = useRef(onComplete); completeRef.current = onComplete;
-  const rewardChangeRef = useRef(onRewardChange); rewardChangeRef.current = onRewardChange;
   const pausedRef = useRef(paused); pausedRef.current = paused;
   const simon = useMemo(() => seededValues(progress.seed, 5, 4), [progress.seed]);
   const deck = useMemo(() => shuffledDeck(progress.seed), [progress.seed]);
@@ -73,7 +71,7 @@ export default function GeneratorPanel({ night, paused, closing = false, progres
     if (target <= from) return;
     rewardingRef.current = true;
     setRewarding(true);
-    rewardChangeRef.current?.(true);
+
     let elapsed = 0;
     let previous = performance.now();
     let lastTick = -1;
@@ -92,7 +90,6 @@ export default function GeneratorPanel({ night, paused, closing = false, progres
         if (fraction >= 1) {
           rewardingRef.current = false;
           setRewarding(false);
-          rewardChangeRef.current?.(false);
           if (target >= 100) completeRef.current();
           return;
         }
@@ -100,7 +97,7 @@ export default function GeneratorPanel({ night, paused, closing = false, progres
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
-    return () => { cancelAnimationFrame(frame); rewardChangeRef.current?.(false); };
+    return () => cancelAnimationFrame(frame);
   }, [progress.percent]);
 
   useEffect(() => {
