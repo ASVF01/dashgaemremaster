@@ -465,17 +465,17 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
         }
         const keyhole = p > 1; // pressed against the door: narrow the FOV
         const cameraEntryState = cameraEntryRef.current;
-        const zoomT = cameraEntryState === "pullback" ? 1.05 : cameraEntryState === "rush" ? 3.0 : zoomed ? 1.3 : keyhole ? 1.35 : 1.22;
+        const zoomT = cameraEntryState === "pullback" ? 1.05 : cameraEntryState === "rush" ? 3.0 : zoomed ? 1.3 : keyhole ? 1.55 : 1.5;
         const zoomEase = cameraEntryState === "rush" ? 0.16 : 0.075;
         zoomCur.current += (zoomT - zoomCur.current) * zoomEase;
         const scale = zoomCur.current + zoomNudge.current;
         const damp = zoomed ? 0 : 1;
         const entrySlide = cameraEntryState === "rush" ? Math.min(1, Math.max(0, (scale - 1.1) / 4.1)) : 0;
-        // Pan across the enlarged room like a FNAF viewport, not a tilted card.
-        // Keep travel inside the overscan so no empty edges are exposed.
-        const margin = Math.max(0, (scale - 1) / (2 * scale)) * 0.9;
-        const horizontalTravel = el.clientWidth * Math.min(0.085 * p, margin);
-        const verticalTravel = el.clientHeight * Math.min(0.035 * p, margin);
+        // Wide pan: the room is wider than the screen, so moving to the edges
+        // turns the view to reveal hidden sides. Flat 2D only, inside overscan.
+        const margin = Math.max(0, (scale - 1) / (2 * scale)) * 0.97;
+        const horizontalTravel = el.clientWidth * Math.min(0.2 * p, margin);
+        const verticalTravel = el.clientHeight * Math.min(0.04 * p, margin);
         const tx = (reducedMotion.matches ? 0 : -cur.current.x * horizontalTravel * damp) - 18 * entrySlide;
         const ty = (reducedMotion.matches ? 0 : -cur.current.y * verticalTravel * damp) + 34 * entrySlide;
         el.style.transform =
