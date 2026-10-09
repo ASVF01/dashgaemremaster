@@ -559,6 +559,19 @@ const Index = () => {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // TEMP DEBUG: "0" opens the Receptionist's shop on Floor 2.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "0" || e.repeat) return;
+      e.preventDefault();
+      setMayhem(true); setMayhemNight(false); setMayhemPaused(false); setMayhemDialogue(null);
+      setLevelId("mayhem-floor-2"); setResetKey((k) => k + 1); setScreen("playing");
+      setMerchantOpen(true);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   // Checkpoint the current floor (and whether its night is running) so quitting resumes here.
   useEffect(() => {
     if (!mayhem || !levelId.startsWith("mayhem-floor-") || nightClearActive) return;
