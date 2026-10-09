@@ -418,7 +418,6 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
   // sweeping the mouse feels like turning your head. Keyhole views peek
   // further because you're pressed against the door.
   const lookRef = useRef<HTMLDivElement | null>(null);
-  const deskRef = useRef<HTMLDivElement | null>(null);
   const generatorLookRef = useRef<HTMLDivElement | null>(null);
   const flipTabRef = useRef<HTMLButtonElement | null>(null);
   const target = useRef({ x: 0, y: 0 });
@@ -480,13 +479,6 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
         const ty = (reducedMotion.matches ? 0 : -cur.current.y * verticalTravel * damp) + 34 * entrySlide;
         el.style.transform =
           `scale(${scale}) translate(${tx}px, ${ty}px)`;
-        const desk = deskRef.current;
-        if (desk) {
-          // Near plane moves further than the wall: flat parallax depth, no warping.
-          const dx = reducedMotion.matches ? 0 : -cur.current.x * el.clientWidth * 0.016 * p * damp;
-          const dy = reducedMotion.matches ? 0 : -cur.current.y * el.clientHeight * 0.008 * p * damp;
-          desk.style.transform = `translate(${dx}px, ${dy}px)`;
-        }
       }
       id = requestAnimationFrame(tick);
     };
@@ -526,43 +518,23 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
           style={{ animation: "mayhemRoomFade 180ms ease-out" }}
         />
 
-        {view === "office" && (
-          <div
-            ref={deskRef}
-            data-testid="office-desk-plane"
-            className="absolute inset-0 will-change-transform"
-          >
-            {/* foreground desk plane: same art, softly masked to the desk area, pans further than the wall */}
-            <img
-              src={art}
-              alt=""
-              aria-hidden="true"
-              draggable={false}
-              className="pointer-events-none absolute inset-0 h-full w-full object-cover"
-              style={{
-                WebkitMaskImage: "linear-gradient(to bottom, transparent 55%, black 70%)",
-                maskImage: "linear-gradient(to bottom, transparent 55%, black 70%)",
-              }}
+        {view === "office" && !cameraOpen && cameraEntry === "idle" && (
+          <>
+            <button
+              type="button"
+              aria-label="Open tracking grid"
+              onClick={openCamera}
+              className="absolute border-2 border-transparent hover:border-white/60"
+              style={monitorSpot}
             />
-            {!cameraOpen && cameraEntry === "idle" && (
-              <>
-                <button
-                  type="button"
-                  aria-label="Open tracking grid"
-                  onClick={openCamera}
-                  className="absolute border-2 border-transparent hover:border-white/60"
-                  style={monitorSpot}
-                />
-                <button
-                  type="button"
-                  aria-label="Pet the little red guy"
-                  onClick={meowRedGuy}
-                  className="absolute cursor-pointer border-2 border-transparent hover:border-white/40"
-                  style={redGuySpot}
-                />
-              </>
-            )}
-          </div>
+            <button
+              type="button"
+              aria-label="Pet the little red guy"
+              onClick={meowRedGuy}
+              className="absolute cursor-pointer border-2 border-transparent hover:border-white/40"
+              style={redGuySpot}
+            />
+          </>
         )}
 
         {/* health pack hotspot — only in the storage room */}
