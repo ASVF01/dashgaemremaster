@@ -97,7 +97,7 @@ export default function GeneratorPanel({ night, paused, closing = false, progres
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
-    return () => { cancelAnimationFrame(frame); rewardChangeRef.current?.(false); };
+    return () => cancelAnimationFrame(frame);
   }, [progress.percent]);
 
   useEffect(() => {
