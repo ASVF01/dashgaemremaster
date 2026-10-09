@@ -485,7 +485,7 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
           // Near plane moves further than the wall: flat parallax depth, no warping.
           const dx = reducedMotion.matches ? 0 : -cur.current.x * el.clientWidth * 0.022 * p * damp;
           const dy = reducedMotion.matches ? 0 : -cur.current.y * el.clientHeight * 0.012 * p * damp;
-          desk.style.transform = `translate(${dx}px, ${dy}px) scale(1.04)`;
+          desk.style.transform = `translate(${dx}px, ${dy}px)`;
         }
       }
       id = requestAnimationFrame(tick);
