@@ -1,4 +1,18 @@
 import { MAYHEM_VOICE, type DialogueScript } from "./dialogue";
+import neutral from "@/assets/mayhem/receptionist/The_Receptionist_Neutral_dialouge.png.asset.json";
+import neutral2 from "@/assets/mayhem/receptionist/The_Receptionist_Neutral_2_dialouge.png.asset.json";
+import surprised from "@/assets/mayhem/receptionist/The_Receptionist_surprised_dialouge.png.asset.json";
+import disbelief from "@/assets/mayhem/receptionist/The_Receptionist_Disbelief_dialouge.png.asset.json";
+import unsurprised from "@/assets/mayhem/receptionist/The_Receptionist_Unsurprised_dialouge.png.asset.json";
+import realise from "@/assets/mayhem/receptionist/The_Receptionist_Realise_dialouge.png.asset.json";
+import bag from "@/assets/mayhem/receptionist/The_Receptionist_Bag_dialouge_l.png.asset.json";
+
+export const MERCHANT_EXPRESSIONS = {
+  intro: [neutral, neutral, surprised, surprised, neutral2, unsurprised, disbelief, unsurprised, neutral2, neutral],
+  thanks: [neutral, neutral2, realise],
+  offer: [neutral2, neutral],
+  bag,
+};
 const rec = (text: string) => ({ speaker: "RECEPTIONIST", text, color: MAYHEM_VOICE.intercom });
 const you = (text: string) => ({ speaker: "YOU", text, color: MAYHEM_VOICE.you });
 export const MERCHANT_DIALOGUE: DialogueScript[] = [
@@ -9,6 +23,6 @@ export const MERCHANT_DIALOGUE: DialogueScript[] = [
     you("W-WHAT!?!? R-R-ROBOT ASSISTANTS?!?!?"), rec("…"), rec("Yes.."),
     rec("anyway, i am not really able to help you while you are there but i CAN help you with some upgrades, and this paper i found, she dropped it by the way."), you("okay.."),
   ] },
-  { id: "merchant-before-bag", lines: [you("Ya know what? This could be real useful, thanks a ton!"), rec("Im glad i can help, now for the way i can help.. Oh i know!")] },
+  { id: "merchant-before-bag", lines: [you("Ya know what? This could be real useful, thanks a ton!"), rec("Im glad i can help, now for the way i can help.."), rec("Oh i know!")] },
   { id: "merchant-before-shop", lines: [rec("i do have these upgrades for your devices, kind alike that slow generator. Say, first one is free, on me, second time you are gunna pay my friend!"), you("Fairs.")] },
 ];

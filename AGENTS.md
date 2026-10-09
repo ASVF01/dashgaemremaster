@@ -1,6 +1,7 @@
 # Project Architecture Rules
 
 - Receptionist merchant dialogue cues use an isolated overlay that owns shop audio; session upgrades are passed from the page into NightRooms and pure merchant rules, keeping effects testable and enemy activation deferred.
+- DialogueBox reports its active line to external character artwork; merchant expression assignments live alongside its script so artwork changes stay synchronized without duplicating dialogue progression.
 
 - Generator-only music uses an isolated audio lifecycle with a pure progress-to-track/rate rule and displayed progress as its clock; start both loops on one audio-clock boundary with matching rate and loop length, switch their gains rather than restart, and derive button beats from that audio clock. Duck the night soundtrack while audible and release all sources on dismissal so timing, pause, and room audio stay independent.
 
