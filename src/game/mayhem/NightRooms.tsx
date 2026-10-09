@@ -117,6 +117,9 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [terminalSession, setTerminalSession] = useState<TerminalSession>(() => ({ initialized: false, error: null, videoTime: 0, videoDone: false, puzzleSeed: Math.floor(Math.random() * 0xFFFFFFFF) }));
   const [generatorOpen, setGeneratorOpen] = useState(false);
+  const [generatorClosing, setGeneratorClosing] = useState(false);
+  const generatorClosingRef = useRef(false);
+  generatorClosingRef.current = generatorClosing;
   const [generatorProgress, setGeneratorProgress] = useState<GeneratorProgress>(makeGeneratorProgress);
   const [generatorOnline, setGeneratorOnline] = useState(false);
   const [storageDoorClosed, setStorageDoorClosed] = useState(false);
@@ -147,6 +150,22 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
   const pausedRef = useRef(paused);
   pausedRef.current = paused;
   const grid = useGridRoster(mayhemAiLevel(night), nightReady, paused);
+
+  const closeGenerator = () => {
+    if (!generatorOpenRef.current || generatorClosingRef.current) return;
+    generatorClosingRef.current = true;
+    mayhemSfx.terminalClose();
+    setGeneratorClosing(true);
+  };
+
+  useEffect(() => {
+    if (!generatorClosing) return;
+    const timer = window.setTimeout(() => {
+      setGeneratorOpen(false);
+      setGeneratorClosing(false);
+    }, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 220);
+    return () => window.clearTimeout(timer);
+  }, [generatorClosing]);
 
 
   // The title card doubles as the loader. It remains visible long enough to
@@ -249,7 +268,7 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
       }
       if (cameraEntryRef.current !== "idle") return;
       if (generatorOpenRef.current) {
-        if (k === "g" || k === "s") setGeneratorOpen(false);
+        if (k === "g" || k === "s") closeGenerator();
         return;
       }
       // terminal: s toggles it; while open, navigation keys are ignored
@@ -602,7 +621,7 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
       </div>
 
       {terminalOpen && <Terminal paused={paused} session={terminalSession} onSessionChange={setTerminalSession} onClose={() => { mayhemSfx.terminalClose(); setTerminalOpen(false); }} onResetGrid={() => setGridDown(false)} />}
-      {generatorOpen && <GeneratorPanel night={night} paused={paused} progress={generatorProgress} onProgress={setGeneratorProgress} onClose={() => { mayhemSfx.terminalClose(); setGeneratorOpen(false); }} onComplete={() => {
+      {generatorOpen && <GeneratorPanel night={night} paused={paused || generatorClosing} closing={generatorClosing} progress={generatorProgress} onProgress={setGeneratorProgress} onClose={closeGenerator} onComplete={() => {
         setGeneratorOnline(true);
         setGeneratorOpen(false);
         setMayhemNight(getMayhemNight() + 1);
@@ -616,16 +635,16 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
           aria-label={generatorOpen ? "Lower generator" : "Raise generator"}
           aria-expanded={generatorOpen}
           onMouseEnter={() => {
-            if (generatorOpenRef.current) mayhemSfx.terminalClose();
-            else mayhemSfx.terminalOpen();
-            setGeneratorOpen((open) => !open);
+            if (generatorClosingRef.current) return;
+            if (generatorOpenRef.current) closeGenerator();
+            else { mayhemSfx.terminalOpen(); setGeneratorOpen(true); }
           }}
           onClick={(event) => {
             // Mouse entry already toggles the panel; retain keyboard/touch access.
             if (event.detail !== 0 && window.matchMedia("(hover: hover)").matches) return;
-            if (generatorOpenRef.current) mayhemSfx.terminalClose();
-            else mayhemSfx.terminalOpen();
-            setGeneratorOpen((open) => !open);
+            if (generatorClosingRef.current) return;
+            if (generatorOpenRef.current) closeGenerator();
+            else { mayhemSfx.terminalOpen(); setGeneratorOpen(true); }
           }}
         >
           {generatorOpen ? <ChevronsDown /> : <ChevronsUp />}

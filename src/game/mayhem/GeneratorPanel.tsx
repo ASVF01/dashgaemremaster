@@ -39,9 +39,10 @@ export function makeGeneratorProgress(): GeneratorProgress {
   return { percent: 0, round: 1, kind: randomKind(), seed: Math.floor(Math.random() * 0xFFFFFFFF), memoryMatched: Array(6).fill(false) };
 }
 
-export default function GeneratorPanel({ night, paused, progress, onProgress, onClose, onComplete }: {
+export default function GeneratorPanel({ night, paused, closing = false, progress, onProgress, onClose, onComplete }: {
   night: number;
   paused: boolean;
+  closing?: boolean;
   progress: GeneratorProgress;
   onProgress: (next: GeneratorProgress) => void;
   onClose: () => void;
@@ -126,7 +127,7 @@ export default function GeneratorPanel({ night, paused, progress, onProgress, on
   };
 
   return (
-    <div className="gen-overlay absolute inset-0 z-[78] flex items-center justify-center">
+    <div className={`gen-overlay absolute inset-0 z-[78] flex items-center justify-center ${closing ? "gen-closing" : ""}`}>
       <div className="gen-panel">
         <img className="gen-art" src={generatorArt.url} alt="Stevenson’s Ultra Power Generator 9000, COMPANY PACE" draggable={false} />
         <output className="gen-percent" aria-label="Generator progress">{progress.percent}%</output>
