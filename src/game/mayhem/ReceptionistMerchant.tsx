@@ -5,6 +5,7 @@ import DialogueBox from "./DialogueBox";
 import { MERCHANT_DIALOGUE, MERCHANT_EXPRESSIONS } from "./merchantDialogue";
 import { MERCHANT_UPGRADES, upgradeCost, type UpgradeId } from "./merchantRules";
 import comic from "@/assets/mayhem/later/The_tutorial_of_madness-2.png.asset.json";
+import shopPortrait from "@/assets/mayhem/receptionist/Reception_in_shop_corner.png.asset.json";
 import music from "@/assets/audio/receptionist-shop.mp3.asset.json";
 import { addTokens, getShop, subscribeShop } from "@/game/shop";
 import { getSettings, useSettings } from "@/game/settings";
@@ -62,7 +63,7 @@ export default function ReceptionistMerchant({ seen, freeUsed, purchased, paused
     </div> : phase === "shop" ? <div className="merchant-stall">
       <div className="merchant-bubbles" aria-hidden="true">{Array.from({ length: 14 }, (_, i) =>
         <span key={i} style={{ left: `${(i * 37) % 100}%`, width: 14 + (i * 7) % 34, height: 14 + (i * 7) % 34, animationDelay: `${-(i * 1.3) % 9}s`, animationDuration: `${7 + (i % 5)}s` }} />)}</div>
-      <img className="merchant-stall-portrait" src={MERCHANT_EXPRESSIONS.offer[1].url} alt="The Receptionist" draggable={false} />
+      <img className="merchant-stall-portrait" src={shopPortrait.url} alt="The Receptionist" draggable={false} />
       <div className="merchant-counter" aria-hidden="true" />
       <section className="merchant-shop">
       <header className="merchant-header"><span className="merchant-tab font-pixel">SHOP</span><p>{freeUsed ? `${getShop().tokens} T` : `FIRST ONE’S ON ME · ${getShop().tokens} T`}</p>
