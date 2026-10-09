@@ -394,7 +394,6 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
   const monitorSpot = { left: "37.5%", top: "39%", width: "25%", height: "22%" };
   const redGuySpot = { left: "65.5%", top: "46%", width: "12%", height: "27%" };
   const packSpot = { left: "59%", top: "40%", width: "16%", height: "26%" };
-  const generatorSpot = { left: "7%", top: "35%", width: "18%", height: "34%" };
   const storageDoorControlSpot = { left: "76%", top: "38%", width: "12%", height: "24%" };
 
   const hint =
@@ -419,6 +418,8 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
   // sweeping the mouse feels like turning your head. Keyhole views peek
   // further because you're pressed against the door.
   const lookRef = useRef<HTMLDivElement | null>(null);
+  const generatorLookRef = useRef<HTMLDivElement | null>(null);
+  const flipTabRef = useRef<HTMLButtonElement | null>(null);
   const target = useRef({ x: 0, y: 0 });
   const cur = useRef({ x: 0, y: 0 });
   // Zoom nudge for the hallway→door step-back — eased back to center.
@@ -436,9 +437,19 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
 
   useEffect(() => {
     let id = 0;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const tick = () => {
+      if (pausedRef.current) { id = requestAnimationFrame(tick); return; }
       cur.current.x += (target.current.x - cur.current.x) * 0.08;
       cur.current.y += (target.current.y - cur.current.y) * 0.08;
+      const gx = reducedMotion.matches ? 0 : -cur.current.x * 20;
+      const gy = reducedMotion.matches ? 0 : -cur.current.y * 10;
+      if (generatorLookRef.current) {
+        generatorLookRef.current.style.transform = `translate3d(${gx}px, ${gy}px, 0) rotateX(${gy * 0.04}deg) rotateY(${-gx * 0.035}deg)`;
+      }
+      if (flipTabRef.current) {
+        flipTabRef.current.style.transform = `translateX(-50%) translate3d(${gx * 0.6}px, ${gy * 0.4}px, 0)`;
+      }
       // ease the zoom nudge back to center
       zoomNudge.current *= 0.86;
       if (Math.abs(zoomNudge.current) < 0.002) zoomNudge.current = 0;
@@ -519,13 +530,6 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
               className="absolute border-2 border-transparent hover:border-white/60"
               style={monitorSpot}
             />
-            {!generatorOnline && <button
-              type="button"
-              aria-label="Open generator station"
-              onClick={() => { mayhemSfx.terminalOpen(); setGeneratorOpen(true); }}
-              className="absolute border-2 border-transparent hover:border-[hsl(var(--hell-terminal))]/60"
-              style={generatorSpot}
-            />}
             <button
               type="button"
               aria-label="Pet the little red guy"
@@ -624,7 +628,7 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
       </div>
 
       {terminalOpen && <Terminal paused={paused} session={terminalSession} onSessionChange={setTerminalSession} onClose={() => { mayhemSfx.terminalClose(); setTerminalOpen(false); }} onResetGrid={() => setGridDown(false)} />}
-      {generatorOpen && <GeneratorPanel night={night} paused={paused || generatorClosing} closing={generatorClosing} progress={generatorProgress} onProgress={setGeneratorProgress} onClose={closeGenerator} onComplete={() => {
+      {generatorOpen && <GeneratorPanel lookRef={generatorLookRef} night={night} paused={paused || generatorClosing} closing={generatorClosing} progress={generatorProgress} onProgress={setGeneratorProgress} onClose={closeGenerator} onComplete={() => {
         setGeneratorOnline(true);
         setGeneratorOpen(false);
         setMayhemNight(getMayhemNight() + 1);
@@ -633,6 +637,7 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
       {cameraOpen && <GridMap onClose={() => setCameraOpen(false)} characters={grid.characters} moveCount={grid.moveCount} heat={gridUseMs / GRID_MAX_VIEW_MS} />}
       {view === "office" && nightReady && !paused && !generatorOnline && !cameraOpen && cameraEntry === "idle" && !terminalOpen && (
         <Button
+          ref={flipTabRef}
           variant="ghost"
           className="gen-hover-tab"
           aria-label={generatorOpen ? "Lower generator" : "Raise generator"}

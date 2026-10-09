@@ -17,6 +17,9 @@ import firewallOpenAsset from "@/assets/audio/FirewallOpenV2.ogg.asset.json";
 import firewallCloseAsset from "@/assets/audio/FirewallClosev2.ogg.asset.json";
 import terminalDoneAsset from "@/assets/audio/Tlure_FixedSound.wav.asset.json";
 import countupAsset from "@/assets/audio/countup.mp3.asset.json";
+import generatorImpactW from "@/assets/audio/generator-impact-w.ogg.asset.json";
+import generatorImpact28 from "@/assets/audio/generator-impact-28.ogg.asset.json";
+import generatorImpact8d from "@/assets/audio/generator-impact-8d.ogg.asset.json";
 import keyholeEnterAsset from "@/assets/audio/keyhole-enter.wav.asset.json";
 import animInHallAsset from "@/assets/audio/NewAnimInHall.wav.asset.json";
 import animGrowlAsset from "@/assets/audio/TealerGrowl.wav.asset.json";
@@ -83,6 +86,7 @@ function pixelateBuffer(c: AudioContext, src: AudioBuffer, bits: number, rateDiv
 }
 
 const pixelCache = new Map<string, AudioBuffer>();
+const GENERATOR_IMPACT_URLS = [generatorImpactW.url, generatorImpact28.url, generatorImpact8d.url];
 function getPixelated(url: string, bits: number, rateDiv: number): AudioBuffer | null {
   const c = ac(); if (!c) return null;
   const key = `${url}|${bits}|${rateDiv}`;
@@ -212,6 +216,7 @@ const MAYHEM_SAMPLE_URLS = [
   firewallCloseAsset.url,
   terminalDoneAsset.url,
   countupAsset.url,
+  ...GENERATOR_IMPACT_URLS,
   keyholeEnterAsset.url,
   animInHallAsset.url,
   animGrowlAsset.url,
@@ -223,7 +228,9 @@ const MAYHEM_SAMPLE_URLS = [
 
 export function preloadMayhemSfx(): Promise<void> {
   ac();
-  return Promise.all(MAYHEM_SAMPLE_URLS.map((url) => loadSample(url))).then(() => undefined);
+  return Promise.all(MAYHEM_SAMPLE_URLS.map((url) => loadSample(url))).then(() => {
+    GENERATOR_IMPACT_URLS.forEach((url) => getPixelated(url, 8, 2));
+  });
 }
 
 export function unlockAudio() {
@@ -1299,6 +1306,24 @@ export const mayhemSfx = {
   },
   generatorCount() {
     nSample(countupAsset.url, { vol: 0.55, rate: 0.7 });
+  },
+  generatorImpact() {
+    const c = ac(); const b = nbus();
+    if (!c || !b) return;
+    const buffers = GENERATOR_IMPACT_URLS.map((url) => getPixelated(url, 8, 2));
+    if (buffers.some((buffer) => buffer === null)) { void preloadMayhemSfx(); return; }
+    const startAt = c.currentTime + 0.005;
+    buffers.forEach((buffer) => {
+      if (!buffer) return;
+      const source = c.createBufferSource();
+      source.buffer = buffer;
+      source.playbackRate.value = 0.92;
+      const gain = c.createGain();
+      gain.gain.value = 0.4;
+      source.connect(gain).connect(b);
+      source.onended = () => { source.disconnect(); gain.disconnect(); };
+      source.start(startAt);
+    });
   },
   // boot hum + two soft confirm blips
   terminalBoot() {
