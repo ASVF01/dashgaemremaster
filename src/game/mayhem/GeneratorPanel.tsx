@@ -59,7 +59,6 @@ export default function GeneratorPanel({ night, paused, closing = false, progres
   const [rewarding, setRewarding] = useState(false);
   const rewardingRef = useRef(false);
   const completeRef = useRef(onComplete); completeRef.current = onComplete;
-  const rewardChangeRef = useRef(onRewardChange); rewardChangeRef.current = onRewardChange;
   const pausedRef = useRef(paused); pausedRef.current = paused;
   const simon = useMemo(() => seededValues(progress.seed, 5, 4), [progress.seed]);
   const deck = useMemo(() => shuffledDeck(progress.seed), [progress.seed]);
