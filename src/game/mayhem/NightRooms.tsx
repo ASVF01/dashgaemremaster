@@ -13,6 +13,9 @@ import packUsedArt from "@/assets/mayhem/storage_used.png.asset.json";
 import Terminal, { TERMINAL_ASSET_URLS } from "./Terminal";
 import { makeTerminalSession, type TerminalSession } from "./Terminal";
 import GridMap from "./GridMap";
+import gridShutdownSfx from "@/assets/audio/grid-shutdown.ogg.asset.json";
+
+const GRID_MAX_VIEW_MS = 12000;
 import GeneratorPanel, { makeGeneratorProgress, type GeneratorProgress } from "./GeneratorPanel";
 import { useGridRoster } from "./useGridRoster";
 import { preloadNightBgm, startNightBgm, stopNightBgm } from "./nightAudio";
@@ -163,7 +166,22 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
     };
   }, []);
 
+  const [gridDown, setGridDown] = useState(false);
+  const gridDownRef = useRef(false);
+  gridDownRef.current = gridDown;
+  useEffect(() => {
+    if (!cameraOpen || paused) return;
+    const id = window.setTimeout(() => {
+      try { const a = new Audio(gridShutdownSfx.url); a.volume = 0.8; void a.play().catch(() => {}); } catch { /* noop */ }
+      setGridDown(true);
+      cameraOpenRef.current = false;
+      setCameraOpen(false);
+    }, GRID_MAX_VIEW_MS);
+    return () => window.clearTimeout(id);
+  }, [cameraOpen, paused]);
+
   const openCamera = () => {
+    if (gridDownRef.current) { mayhemSfx.puzzleMiss(); return; }
     if (cameraOpenRef.current || cameraEntryRef.current !== "idle") return;
     cameraEntryRef.current = "pullback";
     setCameraEntry("pullback");
@@ -573,7 +591,7 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
         <div className="font-pixel text-[9px] text-[hsl(var(--hell-muted))]">{hint}</div>
       </div>
 
-      {terminalOpen && <Terminal paused={paused} session={terminalSession} onSessionChange={setTerminalSession} onClose={() => { mayhemSfx.terminalClose(); setTerminalOpen(false); }} />}
+      {terminalOpen && <Terminal paused={paused} session={terminalSession} onSessionChange={setTerminalSession} onClose={() => { mayhemSfx.terminalClose(); setTerminalOpen(false); }} onResetGrid={() => setGridDown(false)} />}
       {generatorOpen && <GeneratorPanel night={night} paused={paused} progress={generatorProgress} onProgress={setGeneratorProgress} onClose={() => { mayhemSfx.terminalClose(); setGeneratorOpen(false); }} onComplete={() => {
         setGeneratorOnline(true);
         setGeneratorOpen(false);
