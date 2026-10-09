@@ -22,6 +22,8 @@ function isFlowSolved(pairs: Pair[], paths: Record<number, Point[]>) {
 export default function FlowPuzzle({ size, pairs, paused = false, onComplete }: FlowPuzzleProps) {
   const [paths, setPaths] = useState<Record<number, Point[]>>({});
   const [held, setHeld] = useState<number | null>(null);
+  const [pulse, setPulse] = useState<{ point: Point; color: string; id: number } | null>(null);
+  const pulseId = useRef(0);
   const active = useRef<number | null>(null);
   const completed = useRef(false);
   const boardRef = useRef<HTMLDivElement | null>(null);
@@ -29,6 +31,7 @@ export default function FlowPuzzle({ size, pairs, paused = false, onComplete }: 
 
   useEffect(() => {
     setPaths({});
+    setPulse(null);
     active.current = null;
     completed.current = false;
   }, [pairs, size]);
@@ -42,6 +45,8 @@ export default function FlowPuzzle({ size, pairs, paused = false, onComplete }: 
 
   const begin = (pairIndex: number, point: Point) => {
     if (paused) return;
+    const pair = pairs[pairIndex];
+    setPulse({ point: samePoint(point, pair.start) ? pair.end : pair.start, color: pair.color, id: ++pulseId.current });
     active.current = pairIndex;
     setHeld(pairIndex);
     mayhemSfx.puzzleGrab(1 + pairIndex * 0.12);
@@ -92,6 +97,7 @@ export default function FlowPuzzle({ size, pairs, paused = false, onComplete }: 
         const filled = pathCells.get(keyOf(point));
         const pairIndex = terminal ?? filled?.pair;
         const color = pairIndex == null ? undefined : pairs[pairIndex].color;
+        const pressed = terminal != null && held === terminal && paths[terminal]?.[0] && samePoint(paths[terminal][0], point);
         return (
           <button
             key={index}
@@ -106,7 +112,10 @@ export default function FlowPuzzle({ size, pairs, paused = false, onComplete }: 
             className="relative aspect-square border border-[hsl(var(--hell-steel))]/25 transition-colors hover:bg-[hsl(var(--hell-steel))]/15"
           >
             {filled && <i className={`absolute inset-[18%] transition-opacity ${held === pairIndex ? "opacity-90" : "opacity-70"}`} style={{ backgroundColor: color }} />}
-            {terminal != null && <i className={`absolute inset-[22%] rounded-full border-2 border-[hsl(var(--hell-black))] transition-transform duration-75 ${held === terminal ? "scale-75 brightness-75" : "scale-100"}`} style={{ backgroundColor: color, boxShadow: held === terminal ? `inset 0 3px 6px hsl(var(--hell-black)), 0 0 18px ${color}` : `0 0 10px ${color}` }} />}
+            {pulse && samePoint(pulse.point, point) && <span key={pulse.id} aria-hidden="true" className="flow-target-pulse" style={{ color: pulse.color, animationPlayState: paused ? "paused" : "running" }}>
+              {[0, 1, 2].map((ring) => <i key={ring} className="flow-target-ring" onAnimationEnd={ring === 2 ? () => setPulse((current) => current?.id === pulse.id ? null : current) : undefined} />)}
+            </span>}
+            {terminal != null && <i className={`absolute inset-[22%] rounded-full border-2 border-[hsl(var(--hell-black))] transition-transform duration-75 ${pressed ? "scale-75 brightness-75" : "scale-100"}`} style={{ backgroundColor: color, boxShadow: pressed ? `inset 0 3px 6px hsl(var(--hell-black)), 0 0 18px ${color}` : `0 0 10px ${color}` }} />}
           </button>
         );
       })}
