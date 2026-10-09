@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Add the Receptionist merchant on Floors 2–4 with the supplied dialogue, tutorial comic, bag sound, and shop music. Blocked on the user's upgrade effects, prices, and currency.
+
 - [x] Add supplied crushed generator loops, fade on opening/closing, accelerate to original speed at 50%, switch to Fury, and verify audio lifecycle.
 
 - [x] Match the reference generator snap, add subtle looking movement to panel and flip tab, remove the table square, and layer the three supplied impact sounds.
