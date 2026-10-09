@@ -722,6 +722,14 @@
 }
 .mayhem-scare-fade,
 .mayhem-scare-image-fade { animation: mayhemScareFade 0.65s ease-out forwards; }
+.night-clear-screen { background: hsl(var(--hell-black)); }
+.night-clear-art { animation: nightClearDescend 1.8s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+.night-clear-reveal { animation: mayhemScareFade 0.8s ease-out forwards; }
+@keyframes nightClearDescend {
+  from { transform: translateY(-100vh); }
+  to { transform: translateY(0); }
+}
 @media (prefers-reduced-motion: reduce) {
   .mayhem-scare-shake { animation: none; }
+  .night-clear-art { animation: none; }
 }
