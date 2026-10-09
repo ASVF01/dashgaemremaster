@@ -485,7 +485,7 @@ const Index = () => {
     if (!cp) { startMayhem(); return; }
     startMayhem();
     setMayhemTicket(true);
-    setLevelId(cp.level);
+    setLevelId(cp.level as LevelId);
     if (cp.night) setMayhemNight(true);
   };
   const retryMayhem = () => {
