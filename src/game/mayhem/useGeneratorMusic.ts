@@ -37,7 +37,7 @@ class GeneratorMusic {
         if (this.disposed) return;
         const crushed = this.context.createBuffer(decoded.numberOfChannels, decoded.length, decoded.sampleRate);
         for (let channel = 0; channel < decoded.numberOfChannels; channel++) {
-          crushed.copyToChannel(crushGeneratorSamples(decoded.getChannelData(channel)), channel);
+          crushed.getChannelData(channel).set(crushGeneratorSamples(decoded.getChannelData(channel)));
         }
         this.buffers.set(track, crushed);
         this.sync();
