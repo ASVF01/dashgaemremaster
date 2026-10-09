@@ -39,7 +39,7 @@ export function makeGeneratorProgress(): GeneratorProgress {
   return { percent: 0, round: 1, kind: randomKind(), seed: Math.floor(Math.random() * 0xFFFFFFFF), memoryMatched: Array(6).fill(false) };
 }
 
-export default function GeneratorPanel({ night, paused, closing = false, progress, onProgress, onClose, onComplete, onRewardChange }: {
+export default function GeneratorPanel({ night, paused, closing = false, progress, onProgress, onClose, onComplete }: {
   night: number;
   paused: boolean;
   closing?: boolean;
@@ -47,7 +47,6 @@ export default function GeneratorPanel({ night, paused, closing = false, progres
   onProgress: (next: GeneratorProgress) => void;
   onClose: () => void;
   onComplete: () => void;
-  onRewardChange?: (active: boolean) => void;
 }) {
   const [showing, setShowing] = useState(progress.kind === "simon");
   const [lit, setLit] = useState<number | null>(null);
