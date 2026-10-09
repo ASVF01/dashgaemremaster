@@ -985,6 +985,7 @@ function stopWind() {
   const t = c.currentTime;
   const current = wind;
   wind = null;
+  try { current.lfo.disconnect(); } catch { /* noop */ }
   try {
     current.out.gain.cancelScheduledValues(t);
     current.out.gain.setValueAtTime(Math.max(0.0001, current.out.gain.value), t);
