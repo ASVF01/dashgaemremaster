@@ -734,154 +734,80 @@
   .night-clear-art { animation: none; }
 }
 
-/* ---- MAYHEM generator console ---- */
+/* ---- MAYHEM generator console (company-panel style: black + green outlines) ---- */
 .gen-panel {
   position: relative;
-  border: 3px solid hsl(var(--hell-steel));
-  background:
-    radial-gradient(circle at 12px 12px, hsl(var(--hell-steel)) 2.5px, hsl(var(--hell-black)) 3px, transparent 4px) top left / 100% 100% no-repeat,
-    linear-gradient(180deg, hsl(216 14% 16%) 0%, hsl(var(--hell-panel)) 18%, hsl(216 12% 8%) 100%);
-  box-shadow:
-    inset 0 1px 0 hsl(var(--hell-muted) / 0.25),
-    inset 0 -6px 18px hsl(var(--hell-black) / 0.8),
-    0 0 0 2px hsl(var(--hell-black)),
-    0 24px 70px hsl(var(--hell-black));
-}
-.gen-rivet {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  border-radius: 9999px;
-  background: radial-gradient(circle at 35% 30%, hsl(var(--hell-muted)) 0%, hsl(var(--hell-steel)) 45%, hsl(var(--hell-black)) 100%);
-  box-shadow: inset 0 -1px 2px hsl(var(--hell-black)), 0 1px 1px hsl(var(--hell-muted) / 0.2);
-}
-.gen-hazard {
-  height: 12px;
-  background: repeating-linear-gradient(-45deg, hsl(var(--hell-warning)) 0 14px, hsl(var(--hell-black)) 14px 28px);
-  border-top: 2px solid hsl(var(--hell-black));
-  border-bottom: 2px solid hsl(var(--hell-black));
-  opacity: 0.85;
-}
-.gen-lamp {
-  width: 10px;
-  height: 10px;
-  border-radius: 9999px;
+  border: 6px solid hsl(var(--hell-terminal));
   background: hsl(var(--hell-black));
-  border: 1px solid hsl(var(--hell-steel));
-  box-shadow: inset 0 1px 2px hsl(var(--hell-black));
+  box-shadow: 0 0 0 2px hsl(var(--hell-black)), 0 24px 70px hsl(var(--hell-black));
 }
-.gen-lamp-on {
-  background: hsl(var(--hell-terminal));
-  border-color: hsl(var(--hell-terminal));
-  box-shadow: 0 0 8px hsl(var(--hell-terminal)), 0 0 18px hsl(var(--hell-terminal) / 0.5);
-  animation: genLampBlink 1.6s steps(2) infinite;
+.gen-panel * {
+  font-family: "Courier New", ui-monospace, monospace;
 }
-.gen-lamp-warn {
-  background: hsl(var(--hell-warning));
-  border-color: hsl(var(--hell-warning));
-  box-shadow: 0 0 8px hsl(var(--hell-warning)), 0 0 18px hsl(var(--hell-warning) / 0.5);
-  animation: genLampBlink 0.7s steps(2) infinite;
-}
-@keyframes genLampBlink {
-  0%, 60% { opacity: 1; }
-  61%, 100% { opacity: 0.35; }
+.gen-box {
+  border: 6px solid hsl(var(--hell-terminal));
+  background: hsl(var(--hell-black));
 }
 .gen-screen {
   position: relative;
   overflow: hidden;
-  border: 2px solid hsl(var(--hell-black));
-  background:
-    radial-gradient(ellipse at center, hsl(150 30% 7%) 0%, hsl(var(--hell-black)) 90%);
-  box-shadow:
-    inset 0 0 24px hsl(var(--hell-black)),
-    inset 0 0 60px hsl(var(--hell-terminal) / 0.06),
-    0 1px 0 hsl(var(--hell-steel) / 0.4);
-  animation: genFlicker 4s steps(12) infinite;
+  border: 4px solid hsl(var(--hell-terminal));
+  background: hsl(var(--hell-black));
 }
 .gen-screen::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: repeating-linear-gradient(0deg, transparent 0 2px, hsl(var(--hell-black) / 0.35) 2px 4px);
-}
-.gen-screen::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 22%;
-  pointer-events: none;
-  z-index: 2;
-  background: linear-gradient(180deg, transparent, hsl(var(--hell-terminal) / 0.07), transparent);
-  animation: genScan 3.2s linear infinite;
-}
-@keyframes genScan {
-  from { top: -25%; }
-  to { top: 110%; }
-}
-@keyframes genFlicker {
-  0%, 100% { opacity: 1; }
-  92% { opacity: 1; }
-  93% { opacity: 0.86; }
-  94% { opacity: 1; }
-  97% { opacity: 0.93; }
-  98% { opacity: 1; }
+  background: repeating-linear-gradient(0deg, transparent 0 3px, hsl(var(--hell-terminal) / 0.05) 3px 4px);
 }
 .gen-seg {
   flex: 1;
   height: 100%;
   background: hsl(var(--hell-black));
-  border: 1px solid hsl(var(--hell-steel) / 0.35);
+  border: 2px solid hsl(var(--hell-terminal) / 0.4);
 }
 .gen-seg-on {
   background: hsl(var(--hell-terminal));
   border-color: hsl(var(--hell-terminal));
-  box-shadow: 0 0 6px hsl(var(--hell-terminal) / 0.8), inset 0 0 4px hsl(var(--hell-black) / 0.4);
 }
 .gen-seg-hot {
-  background: hsl(var(--hell-warning));
-  border-color: hsl(var(--hell-warning));
-  box-shadow: 0 0 6px hsl(var(--hell-warning) / 0.8), inset 0 0 4px hsl(var(--hell-black) / 0.4);
+  background: hsl(var(--hell-terminal));
+  border-color: hsl(var(--hell-terminal));
+  animation: genSegBlink 0.6s steps(2) infinite;
 }
-.gen-screw-slot {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 7px;
-  height: 1.5px;
-  background: hsl(var(--hell-black));
-  transform: translate(-50%, -50%) rotate(40deg);
+@keyframes genSegBlink {
+  0%, 60% { opacity: 1; }
+  61%, 100% { opacity: 0.35; }
 }
 .gen-pad {
   position: relative;
-  border: 2px solid hsl(var(--hell-steel));
-  background: linear-gradient(180deg, hsl(216 12% 14%), hsl(var(--hell-black)));
-  box-shadow: inset 0 2px 0 hsl(var(--hell-muted) / 0.15), inset 0 -4px 8px hsl(var(--hell-black)), 0 4px 0 hsl(var(--hell-black));
+  border: 4px solid hsl(var(--hell-terminal));
+  background: hsl(var(--hell-black));
+  color: hsl(var(--hell-terminal));
 }
 .gen-pad:active {
-  transform: translateY(3px);
-  box-shadow: inset 0 2px 0 hsl(var(--hell-muted) / 0.1), inset 0 -2px 6px hsl(var(--hell-black)), 0 1px 0 hsl(var(--hell-black));
+  background: hsl(var(--hell-terminal));
+  color: hsl(var(--hell-black));
 }
 .gen-card {
-  border: 2px solid hsl(var(--hell-steel));
-  background: linear-gradient(180deg, hsl(216 12% 13%), hsl(var(--hell-black)));
-  box-shadow: inset 0 1px 0 hsl(var(--hell-muted) / 0.15), 0 3px 0 hsl(var(--hell-black));
+  border: 4px solid hsl(var(--hell-terminal));
+  background: hsl(var(--hell-black));
+  color: hsl(var(--hell-terminal));
 }
 .gen-card:active {
-  transform: translateY(2px);
-  box-shadow: inset 0 1px 0 hsl(var(--hell-muted) / 0.1), 0 1px 0 hsl(var(--hell-black));
+  background: hsl(var(--hell-terminal));
+  color: hsl(var(--hell-black));
 }
 .gen-close {
-  border: 2px solid hsl(var(--hell-steel));
-  background: linear-gradient(180deg, hsl(0 40% 22%), hsl(0 60% 14%));
-  color: hsl(var(--hell-warning));
-  box-shadow: inset 0 1px 0 hsl(var(--hell-muted) / 0.2), 0 3px 0 hsl(var(--hell-black));
+  border: 4px solid hsl(var(--hell-terminal));
+  background: hsl(var(--hell-black));
+  color: hsl(var(--hell-terminal));
 }
 .gen-close:active {
-  transform: translateY(2px);
-  box-shadow: inset 0 1px 0 hsl(var(--hell-muted) / 0.1), 0 1px 0 hsl(var(--hell-black));
+  background: hsl(var(--hell-terminal));
+  color: hsl(var(--hell-black));
 }
 @media (prefers-reduced-motion: reduce) {
-  .gen-screen, .gen-screen::before, .gen-lamp-on, .gen-lamp-warn { animation: none; }
+  .gen-seg-hot { animation: none; }
 }
