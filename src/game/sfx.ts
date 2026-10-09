@@ -1327,6 +1327,33 @@ export const mayhemSfx = {
     const f = [262, 330, 392, 523][pad % 4];
     nTone({ freq: f, dur: 0.16, type: "square", vol: 0.08, attack: 0.003, release: 0.1 });
   },
+  // Simon playback signal — lower pitch, bitcrushed + downsampled for a gritty CRT feel
+  puzzleSignal(pad = 0) {
+    const c = ac(); const b = nbus(); if (!c || !b) return;
+    const f = [262, 330, 392, 523][pad % 4] * 0.6;
+    const dur = 0.18, rel = 0.12;
+    const len = Math.floor(c.sampleRate * (dur + rel));
+    const buf = c.createBuffer(1, len, c.sampleRate);
+    const data = buf.getChannelData(0);
+    const a = 0.005, v = 0.14;
+    for (let i = 0; i < len; i++) {
+      const t = i / c.sampleRate;
+      const env = t < a ? t / a : t < dur ? 1 : Math.max(0, 1 - (t - dur) / rel);
+      const ph = (f * t) % 1;
+      data[i] = env * v * (ph < 0.5 ? 1 : -1);
+    }
+    const steps = Math.pow(2, 4);
+    let held = 0;
+    for (let i = 0; i < len; i++) {
+      if (i % 8 === 0) held = Math.round(data[i] * steps) / steps;
+      data[i] = held;
+    }
+    const src = c.createBufferSource();
+    src.buffer = buf;
+    const lpf = c.createBiquadFilter(); lpf.type = "lowpass"; lpf.frequency.value = 2400;
+    src.connect(lpf).connect(b);
+    src.start();
+  },
   puzzleWrong() {
     nTone({ freq: 160, to: 90, dur: 0.3, type: "sawtooth", vol: 0.1, attack: 0.004, release: 0.15 });
     nNoise(0.12, 0.1, 200, 1500);
