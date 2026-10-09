@@ -3,6 +3,7 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 // Cylindrical panorama projection: the centre stays unchanged while the
 // ceiling/floor stretch toward the edges, unlike a rotated flat rectangle.
 export function roomPerspectiveOffset(x: number, y: number) {
+  if (x === 0.5 || y === 0.5) return 0;
   const angle = (x - 0.5) * 1.7;
   return (y - 0.5) * (Math.cos(angle) - 1);
 }
