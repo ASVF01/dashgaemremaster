@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { mayhemSfx } from "@/game/sfx";
 import FlowPuzzle, { makeRandomFlowPairs } from "./minigames/FlowPuzzle";
 import { advanceGenerator } from "./generatorGain";
@@ -39,10 +39,11 @@ export function makeGeneratorProgress(): GeneratorProgress {
   return { percent: 0, round: 1, kind: randomKind(), seed: Math.floor(Math.random() * 0xFFFFFFFF), memoryMatched: Array(6).fill(false) };
 }
 
-export default function GeneratorPanel({ night, paused, closing = false, progress, onProgress, onClose, onComplete }: {
+export default function GeneratorPanel({ night, paused, closing = false, progress, onProgress, onClose, onComplete, lookRef }: {
   night: number;
   paused: boolean;
   closing?: boolean;
+  lookRef?: RefObject<HTMLDivElement>;
   progress: GeneratorProgress;
   onProgress: (next: GeneratorProgress) => void;
   onClose: () => void;
@@ -71,6 +72,7 @@ export default function GeneratorPanel({ night, paused, closing = false, progres
     if (target <= from) return;
     rewardingRef.current = true;
     setRewarding(true);
+    mayhemSfx.generatorImpact();
 
     let elapsed = 0;
     let previous = performance.now();
@@ -125,7 +127,6 @@ export default function GeneratorPanel({ night, paused, closing = false, progres
   const finishRound = () => {
     if (rewardingRef.current) return;
     const percent = advanceGenerator(progress.percent, night);
-    mayhemSfx.terminalDone();
     if (percent >= 100) {
       onProgress({ ...progress, percent: 100 });
       return;
@@ -168,6 +169,7 @@ export default function GeneratorPanel({ night, paused, closing = false, progres
 
   return (
     <div className={`gen-overlay absolute inset-0 z-[78] flex items-center justify-center ${closing ? "gen-closing" : ""}`}>
+      <div ref={lookRef} className="gen-look-layer">
       <div className="gen-panel">
         <div className={`gen-completion-view ${rewarding ? "gen-rewarding" : ""}`} style={{ animationPlayState: paused ? "paused" : "running" }}>
         <img className="gen-art" src={generatorArt.url} alt="Stevenson’s Ultra Power Generator 9000, COMPANY PACE" draggable={false} />
@@ -193,6 +195,7 @@ export default function GeneratorPanel({ night, paused, closing = false, progres
           {progress.kind === "flow" && <div className="gen-puzzle-layout"><p className="gen-task-label">FLOW</p><div className="gen-flow-board"><FlowPuzzle key={progress.seed} size={6} pairs={flowPairs} paused={paused || rewarding} onComplete={finishRound} /></div></div>}
         </div>
         </div>
+      </div>
       </div>
     </div>
   );

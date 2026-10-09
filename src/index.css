@@ -737,10 +737,16 @@
 /* MAYHEM generator: original supplied artwork with aligned interactive overlays. */
 :root { --generator-ink: 0 0% 100%; --generator-fill: 138 76% 39%; }
 .gen-overlay { background: hsl(var(--hell-black) / 0.9); }
+.gen-look-layer {
+  position: relative;
+  width: min(1000px, 80vw, calc(76vh * 686 / 389));
+  aspect-ratio: 686 / 389;
+  will-change: transform;
+}
 .gen-panel {
   position: relative;
-  width: min(1000px, 94vw, calc(88vh * 686 / 389));
-  aspect-ratio: 686 / 389;
+  width: 100%;
+  height: 100%;
   color: hsl(var(--foreground));
   font-family: "Courier New", ui-monospace, monospace;
 }
@@ -761,7 +767,7 @@
 .gen-progress-fill { height: 100%; background: hsl(var(--generator-fill)); }
 .gen-completion-view { position: relative; width: 100%; height: 100%; }
 .gen-completion-view.gen-rewarding { animation: genRewardZoom 600ms linear; }
-@keyframes genRewardZoom { 0% { transform: scale(1); animation-timing-function: ease-out; } 5% { transform: scale(1.12); } 18% { transform: scale(1.12); animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); } 100% { transform: scale(1); } }
+@keyframes genRewardZoom { 0% { transform: scale(1.2); animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); } 65% { transform: scale(0.97); animation-timing-function: ease-out; } 100% { transform: scale(1); } }
 @media (prefers-reduced-motion: reduce) { .gen-completion-view.gen-rewarding { animation: none; } }
 .gen-task { position: absolute; left: 8%; top: 31%; width: 84%; height: 59%; container-type: size; }
 .gen-puzzle-layout { height: 100%; display: flex; flex-direction: column; align-items: center; gap: 2cqh; }
