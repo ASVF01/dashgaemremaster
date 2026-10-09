@@ -797,16 +797,23 @@
 @media (prefers-reduced-motion: reduce) { .gen-progress-fill { transition: none; } .gen-overlay .gen-panel { animation: none; } }
 
 .merchant-overlay { position: absolute; inset: 0; z-index: 45; background: hsl(var(--hell-black) / 0.92); color: hsl(var(--hell-muted)); display: flex; align-items: center; justify-content: center; padding: 20px; }
-.merchant-shop { width: min(1050px, 100%); max-height: 90%; overflow-y: auto; font-family: monospace; }
-.merchant-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 2px solid hsl(var(--hell-terminal)); padding-bottom: 20px; margin-bottom: 20px; }
-.merchant-header h2 { font-size: 16px; line-height: 1.8; color: hsl(var(--hell-terminal)); }
-.merchant-header p { margin-top: 8px; }
-.merchant-items { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-.merchant-item { border: 2px solid hsl(var(--hell-steel)); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-.merchant-item > svg { color: hsl(var(--hell-terminal)); }
-.merchant-item h3 { font-size: 18px; color: hsl(var(--generator-ink)); overflow-wrap: anywhere; }
-.merchant-item p { font-size: 14px; line-height: 1.5; flex: 1; }
-.merchant-item .mayhem-menu-button { white-space: normal; height: auto; min-height: 42px; font-size: 11px; }
+.merchant-stall { --stall-sky: 194 58% 73%; --stall-pane: 213 100% 88%; --stall-edge: 214 34% 61%; --stall-wood: 22 41% 53%; --stall-ink: 214 40% 25%; position: absolute; inset: 0; overflow: hidden; background: hsl(var(--stall-sky)); display: flex; align-items: center; justify-content: flex-end; padding: 4% 4% 4% 38%; }
+.merchant-bubbles span { position: absolute; bottom: -60px; border-radius: 9999px; border: 4px solid hsl(var(--stall-edge)); background: hsl(var(--stall-pane)); animation: merchantBubble linear infinite; }
+@keyframes merchantBubble { from { transform: translate(0, 0); } 50% { transform: translate(14px, -60vh); } to { transform: translate(-6px, -120vh); } }
+.merchant-stall-portrait { position: absolute; left: 1%; bottom: 8%; height: 72%; max-width: 40%; object-fit: contain; object-position: bottom; image-rendering: pixelated; z-index: 1; }
+.merchant-counter { position: absolute; left: 0; bottom: 0; width: 43%; height: 15%; background: hsl(var(--stall-wood)); border: 6px solid hsl(var(--hell-black)); border-left: 0; border-bottom: 0; z-index: 2; }
+.merchant-shop { position: relative; z-index: 3; width: min(820px, 100%); max-height: 88%; overflow-y: auto; font-family: monospace; background: hsl(var(--stall-pane)); border: 7px solid hsl(var(--stall-edge)); color: hsl(var(--stall-ink)); }
+.merchant-header { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 16px; background: hsl(var(--stall-pane)); border-bottom: 4px solid hsl(var(--stall-edge)); padding: 6px; }
+.merchant-header p { flex: 1; margin: 0; }
+.merchant-tab { background: hsl(var(--stall-edge)); color: hsl(var(--stall-pane)); padding: 14px 22px; font-size: 12px; }
+.merchant-items { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 14px; }
+.merchant-item { border: 3px solid hsl(var(--stall-edge)); background: hsl(var(--stall-sky) / 0.25); padding: 14px; display: flex; flex-direction: column; gap: 10px; transition: transform 0.15s; }
+.merchant-item:hover { transform: translateY(-3px); }
+.merchant-item > svg { color: hsl(var(--stall-edge)); }
+.merchant-item h3 { font-size: 17px; color: hsl(var(--stall-ink)); overflow-wrap: anywhere; }
+.merchant-item p { font-size: 13px; line-height: 1.5; flex: 1; }
+.merchant-buy { white-space: normal; height: auto; min-height: 40px; font-size: 12px; border-radius: 0; background: hsl(var(--stall-edge)); color: hsl(var(--stall-pane)); }
+.merchant-buy:hover { background: hsl(var(--stall-ink)); }
 .merchant-comic { display: flex; flex-direction: column; align-items: center; gap: 16px; height: 95%; }
 .merchant-comic img { max-width: 100%; min-height: 0; flex: 1; object-fit: contain; }
 .merchant-portrait { height: min(50%, 320px); image-rendering: pixelated; }
