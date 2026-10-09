@@ -29,3 +29,5 @@
 - [x] Shop stall portrait: keep the corner-table doodle on white (the blue-box drawing stays only in the post-bag dialogue).
 
 - [x] Post-bag dialogue: use the newly supplied Receptionist expression (Recep_Shop_UI_Dialouge_2.png, white keyed out); shop stall keeps the counter doodle.
+- [x] Add M&M's Guy to character select as a NOT YET roster card; sprite and SFX will be supplied later (he inherits The Player mechanics when unlocked).
+
