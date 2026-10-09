@@ -15,7 +15,7 @@ import { makeTerminalSession, type TerminalSession } from "./Terminal";
 import GridMap from "./GridMap";
 import gridShutdownSfx from "@/assets/audio/grid-shutdown.ogg.asset.json";
 
-const GRID_MAX_VIEW_MS = 12000;
+const GRID_MAX_VIEW_MS = 20000;
 import GeneratorPanel, { makeGeneratorProgress, type GeneratorProgress } from "./GeneratorPanel";
 import { useGridRoster } from "./useGridRoster";
 import { preloadNightBgm, startNightBgm, stopNightBgm } from "./nightAudio";
@@ -606,7 +606,7 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
         setMayhemNight(getMayhemNight() + 1);
         onNightComplete();
       }} />}
-      {cameraOpen && <GridMap onClose={() => setCameraOpen(false)} characters={grid.characters} moveCount={grid.moveCount} />}
+      {cameraOpen && <GridMap onClose={() => setCameraOpen(false)} characters={grid.characters} moveCount={grid.moveCount} heat={gridUseMs / GRID_MAX_VIEW_MS} />}
     </div>
   );
 }
