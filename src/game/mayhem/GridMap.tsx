@@ -28,7 +28,7 @@ export default function GridMap({ onClose, characters, moveCount }: { onClose: (
             const here = characters.filter((c) => c.x === x && c.y === y);
             return (
               <div key={i} className={`relative flex items-center justify-center border ${office ? "border-white bg-[hsl(var(--hell-panel))]" : "border-[hsl(var(--hell-steel))]/40 bg-[hsl(var(--hell-panel))]/30"}`}>
-                {office && <span className="font-pixel text-[clamp(6px,0.8vw,10px)] text-white">YOU</span>}
+                {office && <span className="font-pixel text-[clamp(6px,0.8vw,10px)] text-white">HALL ENTRY</span>}
                 {here.map((c) => (
                   <span key={c.id} title={c.name} className="absolute inset-[12%] flex items-center justify-center rounded-full font-pixel text-[clamp(6px,0.8vw,10px)] text-black transition-all duration-500" style={{ background: c.color, boxShadow: `0 0 10px ${c.color}` }}>
                     {c.tag}
