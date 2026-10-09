@@ -77,6 +77,7 @@ const Index = () => {
   const [mayhemPaused, setMayhemPaused] = useState(false);
   const [mayhemCleared, setMayhemCleared] = useState(false);
   const [nightClearActive, setNightClearActive] = useState(false);
+  const nightClearOrigin = useRef<LevelId>("mayhem-floor-1");
   // MAYHEM night shift: first-person room navigation after floor one.
   const [mayhemNight, setMayhemNight] = useState(false);
   // Which MAYHEM conversation is on screen, and whether the checker has
@@ -722,18 +723,17 @@ const Index = () => {
             <MayhemPause onResume={() => setMayhemPaused(false)} onQuit={quitMayhem} />
           )}
           {mayhem && mayhemNight && <NightRooms paused={mayhemPaused} onNightComplete={() => {
+             nightClearOrigin.current = levelId;
             setMayhemNight(false);
             setMayhemCleared(true);
              setMayhemPaused(false);
-             stopBgm();
-             silenceAllSfx();
              setNightClearActive(true);
           }} />}
            {mayhem && nightClearActive && <NightClear
-             onReveal={() => { if (levelId === "mayhem-floor-1") goToFloor2(); }}
+              onReveal={() => { if (nightClearOrigin.current === "mayhem-floor-1") goToFloor2(); }}
              onDone={() => {
                setNightClearActive(false);
-               if (levelId === "mayhem-floor-2") setMayhemCleared(false);
+                if (nightClearOrigin.current === "mayhem-floor-1") setMayhemCleared(false);
              }}
            />}
            {mayhem && mayhemCleared && !nightClearActive && (

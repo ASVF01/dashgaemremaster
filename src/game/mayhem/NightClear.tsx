@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import art from "@/assets/mayhem/completed-night.png.asset.json";
 import sound from "@/assets/audio/night-complete.mp3.asset.json";
 import { getSettings } from "@/game/settings";
+import { isMuted, setMuted } from "@/game/sfx";
+import { stopBgm } from "@/game/bgm";
 import { NIGHT_CLEAR_DURATION, nightClearEnvelope } from "./nightClearTiming";
 
 export default function NightClear({ onReveal, onDone }: { onReveal: () => void; onDone: () => void }) {
@@ -11,6 +13,9 @@ export default function NightClear({ onReveal, onDone }: { onReveal: () => void;
   callbacks.current = { onReveal, onDone };
 
   useEffect(() => {
+    const previousMuted = isMuted();
+    setMuted(true);
+    stopBgm();
     const audio = new Audio(sound.url);
     audio.preload = "auto";
     audio.volume = getSettings().sfxVolume;
@@ -52,6 +57,7 @@ export default function NightClear({ onReveal, onDone }: { onReveal: () => void;
       audio.pause();
       audio.removeAttribute("src");
       audio.load();
+      setMuted(previousMuted);
     };
   }, []);
 
