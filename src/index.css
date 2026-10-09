@@ -758,7 +758,11 @@
 @keyframes genFlipUp { from { transform: rotateX(75deg) translateY(35%); opacity: 0; } to { transform: rotateX(0deg) translateY(0); opacity: 1; } }
 .gen-percent { position: absolute; left: 14.4%; bottom: 80.5%; font-size: 14px; line-height: 1; color: hsl(var(--generator-ink)); }
 .gen-progress { position: absolute; left: 14.43%; top: 20.82%; width: 63.7%; height: 4.1%; overflow: hidden; }
-.gen-progress-fill { height: 100%; background: hsl(var(--generator-fill)); transition: width 260ms ease; }
+.gen-progress-fill { height: 100%; background: hsl(var(--generator-fill)); }
+.gen-completion-view { position: relative; width: 100%; height: 100%; }
+.gen-completion-view.gen-rewarding { animation: genRewardZoom 600ms ease-out; }
+@keyframes genRewardZoom { 0% { transform: scale(1); } 12% { transform: scale(1.055); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .gen-completion-view.gen-rewarding { animation: none; } }
 .gen-task { position: absolute; left: 8%; top: 31%; width: 84%; height: 59%; container-type: size; }
 .gen-puzzle-layout { height: 100%; display: flex; flex-direction: column; align-items: center; gap: 2cqh; }
 .gen-task-label { font-size: 12px; line-height: 16px; margin: 0; color: hsl(var(--generator-ink)); }
