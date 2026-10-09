@@ -117,7 +117,6 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [terminalSession, setTerminalSession] = useState<TerminalSession>(() => ({ initialized: false, error: null, videoTime: 0, videoDone: false, puzzleSeed: Math.floor(Math.random() * 0xFFFFFFFF) }));
   const [generatorOpen, setGeneratorOpen] = useState(false);
-  const [generatorRewarding, setGeneratorRewarding] = useState(false);
   const [generatorClosing, setGeneratorClosing] = useState(false);
   const generatorClosingRef = useRef(false);
   generatorClosingRef.current = generatorClosing;
