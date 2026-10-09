@@ -474,8 +474,10 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
         const entrySlide = cameraEntryState === "rush" ? Math.min(1, Math.max(0, (scale - 1.1) / 4.1)) : 0;
         const tx = (reducedMotion.matches ? 0 : -cur.current.x * 34 * p * damp) - 18 * entrySlide;
         const ty = (reducedMotion.matches ? 0 : -cur.current.y * 12 * p * damp) + tyOff * (scale - 1.1) + 34 * entrySlide;
+        const rx = reducedMotion.matches ? 0 : cur.current.y * 1.8 * p * damp;
+        const ry = reducedMotion.matches ? 0 : -cur.current.x * 3.4 * p * damp;
         el.style.transform =
-          `scale(${scale}) translate(${tx}px, ${ty}px)`;
+          `perspective(1200px) scale(${scale}) translate(${tx}px, ${ty}px) rotateX(${rx}deg) rotateY(${ry}deg)`;
       }
       id = requestAnimationFrame(tick);
     };
