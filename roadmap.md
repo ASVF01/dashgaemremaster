@@ -26,3 +26,4 @@
 - [x] Shop portrait: use the counter from the user's own doodle (not the flat drawn bar) - key the doodle, clear trapped white gaps, re-upload pointer.
 
 - [x] Apply the supplied Receptionist shop-UI expression as the shop portrait (counter kept as drawn, white keyed out).
+- [x] Shop stall portrait: use the blue-box drawing on its white paper; keep the same expression on the post-bag dialogue.
