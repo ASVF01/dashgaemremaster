@@ -791,3 +791,21 @@
 .gen-pad:hover, .gen-card:hover { background: hsl(var(--generator-fill) / 0.2) !important; color: hsl(var(--generator-fill)) !important; }
 .gen-pad:active, .gen-card:active, .gen-control-on, .gen-control-on:hover { background: hsl(var(--generator-fill)) !important; color: hsl(var(--hell-black)) !important; transform: translateY(1px); }
 @media (prefers-reduced-motion: reduce) { .gen-progress-fill { transition: none; } .gen-overlay .gen-panel { animation: none; } }
+
+.merchant-overlay { position: absolute; inset: 0; z-index: 45; background: hsl(var(--hell-black) / 0.92); color: hsl(var(--hell-muted)); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.merchant-shop { width: min(1050px, 100%); max-height: 90%; overflow-y: auto; font-family: monospace; }
+.merchant-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 2px solid hsl(var(--hell-terminal)); padding-bottom: 20px; margin-bottom: 20px; }
+.merchant-header h2 { font-size: 16px; line-height: 1.8; color: hsl(var(--hell-terminal)); }
+.merchant-header p { margin-top: 8px; }
+.merchant-items { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.merchant-item { border: 2px solid hsl(var(--hell-steel)); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.merchant-item > svg { color: hsl(var(--hell-terminal)); }
+.merchant-item h3 { font-size: 18px; color: hsl(var(--generator-ink)); overflow-wrap: anywhere; }
+.merchant-item p { font-size: 14px; line-height: 1.5; flex: 1; }
+.merchant-item .mayhem-menu-button { white-space: normal; height: auto; min-height: 42px; font-size: 11px; }
+.merchant-comic { display: flex; flex-direction: column; align-items: center; gap: 16px; height: 95%; }
+.merchant-comic img { max-width: 100%; min-height: 0; flex: 1; object-fit: contain; }
+.merchant-portrait { height: min(50%, 320px); image-rendering: pixelated; }
+.merchant-dialogue { position: absolute; bottom: 20px; left: 20px; right: 20px; }
+@media (max-width: 700px) { .merchant-items { grid-template-columns: repeat(2, minmax(0, 1fr)); } .merchant-header h2 { font-size: 12px; } }
+@media (max-width: 420px) { .merchant-items { grid-template-columns: 1fr; } }

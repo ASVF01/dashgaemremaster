@@ -1,6 +1,7 @@
 # Roadmap
 
-- [ ] Add the Receptionist merchant on Floors 2–4 with the supplied dialogue, tutorial comic, bag sound, and shop music. Blocked on the user's upgrade effects, prices, and currency.
+- [x] Add Floor 2 Receptionist dialogue, tutorial comic, bag sound, shop music, free first upgrade and generator upgrades.
+- [ ] Place the merchant on Floors 3–4 when those floors are supplied; replacement enemy sprites await the user's art. Existing enemies remain disabled.
 
 - [x] Add supplied crushed generator loops, fade on opening/closing, accelerate to original speed at 50%, switch to Fury, and verify audio lifecycle.
 

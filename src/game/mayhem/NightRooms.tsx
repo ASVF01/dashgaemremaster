@@ -25,6 +25,7 @@ import { isBgmMuted, setBgmMuted, stopBgm } from "@/game/bgm";
 import { useSettings } from "@/game/settings";
 import { Button } from "@/components/ui/button";
 import { ChevronsDown, ChevronsUp } from "lucide-react";
+import { enemyMoveMultiplier, type NightUpgrades } from "./merchantRules";
 
 
 type View = "office" | "door" | "keyhole" | "hallway" | "storage" | "storageKeyhole" | "storageDoor";
@@ -111,7 +112,7 @@ function makeDust(): { id: number; left: number; top: number; size: number; dura
   }));
 }
 
-export default function NightRooms({ paused = false, onNightComplete }: { paused?: boolean; onNightComplete: () => void }) {
+export default function NightRooms({ paused = false, upgrades = {}, onNightComplete }: { paused?: boolean; upgrades?: NightUpgrades; onNightComplete: () => void }) {
   const [settings] = useSettings();
   const [view, setView] = useState<View>("office");
   const [terminalOpen, setTerminalOpen] = useState(false);
@@ -120,7 +121,7 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
   const [generatorClosing, setGeneratorClosing] = useState(false);
   const generatorClosingRef = useRef(false);
   generatorClosingRef.current = generatorClosing;
-  const [generatorProgress, setGeneratorProgress] = useState<GeneratorProgress>(makeGeneratorProgress);
+  const [generatorProgress, setGeneratorProgress] = useState<GeneratorProgress>(() => makeGeneratorProgress(upgrades));
   const [generatorOnline, setGeneratorOnline] = useState(false);
   const [storageDoorClosed, setStorageDoorClosed] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
@@ -149,7 +150,7 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
   const [night] = useState(getMayhemNight);
   const pausedRef = useRef(paused);
   pausedRef.current = paused;
-  const grid = useGridRoster(mayhemAiLevel(night), nightReady, paused);
+  const grid = useGridRoster(mayhemAiLevel(night) * enemyMoveMultiplier(upgrades), nightReady, paused);
 
   const closeGenerator = () => {
     if (!generatorOpenRef.current || generatorClosingRef.current) return;
@@ -622,7 +623,7 @@ export default function NightRooms({ paused = false, onNightComplete }: { paused
       </div>
 
       {terminalOpen && <Terminal paused={paused} session={terminalSession} onSessionChange={setTerminalSession} onClose={() => { mayhemSfx.terminalClose(); setTerminalOpen(false); }} onResetGrid={() => setGridDown(false)} />}
-      {generatorOpen && <GeneratorPanel lookRef={generatorLookRef} night={night} paused={paused || generatorClosing} closing={generatorClosing} progress={generatorProgress} onProgress={setGeneratorProgress} onClose={closeGenerator} onComplete={() => {
+      {generatorOpen && <GeneratorPanel upgrades={upgrades} lookRef={generatorLookRef} night={night} paused={paused || generatorClosing} closing={generatorClosing} progress={generatorProgress} onProgress={setGeneratorProgress} onClose={closeGenerator} onComplete={() => {
         setGeneratorOnline(true);
         setGeneratorOpen(false);
         setMayhemNight(getMayhemNight() + 1);
