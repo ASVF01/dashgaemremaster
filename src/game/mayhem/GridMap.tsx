@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { mayhemSfx } from "@/game/sfx";
 import { GRID_SIZE, OFFICE_CELL, type GridCharacter } from "./useGridRoster";
 
-export default function GridMap({ onClose, characters, moveCount }: { onClose: () => void; characters: GridCharacter[]; moveCount: number }) {
+export default function GridMap({ onClose, characters, moveCount, heat = 0 }: { onClose: () => void; characters: GridCharacter[]; moveCount: number; heat?: number }) {
   const [staticFlash, setStaticFlash] = useState(false);
   const seen = useRef(moveCount);
   const timer = useRef<number | null>(null);
@@ -42,6 +42,16 @@ export default function GridMap({ onClose, characters, moveCount }: { onClose: (
 
       <div aria-hidden="true" className="mayhem-camera-scan pointer-events-none absolute inset-0" />
       <div aria-hidden="true" className="hell-static pointer-events-none absolute inset-0 opacity-20" />
+      {heat > 0.6 && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-[73] transition-opacity duration-700"
+          style={{
+            opacity: Math.min(0.5, (heat - 0.6) * 1.4),
+            background: "radial-gradient(ellipse at center, rgba(180,20,20,0.15) 0%, rgba(140,0,0,0.55) 100%)",
+          }}
+        />
+      )}
       {staticFlash && <div aria-hidden="true" className="hell-static pointer-events-none absolute inset-0 z-[74] animate-[fade-out_0.3s_ease-out_forwards] opacity-60" />}
 
       <div className="pointer-events-none absolute left-4 top-4 z-[76] font-pixel text-[10px] tracking-[0.3em] text-white/70">
