@@ -9,3 +9,7 @@ export const CHARACTER_ACTION_SOUNDS = [
 export function usesCharacterActionSound(character: CharacterId, event: string): boolean {
   return character === "mmguy" && (CHARACTER_ACTION_SOUNDS as readonly string[]).includes(event);
 }
+
+export function stoneScrapeActive(character: CharacterId, onGround: boolean, speed: number, playing: boolean): boolean {
+  return character === "mmguy" && onGround && Math.abs(speed) > 1 && playing;
+}

@@ -8,6 +8,7 @@
 
 - Playable character variants use `CharacterId` plus per-character sprite overrides; variants without gameplay branches inherit The Player mechanics to prevent physics drift.
 - Character-wide action audio overrides are selected by a tested event allowlist in the shared SFX engine; leave menu, ambience, and boss sounds untouched to avoid replacing unrelated world audio.
+- Continuous character friction audio is gated by tested ground, velocity and active-gameplay rules each frame and stopped on canvas cleanup, so jumps, pauses and scene changes cannot leave scraping audible.
 - Distinct level environments use dedicated canvas scenery renderers while shared collisions stay data-driven in `level.ts`, keeping visuals isolated from physics.
 - Boss cinematics live in boss runtime state and signal the page-level audio owner when combat begins, preventing visual and music timing drift.
 - MAYHEM night-clear cinematics own their media lifecycle and derive picture beats and the shared sound/picture fade from the completion audio clock; separate descent and pulse transform layers preserve both motions, while the page prepares the next available floor and keeps gameplay frozen until reveal finishes.

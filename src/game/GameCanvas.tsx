@@ -951,7 +951,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
           // floor, but keyboard/touch movement cannot interrupt the camera pan.
           update(r, dt, r.boss?.phase === "intro" ? {} : keysRef.current);
         }
-      } else if (!paused && r.deathFxT > 0) {
+      }
+      sfx.stoneScrape(r.player.onGround, r.player.vx, r.player.sliding, !paused && !r.finished && r.player.alive && r.freezeTime <= 0 && r.boss?.phase !== "intro");
+      if (!paused && !r.player.alive && r.deathFxT > 0) {
         // Player is dead but the death FX is still playing: keep particles,
         // camera shake and the freeze counter ticking so the explosion animates.
         r.deathFxT = Math.max(0, r.deathFxT - dt);
@@ -1052,6 +1054,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     raf = requestAnimationFrame(loop);
     return () => {
       cancelAnimationFrame(raf);
+      sfx.stoneScrapeStop();
       if (deathTimeoutRef.current !== null) {
         clearTimeout(deathTimeoutRef.current);
         deathTimeoutRef.current = null;
