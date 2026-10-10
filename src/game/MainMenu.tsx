@@ -2372,7 +2372,6 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                           window.setTimeout(() => setInfoOpen(true), 260);
                         } else {
                           selectCharacter(c.id as CharacterId);
-                          if (c.id === "mmguy") sfx.characterAction();
                         }
                       }}
                       className={[
