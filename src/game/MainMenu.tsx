@@ -1741,6 +1741,7 @@ import greenMachinePreview from "@/assets/characters/green_machine_preview.png";
 import blueBlurArtAsset from "@/assets/characters/blue_blur_art.png.asset.json";
 import sharkGalArtAsset from "@/assets/characters/shark_gal_art.png.asset.json";
 import theAlternateArtAsset from "@/assets/characters/the_alternate_art.png.asset.json";
+import mmguyArt from "@/assets/characters/mmguy.png.asset.json";
 import massiveUpdateAsset from "@/assets/updates/massive_update.png.asset.json";
 import { setBgmMuted as setGameBgmMuted, isBgmMuted as isGameBgmMuted, subscribeBgmMuted } from "@/game/bgm";
 import infoButtonAsset from "@/assets/info_button.png.asset.json";
@@ -2150,7 +2151,7 @@ const WIP_CHARACTERS: WipCharacter[] = [
   },
   { id: "dasher",  name: "Blue Blur",       blurb: "Dashes faster. Thinks slower.", art: blueBlurArtAsset.url },
   { id: "shadow",  name: "Shark Gal",      blurb: "A rumor in pencil form. Hard to pin down.", art: sharkGalArtAsset.url },
-  { id: "mmguy",   name: "M&M's Guy",      blurb: "Yehihehu! BOIII THIS CHARACTER SO TUFF. Sprite and sounds on the way." },
+  { id: "mmguy",   name: "M&M's Guy",      blurb: "Yehihehu! BOIII THIS CHARACTER SO TUFF", art: mmguyArt.url, preview: mmguyArt.url },
   { id: "x3mode",  name: "THE ALTERNATE",       blurb: "TO ACHIVE SUCH FORM, YOU MUST UNLOCK THE MARK, MANIPULATE IT'S FACE AND RE-COMPLETE YOUR GENISIS WITH YOUR NEW FOUND POWER.", art: theAlternateArtAsset.url, locked: true },
 ];
 
@@ -2171,7 +2172,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   const [infoOpen, setInfoOpen] = useState(false);
   const [shakingId, setShakingId] = useState<string | null>(null);
   const selected = WIP_CHARACTERS.find((c) => c.id === picked) ?? WIP_CHARACTERS[0];
-  const isNotYet = (id: string) => id === "dasher" || id === "shadow" || id === "mmguy";
+  const isNotYet = (id: string) => id === "dasher" || id === "shadow";
   const isCharLocked = (id: string) =>
     isNotYet(id) ? true :
     (id === "stick" || id === "green" || id === "x3mode")
@@ -2371,6 +2372,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                           window.setTimeout(() => setInfoOpen(true), 260);
                         } else {
                           selectCharacter(c.id as CharacterId);
+                          if (c.id === "mmguy") sfx.characterAction();
                         }
                       }}
                       className={[
@@ -2393,7 +2395,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                         <img
                           src={c.art}
                           alt={c.name}
-                          className="w-full h-full object-cover"
+                          className={c.id === "mmguy" ? "w-full h-full object-contain" : "w-full h-full object-cover"}
                           style={locked ? { filter: "grayscale(1) brightness(0.55)" } : undefined}
                         />
                       ) : (

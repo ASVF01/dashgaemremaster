@@ -56,6 +56,7 @@ import altReadyAsset from "@/assets/sprites/alternate/alt_ready.png.asset.json";
 import altAimAsset from "@/assets/sprites/alternate/alt_aim.png.asset.json";
 import altFireAsset from "@/assets/sprites/alternate/alt_fire.png.asset.json";
 import { getSelectedCharacter, type CharacterId } from "@/game/character";
+import mmguyAsset from "@/assets/characters/mmguy.png.asset.json";
 
 export type SpriteState = "idle" | "run" | "runFast" | "jump" | "fall" | "slide" | "dive" | "dash" | "skid" | "superDash" | "hurt" | "beam" | "beamJump" | "punchReady" | "punchAim" | "punchFire";
 
@@ -82,6 +83,7 @@ const CYCLES: Partial<Record<SpriteState, string[]>> = {
 // Per-character sprite overrides. Missing states fall back to the default
 // (stick) URLS/CYCLES so partial sprite sets still render sensibly.
 const CHAR_URLS: Partial<Record<CharacterId, Partial<Record<SpriteState, string>>>> = {
+  mmguy: { idle: mmguyAsset.url },
   green: {
     idle: greenStandUrl,
     run: greenWalkUrl,
@@ -174,6 +176,7 @@ function loadCycle(char: CharacterId, state: SpriteState) {
 (Object.keys(CHAR_CYCLES.green ?? {}) as SpriteState[]).forEach((s) => loadCycle("green", s));
 (Object.keys(CHAR_URLS.x3mode ?? {}) as SpriteState[]).forEach((s) => load("x3mode", s));
 (Object.keys(CHAR_CYCLES.x3mode ?? {}) as SpriteState[]).forEach((s) => loadCycle("x3mode", s));
+load("mmguy", "idle");
 
 // Public gallery: every sprite (and animated cycle frame) with a label.
 // Used by the SPRITE GALLERY in the main menu.
@@ -204,6 +207,8 @@ export const SPRITE_GALLERY: GallerySprite[] = [
 // `frame` is an arbitrary integer used to pick a frame for animated cycles.
 export function getSprite(state: SpriteState, frame = 0): HTMLImageElement | null {
   const char = getSelectedCharacter();
+  // His supplied single sprite stays visible for every pose and cycle.
+  if (char === "mmguy") return load("mmguy", "idle");
   const key = (c: CharacterId, s: SpriteState) => `${c}:${s}`;
 
   // animated cycle? (currently only from default character)
