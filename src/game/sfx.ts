@@ -1,6 +1,6 @@
 // Tiny WebAudio SFX engine — procedural, no assets.
 import { getSelectedCharacter } from "@/game/character";
-import { usesCharacterActionSound } from "@/game/characterSoundRules";
+import { stoneScrapeActive, usesCharacterActionSound } from "@/game/characterSoundRules";
 import mmguySound from "@/assets/audio/mmguy-action.mp3.asset.json";
 import nySampleUrl from "@/assets/audio/ny.ogg";
 import sugarcoatSampleUrl from "@/assets/sugarcoat.mp3";
@@ -471,11 +471,54 @@ function noise(dur: number, vol = 0.4, hp = 200, lp = 4000, delay = 0) {
 
 function characterActionOverride(event: string): boolean {
   if (!usesCharacterActionSound(getSelectedCharacter(), event)) return false;
-  if (!muted) playSample(mmguySound.url, { vol: 0.5 });
   return true;
 }
 
+let stoneSource: AudioBufferSourceNode | null = null;
+let stoneGain: GainNode | null = null;
+function stopStoneScrape() {
+  stoneSource?.stop();
+  stoneSource?.disconnect();
+  stoneGain?.disconnect();
+  stoneSource = null;
+  stoneGain = null;
+}
+
 export const sfx = {
+  stoneScrape(onGround: boolean, speed: number, sliding: boolean, playing: boolean) {
+    if (muted || !stoneScrapeActive(getSelectedCharacter(), onGround, speed, playing)) {
+      stopStoneScrape();
+      return;
+    }
+    const c = ac();
+    if (!c || !master) return;
+    if (!stoneSource) {
+      // Rough, granular friction rather than rhythmic footstep impacts.
+      const buffer = c.createBuffer(1, c.sampleRate * 2, c.sampleRate);
+      const data = buffer.getChannelData(0);
+      let body = 0;
+      for (let i = 0; i < data.length; i++) {
+        const grain = Math.random() * 2 - 1;
+        body = body * 0.94 + grain * 0.06;
+        data[i] = (body * 3 + grain * 0.22) * (0.65 + 0.35 * Math.sin(i * 0.0017));
+      }
+      const source = c.createBufferSource();
+      source.buffer = buffer;
+      source.loop = true;
+      const filter = c.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.value = 1900;
+      const gain = c.createGain();
+      gain.gain.value = 0;
+      source.connect(filter).connect(gain).connect(master);
+      source.start();
+      stoneSource = source;
+      stoneGain = gain;
+    }
+    stoneSource.playbackRate.setTargetAtTime(0.65 + Math.min(1, Math.abs(speed) / 600) * 0.65, c.currentTime, 0.035);
+    stoneGain?.gain.setTargetAtTime((sliding ? 0.45 : 0.32) * Math.min(1, Math.abs(speed) / 100), c.currentTime, 0.025);
+  },
+  stoneScrapeStop() { stopStoneScrape(); },
   characterAction() {
     if (getSelectedCharacter() === "mmguy" && !muted) {
       void loadSample(mmguySound.url).then((buffer) => {
