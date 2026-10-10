@@ -2262,13 +2262,13 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                 opacity: shown ? 1 : 0,
                 transition: "transform 650ms cubic-bezier(0.16,1,0.3,1) 120ms, opacity 550ms ease-out 120ms",
               }}
-              className="flex items-center justify-center"
+              className={selected.id === "mmguy" ? "flex h-full w-full items-center justify-center" : "flex items-center justify-center"}
             >
               {selected.preview ? (
                 <img
                   src={selected.preview}
                   alt={`${selected.name} preview`}
-                  className="max-h-[90vh] w-auto object-contain scale-125"
+                  className={selected.id === "mmguy" ? "max-h-[70%] max-w-[80%] w-auto object-contain" : "max-h-[90vh] w-auto object-contain scale-125"}
                 />
               ) : (
                 <div className="flex flex-col items-center text-ink/40 select-none">
