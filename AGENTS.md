@@ -7,6 +7,7 @@
 - Generator-only music uses an isolated audio lifecycle with a pure progress-to-track/rate rule and displayed progress as its clock; start both loops on one audio-clock boundary with matching rate and loop length, switch their gains rather than restart, and derive button beats from that audio clock. Duck the night soundtrack while audible and release all sources on dismissal so timing, pause, and room audio stay independent.
 
 - Playable character variants use `CharacterId` plus per-character sprite overrides; variants without gameplay branches inherit The Player mechanics to prevent physics drift.
+- Character-wide action audio overrides are selected by a tested event allowlist in the shared SFX engine; leave menu, ambience, and boss sounds untouched to avoid replacing unrelated world audio.
 - Distinct level environments use dedicated canvas scenery renderers while shared collisions stay data-driven in `level.ts`, keeping visuals isolated from physics.
 - Boss cinematics live in boss runtime state and signal the page-level audio owner when combat begins, preventing visual and music timing drift.
 - MAYHEM night-clear cinematics own their media lifecycle and derive picture beats and the shared sound/picture fade from the completion audio clock; separate descent and pulse transform layers preserve both motions, while the page prepares the next available floor and keeps gameplay frozen until reveal finishes.
