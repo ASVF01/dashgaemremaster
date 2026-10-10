@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Add Sir Wobble, an original googly-eyed traffic cone character, as a freely selectable playable sprite.
+
 - [x] Add 25% double-charge rewards with stronger impact, boss parry audio, and the supplied fading picture; verify chance, gains, and completion cap.
 - [x] Add the "I'm not gonna sugarcoat it" callout to doubled generator charges alongside the boss parry cue.
 
