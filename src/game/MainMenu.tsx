@@ -1742,6 +1742,7 @@ import blueBlurArtAsset from "@/assets/characters/blue_blur_art.png.asset.json";
 import sharkGalArtAsset from "@/assets/characters/shark_gal_art.png.asset.json";
 import theAlternateArtAsset from "@/assets/characters/the_alternate_art.png.asset.json";
 import mmguyArt from "@/assets/characters/mmguy.png.asset.json";
+import wobbleArt from "@/assets/characters/sir-wobble.png";
 import massiveUpdateAsset from "@/assets/updates/massive_update.png.asset.json";
 import { setBgmMuted as setGameBgmMuted, isBgmMuted as isGameBgmMuted, subscribeBgmMuted } from "@/game/bgm";
 import infoButtonAsset from "@/assets/info_button.png.asset.json";
@@ -2152,6 +2153,7 @@ const WIP_CHARACTERS: WipCharacter[] = [
   { id: "dasher",  name: "Blue Blur",       blurb: "Dashes faster. Thinks slower.", art: blueBlurArtAsset.url },
   { id: "shadow",  name: "Shark Gal",      blurb: "A rumor in pencil form. Hard to pin down.", art: sharkGalArtAsset.url },
   { id: "mmguy",   name: "M&M's Guy",      blurb: "Yehihehu! BOIII THIS CHARACTER SO TUFF", art: mmguyArt.url, preview: mmguyArt.url },
+  { id: "wobble", name: "Sir Wobble", blurb: "ROAD WORK AHEAD? bro IS the road work.", art: wobbleArt, preview: wobbleArt, lore: "A traffic cone who abandoned his shift to become a public inconvenience. His mustache is fake. His confidence is not." },
   { id: "x3mode",  name: "THE ALTERNATE",       blurb: "TO ACHIVE SUCH FORM, YOU MUST UNLOCK THE MARK, MANIPULATE IT'S FACE AND RE-COMPLETE YOUR GENISIS WITH YOUR NEW FOUND POWER.", art: theAlternateArtAsset.url, locked: true },
 ];
 
@@ -2162,6 +2164,7 @@ const CARD_TINT: Record<string, string> = {
   dasher: "#1a1a1a",
   shadow: "#1a1a1a",
   mmguy:  "#1a1a1a",
+  wobble: "hsl(var(--ink))",
   x3mode: "#1a1a1a",
 };
 
@@ -2262,13 +2265,13 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                 opacity: shown ? 1 : 0,
                 transition: "transform 650ms cubic-bezier(0.16,1,0.3,1) 120ms, opacity 550ms ease-out 120ms",
               }}
-              className={selected.id === "mmguy" ? "flex h-full w-full items-center justify-center" : "flex items-center justify-center"}
+              className={selected.id === "mmguy" || selected.id === "wobble" ? "flex h-full w-full items-center justify-center" : "flex items-center justify-center"}
             >
               {selected.preview ? (
                 <img
                   src={selected.preview}
                   alt={`${selected.name} preview`}
-                  className={selected.id === "mmguy" ? "max-h-[70%] max-w-[80%] w-auto object-contain" : "max-h-[90vh] w-auto object-contain scale-125"}
+                  className={selected.id === "mmguy" || selected.id === "wobble" ? "max-h-[70%] max-w-[80%] w-auto object-contain" : "max-h-[90vh] w-auto object-contain scale-125"}
                 />
               ) : (
                 <div className="flex flex-col items-center text-ink/40 select-none">
@@ -2394,7 +2397,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                         <img
                           src={c.art}
                           alt={c.name}
-                          className={c.id === "mmguy" ? "w-full h-full object-contain" : "w-full h-full object-cover"}
+                          className={c.id === "mmguy" || c.id === "wobble" ? "w-full h-full object-contain" : "w-full h-full object-cover"}
                           style={locked ? { filter: "grayscale(1) brightness(0.55)" } : undefined}
                         />
                       ) : (

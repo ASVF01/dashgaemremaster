@@ -57,6 +57,7 @@ import altAimAsset from "@/assets/sprites/alternate/alt_aim.png.asset.json";
 import altFireAsset from "@/assets/sprites/alternate/alt_fire.png.asset.json";
 import { getSelectedCharacter, type CharacterId } from "@/game/character";
 import mmguyAsset from "@/assets/characters/mmguy.png.asset.json";
+import wobbleArt from "@/assets/characters/sir-wobble.png";
 
 export type SpriteState = "idle" | "run" | "runFast" | "jump" | "fall" | "slide" | "dive" | "dash" | "skid" | "superDash" | "hurt" | "beam" | "beamJump" | "punchReady" | "punchAim" | "punchFire";
 
@@ -84,6 +85,7 @@ const CYCLES: Partial<Record<SpriteState, string[]>> = {
 // (stick) URLS/CYCLES so partial sprite sets still render sensibly.
 const CHAR_URLS: Partial<Record<CharacterId, Partial<Record<SpriteState, string>>>> = {
   mmguy: { idle: mmguyAsset.url },
+  wobble: { idle: wobbleArt },
   green: {
     idle: greenStandUrl,
     run: greenWalkUrl,
@@ -177,6 +179,7 @@ function loadCycle(char: CharacterId, state: SpriteState) {
 (Object.keys(CHAR_URLS.x3mode ?? {}) as SpriteState[]).forEach((s) => load("x3mode", s));
 (Object.keys(CHAR_CYCLES.x3mode ?? {}) as SpriteState[]).forEach((s) => loadCycle("x3mode", s));
 load("mmguy", "idle");
+load("wobble", "idle");
 
 // Public gallery: every sprite (and animated cycle frame) with a label.
 // Used by the SPRITE GALLERY in the main menu.
@@ -209,6 +212,7 @@ export function getSprite(state: SpriteState, frame = 0): HTMLImageElement | nul
   const char = getSelectedCharacter();
   // His supplied single sprite stays visible for every pose and cycle.
   if (char === "mmguy") return load("mmguy", "idle");
+  if (char === "wobble") return load("wobble", "idle");
   const key = (c: CharacterId, s: SpriteState) => `${c}:${s}`;
 
   // animated cycle? (currently only from default character)
