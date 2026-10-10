@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { stoneScrapeActive, usesCharacterActionSound } from "./characterSoundRules";
+import { stoneScrapeActive, usesCharacterActionSound, usesCharacterVoice } from "./characterSoundRules";
 
 describe("M&M's Guy movement sound", () => {
+  it.each(["jump", "dash", "superDash", "diveImpact"])("plays his voice for %s", (event) => {
+    expect(usesCharacterVoice("mmguy", event)).toBe(true);
+    expect(usesCharacterVoice("stick", event)).toBe(false);
+  });
+  it.each(["land", "slide", "step", "run", "hit", "shoot"])("does not play his voice for %s", (event) => {
+    expect(usesCharacterVoice("mmguy", event)).toBe(false);
+  });
   it("scrapes while moving on ground, including sliding", () => {
     expect(stoneScrapeActive("mmguy", true, 100, true)).toBe(true);
     expect(stoneScrapeActive("mmguy", true, -500, true)).toBe(true);

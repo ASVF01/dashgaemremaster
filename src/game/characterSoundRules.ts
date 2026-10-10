@@ -13,3 +13,7 @@ export function usesCharacterActionSound(character: CharacterId, event: string):
 export function stoneScrapeActive(character: CharacterId, onGround: boolean, speed: number, playing: boolean): boolean {
   return character === "mmguy" && onGround && Math.abs(speed) > 1 && playing;
 }
+
+export function usesCharacterVoice(character: CharacterId, event: string): boolean {
+  return character === "mmguy" && ["jump", "dash", "superDash", "diveImpact"].includes(event);
+}

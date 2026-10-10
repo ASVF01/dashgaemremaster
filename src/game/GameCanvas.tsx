@@ -941,6 +941,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       if (!r || !c) return;
       const dt = Math.min(0.033, (t - last) / 1000);
       last = t;
+      sfx.characterPowered(r.player.starman);
       if (!paused && !r.finished && r.player.alive) {
         if (r.freezeTime > 0) {
           r.freezeTime = Math.max(0, r.freezeTime - dt);
@@ -2447,6 +2448,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
             if (!p.onGround && p.vy > 200) { p.squash = 1; sfx.land(); }
             // dive impact — convert to slide, shake, sparks
             if (p.diving) {
+              sfx.diveImpact();
               p.diving = false;
               r.shake = Math.max(r.shake, 0.55);
               burst(r, p.x + p.w / 2, pl.y, "#ffd11a", 12, 280);

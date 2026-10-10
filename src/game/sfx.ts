@@ -1,6 +1,6 @@
 // Tiny WebAudio SFX engine — procedural, no assets.
 import { getSelectedCharacter } from "@/game/character";
-import { stoneScrapeActive, usesCharacterActionSound } from "@/game/characterSoundRules";
+import { stoneScrapeActive, usesCharacterActionSound, usesCharacterVoice } from "@/game/characterSoundRules";
 import mmguySound from "@/assets/audio/mmguy-action.mp3.asset.json";
 import nySampleUrl from "@/assets/audio/ny.ogg";
 import sugarcoatSampleUrl from "@/assets/sugarcoat.mp3";
@@ -469,8 +469,19 @@ function noise(dur: number, vol = 0.4, hp = 200, lp = 4000, delay = 0) {
   src.stop(t0 + dur + 0.02);
 }
 
+let characterPowered = false;
+function playCharacterVoice(event: string) {
+  if (muted || !usesCharacterVoice(getSelectedCharacter(), event)) return;
+  playSample(mmguySound.url, { vol: characterPowered ? 0.65 : 0.5, rate: characterPowered ? 1.15 : 1 });
+  if (characterPowered) {
+    playSample(mmguySound.url, { vol: 0.22, rate: 0.75 });
+    tone({ freq: 100, to: 220, dur: 0.25, type: "sawtooth", vol: 0.12 });
+    noise(0.18, 0.1, 2200, 6000);
+  }
+}
 function characterActionOverride(event: string): boolean {
   if (!usesCharacterActionSound(getSelectedCharacter(), event)) return false;
+  playCharacterVoice(event);
   return true;
 }
 
@@ -485,6 +496,8 @@ function stopStoneScrape() {
 }
 
 export const sfx = {
+  characterPowered(value: boolean) { characterPowered = value; },
+  diveImpact() { playCharacterVoice("diveImpact"); },
   stoneScrape(onGround: boolean, speed: number, sliding: boolean, playing: boolean) {
     if (muted || !stoneScrapeActive(getSelectedCharacter(), onGround, speed, playing)) {
       stopStoneScrape();
@@ -515,8 +528,8 @@ export const sfx = {
       stoneSource = source;
       stoneGain = gain;
     }
-    stoneSource.playbackRate.setTargetAtTime(0.65 + Math.min(1, Math.abs(speed) / 600) * 0.65, c.currentTime, 0.035);
-    stoneGain?.gain.setTargetAtTime((sliding ? 0.45 : 0.32) * Math.min(1, Math.abs(speed) / 100), c.currentTime, 0.025);
+    stoneSource.playbackRate.setTargetAtTime((0.65 + Math.min(1, Math.abs(speed) / 600) * 0.65) * (characterPowered ? 1.4 : 1), c.currentTime, 0.035);
+    stoneGain?.gain.setTargetAtTime((sliding ? 0.45 : 0.32) * Math.min(1, Math.abs(speed) / 100) * (characterPowered ? 1.3 : 1), c.currentTime, 0.025);
   },
   stoneScrapeStop() { stopStoneScrape(); },
   characterAction() {
