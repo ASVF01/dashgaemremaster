@@ -1,4 +1,7 @@
 // Tiny WebAudio SFX engine — procedural, no assets.
+import { getSelectedCharacter } from "@/game/character";
+import { usesCharacterActionSound } from "@/game/characterSoundRules";
+import mmguySound from "@/assets/audio/mmguy-action.mp3.asset.json";
 import nySampleUrl from "@/assets/audio/ny.ogg";
 import sugarcoatSampleUrl from "@/assets/sugarcoat.mp3";
 import beamCriticalUrl from "@/assets/audio/beam_critical2.mp3";
@@ -243,6 +246,7 @@ export function preloadMayhemSfx(): Promise<void> {
 
 export function unlockAudio() {
   ac();
+  loadSample(mmguySound.url);
   loadSample(nySampleUrl);
   loadSample(beamCriticalUrl);
   loadSample(notBadUrl);
@@ -465,8 +469,22 @@ function noise(dur: number, vol = 0.4, hp = 200, lp = 4000, delay = 0) {
   src.stop(t0 + dur + 0.02);
 }
 
+function characterActionOverride(event: string): boolean {
+  if (!usesCharacterActionSound(getSelectedCharacter(), event)) return false;
+  if (!muted) playSample(mmguySound.url, { vol: 0.5 });
+  return true;
+}
+
 export const sfx = {
+  characterAction() {
+    if (getSelectedCharacter() === "mmguy" && !muted) {
+      void loadSample(mmguySound.url).then((buffer) => {
+        if (buffer && getSelectedCharacter() === "mmguy" && !muted) playSample(mmguySound.url, { vol: 0.5 });
+      });
+    }
+  },
   jump() {
+    if (characterActionOverride("jump")) return;
     if (metalReplaces()) {
       metalHit(520, 0.62);
       metalScrape(0.08, 0.42);
@@ -482,6 +500,7 @@ export const sfx = {
     thunderBoom({ intensity: 0.85, rumbleDur: 0.6 });
   },
   land() {
+    if (characterActionOverride("land")) return;
     if (metalReplaces()) {
       metalHit(360, 1.08);
       metalScrape(0.1, 0.34);
@@ -498,6 +517,7 @@ export const sfx = {
     thunderBoom({ intensity: 1.15, rumbleDur: 0.9 });
   },
   slide() {
+    if (characterActionOverride("slide")) return;
     if (metalReplaces()) {
       metalScrape(0.34, 0.9);
       metalHit(680, 0.25);
@@ -512,6 +532,7 @@ export const sfx = {
     thunderBoom({ intensity: 0.7, crack: false, rumbleDur: 0.8 });
   },
   slideEnd() {
+    if (characterActionOverride("slideEnd")) return;
     if (metalReplaces()) {
       metalHit(430, 0.55);
     } else if (grassReplaces()) {
@@ -526,6 +547,7 @@ export const sfx = {
     thunderBoom({ intensity: 0.7, rumbleDur: 0.5 });
   },
   step() {
+    if (characterActionOverride("step")) return;
     if (metalReplaces()) {
       metalHit(620 + Math.random() * 100, 0.34);
     } else if (grassReplaces()) {
@@ -543,6 +565,7 @@ export const sfx = {
     }
   },
   run() {
+    if (characterActionOverride("run")) return;
     if (metalReplaces()) {
       metalHit(520 + Math.random() * 160, 0.42);
     } else if (grassReplaces()) {
@@ -557,6 +580,7 @@ export const sfx = {
     }
   },
   skid() {
+    if (characterActionOverride("skid")) return;
     if (metalReplaces()) {
       metalScrape(0.24, 1.1);
       tone({ freq: 2100, to: 900, dur: 0.16, type: "square", vol: 0.07, attack: 0.002, release: 0.09 });
@@ -570,10 +594,12 @@ export const sfx = {
     thunderBoom({ intensity: 0.8, rumbleDur: 0.55 });
   },
   parryStart() {
+    if (characterActionOverride("parryStart")) return;
     tone({ freq: 1200, to: 1800, dur: 0.06, type: "triangle", vol: 0.18 });
     playSample(auraUrl, { vol: 0.6 });
   },
   parryHit() {
+    if (characterActionOverride("parryHit")) return;
     if (!shimmerReplaces()) {
       // 8-bit "ny" sample for successful parries.
       playPixelSample(nySampleUrl, { vol: 0.55, bits: 8, rateDiv: 4, lp: 8000 });
@@ -582,6 +608,7 @@ export const sfx = {
     thunderBoom({ intensity: 1.1, rumbleDur: 0.8 });
   },
   hit() {
+    if (characterActionOverride("hit")) return;
     // long, soft fade-out on the voice sample
     playSampleClipped(wwHitUrl, 1.5, { vol: 0.6, fade: 0.6 });
     // little punchy hit on top
@@ -589,9 +616,11 @@ export const sfx = {
     noise(0.14, 0.28, 250, 3200);
   },
   chaserHit() {
+    if (characterActionOverride("chaserHit")) return;
     playSample(chaserHitUrl, { vol: 0.9 });
   },
   fatalHit() {
+    if (characterActionOverride("fatalHit")) return;
     // ~3s cinematic "final hit" stinger — layered impact + long rumble tail.
     // 1) bright crash transient (the "smack")
     noise(0.06, 0.85, 4000, 14000);
@@ -615,6 +644,7 @@ export const sfx = {
     tone({ freq: 1100, to: 500, dur: 0.09, type: "triangle", vol: 0.08, release: 0.06, delay: 2.3 });
   },
   enemyKill() {
+    if (characterActionOverride("enemyKill")) return;
     if (!shimmerReplaces()) {
       tone({ freq: 600, to: 200, dur: 0.12, type: "square", vol: 0.28 });
       noise(0.1, 0.2, 400, 4000);
@@ -623,6 +653,7 @@ export const sfx = {
     thunderBoom({ intensity: 1.0, rumbleDur: 0.7 });
   },
   pickup() {
+    if (characterActionOverride("pickup")) return;
     if (!shimmerReplaces()) {
       tone({ freq: 880, dur: 0.06, type: "triangle", vol: 0.25 });
       tone({ freq: 1320, dur: 0.08, type: "triangle", vol: 0.2, delay: 0.05 });
@@ -630,16 +661,20 @@ export const sfx = {
     celestialShimmer({ base: 2400, count: 2, intensity: 0.9 });
   },
   shoot() {
+    if (characterActionOverride("shoot")) return;
     tone({ freq: 700, to: 250, dur: 0.08, type: "sawtooth", vol: 0.18 });
   },
   win() {
+    if (characterActionOverride("win")) return;
     playSample(notBadUrl, { vol: 0.7 });
   },
   die() {
+    if (characterActionOverride("die")) return;
     tone({ freq: 400, to: 60, dur: 0.5, type: "sawtooth", vol: 0.35 });
     noise(0.4, 0.25, 100, 2000, 0.05);
   },
   glassShatter() {
+    if (characterActionOverride("glassShatter")) return;
     // hard impact + bright shard rain
     tone({ freq: 220, to: 40, dur: 0.16, type: "square", vol: 0.55, attack: 0.001, release: 0.10 });
     noise(0.02, 0.7, 200, 1200); // punchy thump transient
@@ -653,6 +688,7 @@ export const sfx = {
     noise(0.55, 0.14, 60, 400, 0.05); // low rumble tail
   },
   mach() {
+    if (characterActionOverride("mach")) return;
     if (!shimmerReplaces()) {
       tone({ freq: 200, to: 1200, dur: 0.18, type: "square", vol: 0.22 });
       noise(0.2, 0.18, 600, 6000, 0.02);
@@ -661,6 +697,7 @@ export const sfx = {
     thunderBoom({ intensity: 1.2, rumbleDur: 1.0 });
   },
   superDash() {
+    if (characterActionOverride("superDash")) return;
     if (!shimmerReplaces()) {
       // BIG impact: layered sub-boom, sharp crack transient, body sweep, and tail rumble.
       noise(0.025, 0.7, 3500, 12000);
@@ -674,6 +711,7 @@ export const sfx = {
     thunderBoom({ intensity: 1.4, rumbleDur: 1.2 });
   },
   dash() {
+    if (characterActionOverride("dash")) return;
     if (metalReplaces()) {
       metalScrape(0.16, 0.95);
       metalHit(760, 0.62);
@@ -686,6 +724,7 @@ export const sfx = {
     thunderBoom({ intensity: 1.0, rumbleDur: 0.7 });
   },
   spawnWhoosh() {
+    if (characterActionOverride("spawnWhoosh")) return;
     // quick airy "swoosh" with a sparkly upward chime — for the invboi-star spawn
     noise(0.18, 0.22, 800, 6500);
     noise(0.10, 0.14, 2400, 9500, 0.02);
@@ -730,13 +769,13 @@ export const sfx = {
   },
   shineStart() { startShine(); },
   shineStop() { stopShine(); },
-  laserStart() { startLaser(); },
+  laserStart() { if (!characterActionOverride("laserStart")) startLaser(); },
   laserStop() { stopLaser(); },
   rainStart() { startRain(); },
   rainStop() { stopRain(); },
   windStart() { startWind(); },
   windStop() { stopWind(); },
-  slideStart() { slideActive = true; if (!shimmerReplaces()) startSlideLoop(); },
+  slideStart() { slideActive = true; if (getSelectedCharacter() !== "mmguy" && !shimmerReplaces()) startSlideLoop(); },
   slideStop() { slideActive = false; stopSlideLoop(); },
   slideIntensity(v: number) { setSlideIntensity(v); },
   thunder() {
