@@ -40,6 +40,9 @@ import knightSwordCutAsset from "@/assets/audio/snd_knight_cut2.wav.asset.json";
 import charSelectClickAsset from "@/assets/character-select/character-select-click.mp3.asset.json";
 import charSelectNegativeAsset from "@/assets/character-select/character-select-negative.mp3.asset.json";
 import charSelectHoverAsset from "@/assets/character-select/character-select-hover.mp3.asset.json";
+import wallStartAsset from "@/assets/character-select/wall_start_battle.mp3.asset.json";
+import wallCloseAsset from "@/assets/character-select/wall_close2_stereo.mp3.asset.json";
+import wallOpenAsset from "@/assets/character-select/wall_open_stereo.mp3.asset.json";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -813,6 +816,22 @@ export const sfx = {
     // "negative" buzz for locked / not-ready characters
     playSample(charSelectNegativeAsset.url, { vol: 0.6 });
     loadSample(charSelectNegativeAsset.url);
+  },
+  // --- Shutter border sounds (supplied samples) ---
+  wallShutterAppear() {
+    // borders appear over the main menu
+    playSample(wallStartAsset.url, { vol: 0.6 });
+    loadSample(wallStartAsset.url);
+  },
+  wallShutterClose() {
+    // borders finish closing together
+    playSample(wallCloseAsset.url, { vol: 0.6 });
+    loadSample(wallCloseAsset.url);
+  },
+  wallShutterOpen() {
+    // borders open onto the character select
+    playSample(wallOpenAsset.url, { vol: 0.6 });
+    loadSample(wallOpenAsset.url);
   },
   menuHover() {
     tone({ freq: 880, to: 1180, dur: 0.05, type: "triangle", vol: 0.07, attack: 0.002, release: 0.04 });
