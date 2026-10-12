@@ -2193,7 +2193,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   }, [phase, infoOpen, page]);
 
   const pageCharacters = WIP_CHARACTERS.filter((c) => characterPage(c.id) === page);
-  return (
+  return createPortal(
     <div className="character-select" data-phase={phase} role="dialog" aria-label="Character select">
       <Button variant="ghost" className="select-leave" onClick={handleClose} disabled={phase === "closing"} aria-label="back to menu" onMouseEnter={() => sfx.menuHover()}>
         <svg viewBox="0 0 160 50" aria-hidden="true"><path d="M3 25 60 4 60 15 156 15 156 35 60 35 60 46Z" /></svg>
@@ -2298,6 +2298,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
         </div>
       )}
     </div>
+    , document.body
   );
 }
 
