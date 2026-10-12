@@ -1,5 +1,7 @@
 # Project Architecture Rules
 
+- Character selection uses a single timed shutter phase for entry and exit, with roster and INFO interactions gated until open; presentation animation stays independent of saved character state.
+
 - Receptionist merchant dialogue cues use an isolated overlay that owns shop audio; session upgrades are passed from the page into NightRooms and pure merchant rules, keeping effects testable and enemy activation deferred.
 - DialogueBox reports its active line to external character artwork; merchant expression assignments live alongside its script so artwork changes stay synchronized without duplicating dialogue progression.
 - Generator control hover cues are delegated from its puzzle container and use the shared night SFX bus with cached crushed samples; this covers every puzzle without changing terminal Flow audio.
