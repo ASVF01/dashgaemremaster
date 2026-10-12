@@ -209,7 +209,7 @@ export function getSprite(state: SpriteState, frame = 0): HTMLImageElement | nul
   const char = getSelectedCharacter();
   // His supplied single sprite stays visible for every pose and cycle.
   if (char === "mmguy") return load("mmguy", "idle");
-  if (char === "wobble") return   const key = (c: CharacterId, s: SpriteState) => `${c}:${s}`;
+  const key = (c: CharacterId, s: SpriteState) => `${c}:${s}`;
 
   // animated cycle? (currently only from default character)
   const cyc = cycleCache[key(char, state)] ?? cycleCache[key("stick", state)];
