@@ -2276,7 +2276,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                 </Button>
               );
             })}
-            {page === 2 && Array.from({ length: 4 }, (_, i) => <div className="select-empty" aria-hidden="true" key={`empty-${i}`}><span className="font-scribble">?</span></div>)}
+            {Array.from({ length: page === 2 ? 4 : 1 }, (_, i) => <div className="select-empty" aria-hidden="true" key={`empty-${page}-${i}`}><span className="font-scribble">?</span></div>)}
           </div>
           <Button variant="ghost" className="select-info-banner" aria-label={`Show info for ${selected.name}`} disabled={phase !== "open"} onMouseEnter={() => sfx.menuHover()} onClick={() => { sfx.menuTab(); setInfoOpen(true); }}>
             <img className="select-info-art" src={selectInfoArt.url} alt="" draggable={false} />
