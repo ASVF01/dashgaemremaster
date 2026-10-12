@@ -37,6 +37,9 @@ import knightRoarAsset from "@/assets/audio/snd_knightroar.wav.asset.json";
 import knightDrawPowerAsset from "@/assets/audio/snd_knight_drawpower.wav.asset.json";
 import knightSwordFallAsset from "@/assets/audio/snd_knight_fallingsword_big.wav.asset.json";
 import knightSwordCutAsset from "@/assets/audio/snd_knight_cut2.wav.asset.json";
+import charSelectClickAsset from "@/assets/character-select/character-select-click.mp3.asset.json";
+import charSelectNegativeAsset from "@/assets/character-select/character-select-negative.mp3.asset.json";
+import charSelectHoverAsset from "@/assets/character-select/character-select-hover.mp3.asset.json";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
