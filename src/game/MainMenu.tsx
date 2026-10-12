@@ -1767,9 +1767,15 @@ function useSharedTabMute(): [boolean, (m: boolean | ((p: boolean) => boolean)) 
 // Shared fade-in/out tab BGM with a shared mute toggle.
 function useTabBgm(src: string, targetVolume = 0.6, fadeInMs = 1200, fadeOutMs = 500) {
   const [muted, setMuted] = useSharedTabMute();
+  const [settings] = useSettings();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const mutedRef = useRef(false);
   mutedRef.current = muted;
+  // The tab track's tuned level scaled by the BGM volume setting, kept in a
+  // ref so the fade-in loop and live volume updates always read the current
+  // slider value.
+  const volRef = useRef(targetVolume * settings.bgmVolume);
+  volRef.current = muted ? 0 : Math.max(0, Math.min(1, targetVolume * settings.bgmVolume));
 
   useEffect(() => {
     const a = new Audio(src);
@@ -1786,7 +1792,7 @@ function useTabBgm(src: string, targetVolume = 0.6, fadeInMs = 1200, fadeOutMs =
     const start = performance.now();
     const tickIn = (t: number) => {
       const k = Math.min(1, (t - start) / fadeInMs);
-      a.volume = mutedRef.current ? 0 : Math.max(0, Math.min(1, targetVolume * k));
+      a.volume = Math.max(0, Math.min(1, volRef.current * k));
       if (k < 1) raf = requestAnimationFrame(tickIn);
     };
     raf = requestAnimationFrame(tickIn);
@@ -1806,13 +1812,12 @@ function useTabBgm(src: string, targetVolume = 0.6, fadeInMs = 1200, fadeOutMs =
     };
   }, [src, targetVolume, fadeInMs, fadeOutMs]);
 
-  // Live mute toggle (after fade-in completes, keep volume in sync)
+  // Live BGM volume + mute sync (after fade-in completes, keep volume in sync)
   useEffect(() => {
     const a = audioRef.current;
     if (!a) return;
-    if (muted) a.volume = 0;
-    else if (a.volume === 0) a.volume = Math.max(0, Math.min(1, targetVolume));
-  }, [muted, targetVolume]);
+    a.volume = volRef.current;
+  }, [settings.bgmVolume, muted]);
 
   return { muted, setMuted };
 }
