@@ -891,7 +891,7 @@ const Index = () => {
 
 
           {screen === "menu" && introPhase === "done" && (
-            <Overlay>
+            <>
               <MainMenu
                 onPlay={startLevel}
                 altTutorialPrompt={hasJrbBadge && badgeFace === "X3"}
@@ -902,7 +902,7 @@ const Index = () => {
                 onCommenceMayhem={startMayhem}
                 onContinueMayhem={continueMayhem}
               />
-            </Overlay>
+            </>
           )}
 
           {screen === "loading" && (
