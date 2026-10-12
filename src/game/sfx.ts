@@ -798,6 +798,22 @@ export const sfx = {
     tone({ freq: 260, to: 320, dur: 0.18, type: "sine", vol: 0.08, delay: 0.0 });
   },
   // --- Menu UI sounds: small, snappy, pen-on-paper feel ---
+  // --- Character select sounds (supplied samples) ---
+  charSelectHover() {
+    // "sell select" sample for hovering any UI in character select
+    playSample(charSelectHoverAsset.url, { vol: 0.45 });
+    loadSample(charSelectHoverAsset.url);
+  },
+  charSelectClick() {
+    // "35" sample for picking a character or flipping a page
+    playSample(charSelectClickAsset.url, { vol: 0.6 });
+    loadSample(charSelectClickAsset.url);
+  },
+  charSelectNegative() {
+    // "negative" buzz for locked / not-ready characters
+    playSample(charSelectNegativeAsset.url, { vol: 0.6 });
+    loadSample(charSelectNegativeAsset.url);
+  },
   menuHover() {
     tone({ freq: 880, to: 1180, dur: 0.05, type: "triangle", vol: 0.07, attack: 0.002, release: 0.04 });
     noise(0.025, 0.04, 2400, 8000);
