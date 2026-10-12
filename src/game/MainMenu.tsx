@@ -2476,7 +2476,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
             </p>
             {isCharLocked(selected.id) && (
               <p className="font-scribble text-base text-accent leading-snug mb-4 -rotate-1">
-                to unlock, obtain the cat badge, click it once and play the tutorial
+                Obtainment method not out yet
               </p>
             )}
             <div className="max-h-[60vh] overflow-y-auto pr-2 space-y-4">
@@ -2505,7 +2505,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                 </section>
               )}
               {!selected.howToPlay && !selected.lore && !selected.abilities && (
-                <p className="font-scribble text-base text-ink/60 italic">This character is just a png, has the same movement as The Player, so nothing special about him.</p>
+                <p className="font-scribble text-base text-ink/60 italic">Nothing yet.</p>
               )}
             </div>
           </div>
