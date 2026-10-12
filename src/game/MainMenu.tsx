@@ -2254,8 +2254,8 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
     <div className="character-select" data-phase={phase} role="dialog" aria-label="Character select">
       <canvas ref={gridRef} className="select-grid" aria-hidden="true" />
       <Button variant="ghost" className="select-leave" onClick={handleClose} disabled={phase === "closing"} aria-label="back to menu" onMouseEnter={() => sfx.menuHover()}>
-        <svg viewBox="0 0 160 50" aria-hidden="true"><path d="M3 25 60 4 60 15 156 15 156 35 60 35 60 46Z" /></svg>
-        <span>Leave.</span>
+        <img className="select-leave-art" src={selectLeaveArt.url} alt="" draggable={false} />
+        <img className="select-leave-art hover" src={selectLeaveHoverArt.url} alt="" draggable={false} aria-hidden="true" />
       </Button>
       <Button variant="ghost" className="select-page-arrow previous" aria-label="previous page" title="Actual characters" disabled={page === 1 || phase !== "open"} onClick={() => changePage(1)}>
         <svg viewBox="0 0 120 200" aria-hidden="true"><path d="M5 100 58 7 58 58 114 58 114 142 58 142 58 193Z" /></svg>
