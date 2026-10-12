@@ -37,7 +37,9 @@ import receptionistAsset from "@/assets/mayhem/The_Receptionist.png.asset.json";
 import receptionistFullAsset from "@/assets/mayhem/receptionist/The_Receptionist_Full.png.asset.json";
 import receptionistWave1Asset from "@/assets/mayhem/The_Receptionist_Wave_1.png.asset.json";
 import receptionistWave2Asset from "@/assets/mayhem/The_Receptionist_Wave_2.png.asset.json";
+import dustKickAsset from "@/assets/effects/dust-kick.png.asset.json";
 
+const dustKickImg = new Image(); dustKickImg.src = dustKickAsset.url;
 const bossParryFlashImg = new Image(); bossParryFlashImg.src = bossParryFlashUrl;
 let sugarcoatAudio: HTMLAudioElement | null = null;
 function playSugarcoat() {
@@ -304,6 +306,7 @@ interface GameRefs {
   player: Player;
   projectiles: Projectile[];
   particles: Particle[];
+  footstepDust: { x: number; y: number; facing: number; life: number; maxLife: number }[];
   afterimages: Afterimage[];
   afterTimer: number;
   chaserTrail: { x: number; y: number; w: number; h: number; life: number; maxLife: number }[];
@@ -591,6 +594,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       },
       projectiles: [],
       particles: [],
+      footstepDust: [],
       afterimages: [],
       afterTimer: 0,
       chaserTrail: [],
@@ -1752,8 +1756,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     r.afterTimer -= dt;
     if ((mach >= 1 || p.diving || p.dashTime > 0) && r.afterTimer <= 0) {
       const superDazh = p.superDashing && p.superDashTime >= 5;
-      r.afterTimer = p.starman ? 0.04 : superDazh ? 0.025 : (p.dashTime > 0 ? 0.012 : Math.max(0.018, 0.05 - mach * 0.008));
-      const life = p.starman ? 0.28 : (p.dashTime > 0 ? 0.22 : 0.18);
+      r.afterTimer = p.starman ? 0.10 : superDazh ? 0.075 : (p.dashTime > 0 ? 0.045 : Math.max(0.065, 0.12 - mach * 0.01));
+      const life = p.starman ? 0.20 : (p.dashTime > 0 ? 0.16 : 0.14);
       const rainbowHue = p.starman
         ? (p.somSom ? 190 : Math.floor(r.time * 90) % 360)
         : superDazh ? 190 : undefined;
@@ -1783,7 +1787,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
           : p.dashTime > 0 ? "#22e2ff" : p.diving ? "#ffd11a" : MACH_COLORS[Math.max(1, mach)],
         rainbowHue,
       });
-      const maxAfterimages = p.starman ? 12 : 32;
+      const maxAfterimages = 6;
       if (r.afterimages.length > maxAfterimages) r.afterimages.splice(0, r.afterimages.length - maxAfterimages);
     }
     for (const ai of r.afterimages) ai.life -= dt;
@@ -1792,20 +1796,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     r.chaserTrail = r.chaserTrail.filter((c) => c.life > 0);
     if (r.chaserHitFlash > 0) r.chaserHitFlash = Math.max(0, r.chaserHitFlash - dt);
 
-    // Thin speed lines while running on the ground (any speed above a small threshold).
-    if (p.onGround && !p.sliding && Math.abs(p.vx) > 140 && Math.random() < 0.55) {
-      const len = 14 + Math.random() * 18 + Math.min(40, Math.abs(p.vx) * 0.04);
-      spawnParticle(r, {
-        x: p.x + p.w / 2 - p.facing * (p.w * 0.4 + Math.random() * 30),
-        y: p.y + 4 + Math.random() * (p.h - 8),
-        vx: -p.facing * (Math.abs(p.vx) * 0.5 + 80),
-        vy: 0,
-        color: "#ffffff",
-        size: len / 2,
-        life: 0.18 + Math.random() * 0.12,
-        kind: "smear",
-      });
-    }
+    // Footstep artwork stays where the foot hit the ground, independent of the player.
+    for (const dust of r.footstepDust) dust.life -= dt;
+    r.footstepDust = r.footstepDust.filter((dust) => dust.life > 0);
 
     // ----- Skid dust + walking SFX -----
     const speedAbs = Math.abs(p.vx);
@@ -1859,22 +1852,19 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       if (r.walkTimer <= 0) {
         r.walkTimer = stepInterval;
         if (running) sfx.run(); else sfx.step();
-        spawnParticle(r, {
-          x: p.x + p.w / 2 - moveSign * (p.w * 0.3),
-          y: p.y + p.h - 1,
-          vx: -moveSign * (10 + Math.random() * (running ? 60 : 30)),
-          vy: -20 - Math.random() * (running ? 45 : 25),
-          color: running ? "#bdbdbd" : "#cfcfcf",
-          size: (running ? 3 : 2) + Math.random() * 2,
-          life: 0.25 + Math.random() * 0.15,
-          kind: "ring",
+        r.footstepDust.push({
+          x: p.x + p.w / 2 - moveSign * (p.w / 2 + 20),
+          y: p.y + p.h + 2,
+          facing: moveSign,
+          life: 0.32,
+          maxLife: 0.32,
         });
       }
     } else if (!p.onGround) {
       r.walkTimer = 0;
     }
 
-    // (mach color trail removed — speed lines + afterimage handle the feedback)
+    // Sparse afterimages and footstep dust provide ordinary movement feedback.
 
     // combo decay
     if (r.comboTimer > 0) {
@@ -3346,6 +3336,21 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     if (r.boss) drawBossWorldFx(ctx, r, r.boss);
     if (isMayhemLevel) drawMayhemDoor(ctx, r.level.goal.x, r.level.goal.y, r.level.goal.w, r.level.goal.h, r.time);
     else drawGoal(ctx, r.level.goal.x, r.level.goal.y, r.level.goal.w, r.level.goal.h, r.time);
+
+    // Ground-level dust is drawn behind the player and anchored in world space.
+    if (dustKickImg.complete && dustKickImg.naturalWidth > 0) {
+      for (const dust of r.footstepDust) {
+        const remaining = dust.life / dust.maxLife;
+        const width = 52 + (1 - remaining) * 10;
+        const height = width * dustKickImg.naturalHeight / dustKickImg.naturalWidth;
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, remaining * 1.8);
+        ctx.translate(dust.x, dust.y);
+        ctx.scale(dust.facing, 1);
+        ctx.drawImage(dustKickImg, -width / 2, -height, width, height);
+        ctx.restore();
+      }
+    }
 
     // afterimages — draw before player so player sits on top
     if (!r.hidePlayer) {

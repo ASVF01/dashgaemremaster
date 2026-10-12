@@ -1,5 +1,7 @@
 # Project Architecture Rules
 
+- Footstep artwork is captured at each step in world-space canvas runtime state and rendered behind the player; its lifetime is independent of player transforms so it never follows the sprite.
+
 - Character selection uses timed shutter phases with roster and INFO interactions gated until open; exit keeps the roster stationary, resets main-menu presentation while fully covered, and reveals it before unmounting. Presentation stays independent of saved character state.
 
 - Receptionist merchant dialogue cues use an isolated overlay that owns shop audio; session upgrades are passed from the page into NightRooms and pure merchant rules, keeping effects testable and enemy activation deferred.
