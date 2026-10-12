@@ -2171,6 +2171,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   // horizontal rows scroll up through them, advancing by exactly one cell per
   // wrap so the loop is seamless. Every 4th line is a stronger "major" line.
   useEffect(() => {
+    if (phase !== "open" && phase !== "closing") return;
     const canvas = gridRef.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
