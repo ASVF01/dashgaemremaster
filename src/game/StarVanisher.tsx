@@ -336,10 +336,13 @@ function spotPos(b: Boss, sp: BossSpot) {
 
 // boss theme (module-level so it survives re-renders)
 let bossAudio: GaplessLoop | null = null;
+// Live BGM volume setting (0..1), updated by the component each render so the
+// module-level boss player and volume assignment sites can scale from it.
+let bgmUserVolume = getSettings().bgmVolume;
 function playBossBgm() {
   try {
     if (!bossAudio) bossAudio = new GaplessLoop(dangerAsset.url);
-    bossAudio.volume = 0.5;
+    bossAudio.volume = 0.5 * bgmUserVolume;
     void bossAudio.play().catch(() => { /* blocked */ });
   } catch { /* noop */ }
 }
