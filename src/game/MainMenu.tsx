@@ -2171,10 +2171,11 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
     const style = getComputedStyle(canvas);
-    const light = `hsl(${style.getPropertyValue("--select-white").trim()})`;
     const dark = `hsl(${style.getPropertyValue("--select-black").trim()})`;
     const CELL = 72;   // grid spacing, css px
     const SPEED = 36;  // upward drift, css px per second
+    const MINOR = 3;   // line thickness, css px
+    const MAJOR = 6;   // every 4th line is chunkier
     let W = 0, H = 0, raf = 0, last = performance.now(), total = 0;
     const resize = () => {
       W = canvas.width = canvas.clientWidth;
@@ -2191,11 +2192,12 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
       const rows = Math.ceil(H / CELL) + 2;
       const cols = Math.ceil(W / CELL) + 1;
       ctx.clearRect(0, 0, W, H);
+      ctx.strokeStyle = dark;
       // Vertical columns — invariant under vertical translation, so they stay put.
       for (let c = 0; c < cols; c++) {
         const x = c * CELL + 0.5;
-        ctx.strokeStyle = c % 2 === 0 ? light : dark;
-        ctx.globalAlpha = c % 4 === 0 ? 0.26 : 0.12;
+        ctx.lineWidth = c % 4 === 0 ? MAJOR : MINOR;
+        ctx.globalAlpha = c % 4 === 0 ? 1 : 0.85;
         ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
       }
       // Horizontal rows scroll upward through the columns.
@@ -2203,8 +2205,8 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
         const y = Math.round(H - offset - k * CELL) + 0.5;
         if (y < -1 || y > H + 1) continue;
         const idx = k + rowShift;
-        ctx.strokeStyle = idx % 2 === 0 ? light : dark;
-        ctx.globalAlpha = idx % 4 === 0 ? 0.26 : 0.12;
+        ctx.lineWidth = idx % 4 === 0 ? MAJOR : MINOR;
+        ctx.globalAlpha = idx % 4 === 0 ? 1 : 0.85;
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
       }
       ctx.globalAlpha = 1;
