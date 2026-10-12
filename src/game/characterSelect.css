@@ -3,8 +3,8 @@
   background: hsl(var(--select-background)); color: hsl(var(--select-white));
 }
 .character-select::before {
-  content: ""; position: absolute; inset: -100%; opacity: .22;
-  background: repeating-linear-gradient(125deg, transparent 0 80px, hsl(var(--select-white) / .23) 80px 82px, transparent 82px 160px);
+  content: ""; position: absolute; inset: -100%; opacity: .3;
+  background: repeating-linear-gradient(125deg, transparent 0 80px, hsl(var(--select-black)) 80px 88px, transparent 88px 160px);
   animation: select-background-drift 18s linear infinite;
 }
 /* Drifting background grid — drawn on a canvas by CharacterSelectScreen. */
