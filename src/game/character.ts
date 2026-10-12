@@ -3,7 +3,7 @@
 // without React re-renders.
 import { useEffect, useState } from "react";
 
-export type CharacterId = "stick" | "green" | "dasher" | "shadow" | "x3mode" | "mmguy" | "wobble";
+export type CharacterId = "stick" | "green" | "dasher" | "shadow" | "x3mode" | "mmguy";
 
 export type CharacterState = {
   selected: CharacterId;
@@ -12,7 +12,7 @@ export type CharacterState = {
 
 const DEFAULTS: CharacterState = {
   selected: "stick",
-  unlocked: { stick: true, green: true, dasher: true, shadow: true, x3mode: false, mmguy: true, wobble: true },
+  unlocked: { stick: true, green: true, dasher: true, shadow: true, x3mode: false, mmguy: true },
 };
 
 const KEY = "dashgaem_character_v1";
@@ -26,7 +26,7 @@ function load(): CharacterState {
     if (!raw) return { ...DEFAULTS, unlocked: { ...DEFAULTS.unlocked } };
     const parsed = JSON.parse(raw) as Partial<CharacterState>;
     return {
-      selected: parsed.selected ?? DEFAULTS.selected,
+      selected: parsed.selected && parsed.selected in DEFAULTS.unlocked ? parsed.selected : DEFAULTS.selected,
       unlocked: { ...DEFAULTS.unlocked, ...(parsed.unlocked ?? {}) },
     };
   } catch {
