@@ -2,7 +2,7 @@
 
 - [x] Fix the character-select jagged borders to repeat seamlessly without jumping at the loop boundary.
 
-- [x] Character select background: now a grid that drifts upward (canvas; vertical columns static, horizontal rows scroll up, seamless one-cell loop). Lines are solid black and thick (3px minor, 6px every 4th).
+- [x] Character select background: now a grid that drifts upward (canvas; vertical columns static, horizontal rows scroll up, seamless one-cell loop). Lines are solid black and thick (3px minor, 6px every 4th); the drifting diagonal stripes are black too (8px, one 160px period per loop).
 - [x] Rework character select to the supplied sketch, remove previews, add moving borders and entry/exit transitions; verify selection, paging and INFO.
 
 - [x] Character select: page 1 real characters, page 2 joke characters (Sir Wobble removed).
