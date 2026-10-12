@@ -2234,7 +2234,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   };
   const changePage = (next: 1 | 2) => {
     if (phase !== "open" || next === page) return;
-    sfx.menuTab();
+    sfx.charSelectClick();
     setPage(next);
     const first = WIP_CHARACTERS.find((c) => characterPage(c.id) === next);
     if (first) setPicked(first.id);
@@ -2254,11 +2254,11 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   return createPortal(
     <div className="character-select" data-phase={phase} role="dialog" aria-label="Character select">
       <canvas ref={gridRef} className="select-grid" aria-hidden="true" />
-      <Button variant="ghost" className="select-leave" onClick={handleClose} disabled={phase === "closing"} aria-label="back to menu" onMouseEnter={() => sfx.menuHover()}>
+      <Button variant="ghost" className="select-leave" onClick={handleClose} disabled={phase === "closing"} aria-label="back to menu" onMouseEnter={() => sfx.charSelectHover()}>
         <img className="select-leave-art" src={selectLeaveArt.url} alt="" draggable={false} />
         <img className="select-leave-art hover" src={selectLeaveHoverArt.url} alt="" draggable={false} aria-hidden="true" />
       </Button>
-      <Button variant="ghost" className="select-page-arrow previous" aria-label="previous page" title="Actual characters" disabled={page === 1 || phase !== "open"} onClick={() => changePage(1)}>
+      <Button variant="ghost" className="select-page-arrow previous" aria-label="previous page" title="Actual characters" disabled={page === 1 || phase !== "open"} onMouseEnter={() => sfx.charSelectHover()} onClick={() => changePage(1)}>
         <svg viewBox="0 0 120 200" aria-hidden="true"><path d="M5 100 58 7 58 58 114 58 114 142 58 142 58 193Z" /></svg>
       </Button>
       <main className="select-stage">
@@ -2269,8 +2269,8 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
               const locked = isCharLocked(c.id);
               return (
                 <Button variant="ghost" key={c.id} className={`select-card ${isNotYet(c.id) ? "select-unavailable" : ""}`} data-character={c.id} data-locked={locked} aria-label={c.name} aria-pressed={picked === c.id} title={c.name} disabled={phase !== "open"}
-                  onMouseEnter={() => sfx.menuHover()}
-                  onClick={() => { setPicked(c.id); if (locked) { sfx.keyJingle(); } else { selectCharacter(c.id); sfx.menuConfirm(); } }}>
+                  onMouseEnter={() => sfx.charSelectHover()}
+                  onClick={() => { setPicked(c.id); if (locked) { sfx.charSelectNegative(); } else { selectCharacter(c.id); sfx.charSelectClick(); } }}>
                   {c.art && <img src={c.art} alt={c.name} draggable={false} />}
                   {locked && !isNotYet(c.id) && <LockKeyhole className="select-lock-icon" aria-label="Locked" />}
                   {!c.art && <span className="select-question">?</span>}
@@ -2279,12 +2279,12 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
             })}
             {Array.from({ length: page === 2 ? 4 : 1 }, (_, i) => <div className="select-empty" aria-hidden="true" key={`empty-${page}-${i}`}><span className="font-scribble">?</span></div>)}
           </div>
-          <Button variant="ghost" className="select-info-banner" aria-label={`Show info for ${selected.name}`} disabled={phase !== "open"} onMouseEnter={() => sfx.menuHover()} onClick={() => { sfx.menuTab(); setInfoOpen(true); }}>
+          <Button variant="ghost" className="select-info-banner" aria-label={`Show info for ${selected.name}`} disabled={phase !== "open"} onMouseEnter={() => sfx.charSelectHover()} onClick={() => { sfx.charSelectClick(); setInfoOpen(true); }}>
             <img className="select-info-art" src={selectInfoArt.url} alt="" draggable={false} />
           </Button>
         </div>
       </main>
-      <Button variant="ghost" className="select-page-arrow next" aria-label="next page" title="Joke characters" disabled={page === 2 || phase !== "open"} onClick={() => changePage(2)}>
+      <Button variant="ghost" className="select-page-arrow next" aria-label="next page" title="Joke characters" disabled={page === 2 || phase !== "open"} onMouseEnter={() => sfx.charSelectHover()} onClick={() => changePage(2)}>
         <svg viewBox="0 0 120 200" aria-hidden="true"><path d="M115 100 62 7 62 58 6 58 6 142 62 142 62 193Z" /></svg>
       </Button>
       <div className="select-shutter top" aria-hidden="true" /><div className="select-shutter bottom" aria-hidden="true" />
@@ -2302,6 +2302,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
             <Button variant="ghost"
               type="button"
               onClick={() => setInfoOpen(false)}
+              onMouseEnter={() => sfx.charSelectHover()}
               className="absolute top-2 right-2 scribble-border bg-paper px-3 py-1 font-marker text-xl text-ink hover:rotate-3 transition-transform"
               aria-label="Close info"
             >
