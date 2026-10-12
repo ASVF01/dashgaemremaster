@@ -542,7 +542,7 @@ export default function StarVanisher({ onBack }: { onBack?: () => void } = {}) {
   const ensureBgm = () => {
     if (!bgmRef.current) {
       const a = new GaplessLoop(runBgmAsset.url);
-      a.volume = 0.3375;
+      a.volume = 0.3375 * bgmUserVolume;
       bgmRef.current = a;
     }
 
@@ -566,13 +566,13 @@ export default function StarVanisher({ onBack }: { onBack?: () => void } = {}) {
         return;
       }
       // restart the run track at the beginning of each run / retry
-      a.volume = 0.3375;
+      a.volume = 0.3375 * bgmUserVolume;
       a.currentTime = 0;
       void a.play().catch(() => { /* blocked */ });
     } else if (running && hud.over) {
       // keep the track going on the fail screen but very quiet
       stopBossBgm();
-      a.volume = 0.10;
+      a.volume = 0.10 * bgmUserVolume;
       void a.play().catch(() => { /* noop */ });
     } else {
       a.pause();
@@ -588,9 +588,18 @@ export default function StarVanisher({ onBack }: { onBack?: () => void } = {}) {
     if (!a) return;
     if (m) { a.pause(); }
     else if (inBoss) { pauseBgm(); playBossBgm(); }
-    else if (running && !hud.over) { pauseBgm(); a.volume = 0.3375; a.currentTime = 0; void a.play().catch(() => { /* noop */ }); }
-    else if (running && hud.over) { a.volume = 0.10; void a.play().catch(() => { /* noop */ }); }
+    else if (running && !hud.over) { pauseBgm(); a.volume = 0.3375 * bgmUserVolume; a.currentTime = 0; void a.play().catch(() => { /* noop */ }); }
+    else if (running && hud.over) { a.volume = 0.10 * bgmUserVolume; void a.play().catch(() => { /* noop */ }); }
   }), [running, hud.over]);
+  // Live BGM volume sync: re-apply the current phase volume when the slider moves.
+  useEffect(() => {
+    bgmUserVolume = settings.bgmVolume;
+    if (bossAudio) bossAudio.volume = 0.5 * bgmUserVolume;
+    const a = bgmRef.current;
+    if (!a || isBgmMuted()) return;
+    if (running && !hud.over) a.volume = 0.3375 * bgmUserVolume;
+    else if (running && hud.over) a.volume = 0.10 * bgmUserVolume;
+  }, [settings.bgmVolume, running, hud.over]);
   useEffect(() => () => { bgmRef.current?.pause(); stopBossBgm(); stopChargeHum(); resumeBgm(); }, []);
 
 
