@@ -2488,7 +2488,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
               )}
               {selected.lore && (
                 <section>
-                  <h3 className="font-marker text-2xl text-ink mb-1 -rotate-1">Lore</h3>
+                  <h3 className="font-marker text-2xl text-ink mb-1 -rotate-1">green</h3>
                   <p className="font-scribble text-base text-ink/85 leading-snug">{selected.lore}</p>
                 </section>
               )}
