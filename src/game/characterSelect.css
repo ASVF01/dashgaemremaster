@@ -8,23 +8,27 @@
   animation: select-background-drift 18s linear infinite;
 }
 .character-select::after {
-  content: ""; position: absolute; inset: 0; pointer-events: none;
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .55;
   background-image:
-    radial-gradient(circle, hsl(var(--select-white) / .9) 0 2px, transparent 2.5px),
-    radial-gradient(circle, hsl(var(--select-white) / .6) 0 1.5px, transparent 2px),
-    radial-gradient(circle, hsl(var(--select-black) / .5) 0 2px, transparent 2.5px),
-    radial-gradient(circle, hsl(var(--select-white) / .75) 0 1px, transparent 1.5px);
-  background-size: 340px 340px, 260px 260px, 420px 420px, 200px 200px;
-  background-position: 12% 88%, 64% 22%, 38% 55%, 84% 70%;
-  animation: select-particles-rise 9s linear infinite, select-particles-twinkle 3.2s ease-in-out infinite alternate;
+    linear-gradient(90deg, transparent 26%, hsl(var(--select-white) / .8) 50%, transparent 74%),
+    linear-gradient(90deg, transparent 38%, hsl(var(--select-black) / .6) 50%, transparent 62%),
+    linear-gradient(90deg, transparent 30%, hsl(var(--select-white) / .5) 50%, transparent 70%);
+  background-size: 520px 300px, 760px 440px, 380px 220px;
+  background-repeat: repeat;
+  animation: select-wind-1 7s linear infinite, select-wind-2 11s linear infinite, select-wind-3 5s linear infinite;
 }
-@keyframes select-particles-rise {
-  from { background-position: 12% 108%, 64% 122%, 38% 105%, 84% 120%; }
-  to { background-position: 12% -232px, 64% -138px, 38% -315px, 84% -80px; }
+/* Each layer travels exactly one tile per loop so the restart is invisible. */
+@keyframes select-wind-1 {
+  from { background-position: 0 0, 0 0, 0 0; }
+  to { background-position: -520px 300px, -760px 440px, -380px 220px; }
 }
-@keyframes select-particles-twinkle {
-  from { opacity: .35; }
-  to { opacity: .9; }
+@keyframes select-wind-2 {
+  from { background-position: 0 0, 0 0, 0 0; }
+  to { background-position: 520px -300px, 760px -440px, 380px -220px; }
+}
+@keyframes select-wind-3 {
+  from { background-position: 0 0, 0 0, 0 0; }
+  to { background-position: -380px 220px, -760px 440px, -520px 300px; }
 }
 .select-stage { position: absolute; inset: 12% 12% 14%; display: flex; align-items: stretch; justify-content: center; }
 .select-roster {
