@@ -2158,9 +2158,54 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   const [phase, setPhase] = useState<"entering" | "open" | "closing">("entering");
   const [page, setPage] = useState<1 | 2>(characterPage(charState.selected));
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const windRef = useRef<HTMLCanvasElement | null>(null);
   const selected = WIP_CHARACTERS.find((c) => c.id === picked) ?? WIP_CHARACTERS[0];
   const isNotYet = (id: string) => id === "dasher" || id === "shadow";
   const isCharLocked = (id: string) => isNotYet(id) || !charState.unlocked[id as CharacterId];
+
+  // Wind lines ported from Star Vanisher: ~30 thin horizontal streaks flying
+  // right -> left at random heights, speeds and lengths, drawn at low alpha.
+  useEffect(() => {
+    const canvas = windRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+    const style = getComputedStyle(canvas);
+    const light = `hsl(${style.getPropertyValue("--select-white").trim()})`;
+    const dark = `hsl(${style.getPropertyValue("--select-black").trim()})`;
+    const rand = (a: number, b: number) => a + Math.random() * (b - a);
+    let W = 0, H = 0, raf = 0, last = performance.now();
+    type Streak = { x: number; y: number; len: number; sp: number; w: number; c: string };
+    const spawn = (fromEdge: boolean): Streak => ({
+      x: fromEdge ? W + rand(20, 380) : rand(0, W + 400),
+      y: rand(6, Math.max(7, H - 6)),
+      len: rand(80, 320), sp: rand(220, 760), w: rand(2, 6),
+      c: Math.random() < 0.5 ? light : dark,
+    });
+    let streaks: Streak[] = [];
+    const resize = () => {
+      W = canvas.width = canvas.clientWidth;
+      H = canvas.height = canvas.clientHeight;
+      streaks = Array.from({ length: 30 }, () => spawn(false));
+    };
+    resize();
+    window.addEventListener("resize", resize);
+    const tick = (now: number) => {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      ctx.clearRect(0, 0, W, H);
+      ctx.globalAlpha = 0.26;
+      for (const sk of streaks) {
+        sk.x -= sk.sp * dt;
+        if (sk.x + sk.len < -20) Object.assign(sk, spawn(true));
+        ctx.fillStyle = sk.c;
+        ctx.fillRect(sk.x, sk.y, sk.len, sk.w);
+      }
+      ctx.globalAlpha = 1;
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setPhase((p) => p === "entering" ? "open" : p), CHARACTER_SELECT_HOLD_MS);
@@ -2195,6 +2240,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   const pageCharacters = WIP_CHARACTERS.filter((c) => characterPage(c.id) === page);
   return createPortal(
     <div className="character-select" data-phase={phase} role="dialog" aria-label="Character select">
+      <canvas ref={windRef} className="select-wind" aria-hidden="true" />
       <Button variant="ghost" className="select-leave" onClick={handleClose} disabled={phase === "closing"} aria-label="back to menu" onMouseEnter={() => sfx.menuHover()}>
         <svg viewBox="0 0 160 50" aria-hidden="true"><path d="M3 25 60 4 60 15 156 15 156 35 60 35 60 46Z" /></svg>
         <span>Leave.</span>
