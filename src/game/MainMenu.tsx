@@ -2223,14 +2223,18 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   // Borders appear and slide closed together first; the 3-second hold only
   // begins once they are fully shut.
   useEffect(() => {
+    sfx.wallShutterAppear();
     const raf = requestAnimationFrame(() => requestAnimationFrame(() => setPhase((p) => (p === "entering" ? "shutting" : p))));
     return () => cancelAnimationFrame(raf);
   }, []);
   useEffect(() => () => { if (closeTimer.current) clearTimeout(closeTimer.current); }, []);
   useEffect(() => {
     if (phase !== "shutting") return;
-    const timer = window.setTimeout(() => setPhase("open"), CHARACTER_SELECT_SHUT_MS + CHARACTER_SELECT_HOLD_MS);
-    return () => window.clearTimeout(timer);
+    // Borders finish sliding shut after SHUT_MS — close sound on impact, then
+    // the hold, then the open sound as they part onto the roster.
+    const shutTimer = window.setTimeout(() => sfx.wallShutterClose(), CHARACTER_SELECT_SHUT_MS);
+    const timer = window.setTimeout(() => { sfx.wallShutterOpen(); setPhase("open"); }, CHARACTER_SELECT_SHUT_MS + CHARACTER_SELECT_HOLD_MS);
+    return () => { window.clearTimeout(shutTimer); window.clearTimeout(timer); };
   }, [phase]);
 
   const handleClose = () => {
@@ -2239,7 +2243,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
     setInfoOpen(false);
     if (phase === "entering") { onClose(); return; }
     setPhase("closing");
-    closeTimer.current = setTimeout(onClose, CHARACTER_SELECT_CLOSE_MS);
+    closeTimer.current = setTimeout(() => { sfx.wallShutterClose(); onClose(); }, CHARACTER_SELECT_CLOSE_MS);
   };
   const changePage = (next: 1 | 2) => {
     if (phase !== "open" || next === page) return;
