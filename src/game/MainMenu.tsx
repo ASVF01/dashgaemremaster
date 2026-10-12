@@ -19,7 +19,7 @@ import { SPRITE_GALLERY } from "@/game/sprites";
 import { useLevelStats, formatMs } from "@/game/levelStats";
 import { ChevronLeft, ChevronRight, LockKeyhole } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { characterPage, CHARACTER_SELECT_HOLD_MS, CHARACTER_SELECT_CLOSE_MS } from "@/game/characterSelectRules";
+import { characterPage, CHARACTER_SELECT_HOLD_MS, CHARACTER_SELECT_CLOSE_MS, CHARACTER_SELECT_SHUT_MS } from "@/game/characterSelectRules";
 import "@/game/characterSelect.css";
 import roaringKnightImg from "@/assets/roaring_knight_titlecard.png";
 import celestialMarathonEmblem from "@/assets/celestial-marathon-emblem.png";
@@ -2159,7 +2159,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   const charState = useCharacter();
   const [picked, setPicked] = useState<CharacterId>(charState.selected);
   const [infoOpen, setInfoOpen] = useState(false);
-  const [phase, setPhase] = useState<"entering" | "open" | "closing">("entering");
+  const [phase, setPhase] = useState<"entering" | "shutting" | "open" | "closing">("entering");
   const [page, setPage] = useState<1 | 2>(characterPage(charState.selected));
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const gridRef = useRef<HTMLCanvasElement | null>(null);
@@ -2220,15 +2220,24 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
     return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
   }, []);
 
+  // Borders appear and slide closed together first; the 3-second hold only
+  // begins once they are fully shut.
   useEffect(() => {
-    const timer = window.setTimeout(() => setPhase((p) => p === "entering" ? "open" : p), CHARACTER_SELECT_HOLD_MS);
-    return () => { window.clearTimeout(timer); if (closeTimer.current) clearTimeout(closeTimer.current); };
+    const raf = requestAnimationFrame(() => requestAnimationFrame(() => setPhase((p) => (p === "entering" ? "shutting" : p))));
+    return () => cancelAnimationFrame(raf);
   }, []);
+  useEffect(() => () => { if (closeTimer.current) clearTimeout(closeTimer.current); }, []);
+  useEffect(() => {
+    if (phase !== "shutting") return;
+    const timer = window.setTimeout(() => setPhase("open"), CHARACTER_SELECT_SHUT_MS + CHARACTER_SELECT_HOLD_MS);
+    return () => window.clearTimeout(timer);
+  }, [phase]);
 
   const handleClose = () => {
     if (phase === "closing") return;
     sfx.menuTab();
     setInfoOpen(false);
+    if (phase === "entering") { onClose(); return; }
     setPhase("closing");
     closeTimer.current = setTimeout(onClose, CHARACTER_SELECT_CLOSE_MS);
   };
