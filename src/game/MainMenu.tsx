@@ -2262,7 +2262,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
       </Button>
       <main className="select-stage">
         <div className="select-roster">
-          <div className="select-page-label font-marker"><span>{page === 1 ? "ACTUAL CHARACTERS" : "JOKE CHARACTERS"}</span><span>PG. {page} / 2</span></div>
+          <div className="select-page-label font-marker"><span>{page === 1 ? "CANONICAL CHARACTERS" : "JOKE CHARACTERS"}</span><span>PG. {page} / 2</span></div>
           <div className="select-cards">
             {pageCharacters.map((c) => {
               const locked = isCharLocked(c.id);
