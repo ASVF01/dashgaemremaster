@@ -2199,10 +2199,13 @@ function CharacterSelectScreen({ onClose, onExitCovered }: { onClose: () => void
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       total += SPEED * dt;
-      const offset = total % CELL;
-      const rowShift = Math.floor(total / CELL);
-      const rows = Math.ceil(H / CELL) + 2;
       const cols = Math.ceil(W / CELL) + 1;
+      // Each row keeps a fixed identity and wraps from the top edge back to the
+      // bottom, so motion is continuous — no teleport when the offset wraps.
+      // The cycle is a multiple of 4 cells so thick/thin assignment never flips.
+      const rows = Math.ceil(H / CELL) + 2;
+      const cycleRows = Math.ceil(rows / 4) * 4;
+      const cycle = cycleRows * CELL;
       ctx.clearRect(0, 0, W, H);
       ctx.strokeStyle = dark;
       // Vertical columns — invariant under vertical translation, so they stay put.
@@ -2212,13 +2215,12 @@ function CharacterSelectScreen({ onClose, onExitCovered }: { onClose: () => void
         ctx.globalAlpha = c % 4 === 0 ? 1 : 0.85;
         ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
       }
-      // Horizontal rows scroll upward through the columns.
-      for (let k = 0; k < rows; k++) {
-        const y = Math.round(H - offset - k * CELL) + 0.5;
+      // Horizontal rows scroll upward through the columns, wrapping seamlessly.
+      for (let k = 0; k < cycleRows; k++) {
+        const y = Math.round(H - ((total + k * CELL) % cycle)) + 0.5;
         if (y < -1 || y > H + 1) continue;
-        const idx = k + rowShift;
-        ctx.lineWidth = idx % 4 === 0 ? MAJOR : MINOR;
-        ctx.globalAlpha = idx % 4 === 0 ? 1 : 0.85;
+        ctx.lineWidth = k % 4 === 0 ? MAJOR : MINOR;
+        ctx.globalAlpha = k % 4 === 0 ? 1 : 0.85;
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
       }
       ctx.globalAlpha = 1;
