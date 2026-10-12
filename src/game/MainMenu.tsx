@@ -2144,7 +2144,7 @@ const WIP_CHARACTERS: WipCharacter[] = [
     lore:
       "green",
     abilities: [
-      { name: "Green Run", description: "green" },
+      { name: "green", description: "green" },
       { name: "green", description: "green" },
       { name: "green", description: "green" },
     ],
