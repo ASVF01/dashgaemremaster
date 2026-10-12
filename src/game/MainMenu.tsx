@@ -92,7 +92,7 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
 
   return (
     <div className="absolute inset-0 flex items-stretch justify-center bg-paper/95 backdrop-blur-[2px] overflow-auto">
-      <div className="w-full max-w-5xl mx-auto px-6 py-8 flex flex-col">
+      <div className={`w-full max-w-5xl mx-auto px-6 py-8 flex flex-col menu-zoom-layer ${charSelectOpen ? "menu-zoomed" : ""}`}>
         {/* Title */}
         <div className="text-center mb-6">
           <div className="font-marker text-6xl md:text-7xl text-ink leading-[0.9] -rotate-1 inline-block">

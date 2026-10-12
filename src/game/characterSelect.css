@@ -78,3 +78,11 @@
 }
 @media (max-height: 600px) and (min-width: 701px) { .select-roster { padding: 10px; gap: 8px; }.character-select .select-card { min-height: 90px; } }
 @media (prefers-reduced-motion: reduce) { .character-select::before,.select-shutter::before { animation: none; }.select-shutter,.select-roster { transition-duration: 1ms; } }
+/* Clip-matched entrance: menu zooms in while the borders peek in, pause, then slam shut. */
+.menu-zoom-layer { transform-origin: 50% 35%; transition: transform 700ms cubic-bezier(.4,0,.2,1), opacity 400ms ease; }
+.menu-zoom-layer.menu-zoomed { transform: scale(1.4); transition: transform 1100ms cubic-bezier(.5,0,.75,0); }
+.character-select[data-phase="shutting"] .select-shutter.top { animation: select-shut-top 850ms cubic-bezier(.65,0,.35,1) forwards; }
+.character-select[data-phase="shutting"] .select-shutter.bottom { animation: select-shut-bottom 850ms cubic-bezier(.65,0,.35,1) forwards; }
+@keyframes select-shut-top { 0% { transform: translateY(-105%); } 35%,55% { transform: translateY(-78%); } 100% { transform: translateY(0); } }
+@keyframes select-shut-bottom { 0% { transform: translateY(105%) rotate(180deg); } 35%,55% { transform: translateY(78%) rotate(180deg); } 100% { transform: translateY(0) rotate(180deg); } }
+@media (prefers-reduced-motion: reduce) { .menu-zoom-layer, .menu-zoom-layer.menu-zoomed { transition: none; } }
