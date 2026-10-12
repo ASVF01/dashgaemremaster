@@ -2264,9 +2264,12 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   }, [phase, infoOpen, page]);
 
   const pageCharacters = WIP_CHARACTERS.filter((c) => characterPage(c.id) === page);
+  // During entering/shutting only the shutters render, so the transition plays
+  // over the main menu with no character select UI underneath.
+  const uiVisible = phase === "open" || phase === "closing";
   return createPortal(
     <div className="character-select" data-phase={phase} role="dialog" aria-label="Character select">
-      <canvas ref={gridRef} className="select-grid" aria-hidden="true" />
+      {uiVisible && <canvas ref={gridRef} className="select-grid" aria-hidden="true" />}
       <Button variant="ghost" className="select-leave" onClick={handleClose} disabled={phase === "closing"} aria-label="back to menu" onMouseEnter={() => sfx.charSelectHover()}>
         <img className="select-leave-art" src={selectLeaveArt.url} alt="" draggable={false} />
         <img className="select-leave-art hover" src={selectLeaveHoverArt.url} alt="" draggable={false} aria-hidden="true" />
