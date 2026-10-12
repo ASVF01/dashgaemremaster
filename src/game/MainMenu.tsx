@@ -2254,7 +2254,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   return createPortal(
     <div className="character-select" data-phase={phase} role="dialog" aria-label="Character select">
       <canvas ref={gridRef} className="select-grid" aria-hidden="true" />
-      <Button variant="ghost" className="select-leave" onClick={handleClose} disabled={phase === "closing"} aria-label="back to menu" onMouseEnter={() => sfx.menuHover()}>
+      <Button variant="ghost" className="select-leave" onClick={handleClose} disabled={phase === "closing"} aria-label="back to menu" onMouseEnter={() => sfx.charSelectHover()}>
         <img className="select-leave-art" src={selectLeaveArt.url} alt="" draggable={false} />
         <img className="select-leave-art hover" src={selectLeaveHoverArt.url} alt="" draggable={false} aria-hidden="true" />
       </Button>
