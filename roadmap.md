@@ -2,6 +2,7 @@
 
 - [x] Fix the character-select jagged borders to repeat seamlessly without jumping at the loop boundary.
 
+- [x] Replace character select background particles with Star Vanisher-style wind lines (canvas streaks flying right to left).
 - [x] Rework character select to the supplied sketch, remove previews, add moving borders and entry/exit transitions; verify selection, paging and INFO.
 
 - [x] Character select: page 1 real characters, page 2 joke characters (Sir Wobble removed).
