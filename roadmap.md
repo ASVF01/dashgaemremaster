@@ -2,6 +2,9 @@
 
 - [x] Fix the character-select jagged borders to repeat seamlessly without jumping at the loop boundary.
 
+- [x] Move green (Green Machine) to the joke-characters page; canonical page shows 4 characters plus one "?" slot.
+
+- [x] Swap M&M's Guy's character-select icon to the newly supplied drawing (in-game sprite unchanged).
 - [x] Character select background: now a grid that drifts upward (canvas; vertical columns static, horizontal rows scroll up, seamless one-cell loop). Lines are solid black and thick (3px minor, 6px every 4th); the drifting diagonal stripes are black too (8px, one 160px period per loop).
 - [x] Rework character select to the supplied sketch, remove previews, add moving borders and entry/exit transitions; verify selection, paging and INFO.
 - [x] Swap in supplied INFO.png banner art and Leave.png / Leave_hover.png arrow art (white keyed out of the arrows), and enlarge the leave button.

@@ -1743,6 +1743,7 @@ import blueBlurArtAsset from "@/assets/characters/blue_blur_art.png.asset.json";
 import sharkGalArtAsset from "@/assets/characters/shark_gal_art.png.asset.json";
 import theAlternateArtAsset from "@/assets/characters/the_alternate_art.png.asset.json";
 import mmguyArt from "@/assets/characters/mmguy.png.asset.json";
+import mmguyIcon from "@/assets/characters/mmguy-icon.png.asset.json";
 import massiveUpdateAsset from "@/assets/updates/massive_update.png.asset.json";
 import selectInfoArt from "@/assets/character-select/info.png.asset.json";
 import selectLeaveArt from "@/assets/character-select/leave.png.asset.json";
@@ -2149,7 +2150,7 @@ const WIP_CHARACTERS: WipCharacter[] = [
   },
   { id: "dasher",  name: "Blue Blur",       blurb: "Dashes faster. Thinks slower.", art: blueBlurArtAsset.url },
   { id: "shadow",  name: "Shark Gal",      blurb: "A rumor in pencil form. Hard to pin down.", art: sharkGalArtAsset.url },
-  { id: "mmguy",   name: "M&M's Guy",      blurb: "BOIII IM SO TUFF ✌️😂", art: mmguyArt.url },
+  { id: "mmguy",   name: "M&M's Guy",      blurb: "BOIII IM SO TUFF ✌️😂", art: mmguyIcon.url },
   { id: "x3mode",  name: "THE ALTERNATE",       blurb: "TO ACHIVE SUCH FORM, YOU MUST UNLOCK THE MARK, MANIPULATE IT'S FACE AND RE-COMPLETE YOUR GENISIS WITH YOUR NEW FOUND POWER.", art: theAlternateArtAsset.url, locked: true },
 ];
 
@@ -2276,7 +2277,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                 </Button>
               );
             })}
-            {page === 2 && Array.from({ length: 4 }, (_, i) => <div className="select-empty" aria-hidden="true" key={`empty-${i}`}><span className="font-scribble">?</span></div>)}
+            {Array.from({ length: page === 2 ? 4 : 1 }, (_, i) => <div className="select-empty" aria-hidden="true" key={`empty-${page}-${i}`}><span className="font-scribble">?</span></div>)}
           </div>
           <Button variant="ghost" className="select-info-banner" aria-label={`Show info for ${selected.name}`} disabled={phase !== "open"} onMouseEnter={() => sfx.menuHover()} onClick={() => { sfx.menuTab(); setInfoOpen(true); }}>
             <img className="select-info-art" src={selectInfoArt.url} alt="" draggable={false} />
