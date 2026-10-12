@@ -85,4 +85,19 @@
 .character-select[data-phase="shutting"] .select-shutter.bottom { animation: select-shut-bottom 850ms cubic-bezier(.65,0,.35,1) forwards; }
 @keyframes select-shut-top { 0% { transform: translateY(-105%); } 35%,55% { transform: translateY(-78%); } 100% { transform: translateY(0); } }
 @keyframes select-shut-bottom { 0% { transform: translateY(105%) rotate(180deg); } 35%,55% { transform: translateY(78%) rotate(180deg); } 100% { transform: translateY(0) rotate(180deg); } }
+/* Menu entrance: as the shutters part, the UI pops in with a stagger. */
+@keyframes select-pop-in { 0% { opacity: 0; transform: translateY(26px) scale(.85); } 60% { opacity: 1; transform: translateY(-4px) scale(1.03); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes select-slide-in-left { 0% { opacity: 0; transform: translateY(-50%) translateX(-60px); } 100% { opacity: 1; transform: translateY(-50%) translateX(0); } }
+@keyframes select-slide-in-right { 0% { opacity: 0; transform: translateY(-50%) translateX(60px); } 100% { opacity: 1; transform: translateY(-50%) translateX(0); } }
+@keyframes select-drop-in { 0% { opacity: 0; transform: translateY(-40px) rotate(-4deg); } 60% { opacity: 1; transform: translateY(4px) rotate(1deg); } 100% { opacity: 1; transform: translateY(0) rotate(0); } }
+.character-select[data-phase="open"] .select-card, .character-select[data-phase="open"] .select-empty { animation: select-pop-in 420ms cubic-bezier(.34,1.56,.64,1) backwards; }
+.character-select[data-phase="open"] .select-card:nth-child(1), .character-select[data-phase="open"] .select-empty:nth-child(1) { animation-delay: 60ms; }
+.character-select[data-phase="open"] .select-card:nth-child(2), .character-select[data-phase="open"] .select-empty:nth-child(2) { animation-delay: 120ms; }
+.character-select[data-phase="open"] .select-card:nth-child(3), .character-select[data-phase="open"] .select-empty:nth-child(3) { animation-delay: 180ms; }
+.character-select[data-phase="open"] .select-card:nth-child(4), .character-select[data-phase="open"] .select-empty:nth-child(4) { animation-delay: 240ms; }
+.character-select[data-phase="open"] .select-card:nth-child(5), .character-select[data-phase="open"] .select-empty:nth-child(5) { animation-delay: 300ms; }
+.character-select[data-phase="open"] .select-page-arrow.previous { animation: select-slide-in-left 400ms 150ms cubic-bezier(.34,1.56,.64,1) backwards; }
+.character-select[data-phase="open"] .select-page-arrow.next { animation: select-slide-in-right 400ms 150ms cubic-bezier(.34,1.56,.64,1) backwards; }
+.character-select[data-phase="open"] .select-leave { animation: select-drop-in 420ms 250ms cubic-bezier(.34,1.56,.64,1) backwards; }
+.character-select[data-phase="open"] .select-page-label, .character-select[data-phase="open"] .select-info-banner { animation: select-pop-in 380ms 350ms cubic-bezier(.34,1.56,.64,1) backwards; }
 @media (prefers-reduced-motion: reduce) { .menu-zoom-layer, .menu-zoom-layer.menu-zoomed { transition: none; } }
