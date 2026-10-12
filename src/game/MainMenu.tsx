@@ -2302,6 +2302,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
             <Button variant="ghost"
               type="button"
               onClick={() => setInfoOpen(false)}
+              onMouseEnter={() => sfx.charSelectHover()}
               className="absolute top-2 right-2 scribble-border bg-paper px-3 py-1 font-marker text-xl text-ink hover:rotate-3 transition-transform"
               aria-label="Close info"
             >
