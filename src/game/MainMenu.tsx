@@ -2279,11 +2279,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
             {page === 2 && Array.from({ length: 4 }, (_, i) => <div className="select-empty" aria-hidden="true" key={`empty-${i}`}><span className="font-scribble">?</span></div>)}
           </div>
           <Button variant="ghost" className="select-info-banner" aria-label={`Show info for ${selected.name}`} disabled={phase !== "open"} onMouseEnter={() => sfx.menuHover()} onClick={() => { sfx.menuTab(); setInfoOpen(true); }}>
-            <span className="select-info-word">INFO</span>
-            <svg className="select-info-doodle" viewBox="0 0 260 160" aria-hidden="true">
-              <path d="M2 3 99 77M144 8 156 34 168 5M187 115 228 96 252 101M169 138 217 148 236 120M114 113 95 153M139 116 157 151" />
-              <circle cx="141" cy="76" r="48" /><path d="M126 62Q151 40 155 61Q157 72 140 76L141 88M141 98 142 101M70 101 115 106 113 138 68 135Z" />
-            </svg>
+            <img className="select-info-art" src={selectInfoArt.url} alt="" draggable={false} />
           </Button>
         </div>
       </main>
