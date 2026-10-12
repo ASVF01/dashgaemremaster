@@ -7,6 +7,25 @@
   background: repeating-linear-gradient(125deg, transparent 0 80px, hsl(var(--select-white) / .23) 80px 82px, transparent 82px 160px);
   animation: select-background-drift 18s linear infinite;
 }
+.character-select::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    radial-gradient(circle, hsl(var(--select-white) / .9) 0 2px, transparent 2.5px),
+    radial-gradient(circle, hsl(var(--select-white) / .6) 0 1.5px, transparent 2px),
+    radial-gradient(circle, hsl(var(--select-black) / .5) 0 2px, transparent 2.5px),
+    radial-gradient(circle, hsl(var(--select-white) / .75) 0 1px, transparent 1.5px);
+  background-size: 340px 340px, 260px 260px, 420px 420px, 200px 200px;
+  background-position: 12% 88%, 64% 22%, 38% 55%, 84% 70%;
+  animation: select-particles-rise 9s linear infinite, select-particles-twinkle 3.2s ease-in-out infinite alternate;
+}
+@keyframes select-particles-rise {
+  from { background-position: 12% 108%, 64% 122%, 38% 105%, 84% 120%; }
+  to { background-position: 12% -232px, 64% -138px, 38% -315px, 84% -80px; }
+}
+@keyframes select-particles-twinkle {
+  from { opacity: .35; }
+  to { opacity: .9; }
+}
 .select-stage { position: absolute; inset: 12% 12% 14%; display: flex; align-items: stretch; justify-content: center; }
 .select-roster {
   width: 100%; min-height: 0; background: hsl(var(--select-panel)); border: 5px solid hsl(var(--select-edge));
