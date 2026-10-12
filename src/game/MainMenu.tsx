@@ -2355,19 +2355,19 @@ function CharacterSelectScreen({ onClose, onExitCovered }: { onClose: () => void
             <div className="max-h-[60vh] overflow-y-auto pr-2 space-y-4">
               {selected.howToPlay && (
                 <section>
-                  <h3 className="font-marker text-2xl text-ink mb-1 rotate-1">How to green</h3>
+                  <h3 className="font-marker text-2xl text-ink mb-1 rotate-1">How to Play</h3>
                   <p className="font-scribble text-base text-ink/85 leading-snug">{selected.howToPlay}</p>
                 </section>
               )}
               {selected.lore && (
                 <section>
-                  <h3 className="font-marker text-2xl text-ink mb-1 -rotate-1">green</h3>
+                  <h3 className="font-marker text-2xl text-ink mb-1 -rotate-1">Lore</h3>
                   <p className="font-scribble text-base text-ink/85 leading-snug">{selected.lore}</p>
                 </section>
               )}
               {selected.abilities && selected.abilities.length > 0 && (
                 <section>
-                  <h3 className="font-marker text-2xl text-ink mb-1 rotate-1">Abilities &amp; Green</h3>
+                  <h3 className="font-marker text-2xl text-ink mb-1 rotate-1">Abilities</h3>
                   <ul className="space-y-2">
                     {selected.abilities.map((a, i) => (
                       <li key={`${a.name}-${i}`} className="font-scribble text-base text-ink/85 leading-snug">
