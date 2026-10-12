@@ -1743,7 +1743,7 @@ import blueBlurArtAsset from "@/assets/characters/blue_blur_art.png.asset.json";
 import sharkGalArtAsset from "@/assets/characters/shark_gal_art.png.asset.json";
 import theAlternateArtAsset from "@/assets/characters/the_alternate_art.png.asset.json";
 import mmguyArt from "@/assets/characters/mmguy.png.asset.json";
-import mmguyIcon from "@/assets/characters/mmguy-icon.png.asset.json";
+import mmguyIcon from "@/assets/characters/mmguy-icon-card.png";
 import massiveUpdateAsset from "@/assets/updates/massive_update.png.asset.json";
 import selectInfoArt from "@/assets/character-select/info.png.asset.json";
 import selectLeaveArt from "@/assets/character-select/leave.png.asset.json";
