@@ -10,7 +10,7 @@ export const MERCHANT_UPGRADES: { id: UpgradeId; name: string; price: number; de
   { id: "grace", name: "saving grace", price: 600, description: "First 5 puzzles restore 10% each." },
   { id: "jumpstart", name: "jumpstart", price: 900, description: "Start with 45% power." },
   { id: "fiends", name: "BACK YOU FIENDS!", price: 500, description: "Enemies move 25% less often this night." },
-  { id: "faces", name: "oh, so thats what they look like..", price: 350, description: "Actual counterpart sprites.", unavailable: true },
+  { id: "faces", name: "oh, so thats what they look like..", price: 350, description: "Visually change the enemies to what their counterparts are.. idk why you would wanna buy this but sure, go crazy.", unavailable: true },
 ];
 export function upgradeCost(id: UpgradeId, freeUsed: boolean) {
   return freeUsed ? MERCHANT_UPGRADES.find((item) => item.id === id)?.price ?? Infinity : 0;
