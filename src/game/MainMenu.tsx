@@ -2206,7 +2206,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
         if (y < -1 || y > H + 1) continue;
         const idx = k + rowShift;
         ctx.lineWidth = idx % 4 === 0 ? MAJOR : MINOR;
-        ctx.globalAlpha = idx % 4 === 0 ? 0.5 : 0.32;
+        ctx.globalAlpha = idx % 4 === 0 ? 1 : 0.85;
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
       }
       ctx.globalAlpha = 1;
