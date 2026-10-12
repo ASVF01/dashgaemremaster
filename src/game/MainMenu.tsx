@@ -2299,10 +2299,10 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
             <img className="select-info-art" src={selectInfoArt.url} alt="" draggable={false} />
           </Button>
         </div>
-      </main>
-      <Button variant="ghost" className="select-page-arrow next" aria-label="next page" title="Joke characters" disabled={page === 2 || phase !== "open"} onMouseEnter={() => sfx.charSelectHover()} onClick={() => changePage(2)}>
+      </main>}
+      {uiVisible && <Button variant="ghost" className="select-page-arrow next" aria-label="next page" title="Joke characters" disabled={page === 2 || phase !== "open"} onMouseEnter={() => sfx.charSelectHover()} onClick={() => changePage(2)}>
         <svg viewBox="0 0 120 200" aria-hidden="true"><path d="M115 100 62 7 62 58 6 58 6 142 62 142 62 193Z" /></svg>
-      </Button>
+      </Button>}
       <div className="select-shutter top" aria-hidden="true" /><div className="select-shutter bottom" aria-hidden="true" />
 
       {/* INFO modal — character details. Click outside or press ESC to close. */}
