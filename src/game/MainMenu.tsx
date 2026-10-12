@@ -19,7 +19,7 @@ import { SPRITE_GALLERY } from "@/game/sprites";
 import { useLevelStats, formatMs } from "@/game/levelStats";
 import { ChevronLeft, ChevronRight, LockKeyhole } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { characterPage, CHARACTER_SELECT_HOLD_MS, CHARACTER_SELECT_CLOSE_MS, CHARACTER_SELECT_SHUT_MS } from "@/game/characterSelectRules";
+import { characterPage, CHARACTER_SELECT_HOLD_MS, CHARACTER_SELECT_EXIT_CLOSE_MS, CHARACTER_SELECT_EXIT_OPEN_MS, CHARACTER_SELECT_SHUT_MS } from "@/game/characterSelectRules";
 import "@/game/characterSelect.css";
 import roaringKnightImg from "@/assets/roaring_knight_titlecard.png";
 import celestialMarathonEmblem from "@/assets/celestial-marathon-emblem.png";
@@ -2251,9 +2251,9 @@ function CharacterSelectScreen({ onClose, onExitCovered }: { onClose: () => void
       closeTimer.current = setTimeout(() => {
         sfx.wallShutterOpenShort();
         setPhase("returning");
-        closeTimer.current = setTimeout(onClose, CHARACTER_SELECT_SHUT_MS);
-      }, 150);
-    }, CHARACTER_SELECT_CLOSE_MS);
+        closeTimer.current = setTimeout(onClose, CHARACTER_SELECT_EXIT_OPEN_MS);
+      }, 20);
+    }, CHARACTER_SELECT_EXIT_CLOSE_MS);
   };
   const changePage = (next: 1 | 2) => {
     if (phase !== "open" || next === page) return;
