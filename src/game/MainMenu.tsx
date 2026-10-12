@@ -1744,6 +1744,9 @@ import sharkGalArtAsset from "@/assets/characters/shark_gal_art.png.asset.json";
 import theAlternateArtAsset from "@/assets/characters/the_alternate_art.png.asset.json";
 import mmguyArt from "@/assets/characters/mmguy.png.asset.json";
 import massiveUpdateAsset from "@/assets/updates/massive_update.png.asset.json";
+import selectInfoArt from "@/assets/character-select/info.png.asset.json";
+import selectLeaveArt from "@/assets/character-select/leave.png.asset.json";
+import selectLeaveHoverArt from "@/assets/character-select/leave-hover.png.asset.json";
 import { setBgmMuted as setGameBgmMuted, isBgmMuted as isGameBgmMuted, subscribeBgmMuted } from "@/game/bgm";
 import { useCharacter, selectCharacter, unlockCharacter, type CharacterId } from "@/game/character";
 
@@ -2251,8 +2254,8 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
     <div className="character-select" data-phase={phase} role="dialog" aria-label="Character select">
       <canvas ref={gridRef} className="select-grid" aria-hidden="true" />
       <Button variant="ghost" className="select-leave" onClick={handleClose} disabled={phase === "closing"} aria-label="back to menu" onMouseEnter={() => sfx.menuHover()}>
-        <svg viewBox="0 0 160 50" aria-hidden="true"><path d="M3 25 60 4 60 15 156 15 156 35 60 35 60 46Z" /></svg>
-        <span>Leave.</span>
+        <img className="select-leave-art" src={selectLeaveArt.url} alt="" draggable={false} />
+        <img className="select-leave-art hover" src={selectLeaveHoverArt.url} alt="" draggable={false} aria-hidden="true" />
       </Button>
       <Button variant="ghost" className="select-page-arrow previous" aria-label="previous page" title="Actual characters" disabled={page === 1 || phase !== "open"} onClick={() => changePage(1)}>
         <svg viewBox="0 0 120 200" aria-hidden="true"><path d="M5 100 58 7 58 58 114 58 114 142 58 142 58 193Z" /></svg>
@@ -2276,11 +2279,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
             {page === 2 && Array.from({ length: 4 }, (_, i) => <div className="select-empty" aria-hidden="true" key={`empty-${i}`}><span className="font-scribble">?</span></div>)}
           </div>
           <Button variant="ghost" className="select-info-banner" aria-label={`Show info for ${selected.name}`} disabled={phase !== "open"} onMouseEnter={() => sfx.menuHover()} onClick={() => { sfx.menuTab(); setInfoOpen(true); }}>
-            <span className="select-info-word">INFO</span>
-            <svg className="select-info-doodle" viewBox="0 0 260 160" aria-hidden="true">
-              <path d="M2 3 99 77M144 8 156 34 168 5M187 115 228 96 252 101M169 138 217 148 236 120M114 113 95 153M139 116 157 151" />
-              <circle cx="141" cy="76" r="48" /><path d="M126 62Q151 40 155 61Q157 72 140 76L141 88M141 98 142 101M70 101 115 106 113 138 68 135Z" />
-            </svg>
+            <img className="select-info-art" src={selectInfoArt.url} alt="" draggable={false} />
           </Button>
         </div>
       </main>
