@@ -2246,10 +2246,10 @@ function CharacterSelectScreen({ onClose, onExitCovered }: { onClose: () => void
     setInfoOpen(false);
     setPhase("closing");
     closeTimer.current = setTimeout(() => {
-      sfx.wallShutterClose();
+      sfx.wallShutterCloseShort();
       onExitCovered();
       closeTimer.current = setTimeout(() => {
-        sfx.wallShutterOpen();
+        sfx.wallShutterOpenShort();
         setPhase("returning");
         closeTimer.current = setTimeout(onClose, CHARACTER_SELECT_SHUT_MS);
       }, 150);

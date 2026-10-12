@@ -17,3 +17,17 @@ describe("character select sounds", () => {
     expect(() => sfx.charSelectHover()).not.toThrow();
   });
 });
+
+// Leaving character select must not play the two full-length wall samples on
+// top of each other; it uses clipped versions instead.
+describe("character select exit sounds", () => {
+  it("exposes clipped exit cues", () => {
+    expect(typeof sfx.wallShutterCloseShort).toBe("function");
+    expect(typeof sfx.wallShutterOpenShort).toBe("function");
+  });
+
+  it("plays the clipped exit cues safely without an AudioContext", () => {
+    expect(() => sfx.wallShutterCloseShort()).not.toThrow();
+    expect(() => sfx.wallShutterOpenShort()).not.toThrow();
+  });
+});
