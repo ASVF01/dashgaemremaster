@@ -1744,6 +1744,9 @@ import sharkGalArtAsset from "@/assets/characters/shark_gal_art.png.asset.json";
 import theAlternateArtAsset from "@/assets/characters/the_alternate_art.png.asset.json";
 import mmguyArt from "@/assets/characters/mmguy.png.asset.json";
 import massiveUpdateAsset from "@/assets/updates/massive_update.png.asset.json";
+import selectInfoArt from "@/assets/character-select/info.png.asset.json";
+import selectLeaveArt from "@/assets/character-select/leave.png.asset.json";
+import selectLeaveHoverArt from "@/assets/character-select/leave-hover.png.asset.json";
 import { setBgmMuted as setGameBgmMuted, isBgmMuted as isGameBgmMuted, subscribeBgmMuted } from "@/game/bgm";
 import { useCharacter, selectCharacter, unlockCharacter, type CharacterId } from "@/game/character";
 
