@@ -15,20 +15,13 @@
     linear-gradient(90deg, transparent 30%, hsl(var(--select-white) / .5) 50%, transparent 70%);
   background-size: 520px 300px, 760px 440px, 380px 220px;
   background-repeat: repeat;
-  animation: select-wind-1 7s linear infinite, select-wind-2 11s linear infinite, select-wind-3 5s linear infinite;
+  animation: select-wind 8s linear infinite;
 }
-/* Each layer travels exactly one tile per loop so the restart is invisible. */
-@keyframes select-wind-1 {
+/* Every layer travels exactly one tile per loop, so the restart is invisible;
+   smaller tiles cross the screen faster, giving each layer its own speed. */
+@keyframes select-wind {
   from { background-position: 0 0, 0 0, 0 0; }
-  to { background-position: -520px 300px, -760px 440px, -380px 220px; }
-}
-@keyframes select-wind-2 {
-  from { background-position: 0 0, 0 0, 0 0; }
-  to { background-position: 520px -300px, 760px -440px, 380px -220px; }
-}
-@keyframes select-wind-3 {
-  from { background-position: 0 0, 0 0, 0 0; }
-  to { background-position: -380px 220px, -760px 440px, -520px 300px; }
+  to { background-position: -520px 300px, 760px -440px, -380px 220px; }
 }
 .select-stage { position: absolute; inset: 12% 12% 14%; display: flex; align-items: stretch; justify-content: center; }
 .select-roster {
