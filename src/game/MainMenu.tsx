@@ -2151,7 +2151,7 @@ const WIP_CHARACTERS: WipCharacter[] = [
   },
   { id: "dasher",  name: "Blue Blur",       blurb: "Dashes faster. Thinks slower.", art: blueBlurArtAsset.url },
   { id: "shadow",  name: "Shark Gal",      blurb: "A rumor in pencil form. Hard to pin down.", art: sharkGalArtAsset.url },
-  { id: "mmguy",   name: "M&M's Guy",      blurb: "Yehihehu! BOIII THIS CHARACTER SO TUFF", art: mmguyArt.url, preview: mmguyArt.url },
+  { id: "mmguy",   name: "M&M's Guy",      blurb: "BOIII IM SO TUFF ✌️😂", art: mmguyArt.url, preview: mmguyArt.url },
   { id: "x3mode",  name: "THE ALTERNATE",       blurb: "TO ACHIVE SUCH FORM, YOU MUST UNLOCK THE MARK, MANIPULATE IT'S FACE AND RE-COMPLETE YOUR GENISIS WITH YOUR NEW FOUND POWER.", art: theAlternateArtAsset.url, locked: true },
 ];
 
@@ -2505,7 +2505,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                 </section>
               )}
               {!selected.howToPlay && !selected.lore && !selected.abilities && (
-                <p className="font-scribble text-base text-ink/60 italic">More info coming soon.</p>
+                <p className="font-scribble text-base text-ink/60 italic">This character is just a png, has the same movement as The Player, so nothing special about him.</p>
               )}
             </div>
           </div>
