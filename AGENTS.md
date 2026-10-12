@@ -1,6 +1,6 @@
 # Project Architecture Rules
 
-- Character selection uses a single timed shutter phase for entry and exit, with roster and INFO interactions gated until open; presentation animation stays independent of saved character state.
+- Character selection uses timed shutter phases with roster and INFO interactions gated until open; exit keeps the roster stationary, resets main-menu presentation while fully covered, and reveals it before unmounting. Presentation stays independent of saved character state.
 
 - Receptionist merchant dialogue cues use an isolated overlay that owns shop audio; session upgrades are passed from the page into NightRooms and pure merchant rules, keeping effects testable and enemy activation deferred.
 - DialogueBox reports its active line to external character artwork; merchant expression assignments live alongside its script so artwork changes stay synchronized without duplicating dialogue progression.
