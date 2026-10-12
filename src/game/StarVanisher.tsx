@@ -13,6 +13,7 @@ import { GaplessLoop } from "@/game/gapless";
 import { isCheatOn } from "@/game/cheats";
 
 import { isBgmMuted, subscribeBgmMuted, pauseBgm, resumeBgm } from "@/game/bgm";
+import { useSettings, getSettings } from "@/game/settings";
 
 // simple one-shot sample player (overlapping playback via cloned nodes)
 function makeSample(url: string, volume: number) {
@@ -336,10 +337,13 @@ function spotPos(b: Boss, sp: BossSpot) {
 
 // boss theme (module-level so it survives re-renders)
 let bossAudio: GaplessLoop | null = null;
+// Live BGM volume setting (0..1), updated by the component each render so the
+// module-level boss player and volume assignment sites can scale from it.
+let bgmUserVolume = getSettings().bgmVolume;
 function playBossBgm() {
   try {
     if (!bossAudio) bossAudio = new GaplessLoop(dangerAsset.url);
-    bossAudio.volume = 0.5;
+    bossAudio.volume = 0.5 * bgmUserVolume;
     void bossAudio.play().catch(() => { /* blocked */ });
   } catch { /* noop */ }
 }
@@ -515,6 +519,8 @@ export default function StarVanisher({ onBack }: { onBack?: () => void } = {}) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const stateRef = useRef<State | null>(null);
   const [running, setRunning] = useState(false);
+  const [settings] = useSettings();
+  bgmUserVolume = settings.bgmVolume; // keep module-level players in sync
   const [hud, setHud] = useState({ score: 0, combo: 0, best: 0, over: false, lastScore: 0, newBest: false, lastPct: 0, earned: 0 });
   const [, forceShop] = useState(0);
   useEffect(() => subscribeShop(() => forceShop((n) => n + 1)), []);
@@ -536,7 +542,7 @@ export default function StarVanisher({ onBack }: { onBack?: () => void } = {}) {
   const ensureBgm = () => {
     if (!bgmRef.current) {
       const a = new GaplessLoop(runBgmAsset.url);
-      a.volume = 0.3375;
+      a.volume = 0.3375 * bgmUserVolume;
       bgmRef.current = a;
     }
 
@@ -560,13 +566,13 @@ export default function StarVanisher({ onBack }: { onBack?: () => void } = {}) {
         return;
       }
       // restart the run track at the beginning of each run / retry
-      a.volume = 0.3375;
+      a.volume = 0.3375 * bgmUserVolume;
       a.currentTime = 0;
       void a.play().catch(() => { /* blocked */ });
     } else if (running && hud.over) {
       // keep the track going on the fail screen but very quiet
       stopBossBgm();
-      a.volume = 0.10;
+      a.volume = 0.10 * bgmUserVolume;
       void a.play().catch(() => { /* noop */ });
     } else {
       a.pause();
@@ -582,9 +588,18 @@ export default function StarVanisher({ onBack }: { onBack?: () => void } = {}) {
     if (!a) return;
     if (m) { a.pause(); }
     else if (inBoss) { pauseBgm(); playBossBgm(); }
-    else if (running && !hud.over) { pauseBgm(); a.volume = 0.3375; a.currentTime = 0; void a.play().catch(() => { /* noop */ }); }
-    else if (running && hud.over) { a.volume = 0.10; void a.play().catch(() => { /* noop */ }); }
+    else if (running && !hud.over) { pauseBgm(); a.volume = 0.3375 * bgmUserVolume; a.currentTime = 0; void a.play().catch(() => { /* noop */ }); }
+    else if (running && hud.over) { a.volume = 0.10 * bgmUserVolume; void a.play().catch(() => { /* noop */ }); }
   }), [running, hud.over]);
+  // Live BGM volume sync: re-apply the current phase volume when the slider moves.
+  useEffect(() => {
+    bgmUserVolume = settings.bgmVolume;
+    if (bossAudio) bossAudio.volume = 0.5 * bgmUserVolume;
+    const a = bgmRef.current;
+    if (!a || isBgmMuted()) return;
+    if (running && !hud.over) a.volume = 0.3375 * bgmUserVolume;
+    else if (running && hud.over) a.volume = 0.10 * bgmUserVolume;
+  }, [settings.bgmVolume, running, hud.over]);
   useEffect(() => () => { bgmRef.current?.pause(); stopBossBgm(); stopChargeHum(); resumeBgm(); }, []);
 
 
@@ -846,7 +861,7 @@ export default function StarVanisher({ onBack }: { onBack?: () => void } = {}) {
     stopBossBgm();
     if (!isBgmMuted() && !hud.over) {
       const a = bgmRef.current;
-      if (a && a.paused) { a.volume = 0.3375; a.currentTime = 0; void a.play().catch(() => { /* noop */ }); }
+      if (a && a.paused) { a.volume = 0.3375 * bgmUserVolume; a.currentTime = 0; void a.play().catch(() => { /* noop */ }); }
     }
   };
 

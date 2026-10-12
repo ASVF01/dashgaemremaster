@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useSettings } from "@/game/settings";
 import { sfx } from "@/game/sfx";
 import { addTokens } from "@/game/shop";
 import { isBgmMuted, pauseBgm, resumeBgm } from "@/game/bgm";
@@ -25,11 +26,13 @@ export default function CheatMenu() {
   const [line, setLine] = useState("READY.");
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // CRT menu music — takes over while this tab is open
+  // CRT menu music — takes over while this tab is open, scaled by the BGM
+  // volume setting (live) and the shared mute flag.
+  const [settings] = useSettings();
   useEffect(() => {
     const a = new Audio(bgmOpeningAsset.url);
     a.loop = true;
-    a.volume = isBgmMuted() ? 0 : 0.4;
+    a.volume = isBgmMuted() ? 0 : 0.4 * settings.bgmVolume;
     audioRef.current = a;
     pauseBgm();
     void a.play().catch(() => {});
@@ -39,7 +42,14 @@ export default function CheatMenu() {
       audioRef.current = null;
       resumeBgm();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Live BGM volume sync while the tab is open.
+  useEffect(() => {
+    const a = audioRef.current;
+    if (a) a.volume = isBgmMuted() ? 0 : 0.4 * settings.bgmVolume;
+  }, [settings.bgmVolume]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
