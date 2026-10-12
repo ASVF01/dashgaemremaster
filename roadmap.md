@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Remove run lines, reduce afterimages, and add the supplied transparent dust at world-space footstep positions; verify movement.
+
 - [x] Clean up character-select exit: close over the unchanged roster, reset the menu while covered, and reopen onto it; verified the full exit and selection/sound tests.
 
 - [x] Fix the character-select jagged borders to repeat seamlessly without jumping at the loop boundary.
