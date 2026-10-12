@@ -2227,7 +2227,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
 
   const handleClose = () => {
     if (phase === "closing") return;
-    sfx.menuTab();
+    sfx.charSelectClick();
     setInfoOpen(false);
     setPhase("closing");
     closeTimer.current = setTimeout(onClose, CHARACTER_SELECT_CLOSE_MS);
