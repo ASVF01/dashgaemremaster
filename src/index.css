@@ -65,6 +65,13 @@
     --flow-green: 142 69% 58%;
     --flow-pink: 330 81% 70%;
     --green-machine: 139 84% 40%;
+    --select-background: 0 0% 76%;
+    --select-panel: 0 0% 28%;
+    --select-edge: 0 0% 50%;
+    --select-black: 0 0% 0%;
+    --select-white: 0 0% 100%;
+    --select-lock: 53 100% 50%;
+    --select-stripe: 0 0% 38%;
 
     --sidebar-background: 48 30% 94%;
     --sidebar-foreground: 0 0% 8%;

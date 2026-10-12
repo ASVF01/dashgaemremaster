@@ -17,7 +17,10 @@ import StarVanisher from "@/game/StarVanisher";
 import Shop from "@/game/Shop";
 import { SPRITE_GALLERY } from "@/game/sprites";
 import { useLevelStats, formatMs } from "@/game/levelStats";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, LockKeyhole } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { characterPage, CHARACTER_SELECT_HOLD_MS, CHARACTER_SELECT_CLOSE_MS } from "@/game/characterSelectRules";
+import "@/game/characterSelect.css";
 import roaringKnightImg from "@/assets/roaring_knight_titlecard.png";
 import celestialMarathonEmblem from "@/assets/celestial-marathon-emblem.png";
 
@@ -1735,17 +1738,13 @@ import bestiaryBgm from "@/assets/audio/bgm_champion_map.mp3";
 import gachaBgmAsset from "@/assets/audio/bgm_map3.mp3.asset.json";
 const gachaBgm = gachaBgmAsset.url;
 import thePlayerArt from "@/assets/characters/the_player.png";
-import thePlayerPreviewAsset from "@/assets/characters/the_player_preview.png.asset.json";
 import greenMachineArt from "@/assets/characters/green_machine.png";
-import greenMachinePreview from "@/assets/characters/green_machine_preview.png";
 import blueBlurArtAsset from "@/assets/characters/blue_blur_art.png.asset.json";
 import sharkGalArtAsset from "@/assets/characters/shark_gal_art.png.asset.json";
 import theAlternateArtAsset from "@/assets/characters/the_alternate_art.png.asset.json";
 import mmguyArt from "@/assets/characters/mmguy.png.asset.json";
 import massiveUpdateAsset from "@/assets/updates/massive_update.png.asset.json";
 import { setBgmMuted as setGameBgmMuted, isBgmMuted as isGameBgmMuted, subscribeBgmMuted } from "@/game/bgm";
-import infoButtonAsset from "@/assets/info_button.png.asset.json";
-import getOutButtonAsset from "@/assets/get_out_button.png.asset.json";
 import { useCharacter, selectCharacter, unlockCharacter, type CharacterId } from "@/game/character";
 
 // Tab BGM mute now mirrors the global BGM mute state (the toggle next to the
@@ -2102,13 +2101,11 @@ function BestiaryScreen({ onClose }: { onClose: () => void }) {
 
 // ---------------- WIP CHARACTER SELECTION TAB ----------------
 type WipCharacter = {
-  id: string;
+  id: CharacterId;
   name: string;
   blurb: string;
   /** Small art shown on the grid card. */
   art?: string;
-  /** Larger preview art shown in the left INFO panel. Falls back to a placeholder until provided. */
-  preview?: string;
   /** Detailed info shown in the INFO modal. */
   howToPlay?: string;
   lore?: string;
@@ -2122,7 +2119,6 @@ const WIP_CHARACTERS: WipCharacter[] = [
     name: "The Player",
     blurb: "The Original.",
     art: thePlayerArt,
-    preview: thePlayerPreviewAsset.url,
     howToPlay:
       "Keep moving. The Player thrives on momentum — chain jumps and dashes to maintain speed across gaps. Tap jump for short hops over small hazards, hold for higher arcs. Use dash to cancel fall speed and slip past tight obstacles. Stay grounded only long enough to reposition.",
     lore:
@@ -2138,7 +2134,6 @@ const WIP_CHARACTERS: WipCharacter[] = [
     name: "green",
     blurb: "green",
     art: greenMachineArt,
-    preview: greenMachinePreview,
     howToPlay:
       "green",
     lore:
@@ -2151,321 +2146,112 @@ const WIP_CHARACTERS: WipCharacter[] = [
   },
   { id: "dasher",  name: "Blue Blur",       blurb: "Dashes faster. Thinks slower.", art: blueBlurArtAsset.url },
   { id: "shadow",  name: "Shark Gal",      blurb: "A rumor in pencil form. Hard to pin down.", art: sharkGalArtAsset.url },
-  { id: "mmguy",   name: "M&M's Guy",      blurb: "BOIII IM SO TUFF ✌️😂", art: mmguyArt.url, preview: mmguyArt.url },
+  { id: "mmguy",   name: "M&M's Guy",      blurb: "BOIII IM SO TUFF ✌️😂", art: mmguyArt.url },
   { id: "x3mode",  name: "THE ALTERNATE",       blurb: "TO ACHIVE SUCH FORM, YOU MUST UNLOCK THE MARK, MANIPULATE IT'S FACE AND RE-COMPLETE YOUR GENISIS WITH YOUR NEW FOUND POWER.", art: theAlternateArtAsset.url, locked: true },
 ];
-
-// Page 2 of character select: joke characters.
-const JOKE_CHARACTERS = new Set<string>(["mmguy"]);
-
-// Per-character outline tint for the grid cards (matches reference colors).
-const CARD_TINT: Record<string, string> = {
-  stick:  "#1a1a1a",
-  green:  "hsl(var(--green-machine))",
-  dasher: "#1a1a1a",
-  shadow: "#1a1a1a",
-  mmguy:  "#1a1a1a",
-  x3mode: "#1a1a1a",
-};
 
 function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   useTabBgm(gachaBgm);
   const charState = useCharacter();
-  const [picked, setPicked] = useState<string>(charState.selected);
+  const [picked, setPicked] = useState<CharacterId>(charState.selected);
   const [infoOpen, setInfoOpen] = useState(false);
-  const [shakingId, setShakingId] = useState<string | null>(null);
+  const [phase, setPhase] = useState<"entering" | "open" | "closing">("entering");
+  const [page, setPage] = useState<1 | 2>(characterPage(charState.selected));
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const selected = WIP_CHARACTERS.find((c) => c.id === picked) ?? WIP_CHARACTERS[0];
   const isNotYet = (id: string) => id === "dasher" || id === "shadow";
-  const isCharLocked = (id: string) =>
-    isNotYet(id) ? true :
-    (id === "stick" || id === "green" || id === "x3mode")
-      ? !charState.unlocked[id as CharacterId]
-      : false;
+  const isCharLocked = (id: string) => isNotYet(id) || !charState.unlocked[id as CharacterId];
 
-  // Swipe-in / swipe-out transition.
-  const [shown, setShown] = useState(false);
-  const [closing, setClosing] = useState(false);
   useEffect(() => {
-    const r = requestAnimationFrame(() => setShown(true));
-    return () => cancelAnimationFrame(r);
+    const timer = window.setTimeout(() => setPhase((p) => p === "entering" ? "open" : p), CHARACTER_SELECT_HOLD_MS);
+    return () => { window.clearTimeout(timer); if (closeTimer.current) clearTimeout(closeTimer.current); };
   }, []);
 
   const handleClose = () => {
-    if (closing) return;
+    if (phase === "closing") return;
     sfx.menuTab();
-    setClosing(true);
-    setShown(false);
-    window.setTimeout(onClose, 600);
+    setInfoOpen(false);
+    setPhase("closing");
+    closeTimer.current = setTimeout(onClose, CHARACTER_SELECT_CLOSE_MS);
   };
-
-  // ESC to leave (or close info panel if it's open).
+  const changePage = (next: 1 | 2) => {
+    if (phase !== "open" || next === page) return;
+    sfx.menuTab();
+    setPage(next);
+    const first = WIP_CHARACTERS.find((c) => characterPage(c.id) === next);
+    if (first) setPicked(first.id);
+  };
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.code === "Escape") {
-        e.preventDefault();
-        if (infoOpen) setInfoOpen(false);
-        else handleClose();
-      }
+      if (e.code === "Escape") { e.preventDefault(); if (infoOpen) setInfoOpen(false); else handleClose(); }
+      if (!infoOpen && e.code === "ArrowLeft") changePage(1);
+      if (!infoOpen && e.code === "ArrowRight") changePage(2);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [closing, infoOpen]);
+  }, [phase, infoOpen, page]);
 
-  // Page nav (only one page for now — arrows are decorative/disabled).
-  const [PAGE, setPage] = useState(JOKE_CHARACTERS.has(charState.selected) ? 2 : 1);
-  const MAX_PAGE = 2;
-  const pageCharacters = WIP_CHARACTERS.filter((c) => JOKE_CHARACTERS.has(c.id) === (PAGE === 2));
-
+  const pageCharacters = WIP_CHARACTERS.filter((c) => characterPage(c.id) === page);
   return (
-    <div
-      className="fixed inset-0 z-50 overflow-hidden"
-      style={{
-        background: "#c9c9c9",
-        opacity: shown ? 1 : 0,
-        transition: "opacity 520ms ease-out",
-      }}
-    >
-
-
-      {/* Two-panel layout — full screen, mirrors the reference sketch 1:1 */}
-      <div className="w-full h-full grid grid-cols-1 md:grid-cols-[5fr_6fr]">
-        {/* LEFT — light gray panel, GET OUT top-left, big preview, INFO tag bottom-left */}
-        <div className="relative overflow-hidden" style={{ background: "#c9c9c9" }}>
-          {/* GET OUT arrow — top-left, points left */}
-          <button
-            type="button"
-            onClick={handleClose}
-            onMouseEnter={() => sfx.menuHover()}
-            aria-label="back to menu"
-            title="back to menu"
-            className="absolute top-4 left-4 z-10 select-none hover:-rotate-2 active:scale-95"
-            style={{
-              background: "transparent",
-              border: "none",
-              padding: 0,
-              transform: shown ? "translateY(0)" : "translateY(-20px)",
-              opacity: shown ? 1 : 0,
-              transition: "transform 600ms cubic-bezier(0.16,1,0.3,1) 60ms, opacity 500ms ease-out 60ms",
-            }}
-          >
-            <img
-              src={getOutButtonAsset.url}
-              alt="GET OUT"
-              draggable={false}
-              className="h-16 sm:h-20 md:h-24 w-auto pointer-events-none"
-            />
-          </button>
-
-          {/* Big character preview, centered. Selecting a character lifts it up. */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div
-              key={selected.id}
-              style={{
-                transform: shown ? "translateY(-24px)" : "translateY(40px)",
-                opacity: shown ? 1 : 0,
-                transition: "transform 650ms cubic-bezier(0.16,1,0.3,1) 120ms, opacity 550ms ease-out 120ms",
-              }}
-              className={selected.id === "mmguy" ? "flex h-full w-full items-center justify-center" : "flex items-center justify-center"}
-            >
-              {selected.preview ? (
-                <img
-                  src={selected.preview}
-                  alt={`${selected.name} preview`}
-                  className={selected.id === "mmguy" ? "max-h-[70%] max-w-[80%] w-auto object-contain" : "max-h-[90vh] w-auto object-contain scale-125"}
-                />
-              ) : (
-                <div className="flex flex-col items-center text-ink/40 select-none">
-                  <div className="font-marker text-[10rem] leading-none">?</div>
-                  <div className="font-scribble text-sm mt-2">preview sprite coming soon</div>
-                </div>
-              )}
-            </div>
+    <div className="character-select" data-phase={phase} role="dialog" aria-label="Character select">
+      <Button variant="ghost" className="select-leave" onClick={handleClose} disabled={phase === "closing"} aria-label="back to menu" onMouseEnter={() => sfx.menuHover()}>
+        <svg viewBox="0 0 160 50" aria-hidden="true"><path d="M3 25 60 4 60 15 156 15 156 35 60 35 60 46Z" /></svg>
+        <span>Leave.</span>
+      </Button>
+      <Button variant="ghost" className="select-page-arrow previous" aria-label="previous page" title="Actual characters" disabled={page === 1 || phase !== "open"} onClick={() => changePage(1)}>
+        <svg viewBox="0 0 120 200" aria-hidden="true"><path d="M5 100 58 7 58 58 114 58 114 142 58 142 58 193Z" /></svg>
+      </Button>
+      <main className="select-stage">
+        <div className="select-roster">
+          <div className="select-page-label font-marker"><span>{page === 1 ? "ACTUAL CHARACTERS" : "JOKE CHARACTERS"}</span><span>PG. {page} / 2</span></div>
+          <div className="select-cards">
+            {pageCharacters.map((c) => {
+              const locked = isCharLocked(c.id);
+              return (
+                <Button variant="ghost" key={c.id} className={`select-card ${isNotYet(c.id) ? "select-unavailable" : ""}`} data-character={c.id} data-locked={locked} aria-label={c.name} aria-pressed={picked === c.id} title={c.name} disabled={phase !== "open"}
+                  onMouseEnter={() => sfx.menuHover()}
+                  onClick={() => { setPicked(c.id); if (locked) { sfx.keyJingle(); } else { selectCharacter(c.id); sfx.menuConfirm(); } }}>
+                  {c.art && <img src={c.art} alt={c.name} draggable={false} />}
+                  {locked && !isNotYet(c.id) && <LockKeyhole className="select-lock-icon" aria-label="Locked" />}
+                  {!c.art && <span className="select-question">?</span>}
+                </Button>
+              );
+            })}
+            {page === 2 && Array.from({ length: 4 }, (_, i) => <div className="select-empty" aria-hidden="true" key={`empty-${i}`}><span className="font-scribble">?</span></div>)}
           </div>
-
-          {/* INFO button — bottom-left, scribbled image, opens character info */}
-          <button
-            type="button"
-            onClick={() => { sfx.menuTab(); setInfoOpen(true); }}
-            onMouseEnter={() => sfx.menuHover()}
-            aria-label={`Show info for ${selected.name}`}
-            className="absolute bottom-6 left-4 sm:left-8 z-10 select-none hover:-rotate-6 active:scale-95"
-            style={{
-              transform: shown ? "translateY(0) rotate(-3deg)" : "translateY(30px) rotate(-3deg)",
-              opacity: shown ? 1 : 0,
-              transition: "transform 600ms cubic-bezier(0.16,1,0.3,1) 200ms, opacity 500ms ease-out 200ms",
-              background: "transparent",
-              border: "none",
-              padding: 0,
-            }}
-          >
-            <img
-              src={infoButtonAsset.url}
-              alt="INFO"
-              draggable={false}
-              className="h-20 sm:h-28 md:h-32 w-auto drop-shadow-[3px_3px_0_rgba(0,0,0,0.35)] pointer-events-none"
-            />
-          </button>
-
+          <Button variant="ghost" className="select-info-banner" aria-label={`Show info for ${selected.name}`} disabled={phase !== "open"} onMouseEnter={() => sfx.menuHover()} onClick={() => { sfx.menuTab(); setInfoOpen(true); }}>
+            <span className="select-info-word">INFO</span>
+            <svg className="select-info-doodle" viewBox="0 0 260 160" aria-hidden="true">
+              <path d="M2 3 99 77M144 8 156 34 168 5M187 115 228 96 252 101M169 138 217 148 236 120M114 113 95 153M139 116 157 151" />
+              <circle cx="141" cy="76" r="48" /><path d="M126 62Q151 40 155 61Q157 72 140 76L141 88M141 98 142 101M70 101 115 106 113 138 68 135Z" />
+            </svg>
+          </Button>
         </div>
-
-        {/* RIGHT — darker gray panel, slightly tilted, PG.1 + arrows + 2x2 grid */}
-        <div className="relative flex items-center justify-center p-4 sm:p-6">
-          <div
-            className="relative w-full h-[92%] p-4 sm:p-6"
-            style={{
-              background: "#7a7a7a",
-              border: "3px solid #1a1a1a",
-              boxShadow: "-6px 6px 0 #5a5a5a, -6px 6px 0 3px #1a1a1a, 4px 4px 0 rgba(0,0,0,0.45)",
-              transform: shown ? "translateY(0) rotate(-3deg)" : "translateY(30px) rotate(-3deg)",
-              opacity: shown ? 1 : 0,
-              transition: "transform 650ms cubic-bezier(0.16,1,0.3,1) 80ms, opacity 550ms ease-out 80ms",
-            }}
-          >
-            {/* PG . 1 — folder-tab style, top-left, juts above the panel */}
-            <div
-              className="absolute -top-7 sm:-top-9 left-0 font-pixel text-base sm:text-2xl text-paper px-4 sm:px-6 py-1 select-none"
-              style={{
-                background: "#5a5a5a",
-                border: "3px solid #1a1a1a",
-                borderBottom: "none",
-                letterSpacing: "0.15em",
-              }}
-            >
-              PG . {PAGE}
-            </div>
-
-            <div className="flex gap-4 sm:gap-6 items-stretch h-full pt-2">
-              {/* Up/Down arrows column */}
-              <div className="flex flex-col items-center justify-center gap-6 sm:gap-10 py-2">
-                <button
-                  type="button"
-                  disabled={PAGE <= 1}
-                  onClick={() => { sfx.menuTab(); setPage(1); }}
-                  className="font-marker text-4xl sm:text-6xl text-ink disabled:opacity-40 hover:-translate-y-0.5 transition-transform leading-none"
-                  aria-label="previous page"
-                >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  disabled={PAGE >= MAX_PAGE}
-                  onClick={() => { sfx.menuTab(); setPage(2); }}
-                  className="font-marker text-4xl sm:text-6xl text-ink disabled:opacity-40 hover:translate-y-0.5 transition-transform leading-none"
-                  aria-label="next page"
-                >
-                  ↓
-                </button>
-              </div>
-
-              {/* Character cards — a compact three-column roster that wraps cleanly. */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 flex-1 auto-rows-fr">
-                {pageCharacters.map((c, i) => {
-                  const active = picked === c.id;
-                  const tint = CARD_TINT[c.id] ?? "#1a1a1a";
-                  const delay = 220 + i * 120; // stagger each card
-                  const locked = isCharLocked(c.id);
-                  return (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => {
-                        setPicked(c.id);
-                        if (locked) {
-                          sfx.keyJingle();
-                          setShakingId(c.id);
-                          window.setTimeout(() => setShakingId((s) => (s === c.id ? null : s)), 700);
-                          window.setTimeout(() => setInfoOpen(true), 260);
-                        } else {
-                          selectCharacter(c.id as CharacterId);
-                        }
-                      }}
-                      className={[
-                        "relative bg-black flex items-center justify-center overflow-hidden hover:scale-[1.03]",
-                      ].join(" ")}
-                      style={{
-                        border: active ? "4px solid #ffffff" : `4px solid ${tint}`,
-                        boxShadow: active
-                          ? "0 0 0 3px #1a1a1a, 3px 3px 0 rgba(0,0,0,0.4)"
-                          : "3px 3px 0 rgba(0,0,0,0.4)",
-                        transform: shown
-                          ? `translateY(0) scale(${active ? 1.04 : 1})`
-                          : "translateY(60px) scale(1)",
-                        opacity: shown ? 1 : 0,
-                        transition: `transform 650ms cubic-bezier(0.16,1,0.3,1) ${delay}ms, opacity 550ms ease-out ${delay}ms, border-color 200ms ease-out, box-shadow 200ms ease-out`,
-                      }}
-                      title={c.name}
-                    >
-                      {c.art ? (
-                        <img
-                          src={c.art}
-                          alt={c.name}
-                          className={c.id === "mmguy" ? "w-full h-full object-contain" : "w-full h-full object-cover"}
-                          style={locked ? { filter: "grayscale(1) brightness(0.55)" } : undefined}
-                        />
-                      ) : (
-                        <span className="font-marker text-6xl sm:text-7xl" style={{ color: tint }}>?</span>
-                      )}
-                      {locked && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          {isNotYet(c.id) ? (
-                            <span
-                              className={[
-                                "font-marker text-2xl sm:text-3xl md:text-4xl text-white drop-shadow-[2px_2px_0_rgba(0,0,0,0.9)] tracking-[0.4em] -rotate-6 select-none",
-                                shakingId === c.id ? "animate-jitter" : "",
-                              ].join(" ")}
-                            >
-                              N O T&nbsp;&nbsp;Y E T .
-                            </span>
-                          ) : (
-                            <span
-                              className={[
-                                "font-marker text-6xl sm:text-7xl text-white drop-shadow-[2px_2px_0_rgba(0,0,0,0.9)]",
-                                shakingId === c.id ? "animate-jitter" : "",
-                              ].join(" ")}
-                            >
-                              🔒
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Pencil decoration — bottom-right */}
-            <div className="absolute -bottom-2 right-4 font-marker text-2xl sm:text-3xl text-ink/80 rotate-12 select-none pointer-events-none">
-              ✏
-            </div>
-          </div>
-        </div>
-      </div>
+      </main>
+      <Button variant="ghost" className="select-page-arrow next" aria-label="next page" title="Joke characters" disabled={page === 2 || phase !== "open"} onClick={() => changePage(2)}>
+        <svg viewBox="0 0 120 200" aria-hidden="true"><path d="M115 100 62 7 62 58 6 58 6 142 62 142 62 193Z" /></svg>
+      </Button>
+      <div className="select-shutter top" aria-hidden="true" /><div className="select-shutter bottom" aria-hidden="true" />
 
       {/* INFO modal — character details. Click outside or press ESC to close. */}
       {infoOpen && (
         <div
-          className="absolute inset-0 z-30 flex items-center justify-center p-4 sm:p-8 animate-fade-in"
-          style={{ background: "rgba(0,0,0,0.55)" }}
+          className="select-info-overlay absolute inset-0 z-[60] flex items-center justify-center p-4 sm:p-8 animate-fade-in"
           onClick={() => setInfoOpen(false)}
         >
           <div
-            className="relative bg-paper max-w-xl w-full p-6 sm:p-8 -rotate-1"
-            style={{
-              border: "4px solid #1a1a1a",
-              boxShadow: "6px 6px 0 rgba(0,0,0,0.4)",
-            }}
+            className="select-info-dialog relative bg-paper max-w-xl w-full p-6 sm:p-8 -rotate-1" role="dialog" aria-label={`${selected.name} info`}
             onClick={(e) => e.stopPropagation()}
           >
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={() => setInfoOpen(false)}
               className="absolute top-2 right-2 scribble-border bg-paper px-3 py-1 font-marker text-xl text-ink hover:rotate-3 transition-transform"
               aria-label="Close info"
             >
               ✕
-            </button>
+            </Button>
             <h2 className="font-marker text-4xl sm:text-5xl text-ink mb-2 -rotate-1">
               {selected.name}
             </h2>
@@ -2496,8 +2282,8 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
                 <section>
                   <h3 className="font-marker text-2xl text-ink mb-1 rotate-1">Abilities &amp; Green</h3>
                   <ul className="space-y-2">
-                    {selected.abilities.map((a) => (
-                      <li key={a.name} className="font-scribble text-base text-ink/85 leading-snug">
+                    {selected.abilities.map((a, i) => (
+                      <li key={`${a.name}-${i}`} className="font-scribble text-base text-ink/85 leading-snug">
                         <span className="font-marker text-ink">{a.name}:</span> {a.description}
                       </li>
                     ))}
