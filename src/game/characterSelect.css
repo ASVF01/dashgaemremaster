@@ -47,8 +47,10 @@
 .select-page-arrow.previous { left: 1%; }.select-page-arrow.next { right: 1%; }
 .character-select .select-leave { position: absolute; top: 12px; left: 3%; z-index: 55; height: 50px; width: 150px; background: transparent; color: hsl(var(--destructive)); padding: 0; }
 .character-select .select-leave:hover { background: transparent; }
-.character-select .select-leave svg { position: absolute; inset: 0; width: 100%; height: 100%; stroke: currentColor; fill: hsl(var(--select-black)); stroke-width: 3; }
-.select-leave span { position: relative; margin-left: 25px; font-family: "Caveat", cursive; font-size: 24px; }
+.select-leave .select-leave-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.select-leave .select-leave-art.hover { opacity: 0; }
+.select-leave:hover .select-leave-art { opacity: 0; }
+.select-leave:hover .select-leave-art.hover { opacity: 1; }
 .select-shutter { position: absolute; left: 0; width: 100%; height: 54%; z-index: 50; pointer-events: none; transition: transform 850ms cubic-bezier(.65,0,.35,1); }
 .select-shutter.top { top: 0; }.select-shutter.bottom { bottom: 0; transform: rotate(180deg); }
 .select-shutter::before { content: ""; position: absolute; inset: 0 0 -12% -100%; background: hsl(var(--select-black)); clip-path: polygon(0 0,100% 0,100% 88%,97.5% 96%,95% 88%,92% 99%,89% 86%,86% 95%,82.5% 89%,80% 99%,77% 85%,74% 97%,71% 90%,68% 99%,65% 85%,62% 96%,59% 89%,56.5% 99%,54% 86%,52% 94%,50% 88%,47.5% 96%,45% 88%,42% 99%,39% 86%,36% 95%,32.5% 89%,30% 99%,27% 85%,24% 97%,21% 90%,18% 99%,15% 85%,12% 96%,9% 89%,6.5% 99%,4% 86%,2% 94%,0 88%); animation: select-border-drift 14s linear infinite; }
