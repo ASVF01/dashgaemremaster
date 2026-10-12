@@ -2158,47 +2158,54 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   const [phase, setPhase] = useState<"entering" | "open" | "closing">("entering");
   const [page, setPage] = useState<1 | 2>(characterPage(charState.selected));
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const windRef = useRef<HTMLCanvasElement | null>(null);
+  const gridRef = useRef<HTMLCanvasElement | null>(null);
   const selected = WIP_CHARACTERS.find((c) => c.id === picked) ?? WIP_CHARACTERS[0];
   const isNotYet = (id: string) => id === "dasher" || id === "shadow";
   const isCharLocked = (id: string) => isNotYet(id) || !charState.unlocked[id as CharacterId];
 
-  // Wind lines ported from Star Vanisher: ~30 thin horizontal streaks flying
-  // right -> left at random heights, speeds and lengths, drawn at low alpha.
+  // Background grid that drifts upward: vertical lines hold their columns while
+  // horizontal rows scroll up through them, advancing by exactly one cell per
+  // wrap so the loop is seamless. Every 4th line is a stronger "major" line.
   useEffect(() => {
-    const canvas = windRef.current;
+    const canvas = gridRef.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
     const style = getComputedStyle(canvas);
     const light = `hsl(${style.getPropertyValue("--select-white").trim()})`;
     const dark = `hsl(${style.getPropertyValue("--select-black").trim()})`;
-    const rand = (a: number, b: number) => a + Math.random() * (b - a);
-    let W = 0, H = 0, raf = 0, last = performance.now();
-    type Streak = { x: number; y: number; len: number; sp: number; w: number; c: string };
-    const spawn = (fromEdge: boolean): Streak => ({
-      x: fromEdge ? W + rand(20, 380) : rand(0, W + 400),
-      y: rand(6, Math.max(7, H - 6)),
-      len: rand(80, 320), sp: rand(220, 760), w: rand(2, 6),
-      c: Math.random() < 0.5 ? light : dark,
-    });
-    let streaks: Streak[] = [];
+    const CELL = 72;   // grid spacing, css px
+    const SPEED = 36;  // upward drift, css px per second
+    let W = 0, H = 0, raf = 0, last = performance.now(), total = 0;
     const resize = () => {
       W = canvas.width = canvas.clientWidth;
       H = canvas.height = canvas.clientHeight;
-      streaks = Array.from({ length: 30 }, () => spawn(false));
     };
     resize();
     window.addEventListener("resize", resize);
     const tick = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
+      total += SPEED * dt;
+      const offset = total % CELL;
+      const rowShift = Math.floor(total / CELL);
+      const rows = Math.ceil(H / CELL) + 2;
+      const cols = Math.ceil(W / CELL) + 1;
       ctx.clearRect(0, 0, W, H);
-      ctx.globalAlpha = 0.26;
-      for (const sk of streaks) {
-        sk.x -= sk.sp * dt;
-        if (sk.x + sk.len < -20) Object.assign(sk, spawn(true));
-        ctx.fillStyle = sk.c;
-        ctx.fillRect(sk.x, sk.y, sk.len, sk.w);
+      // Vertical columns — invariant under vertical translation, so they stay put.
+      for (let c = 0; c < cols; c++) {
+        const x = c * CELL + 0.5;
+        ctx.strokeStyle = c % 2 === 0 ? light : dark;
+        ctx.globalAlpha = c % 4 === 0 ? 0.26 : 0.12;
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+      }
+      // Horizontal rows scroll upward through the columns.
+      for (let k = 0; k < rows; k++) {
+        const y = Math.round(H - offset - k * CELL) + 0.5;
+        if (y < -1 || y > H + 1) continue;
+        const idx = k + rowShift;
+        ctx.strokeStyle = idx % 2 === 0 ? light : dark;
+        ctx.globalAlpha = idx % 4 === 0 ? 0.26 : 0.12;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
       }
       ctx.globalAlpha = 1;
       raf = requestAnimationFrame(tick);
@@ -2240,7 +2247,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   const pageCharacters = WIP_CHARACTERS.filter((c) => characterPage(c.id) === page);
   return createPortal(
     <div className="character-select" data-phase={phase} role="dialog" aria-label="Character select">
-      <canvas ref={windRef} className="select-wind" aria-hidden="true" />
+      <canvas ref={gridRef} className="select-grid" aria-hidden="true" />
       <Button variant="ghost" className="select-leave" onClick={handleClose} disabled={phase === "closing"} aria-label="back to menu" onMouseEnter={() => sfx.menuHover()}>
         <svg viewBox="0 0 160 50" aria-hidden="true"><path d="M3 25 60 4 60 15 156 15 156 35 60 35 60 46Z" /></svg>
         <span>Leave.</span>
