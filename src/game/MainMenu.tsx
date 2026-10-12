@@ -2219,7 +2219,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
     };
     raf = requestAnimationFrame(tick);
     return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
-  }, [uiVisible]);
+  }, [phase]);
 
   // Borders appear and slide closed together first; the 3-second hold only
   // begins once they are fully shut.
