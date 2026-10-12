@@ -39,6 +39,7 @@ interface Props {
 export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAlternate, onCommenceMayhem, onContinueMayhem }: Props) {
   const [tab, setTab] = useState<MenuTab>("play");
   const [charSelectOpen, setCharSelectOpen] = useState(false);
+  const [charSelectZoomed, setCharSelectZoomed] = useState(false);
   const [bestiaryOpen, setBestiaryOpen] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const prevTabRef = useRef<MenuTab>("play");
@@ -73,6 +74,7 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
   const openCharSelect = () => {
     unlockAudio();
     sfx.menuTab();
+    setCharSelectZoomed(true);
     setCharSelectOpen(true);
   };
 
@@ -92,7 +94,7 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
 
   return (
     <div className="absolute inset-0 flex items-stretch justify-center bg-paper/95 backdrop-blur-[2px] overflow-auto">
-      <div className={`w-full max-w-5xl mx-auto px-6 py-8 flex flex-col menu-zoom-layer ${charSelectOpen ? "menu-zoomed" : ""}`}>
+      <div className={`w-full max-w-5xl mx-auto px-6 py-8 flex flex-col menu-zoom-layer ${charSelectZoomed ? "menu-zoomed" : ""}`}>
         {/* Title */}
         <div className="text-center mb-6">
           <div className="font-marker text-6xl md:text-7xl text-ink leading-[0.9] -rotate-1 inline-block">
@@ -137,7 +139,7 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
         </div>
       </div>
 
-      {charSelectOpen && <CharacterSelectScreen onClose={() => setCharSelectOpen(false)} />}
+      {charSelectOpen && <CharacterSelectScreen onExitCovered={() => setCharSelectZoomed(false)} onClose={() => { setCharSelectZoomed(false); setCharSelectOpen(false); }} />}
       {bestiaryOpen && <BestiaryScreen onClose={() => setBestiaryOpen(false)} />}
       {shopOpen && <Shop onClose={() => setShopOpen(false)} />}
     </div>
@@ -2154,12 +2156,12 @@ const WIP_CHARACTERS: WipCharacter[] = [
   { id: "x3mode",  name: "THE ALTERNATE",       blurb: "TO ACHIVE SUCH FORM, YOU MUST UNLOCK THE MARK, MANIPULATE IT'S FACE AND RE-COMPLETE YOUR GENISIS WITH YOUR NEW FOUND POWER.", art: theAlternateArtAsset.url, locked: true },
 ];
 
-function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
+function CharacterSelectScreen({ onClose, onExitCovered }: { onClose: () => void; onExitCovered: () => void }) {
   useTabBgm(gachaBgm);
   const charState = useCharacter();
   const [picked, setPicked] = useState<CharacterId>(charState.selected);
   const [infoOpen, setInfoOpen] = useState(false);
-  const [phase, setPhase] = useState<"entering" | "shutting" | "open" | "closing">("entering");
+  const [phase, setPhase] = useState<"entering" | "shutting" | "open" | "closing" | "returning">("entering");
   const [page, setPage] = useState<1 | 2>(characterPage(charState.selected));
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const gridRef = useRef<HTMLCanvasElement | null>(null);
@@ -2239,12 +2241,19 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   }, [phase]);
 
   const handleClose = () => {
-    if (phase === "closing") return;
+    if (phase !== "open") return;
     sfx.menuTab();
     setInfoOpen(false);
-    if (phase === "entering") { onClose(); return; }
     setPhase("closing");
-    closeTimer.current = setTimeout(() => { sfx.wallShutterClose(); onClose(); }, CHARACTER_SELECT_CLOSE_MS);
+    closeTimer.current = setTimeout(() => {
+      sfx.wallShutterClose();
+      onExitCovered();
+      closeTimer.current = setTimeout(() => {
+        sfx.wallShutterOpen();
+        setPhase("returning");
+        closeTimer.current = setTimeout(onClose, CHARACTER_SELECT_SHUT_MS);
+      }, 150);
+    }, CHARACTER_SELECT_CLOSE_MS);
   };
   const changePage = (next: 1 | 2) => {
     if (phase !== "open" || next === page) return;
