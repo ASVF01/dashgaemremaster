@@ -2120,7 +2120,7 @@ const WIP_CHARACTERS: WipCharacter[] = [
   {
     id: "stick",
     name: "The Player",
-    blurb: "The OG. Runs. Jumps. Vibes.",
+    blurb: "The Original.",
     art: thePlayerArt,
     preview: thePlayerPreviewAsset.url,
     howToPlay:
