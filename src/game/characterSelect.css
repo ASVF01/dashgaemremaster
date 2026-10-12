@@ -45,7 +45,7 @@
 .character-select .select-page-arrow:hover { background: transparent; }
 .character-select .select-page-arrow svg { width: 100%; height: 100%; stroke: hsl(var(--select-edge)); stroke-width: 5; fill: currentColor; }
 .select-page-arrow.previous { left: 1%; }.select-page-arrow.next { right: 1%; }
-.character-select .select-leave { position: absolute; top: 12px; left: 3%; z-index: 55; height: 50px; width: 150px; background: transparent; color: hsl(var(--destructive)); padding: 0; }
+.character-select .select-leave { position: absolute; top: 16px; left: 3%; z-index: 55; height: 86px; width: 230px; background: transparent; color: hsl(var(--destructive)); padding: 0; }
 .character-select .select-leave:hover { background: transparent; }
 .select-leave .select-leave-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
 .select-leave .select-leave-art.hover { opacity: 0; }
