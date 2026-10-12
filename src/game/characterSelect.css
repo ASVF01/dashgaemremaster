@@ -7,21 +7,9 @@
   background: repeating-linear-gradient(125deg, transparent 0 80px, hsl(var(--select-white) / .23) 80px 82px, transparent 82px 160px);
   animation: select-background-drift 18s linear infinite;
 }
-.character-select::after {
-  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .55;
-  background-image:
-    linear-gradient(90deg, transparent 26%, hsl(var(--select-white) / .8) 50%, transparent 74%),
-    linear-gradient(90deg, transparent 38%, hsl(var(--select-black) / .6) 50%, transparent 62%),
-    linear-gradient(90deg, transparent 30%, hsl(var(--select-white) / .5) 50%, transparent 70%);
-  background-size: 520px 300px, 760px 440px, 380px 220px;
-  background-repeat: repeat;
-  animation: select-wind 8s linear infinite;
-}
-/* Every layer travels exactly one tile per loop, so the restart is invisible;
-   smaller tiles cross the screen faster, giving each layer its own speed. */
-@keyframes select-wind {
-  from { background-position: 0 0, 0 0, 0 0; }
-  to { background-position: -520px 300px, 760px -440px, -380px 220px; }
+/* Wind lines, Star Vanisher style — drawn on a canvas by CharacterSelectScreen. */
+.character-select .select-wind {
+  position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;
 }
 .select-stage { position: absolute; inset: 12% 12% 14%; display: flex; align-items: stretch; justify-content: center; }
 .select-roster {
