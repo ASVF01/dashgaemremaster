@@ -861,7 +861,7 @@ export default function StarVanisher({ onBack }: { onBack?: () => void } = {}) {
     stopBossBgm();
     if (!isBgmMuted() && !hud.over) {
       const a = bgmRef.current;
-      if (a && a.paused) { a.volume = 0.3375; a.currentTime = 0; void a.play().catch(() => { /* noop */ }); }
+      if (a && a.paused) { a.volume = 0.3375 * bgmUserVolume; a.currentTime = 0; void a.play().catch(() => { /* noop */ }); }
     }
   };
 
