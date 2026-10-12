@@ -13,6 +13,7 @@ import { GaplessLoop } from "@/game/gapless";
 import { isCheatOn } from "@/game/cheats";
 
 import { isBgmMuted, subscribeBgmMuted, pauseBgm, resumeBgm } from "@/game/bgm";
+import { useSettings, getSettings } from "@/game/settings";
 
 // simple one-shot sample player (overlapping playback via cloned nodes)
 function makeSample(url: string, volume: number) {
@@ -518,6 +519,8 @@ export default function StarVanisher({ onBack }: { onBack?: () => void } = {}) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const stateRef = useRef<State | null>(null);
   const [running, setRunning] = useState(false);
+  const [settings] = useSettings();
+  bgmUserVolume = settings.bgmVolume; // keep module-level players in sync
   const [hud, setHud] = useState({ score: 0, combo: 0, best: 0, over: false, lastScore: 0, newBest: false, lastPct: 0, earned: 0 });
   const [, forceShop] = useState(0);
   useEffect(() => subscribeShop(() => forceShop((n) => n + 1)), []);
