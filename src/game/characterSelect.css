@@ -64,12 +64,12 @@
 .character-select[data-phase="open"] .select-shutter.bottom { animation: select-open-bottom 850ms cubic-bezier(.65,0,.35,1) forwards; }
 @keyframes select-open-top { 0% { transform: translateY(0); } 100% { transform: translateY(-86%); } }
 @keyframes select-open-bottom { 0% { transform: translateY(0) rotate(180deg); } 100% { transform: translateY(86%) rotate(180deg); } }
-.character-select[data-phase="closing"] .select-shutter.top { animation: select-close-top 700ms cubic-bezier(.65,0,.35,1) forwards; }
-.character-select[data-phase="closing"] .select-shutter.bottom { animation: select-close-bottom 700ms cubic-bezier(.65,0,.35,1) forwards; }
+.character-select[data-phase="closing"] .select-shutter.top { animation: select-close-top 300ms cubic-bezier(.65,0,.35,1) forwards; }
+.character-select[data-phase="closing"] .select-shutter.bottom { animation: select-close-bottom 300ms cubic-bezier(.65,0,.35,1) forwards; }
 @keyframes select-close-top { from { transform: translateY(-86%); } to { transform: translateY(0); } }
 @keyframes select-close-bottom { from { transform: translateY(86%) rotate(180deg); } to { transform: translateY(0) rotate(180deg); } }
-.character-select[data-phase="returning"] .select-shutter.top { animation: select-return-top 850ms cubic-bezier(.65,0,.35,1) forwards; }
-.character-select[data-phase="returning"] .select-shutter.bottom { animation: select-return-bottom 850ms cubic-bezier(.65,0,.35,1) forwards; }
+.character-select[data-phase="returning"] .select-shutter.top { animation: select-return-top 280ms cubic-bezier(.65,0,.35,1) forwards; }
+.character-select[data-phase="returning"] .select-shutter.bottom { animation: select-return-bottom 280ms cubic-bezier(.65,0,.35,1) forwards; }
 @keyframes select-return-top { from { transform: translateY(0); } to { transform: translateY(-120%); } }
 @keyframes select-return-bottom { from { transform: translateY(0) rotate(180deg); } to { transform: translateY(120%) rotate(180deg); } }
 .character-select[data-phase="closing"] .select-leave { z-index: 40; }
