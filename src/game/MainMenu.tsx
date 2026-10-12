@@ -2171,6 +2171,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   // horizontal rows scroll up through them, advancing by exactly one cell per
   // wrap so the loop is seamless. Every 4th line is a stronger "major" line.
   useEffect(() => {
+    if (phase !== "open" && phase !== "closing") return;
     const canvas = gridRef.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
@@ -2218,7 +2219,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
     };
     raf = requestAnimationFrame(tick);
     return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
-  }, []);
+  }, [phase]);
 
   // Borders appear and slide closed together first; the 3-second hold only
   // begins once they are fully shut.
@@ -2264,17 +2265,20 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   }, [phase, infoOpen, page]);
 
   const pageCharacters = WIP_CHARACTERS.filter((c) => characterPage(c.id) === page);
+  // During entering/shutting only the shutters render, so the transition plays
+  // over the main menu with no character select UI underneath.
+  const uiVisible = phase === "open" || phase === "closing";
   return createPortal(
     <div className="character-select" data-phase={phase} role="dialog" aria-label="Character select">
-      <canvas ref={gridRef} className="select-grid" aria-hidden="true" />
-      <Button variant="ghost" className="select-leave" onClick={handleClose} disabled={phase === "closing"} aria-label="back to menu" onMouseEnter={() => sfx.charSelectHover()}>
+      {uiVisible && <canvas ref={gridRef} className="select-grid" aria-hidden="true" />}
+      {uiVisible && <Button variant="ghost" className="select-leave" onClick={handleClose} disabled={phase === "closing"} aria-label="back to menu" onMouseEnter={() => sfx.charSelectHover()}>
         <img className="select-leave-art" src={selectLeaveArt.url} alt="" draggable={false} />
         <img className="select-leave-art hover" src={selectLeaveHoverArt.url} alt="" draggable={false} aria-hidden="true" />
-      </Button>
-      <Button variant="ghost" className="select-page-arrow previous" aria-label="previous page" title="Actual characters" disabled={page === 1 || phase !== "open"} onMouseEnter={() => sfx.charSelectHover()} onClick={() => changePage(1)}>
+      </Button>}
+      {uiVisible && <Button variant="ghost" className="select-page-arrow previous" aria-label="previous page" title="Actual characters" disabled={page === 1 || phase !== "open"} onMouseEnter={() => sfx.charSelectHover()} onClick={() => changePage(1)}>
         <svg viewBox="0 0 120 200" aria-hidden="true"><path d="M5 100 58 7 58 58 114 58 114 142 58 142 58 193Z" /></svg>
-      </Button>
-      <main className="select-stage">
+      </Button>}
+      {uiVisible && <main className="select-stage">
         <div className="select-roster">
           <div className="select-page-label font-marker"><span>{page === 1 ? "CANONICAL CHARACTERS" : "JOKE CHARACTERS"}</span><span>PG. {page} / 2</span></div>
           <div className="select-cards">
@@ -2296,10 +2300,10 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
             <img className="select-info-art" src={selectInfoArt.url} alt="" draggable={false} />
           </Button>
         </div>
-      </main>
-      <Button variant="ghost" className="select-page-arrow next" aria-label="next page" title="Joke characters" disabled={page === 2 || phase !== "open"} onMouseEnter={() => sfx.charSelectHover()} onClick={() => changePage(2)}>
+      </main>}
+      {uiVisible && <Button variant="ghost" className="select-page-arrow next" aria-label="next page" title="Joke characters" disabled={page === 2 || phase !== "open"} onMouseEnter={() => sfx.charSelectHover()} onClick={() => changePage(2)}>
         <svg viewBox="0 0 120 200" aria-hidden="true"><path d="M115 100 62 7 62 58 6 58 6 142 62 142 62 193Z" /></svg>
-      </Button>
+      </Button>}
       <div className="select-shutter top" aria-hidden="true" /><div className="select-shutter bottom" aria-hidden="true" />
 
       {/* INFO modal — character details. Click outside or press ESC to close. */}

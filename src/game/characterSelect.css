@@ -2,6 +2,9 @@
   position: fixed; inset: 0; z-index: 50; overflow: hidden;
   background: hsl(var(--select-background)); color: hsl(var(--select-white));
 }
+/* While the shutters slide in over the main menu, the select UI stays hidden. */
+.character-select[data-phase="entering"], .character-select[data-phase="shutting"] { background: transparent; }
+.character-select[data-phase="entering"]::before, .character-select[data-phase="shutting"]::before { opacity: 0; }
 .character-select::before {
   content: ""; position: absolute; inset: -100%; opacity: .3;
   background: repeating-linear-gradient(125deg, transparent 0 80px, hsl(var(--select-black)) 80px 88px, transparent 88px 160px);
