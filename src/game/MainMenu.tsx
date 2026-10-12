@@ -2270,14 +2270,14 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
   return createPortal(
     <div className="character-select" data-phase={phase} role="dialog" aria-label="Character select">
       {uiVisible && <canvas ref={gridRef} className="select-grid" aria-hidden="true" />}
-      <Button variant="ghost" className="select-leave" onClick={handleClose} disabled={phase === "closing"} aria-label="back to menu" onMouseEnter={() => sfx.charSelectHover()}>
+      {uiVisible && <Button variant="ghost" className="select-leave" onClick={handleClose} disabled={phase === "closing"} aria-label="back to menu" onMouseEnter={() => sfx.charSelectHover()}>
         <img className="select-leave-art" src={selectLeaveArt.url} alt="" draggable={false} />
         <img className="select-leave-art hover" src={selectLeaveHoverArt.url} alt="" draggable={false} aria-hidden="true" />
-      </Button>
-      <Button variant="ghost" className="select-page-arrow previous" aria-label="previous page" title="Actual characters" disabled={page === 1 || phase !== "open"} onMouseEnter={() => sfx.charSelectHover()} onClick={() => changePage(1)}>
+      </Button>}
+      {uiVisible && <Button variant="ghost" className="select-page-arrow previous" aria-label="previous page" title="Actual characters" disabled={page === 1 || phase !== "open"} onMouseEnter={() => sfx.charSelectHover()} onClick={() => changePage(1)}>
         <svg viewBox="0 0 120 200" aria-hidden="true"><path d="M5 100 58 7 58 58 114 58 114 142 58 142 58 193Z" /></svg>
-      </Button>
-      <main className="select-stage">
+      </Button>}
+      {uiVisible && <main className="select-stage">
         <div className="select-roster">
           <div className="select-page-label font-marker"><span>{page === 1 ? "CANONICAL CHARACTERS" : "JOKE CHARACTERS"}</span><span>PG. {page} / 2</span></div>
           <div className="select-cards">
