@@ -34,4 +34,5 @@
 
 - [x] Post-bag dialogue: use the newly supplied Receptionist expression (Recep_Shop_UI_Dialouge_2.png, white keyed out); shop stall keeps the counter doodle.
 - [x] Make M&M's Guy playable with the supplied icon/sprite, ground-only stone scraping, voice on jumps/dashes/dive impacts and powered invboi audio.
+- [x] Character icons: drop the diagonal stripe and the diagonal cut so each sprite shows exactly as supplied (only the red X and yellow lock remain).
 
