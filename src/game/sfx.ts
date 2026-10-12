@@ -833,6 +833,16 @@ export const sfx = {
     playSample(wallOpenAsset.url, { vol: 0.6 });
     loadSample(wallOpenAsset.url);
   },
+  // Leaving character select: the same cues, clipped short so the exit doesn't
+    // drag on with two overlapping full-length wall sounds.
+  wallShutterCloseShort() {
+    playSampleClipped(wallCloseAsset.url, 0.3, { vol: 0.6, fade: 0.08 });
+    loadSample(wallCloseAsset.url);
+  },
+  wallShutterOpenShort() {
+    playSampleClipped(wallOpenAsset.url, 0.28, { vol: 0.6, fade: 0.08 });
+    loadSample(wallOpenAsset.url);
+  },
   menuHover() {
     tone({ freq: 880, to: 1180, dur: 0.05, type: "triangle", vol: 0.07, attack: 0.002, release: 0.04 });
     noise(0.025, 0.04, 2400, 8000);
