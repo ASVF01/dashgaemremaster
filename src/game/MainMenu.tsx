@@ -2227,14 +2227,14 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
 
   const handleClose = () => {
     if (phase === "closing") return;
-    sfx.charSelectClick();
+    sfx.menuTab();
     setInfoOpen(false);
     setPhase("closing");
     closeTimer.current = setTimeout(onClose, CHARACTER_SELECT_CLOSE_MS);
   };
   const changePage = (next: 1 | 2) => {
     if (phase !== "open" || next === page) return;
-    sfx.menuTab();
+    sfx.charSelectClick();
     setPage(next);
     const first = WIP_CHARACTERS.find((c) => characterPage(c.id) === next);
     if (first) setPicked(first.id);
