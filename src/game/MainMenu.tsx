@@ -2197,7 +2197,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
       for (let c = 0; c < cols; c++) {
         const x = c * CELL + 0.5;
         ctx.lineWidth = c % 4 === 0 ? MAJOR : MINOR;
-        ctx.globalAlpha = c % 4 === 0 ? 0.5 : 0.32;
+        ctx.globalAlpha = c % 4 === 0 ? 1 : 0.85;
         ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
       }
       // Horizontal rows scroll upward through the columns.
