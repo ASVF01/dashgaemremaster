@@ -2135,18 +2135,18 @@ const WIP_CHARACTERS: WipCharacter[] = [
   },
   {
     id: "green",
-    name: "GREEN MACHINE",
-    blurb: "The Player, dipped in radioactive lime. Same moves. More chlorophyll.",
+    name: "green",
+    blurb: "green",
     art: greenMachineArt,
     preview: greenMachinePreview,
     howToPlay:
-      "Play it exactly like The Player: preserve momentum, chain jumps into dashes, and keep moving. Green Machine has the same timing, health, and abilities, so every route you already know still works.",
+      "green",
     lore:
-      "Nobody knows why The Player turned green. The leading theories are toxic rain, too much terminal glow, or one truly suspicious energy drink. Green Machine refuses to clarify.",
+      "green",
     abilities: [
-      { name: "Green Run", description: "The Player's familiar momentum, now in an aggressively green package." },
-      { name: "Lime Leap", description: "The same variable-height jump. Tap for a hop or hold for a full arc." },
-      { name: "Verdant Dash", description: "The standard gravity-canceling dash, leaving a streak of bright green motion." },
+      { name: "green", description: "green" },
+      { name: "green", description: "green" },
+      { name: "green", description: "green" },
     ],
   },
   { id: "dasher",  name: "Blue Blur",       blurb: "Dashes faster. Thinks slower.", art: blueBlurArtAsset.url },
@@ -2482,7 +2482,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
             <div className="max-h-[60vh] overflow-y-auto pr-2 space-y-4">
               {selected.howToPlay && (
                 <section>
-                  <h3 className="font-marker text-2xl text-ink mb-1 rotate-1">How to Play</h3>
+                  <h3 className="font-marker text-2xl text-ink mb-1 rotate-1">How to green</h3>
                   <p className="font-scribble text-base text-ink/85 leading-snug">{selected.howToPlay}</p>
                 </section>
               )}
@@ -2494,7 +2494,7 @@ function CharacterSelectScreen({ onClose }: { onClose: () => void }) {
               )}
               {selected.abilities && selected.abilities.length > 0 && (
                 <section>
-                  <h3 className="font-marker text-2xl text-ink mb-1 rotate-1">Abilities &amp; Mastery</h3>
+                  <h3 className="font-marker text-2xl text-ink mb-1 rotate-1">Abilities &amp; Green</h3>
                   <ul className="space-y-2">
                     {selected.abilities.map((a) => (
                       <li key={a.name} className="font-scribble text-base text-ink/85 leading-snug">
