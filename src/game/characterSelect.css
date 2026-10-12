@@ -68,8 +68,7 @@
   .select-cards { gap: 8px; grid-template-columns: repeat(3,minmax(0,1fr)); }
   .character-select .select-card, .select-empty { height: 100%; min-height: 80px; max-height: 210px; border-width: 4px; }
   .select-page-label { font-size: 13px; }
-  .select-info-word { font-size: 55px; }.select-question { font-size: 50px; }
-  .character-select .select-info-banner { padding: 4px 12px; border-width: 4px; }
+  .select-question { font-size: 50px; }
 }
-@media (max-height: 600px) and (min-width: 701px) { .select-roster { padding: 10px; gap: 8px; }.select-info-word { font-size: 65px; }.character-select .select-card { min-height: 90px; } }
+@media (max-height: 600px) and (min-width: 701px) { .select-roster { padding: 10px; gap: 8px; }.character-select .select-card { min-height: 90px; } }
 @media (prefers-reduced-motion: reduce) { .character-select::before,.select-shutter::before { animation: none; }.select-shutter,.select-roster { transition-duration: 1ms; } }
