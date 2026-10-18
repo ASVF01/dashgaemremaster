@@ -149,6 +149,29 @@ function fallback(id: number) {
   } catch { /* noop */ }
 }
 
+// Pause/resume for scripted scares: halts the track and later restarts it
+// from the same position instead of from the top.
+let pausedOffset = 0;
+let bgmPaused = false;
+
+export function pauseNightBgm() {
+  if (!source && !element) return;
+  pausedOffset = element ? element.currentTime : 0;
+  bgmPaused = true;
+  stopNightBgm(0);
+}
+
+export function resumeNightBgm() {
+  if (!bgmPaused) return;
+  bgmPaused = false;
+  startNightBgm();
+  if (pausedOffset > 0) {
+    if (source) { try { (source as AudioBufferSourceNode & { offset: number }).offset = pausedOffset; } catch { /* noop */ } }
+    if (element) element.currentTime = pausedOffset;
+  }
+  pausedOffset = 0;
+}
+
 export function stopNightBgm(fadeMs = 300) {
   token++;
   const c = ctx;

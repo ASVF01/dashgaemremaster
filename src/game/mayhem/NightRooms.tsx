@@ -23,7 +23,7 @@ import gridShutdownSfx from "@/assets/audio/grid-shutdown.ogg.asset.json";
 const GRID_MAX_VIEW_MS = 20000;
 import GeneratorPanel, { makeGeneratorProgress, type GeneratorProgress } from "./GeneratorPanel";
 import { useGridRoster } from "./useGridRoster";
-import { preloadNightBgm, startNightBgm, stopNightBgm } from "./nightAudio";
+import { preloadNightBgm, startNightBgm, stopNightBgm, pauseNightBgm, resumeNightBgm } from "./nightAudio";
 import { getMayhemNight, mayhemAiLevel, setMayhemNight } from "@/game/progress";
 import { isMuted, setMuted, setNightSfxVolume, mayhemSfx, preloadMayhemSfx } from "@/game/sfx";
 import { isBgmMuted, setBgmMuted, stopBgm } from "@/game/bgm";
