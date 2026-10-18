@@ -178,6 +178,43 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   }, [generatorClosing]);
 
 
+  const HALLU_ARTS = [herHalluArt1, herHalluArt2, herHalluArt3];
+  useEffect(() => {
+    if (halluFiredRef.current || night !== 1 || generatorOnline) return;
+    if (generatorProgress.percent < 90) return;
+    halluFiredRef.current = true;
+    if (generatorOpenRef.current) closeGenerator();
+    setTerminalOpen(false);
+    setCameraOpen(false);
+    setView("door");
+    viewRef.current = "door";
+    setHallu(0);
+    const audio = new Audio(herHalluAudio.url);
+    audio.volume = 0.9 * settings.sfxVolume;
+    halluAudioRef.current = audio;
+    void audio.play().catch(() => {});
+    let last = 0;
+    const cycle = window.setInterval(() => {
+      let next = Math.floor(Math.random() * 3);
+      if (next === last) next = (next + 1) % 3;
+      last = next;
+      setHallu(next);
+    }, 200);
+    const stop = window.setTimeout(() => {
+      window.clearInterval(cycle);
+      audio.pause();
+      audio.currentTime = 0;
+      halluAudioRef.current = null;
+      setHallu(null);
+    }, 3000);
+    return () => {
+      window.clearInterval(cycle);
+      window.clearTimeout(stop);
+      audio.pause();
+      halluAudioRef.current = null;
+    };
+  }, [generatorProgress.percent, night, generatorOnline]);
+
   // The title card doubles as the loader. It remains visible long enough to
   // read while room art, camera feeds, terminal art, SFX, and music decode.
   useEffect(() => {
