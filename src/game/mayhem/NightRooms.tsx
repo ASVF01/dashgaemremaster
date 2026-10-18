@@ -127,6 +127,11 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   generatorClosingRef.current = generatorClosing;
   const [generatorProgress, setGeneratorProgress] = useState<GeneratorProgress>(() => makeGeneratorProgress(upgrades));
   const [generatorOnline, setGeneratorOnline] = useState(false);
+  // Night 1 hallucination: at 90%+ generator power the player is forced off
+  // the panel, turned to THE DOOR, and "HER" flickers through three tweaks.
+  const [hallu, setHallu] = useState<number | null>(null);
+  const halluFiredRef = useRef(false);
+  const halluAudioRef = useRef<HTMLAudioElement | null>(null);
   const [storageDoorClosed, setStorageDoorClosed] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraEntry, setCameraEntry] = useState<"idle" | "pullback" | "rush">("idle");
