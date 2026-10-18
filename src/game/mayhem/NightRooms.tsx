@@ -564,6 +564,16 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
           style={{ animation: "mayhemRoomFade 180ms ease-out" }}
         />
 
+        {view === "door" && hallu !== null && (
+          <img
+            src={HALLU_ARTS[hallu].url}
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+          />
+        )}
+
         {view === "office" && !cameraOpen && cameraEntry === "idle" && (
           <>
             <button
