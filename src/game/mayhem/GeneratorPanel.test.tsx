@@ -12,6 +12,14 @@ afterEach(() => { cleanup(); vi.clearAllMocks(); });
 const progress: GeneratorProgress = { percent: 0, round: 1, kind: "memory", seed: 17, memoryMatched: Array(6).fill(false) };
 const props = { night: 2, paused: false, progress, onProgress: vi.fn(), onClose: vi.fn(), onComplete: vi.fn() };
 
+describe("generator completion", () => {
+  it("completes the night when reopened already at 100%", () => {
+    const onComplete = vi.fn();
+    render(<GeneratorPanel {...props} onComplete={onComplete} progress={{ ...progress, percent: 100 }} />);
+    expect(onComplete).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("generator hover cues", () => {
   it("adds the boss parry and sugarcoat cues only for doubled rewards", () => {
     const { rerender } = render(<GeneratorPanel {...props} />);
