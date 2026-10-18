@@ -77,7 +77,11 @@ export default function GeneratorPanel({ night, upgrades = {}, paused, closing =
   useEffect(() => {
     const from = displayPercentRef.current;
     const target = progress.percent;
-    if (target <= from) return;
+    if (target <= from) {
+      // Panel was closed mid-reward after reaching 100%: finish the night on reopen.
+      if (target >= 100) completeRef.current();
+      return;
+    }
     rewardingRef.current = true;
     setRewarding(true);
     mayhemSfx.generatorImpact(progress.doubled);
