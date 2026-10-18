@@ -190,6 +190,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
     setView("door");
     viewRef.current = "door";
     setHallu(0);
+    pauseNightBgm();
     const audio = new Audio(herHalluAudio.url);
     audio.volume = 0.9 * settings.sfxVolume;
     halluAudioRef.current = audio;
@@ -207,6 +208,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
       audio.currentTime = 0;
       halluAudioRef.current = null;
       setHallu(null);
+      resumeNightBgm();
     }, 3000);
     return () => {
       window.clearInterval(cycle);
