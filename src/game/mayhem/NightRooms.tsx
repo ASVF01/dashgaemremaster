@@ -23,7 +23,7 @@ import gridShutdownSfx from "@/assets/audio/grid-shutdown.ogg.asset.json";
 const GRID_MAX_VIEW_MS = 20000;
 import GeneratorPanel, { makeGeneratorProgress, type GeneratorProgress } from "./GeneratorPanel";
 import { useGridRoster } from "./useGridRoster";
-import { preloadNightBgm, startNightBgm, stopNightBgm } from "./nightAudio";
+import { preloadNightBgm, startNightBgm, stopNightBgm, pauseNightBgm, resumeNightBgm } from "./nightAudio";
 import { getMayhemNight, mayhemAiLevel, setMayhemNight } from "@/game/progress";
 import { isMuted, setMuted, setNightSfxVolume, mayhemSfx, preloadMayhemSfx } from "@/game/sfx";
 import { isBgmMuted, setBgmMuted, stopBgm } from "@/game/bgm";
@@ -190,6 +190,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
     setView("door");
     viewRef.current = "door";
     setHallu(0);
+    pauseNightBgm();
     const audio = new Audio(herHalluAudio.url);
     audio.volume = 0.9 * settings.sfxVolume;
     halluAudioRef.current = audio;
@@ -207,6 +208,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
       audio.currentTime = 0;
       halluAudioRef.current = null;
       setHallu(null);
+      resumeNightBgm();
     }, 3000);
     return () => {
       window.clearInterval(cycle);
