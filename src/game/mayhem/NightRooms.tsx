@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import officeArt from "@/assets/mayhem/THE_OFFICE.png.asset.json";
 import officeMeowArt from "@/assets/mayhem/THE_OFFICE_red_guy_meow.png.asset.json";
 import doorArt from "@/assets/mayhem/THE_DOOR.png.asset.json";
+import herHalluBaseArt from "@/assets/mayhem/THE_DOOR_HER_HALLU.png.asset.json";
 import herHalluArt1 from "@/assets/mayhem/THE_DOOR_HER_TWEAK_1.png.asset.json";
 import herHalluArt2 from "@/assets/mayhem/THE_DOOR_HER_TWEAK_2.png.asset.json";
 import herHalluArt3 from "@/assets/mayhem/THE_DOOR_HER_TWEAK_3.png.asset.json";
@@ -432,7 +433,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
 
   const art =
     view === "office" ? (redGuyMeowing ? officeMeowArt.url : officeArt.url) :
-    view === "door" ? (hallu !== null ? HALLU_ARTS[hallu].url : doorArt.url) :
+    view === "door" ? (hallu !== null ? herHalluBaseArt.url : doorArt.url) :
     view === "keyhole" || view === "storageKeyhole" ? keyholeArt.url :
     view === "storageDoor" ? doorArt.url :
     view === "hallway" ? hallwayArt.url :
