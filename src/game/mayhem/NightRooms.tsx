@@ -432,7 +432,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
 
   const art =
     view === "office" ? (redGuyMeowing ? officeMeowArt.url : officeArt.url) :
-    view === "door" ? doorArt.url :
+    view === "door" ? (hallu !== null ? HALLU_ARTS[hallu].url : doorArt.url) :
     view === "keyhole" || view === "storageKeyhole" ? keyholeArt.url :
     view === "storageDoor" ? doorArt.url :
     view === "hallway" ? hallwayArt.url :
