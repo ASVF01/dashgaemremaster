@@ -5,6 +5,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import officeArt from "@/assets/mayhem/THE_OFFICE.png.asset.json";
 import officeMeowArt from "@/assets/mayhem/THE_OFFICE_red_guy_meow.png.asset.json";
 import doorArt from "@/assets/mayhem/THE_DOOR.png.asset.json";
+import herHalluBaseArt from "@/assets/mayhem/THE_DOOR_HER_HALLU.png.asset.json";
+import herHalluArt1 from "@/assets/mayhem/THE_DOOR_HER_TWEAK_1.png.asset.json";
+import herHalluArt2 from "@/assets/mayhem/THE_DOOR_HER_TWEAK_2.png.asset.json";
+import herHalluArt3 from "@/assets/mayhem/THE_DOOR_HER_TWEAK_3.png.asset.json";
+import herHalluAudio from "@/assets/audio/her-hallu.mp3.asset.json";
 import keyholeArt from "@/assets/mayhem/THE_KEYHOLE.png.asset.json";
 import hallwayArt from "@/assets/mayhem/THE_HALLWAY.png.asset.json";
 import packArt from "@/assets/mayhem/storage_pack.png.asset.json";
@@ -123,6 +128,11 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   generatorClosingRef.current = generatorClosing;
   const [generatorProgress, setGeneratorProgress] = useState<GeneratorProgress>(() => makeGeneratorProgress(upgrades));
   const [generatorOnline, setGeneratorOnline] = useState(false);
+  // Night 1 hallucination: at 90%+ generator power the player is forced off
+  // the panel, turned to THE DOOR, and "HER" flickers through three tweaks.
+  const [hallu, setHallu] = useState<number | null>(null);
+  const halluFiredRef = useRef(false);
+  const halluAudioRef = useRef<HTMLAudioElement | null>(null);
   const [storageDoorClosed, setStorageDoorClosed] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraEntry, setCameraEntry] = useState<"idle" | "pullback" | "rush">("idle");
@@ -168,6 +178,43 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
     return () => window.clearTimeout(timer);
   }, [generatorClosing]);
 
+
+  const HALLU_ARTS = [herHalluArt1, herHalluArt2, herHalluArt3];
+  useEffect(() => {
+    if (halluFiredRef.current || night !== 1 || generatorOnline) return;
+    if (generatorProgress.percent < 90) return;
+    halluFiredRef.current = true;
+    if (generatorOpenRef.current) closeGenerator();
+    setTerminalOpen(false);
+    setCameraOpen(false);
+    setView("door");
+    viewRef.current = "door";
+    setHallu(0);
+    const audio = new Audio(herHalluAudio.url);
+    audio.volume = 0.9 * settings.sfxVolume;
+    halluAudioRef.current = audio;
+    void audio.play().catch(() => {});
+    let last = 0;
+    const cycle = window.setInterval(() => {
+      let next = Math.floor(Math.random() * 3);
+      if (next === last) next = (next + 1) % 3;
+      last = next;
+      setHallu(next);
+    }, 200);
+    const stop = window.setTimeout(() => {
+      window.clearInterval(cycle);
+      audio.pause();
+      audio.currentTime = 0;
+      halluAudioRef.current = null;
+      setHallu(null);
+    }, 3000);
+    return () => {
+      window.clearInterval(cycle);
+      window.clearTimeout(stop);
+      audio.pause();
+      halluAudioRef.current = null;
+    };
+  }, [generatorProgress.percent, night, generatorOnline]);
 
   // The title card doubles as the loader. It remains visible long enough to
   // read while room art, camera feeds, terminal art, SFX, and music decode.
@@ -386,7 +433,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
 
   const art =
     view === "office" ? (redGuyMeowing ? officeMeowArt.url : officeArt.url) :
-    view === "door" ? doorArt.url :
+    view === "door" ? (hallu !== null ? herHalluBaseArt.url : doorArt.url) :
     view === "keyhole" || view === "storageKeyhole" ? keyholeArt.url :
     view === "storageDoor" ? doorArt.url :
     view === "hallway" ? hallwayArt.url :
@@ -516,6 +563,16 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
           className="absolute inset-0 h-full w-full object-cover"
           style={{ animation: "mayhemRoomFade 180ms ease-out" }}
         />
+
+        {view === "door" && hallu !== null && (
+          <img
+            src={HALLU_ARTS[hallu].url}
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+          />
+        )}
 
         {view === "office" && !cameraOpen && cameraEntry === "idle" && (
           <>
