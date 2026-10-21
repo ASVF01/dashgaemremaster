@@ -38,7 +38,7 @@ import shieldSfx from "@/assets/audio/encounter/shield-break.mp3.asset.json";
 import loadingSfx from "@/assets/audio/encounter/loading.ogg.asset.json";
 import animMove1 from "@/assets/audio/AnimMove1.wav.asset.json";
 import animMove4 from "@/assets/audio/AnimMove4.wav.asset.json";
-import NickyJumpscare, { JUMPSCARE_URLS } from "./NickyJumpscare";
+import { anbOutcome, lockdownAllows, lookingAtAnb, nickyOutcome, tipsForNight } from "./encounterRules";
 import { anbOutcome, lockdownAllows, lookingAtAnb, nickyOutcome, tipsForNight } from "./encounterRules";
 import type { GridEnemyId } from "./useGridRoster";
 
