@@ -770,7 +770,7 @@ const Index = () => {
               setMerchantFreeUsed(true); setMerchantPurchased((list) => [...list, id]);
               setNightUpgrades((current) => applyUpgrade(current, id));
             }} />}
-          {mayhem && mayhemNight && <NightRooms upgrades={nightUpgrades} paused={mayhemPaused} onNightComplete={() => {
+          {mayhem && mayhemNight && <NightRooms key={nightAttempt} onRetry={() => setNightAttempt((n) => n + 1)} upgrades={nightUpgrades} paused={mayhemPaused} onNightComplete={() => {
              nightClearOrigin.current = levelId;
             setMayhemNight(false);
             setMayhemCleared(true);
