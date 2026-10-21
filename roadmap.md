@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Restore the pre-zoom camera framing with only a slight zoom in (flat 1.07 on ordinary levels, MAYHEM unchanged) while keeping the floor pinned to the bottom edge; verified with viewport-rule tests and a tutorial run.
+
 - [x] Hide desktop touch controls, use ESC to leave levels, and tighten the player camera without changing movement physics; verified desktop ESC, mobile controls, floor framing, and three viewport-rule tests.
 
 - [x] Make platformer gameplay edge-to-edge and hide the page header during runs; verified movement, exact viewport coverage at desktop/landscape sizes, and return to menu without runtime errors.
