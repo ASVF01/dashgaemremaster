@@ -18,6 +18,11 @@ describe("encounter rules", () => {
     expect(lockdownAllows("storage")).toBe(false);
     expect(lockdownAllows("office")).toBe(true);
   });
+  it("lockdown lets the player back out of the storage keyhole and door", () => {
+    expect(lockdownAllows("storage", "storageKeyhole")).toBe(true);
+    expect(lockdownAllows("storage", "storageDoor")).toBe(true);
+    expect(lockdownAllows("storage", "hallway")).toBe(false);
+  });
   it("tip screens per night", () => {
     expect(tipsForNight(1)).toEqual([3, 4]);
     expect(tipsForNight(2)).toEqual([1, 2]);
