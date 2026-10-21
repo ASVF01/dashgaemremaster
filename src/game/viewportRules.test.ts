@@ -6,9 +6,9 @@ describe("gameplay viewport", () => {
     expect(usesTouchControls(false)).toBe(false);
     expect(usesTouchControls(true)).toBe(true);
   });
-  it("uses a gentler zoom while keeping tall screens within the level", () => {
-    expect(gameplayZoom(935, false)).toBeCloseTo(935 / 780);
-    expect(gameplayZoom(600, false)).toBe(1.1);
+  it("keeps the original framing with only a slight zoom on any screen height", () => {
+    expect(gameplayZoom(935, false)).toBe(1.07);
+    expect(gameplayZoom(600, false)).toBe(1.07);
     expect(gameplayZoom(935, true)).toBe(1.2);
   });
   it("cannot scroll below the floor boundary", () => {
