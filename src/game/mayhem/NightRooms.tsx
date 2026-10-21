@@ -39,7 +39,6 @@ import loadingSfx from "@/assets/audio/encounter/loading.ogg.asset.json";
 import animMove1 from "@/assets/audio/AnimMove1.wav.asset.json";
 import animMove4 from "@/assets/audio/AnimMove4.wav.asset.json";
 import { anbOutcome, lockdownAllows, lookingAtAnb, nickyOutcome, tipsForNight } from "./encounterRules";
-import { anbOutcome, lockdownAllows, lookingAtAnb, nickyOutcome, tipsForNight } from "./encounterRules";
 import type { GridEnemyId } from "./useGridRoster";
 
 const TIP_ARTS: Record<number, string> = { 1: tip1.url, 2: tip2.url, 3: tip3.url, 4: tip4.url };
@@ -80,7 +79,6 @@ const NIGHT_IMAGE_URLS = [
   ...TERMINAL_ASSET_URLS,
   hallNicky.url, hallAnb1.url, hallAnb2.url, keyholeNicky.url, keyholeAnb.url, keyholeAnbStun.url, keyholeAnbLeave.url,
   gridNicky.url, gridNickyRage.url, gridAnb.url,
-  ...JUMPSCARE_URLS,
 ];
 
 
@@ -196,7 +194,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   const [night] = useState(getMayhemNight);
   const pausedRef = useRef(paused);
   pausedRef.current = paused;
-  const [dead, setDead] = useState<null | "jumpscare" | "blackout">(null);
+  const [dead, setDead] = useState<null | "blackout">(null);
   const [deathDone, setDeathDone] = useState(false);
   nightReadyRef.current = nightReady;
   deadRef.current = dead !== null;
@@ -249,7 +247,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
       const v = viewRef.current;
       if (threat.id === "gifted") {
         const out = nickyOutcome(v, threatElapsed.current);
-        if (out === "kill") { setDead("jumpscare"); setThreat(null); }
+        if (out === "kill") { setDead("blackout"); setThreat(null); }
         else if (out === "leave") { grid.sendBack("gifted"); setThreat(null); }
         return;
       }
@@ -882,7 +880,6 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
           {threat.id === "gifted" ? "SHE'S IN THE HALL — GET TO THE OFFICE" : "SOMETHING IS IN THE HALL"}
         </div>
       )}
-      {dead === "jumpscare" && <NickyJumpscare volume={settings.sfxVolume} onDone={() => setDeathDone(true)} />}
       {dead === "blackout" && <div className="absolute inset-0 z-[130] bg-black"><div aria-hidden="true" className="hell-static absolute inset-0 opacity-50" /></div>}
       {dead && deathDone && (
         <div className="absolute inset-0 z-[140] flex flex-col items-center justify-center gap-6 bg-black/80">
