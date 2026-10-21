@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Replace slide particles with transparent attached dust in 1 → 4 → 3 → 2 order; test sequencing and verify sliding in the tutorial.
+
 - [x] Refine dust to the Stylish Sprint reference: immediate contact, one-shot frame progression, backward expansion and smooth fade; verified running and jumping in the tutorial with local dust asset interception.
 
 - [x] Lower the camera window on tall views: less empty sky, ground rendering fills below the level, never exposing below-level void; verify in the tutorial.
