@@ -39,11 +39,6 @@ export function lookingAtAnb(view: EncounterView) {
   return staringAtThreat(view);
 }
 
-/** The run-away cue plays when a threat leaves while the player is in the hallway or office rooms. */
-export function hearsRunAway(view: EncounterView) {
-  return view === "hallway" || inOfficeRooms(view);
-}
-
 export function anbOutcome(staredMs: number, elapsedMs: number): "stun" | "breach" | "wait" {
   if (staredMs >= ANB_STARE_MS) return "stun";
   if (elapsedMs >= ANB_BREACH_MS) return "breach";
