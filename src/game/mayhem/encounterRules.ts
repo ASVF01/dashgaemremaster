@@ -6,8 +6,10 @@ export const ANB_BREACH_MS = 12000;
 
 export type EncounterView = "office" | "door" | "keyhole" | "hallway" | "storage" | "storageKeyhole" | "storageDoor";
 
-/** While a hallway threat is active the player may only head toward the office. */
-export function lockdownAllows(to: EncounterView): boolean {
+/** While a hallway threat is active the player may only head toward the office.
+ * Stepping back from the storage keyhole/door into storage counts as heading toward it. */
+export function lockdownAllows(to: EncounterView, from?: EncounterView): boolean {
+  if (to === "storage" && (from === "storageKeyhole" || from === "storageDoor")) return true;
   return to === "office" || to === "door" || to === "keyhole" || to === "hallway";
 }
 

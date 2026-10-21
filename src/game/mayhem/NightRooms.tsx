@@ -501,7 +501,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
       }
       const from = viewRef.current;
       const to = nextView(from, k);
-      if (to !== from && threatRef.current && !lockdownAllows(to)) {
+      if (to !== from && threatRef.current && !lockdownAllows(to, from)) {
         playOnce(blockedSfx.url, 0.9);
         return;
       }
