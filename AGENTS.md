@@ -1,7 +1,7 @@
 # Project Architecture Rules
 
 - Active game sessions use a fixed edge-to-edge stage and a viewport-sized canvas; scale logical dimensions uniformly on small screens to preserve world proportions, while keeping menu presentation independent.
-- Touch controls follow the primary coarse-pointer media query, not touch API presence or window width; ordinary gameplay camera zoom keeps the visible world inside the level, pinning the floor to the bottom edge when the view is taller than the level so fullscreen cannot expose below-level space.
+- Touch controls follow the primary coarse-pointer media query, not touch API presence or window width; ordinary gameplay camera keeps the visible world inside the level; when the view is taller than the level the camera window sits lowered (a tested fraction of the extra view hangs below the level) and ground platforms extend to the screen bottom, so fullscreen can never expose below-level void.
 
 - Footstep artwork is captured at each step in world-space canvas runtime state and rendered behind the player; its lifetime is independent of player transforms so it never follows the sprite.
 
