@@ -3,6 +3,8 @@ import GameCanvas, { type HudState } from "@/game/GameCanvas";
 import Hud from "@/game/Hud";
 import TouchControls from "@/game/TouchControls";
 import FpsOverlay from "@/game/FpsOverlay";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 import MainMenu from "@/game/MainMenu";
 import { LEVELS, type LevelId } from "@/game/level";
@@ -596,6 +598,7 @@ const Index = () => {
   const visibleLevels = LEVELS.filter((l) => !l.hidden);
   const currentIdx = visibleLevels.findIndex((l) => l.id === levelId);
   const nextLevel = currentIdx >= 0 ? visibleLevels[currentIdx + 1] : undefined;
+  const fullScreenStage = mayhem || screen !== "menu";
 
   // secret code: type "testpls" anywhere to launch the speed test level
   useEffect(() => {
@@ -633,8 +636,8 @@ const Index = () => {
         </div>
       </div>
 
-      {/* page header — hidden while MAYHEM owns the screen */}
-      <header className={`relative z-[45] px-3 sm:px-6 pt-2 sm:pt-4 pb-1 sm:pb-2 flex items-center justify-between gap-2 max-w-[1500px] mx-auto ${mayhem ? "hidden" : ""}`}>
+      {/* Page controls belong to the menu, never the active game stage. */}
+      <header className={`relative z-[45] px-3 sm:px-6 pt-2 sm:pt-4 pb-1 sm:pb-2 flex items-center justify-between gap-2 max-w-[1500px] mx-auto ${fullScreenStage ? "hidden" : ""}`}>
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <h1 className="font-marker text-xl sm:text-3xl md:text-5xl text-ink leading-none truncate">
             DASH GAEM <span className="text-[hsl(var(--accent))] inline-block -rotate-2">R</span>
@@ -714,11 +717,14 @@ const Index = () => {
         className={
           mayhem
             ? "fixed inset-0 z-[90] bg-[hsl(var(--hell-black))] flex items-center justify-center"
-            : "relative max-w-[1500px] mx-auto px-1 sm:px-3"
+            : fullScreenStage
+              ? "fixed inset-0 z-40 overflow-hidden bg-paper"
+              : "relative max-w-[1500px] mx-auto px-1 sm:px-3"
         }
       >
-        <div className={mayhem ? "absolute inset-0" : "relative"}>
+        <div className={fullScreenStage ? "absolute inset-0" : "relative"}>
           <GameCanvas
+            fullscreen={fullScreenStage}
             onHud={handleHud}
             onFinish={handleFinish}
             onDeath={handleDeath}
@@ -991,6 +997,18 @@ const Index = () => {
           {/* touch controls overlay the canvas corners on touch devices —
               they don't push the canvas down or hide the HUD. */}
           <TouchControls visible={screen === "playing"} />
+          {screen === "playing" && !mayhem && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={backToMenu}
+              aria-label="Return to main menu"
+              title="Return to main menu"
+              className="absolute bottom-3 left-1/2 z-30 -translate-x-1/2 scribble-border rounded-none border-ink bg-paper text-ink"
+            >
+              <ArrowLeft />
+            </Button>
+          )}
         </div>
       </section>
 
@@ -1071,7 +1089,7 @@ function TutorialPrompt({ progress, alt = false }: { progress: number; alt?: boo
   const steps = alt ? ALT_TUTORIAL_STEPS : TUTORIAL_STEPS;
   const step = steps.slice().reverse().find((s) => progress >= s.from) ?? steps[0];
   return (
-    <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-20 w-[min(92%,640px)]">
+    <div className="pointer-events-none absolute top-24 sm:top-32 left-1/2 -translate-x-1/2 z-20 w-[min(92%,640px)]">
       <div className="scribble-border bg-paper/95 px-5 py-3 -rotate-1 text-center">
         <div className="font-marker text-xl md:text-2xl text-[hsl(var(--accent))] tracking-wide">
           {step.title}

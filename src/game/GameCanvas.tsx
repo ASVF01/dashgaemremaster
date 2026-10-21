@@ -413,6 +413,7 @@ interface Boss {
 }
 
 interface Props {
+  fullscreen?: boolean;
   onHud: (hud: HudState) => void;
   onFinish: (timeMs: number, score: number) => void;
   onDeath: () => void;
@@ -467,7 +468,7 @@ function nearbyNpc(r: GameRefs) {
 
 
 
-export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, onNpcInteract, onBossIntroComplete, receptionistWaveKey = 0, goalLocked = false, paused, keepAudio = false, startAsInvboi = false, resetKey, levelId = "scribble-1" }: Props) {
+export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, onNpcInteract, onBossIntroComplete, receptionistWaveKey = 0, goalLocked = false, paused, keepAudio = false, startAsInvboi = false, fullscreen = false, resetKey, levelId = "scribble-1" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const deathTimeoutRef = useRef<number | null>(null);
   const refs = useRef<GameRefs | null>(null);
@@ -502,6 +503,16 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     const update = () => {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
+      if (fullscreen) {
+        // Fill every edge without stretching world geometry. Small screens
+        // retain a generous logical view using one uniform scale factor.
+        const worldScale = levelIdRef.current.startsWith("mayhem")
+          ? 1
+          : Math.max(1, 1200 / vw, 600 / vh);
+        setSize({ w: Math.round(vw * worldScale), h: Math.round(vh * worldScale), dw: vw, dh: vh });
+        isMobileViewRef.current = navigator.maxTouchPoints > 0 || window.matchMedia("(pointer: coarse)").matches || vw < 1100 || vh < 560;
+        return;
+      }
       // MAYHEM takes over the whole screen — no header reserve, no size cap.
       const mayhemFull = (levelIdRef.current ?? "").startsWith("mayhem");
       const headerReserve = mayhemFull ? 0 : vw < 640 ? 44 : vw < 900 ? 60 : 96;
@@ -543,7 +554,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       window.removeEventListener("resize", update);
       window.removeEventListener("orientationchange", update);
     };
-  }, [levelId]);
+  }, [levelId, fullscreen]);
 
   // init / reset
   useEffect(() => {
@@ -1078,7 +1089,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         ref={canvasRef}
         width={size.w}
         height={size.h}
-        className="block scribble-border bg-paper"
+        className={fullscreen ? "block bg-paper" : "block scribble-border bg-paper"}
         style={{ width: size.dw, height: size.dh, imageRendering: "pixelated" }}
       />
     </div>
