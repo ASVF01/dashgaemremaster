@@ -82,6 +82,7 @@ const Index = () => {
   // entire session; the only exit is its own pause menu.
   const [mayhem, setMayhem] = useState(false);
   const [mayhemPaused, setMayhemPaused] = useState(false);
+  const [nightAttempt, setNightAttempt] = useState(0);
   const [mayhemCleared, setMayhemCleared] = useState(false);
   const [nightClearActive, setNightClearActive] = useState(false);
   const nightClearOrigin = useRef<LevelId>("mayhem-floor-1");
