@@ -106,5 +106,16 @@ export function useGridRoster(night: number, aiLevel: number, active: boolean, p
     setMoveCount((n) => n + 1);
   }, []);
 
-  return { characters, moveCount, sendBack };
+  /** Test hook: put an enemy straight into the hallway (adds it if absent tonight). */
+  const summon = useCallback((id: GridEnemyId) => {
+    setCharacters((list) => {
+      if (list.some((c) => c.inHall)) return list;
+      const def = GRID_ROSTER.find((d) => d.id === id)!;
+      const placed = { ...def, x: OFFICE_CELL.x, y: OFFICE_CELL.y, inHall: true };
+      return list.some((c) => c.id === id) ? list.map((c) => (c.id === id ? { ...c, ...placed } : c)) : [...list, placed];
+    });
+    setMoveCount((n) => n + 1);
+  }, []);
+
+  return { characters, moveCount, sendBack, summon };
 }
