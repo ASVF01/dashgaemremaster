@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Refine dust to the Stylish Sprint reference: immediate contact, one-shot frame progression, backward expansion and smooth fade; verify running and jumping.
+- [x] Refine dust to the Stylish Sprint reference: immediate contact, one-shot frame progression, backward expansion and smooth fade; verified running and jumping in the tutorial with local dust asset interception.
 
 - [x] Lower the camera window on tall views: less empty sky, ground rendering fills below the level, never exposing below-level void; verify in the tutorial.
 - [x] Animate footstep dust with the supplied dust_kick frames and replace the jump puff with dust_jump; store uploads as assets.

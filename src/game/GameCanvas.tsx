@@ -3382,7 +3382,6 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     // Ground-level dust is drawn behind the player and anchored in world space.
     // One-shot contact burst: expand backward from the planted foot, then dissolve.
     for (const dust of r.footstepDust) {
-      const remaining = dust.life / dust.maxLife;
       const age = dust.maxLife - dust.life;
       const progress = Math.max(0, Math.min(1, age / dust.maxLife));
       const spread = 1 - Math.pow(1 - progress, 3);
