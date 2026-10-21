@@ -16,6 +16,7 @@ import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, 
 import weSfxUrl from "@/assets/audio/impact_aura_charge.ogg";
 import { getSettings } from "@/game/settings";
 import { gameplayZoom, clampCamera } from "@/game/viewportRules";
+import { slideDustFrame, slideDustAnchor } from "@/game/slideDustRules";
 import { getSprite, type SpriteState } from "@/game/sprites";
 import { getSelectedCharacter } from "@/game/character";
 import spookUrl from "@/assets/sprites/spook.png";
@@ -42,6 +43,15 @@ import dustKick2Asset from "@/assets/effects/dust-kick-2.png.asset.json";
 import dustKick0Asset from "@/assets/effects/dust-kick-0.png.asset.json";
 import dustJumpAsset from "@/assets/effects/dust-jump.png.asset.json";
 
+import dustSlide1Asset from "@/assets/effects/dust-slide-1.png.asset.json";
+import dustSlide4Asset from "@/assets/effects/dust-slide-4.png.asset.json";
+import dustSlide3Asset from "@/assets/effects/dust-slide-3.png.asset.json";
+import dustSlide2Asset from "@/assets/effects/dust-slide-2.png.asset.json";
+
+const dustSlideImgs = new Map([dustSlide1Asset, dustSlide4Asset, dustSlide3Asset, dustSlide2Asset].map((asset, i) => {
+  const img = new Image(); img.src = asset.url;
+  return [[1, 4, 3, 2][i], img] as const;
+}));
 const dustKickImgs = [new Image(), new Image()];
 dustKickImgs[0].src = dustKick0Asset.url;
 dustKickImgs[1].src = dustKick2Asset.url;
@@ -312,6 +322,7 @@ interface GameRefs {
   player: Player;
   projectiles: Projectile[];
   particles: Particle[];
+  slideDustTime: number;
   footstepDust: { x: number; y: number; facing: number; life: number; maxLife: number; kind?: "kick" | "jump" }[];
   afterimages: Afterimage[];
   afterTimer: number;
@@ -611,6 +622,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       },
       projectiles: [],
       particles: [],
+      slideDustTime: 0,
       footstepDust: [],
       afterimages: [],
       afterTimer: 0,
@@ -1170,136 +1182,6 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       });
     }
     }
-  function spawnSlideDustBurst(r: GameRefs, p: Player) {
-    const reduced = getSettings().reducedFx;
-    const baseY = p.y + p.h;
-    const cx = p.x + p.w / 2;
-    const back = -p.facing; // dust shoots backward relative to movement
-    const n = reduced ? 6 : 14;
-    // big back-smear
-    spawnParticle(r, {
-      x: cx, y: baseY,
-      vx: back * 240, vy: -90,
-      color: INK, life: 0.42, size: 5, kind: "smear",
-    });
-    for (let i = 0; i < n; i++) {
-      const fwdJitter = (Math.random() - 0.5) * p.w;
-      const speed = 90 + Math.random() * 220;
-      const upward = 80 + Math.random() * 180;
-      const grayShade = 60 + Math.floor(Math.random() * 90);
-      const col = `rgb(${grayShade},${grayShade},${grayShade})`;
-      spawnParticle(r, {
-        x: cx + fwdJitter,
-        y: baseY - Math.random() * 4,
-        vx: back * speed + (Math.random() - 0.5) * 60,
-        vy: -upward,
-        color: col,
-        size: 1.5 + Math.random() * 2.5,
-        life: 0.35 + Math.random() * 0.4,
-        kind: Math.random() < 0.5 ? "spark" : "shard",
-        angle: Math.random() * Math.PI,
-      });
-    }
-    // a couple of pebbles arcing out
-    if (!reduced) {
-      for (let i = 0; i < 4; i++) {
-        spawnParticle(r, {
-          x: cx, y: baseY - 2,
-          vx: back * (260 + Math.random() * 200),
-          vy: -(180 + Math.random() * 140),
-          color: "#3a3a3a",
-          size: 2 + Math.random() * 1.5,
-          life: 0.5 + Math.random() * 0.3,
-          kind: "shard",
-          angle: Math.random() * Math.PI,
-        });
-      }
-    }
-  }
-
-  // Continuous grinding-dust trail while sliding. Throttled by smearTimer.
-  function spawnSlideDustTrail(r: GameRefs, p: Player, dt: number, intensity: number) {
-    const reduced = getSettings().reducedFx;
-    // pace: faster at higher intensity (every 30-90ms)
-    const interval = reduced ? 0.12 : (0.09 - 0.06 * intensity);
-    p.smearTimer -= dt;
-    if (p.smearTimer > 0) return;
-    p.smearTimer = Math.max(0.02, interval);
-    const baseY = p.y + p.h;
-    const cx = p.x + p.w / 2;
-    const back = -p.facing;
-    const puffs = reduced ? 1 : (1 + Math.floor(intensity * 2));
-    for (let i = 0; i < puffs; i++) {
-      const offsetX = (Math.random() - 0.5) * (p.w * 0.7);
-      const grayShade = 80 + Math.floor(Math.random() * 100);
-      const col = `rgb(${grayShade},${grayShade},${grayShade})`;
-      spawnParticle(r, {
-        x: cx + offsetX,
-        y: baseY - Math.random() * 2,
-        vx: back * (40 + Math.random() * 80 + intensity * 80),
-        vy: -(40 + Math.random() * 70 + intensity * 40),
-        color: col,
-        size: 1.5 + Math.random() * 2 + intensity,
-        life: 0.28 + Math.random() * 0.25,
-        kind: Math.random() < 0.35 ? "shard" : "spark",
-        angle: Math.random() * Math.PI,
-      });
-    }
-    // occasional spark/grit shard at higher speeds
-    if (!reduced && intensity > 0.5 && Math.random() < 0.35) {
-      spawnParticle(r, {
-        x: cx + (Math.random() - 0.5) * p.w * 0.5,
-        y: baseY - 1,
-        vx: back * (200 + Math.random() * 180),
-        vy: -(120 + Math.random() * 100),
-        color: "#fff34a",
-        size: 1 + Math.random() * 1.5,
-        life: 0.18 + Math.random() * 0.12,
-        kind: "spark",
-        angle: Math.random() * Math.PI,
-      });
-    }
-  }
-
-  // Soft puff of dust when the player stands up out of a slide.
-  function spawnSlideEndPuff(r: GameRefs, p: Player) {
-    const reduced = getSettings().reducedFx;
-    const baseY = p.y + p.h;
-    const cx = p.x + p.w / 2;
-    const back = -p.facing;
-    const n = reduced ? 5 : 11;
-    // small back-smear
-    spawnParticle(r, {
-      x: cx, y: baseY,
-      vx: back * 110, vy: -60,
-      color: INK, life: 0.32, size: 4, kind: "smear",
-    });
-    for (let i = 0; i < n; i++) {
-      const offsetX = (Math.random() - 0.5) * (p.w * 0.9);
-      const grayShade = 110 + Math.floor(Math.random() * 90);
-      const col = `rgb(${grayShade},${grayShade},${grayShade})`;
-      spawnParticle(r, {
-        x: cx + offsetX,
-        y: baseY - Math.random() * 3,
-        vx: back * (40 + Math.random() * 90) + (Math.random() - 0.5) * 50,
-        vy: -(70 + Math.random() * 130),
-        color: col,
-        size: 1.5 + Math.random() * 2,
-        life: 0.32 + Math.random() * 0.28,
-        kind: Math.random() < 0.4 ? "shard" : "spark",
-        angle: Math.random() * Math.PI,
-      });
-    }
-    // tiny upward ring to sell the "pop up to standing" feel
-    if (!reduced) {
-      spawnParticle(r, {
-        x: cx, y: baseY - 4,
-        vx: 0, vy: -20,
-        color: INK, life: 0.28, size: 5, kind: "ring",
-      });
-    }
-  }
-
   function igniteDash(r: GameRefs, p: Player, dx: number, dy: number, jumpAlso: boolean) {
     if (dx === 0 && dy === 0) dx = p.facing;
     const len = Math.hypot(dx, dy) || 1;
@@ -1563,8 +1445,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       p.y += PLAYER_H - SLIDE_H;
       // boost in facing dir
       p.vx += p.facing * SLIDE_BOOST;
-      // chunky dust kick-up burst on slide-start
-      spawnSlideDustBurst(r, p);
+      r.slideDustTime = 0;
       sfx.slide();
       sfx.slideStart();
     }
@@ -1584,16 +1465,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         p.y -= PLAYER_H - SLIDE_H;
         p.h = PLAYER_H;
         p.sliding = false;
-        spawnSlideEndPuff(r, p);
+        r.slideDustTime = 0;
         sfx.slideEnd();
       }
     }
-    // Drive the looping slide sfx + grinding-dust trail based on state/speed.
+    // Keep slide audio; artwork follows the player on its own animation clock.
     if (p.sliding && p.alive) {
       const intensity = Math.max(0, Math.min(1, (Math.abs(p.vx) - 120) / 700));
       sfx.slideIntensity(intensity);
-      spawnSlideDustTrail(r, p, dt, intensity);
+      r.slideDustTime += dt;
     } else {
+      r.slideDustTime = 0;
       sfx.slideStop();
     }
 
@@ -2480,8 +2362,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
                 p.h = SLIDE_H;
                 p.y = pl.y - p.h;
                 p.vx += p.facing * SLIDE_BOOST;
-                // dive→slide also needs the looping slide sfx + dust kick-up
-                spawnSlideDustBurst(r, p);
+                // Start the attached dust animation with the landing slide.
+                r.slideDustTime = 0;
                 sfx.slide();
                 sfx.slideStart();
               }
@@ -3410,6 +3292,21 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         drawAfterimage(ctx, ai, t);
       }
 
+      // Slide dust is attached to live feet, not captured in the world-space trail.
+      const p = r.player;
+      if (p.alive && p.sliding && p.onGround && Math.abs(p.vx) > 20) {
+        const img = dustSlideImgs.get(slideDustFrame(r.slideDustTime));
+        if (img?.complete && img.naturalWidth > 0) {
+          const anchor = slideDustAnchor(p.x, p.y, p.w, p.h, p.facing);
+          const width = 112;
+          const height = width * img.naturalHeight / img.naturalWidth;
+          ctx.save();
+          ctx.translate(anchor.x, anchor.y);
+          ctx.scale(p.facing, 1);
+          ctx.drawImage(img, -width, -height, width, height);
+          ctx.restore();
+        }
+      }
       // player
       drawPlayer(ctx, r);
       if (r.player.starman && !r.player.somSom) drawStarmanStars(ctx, r);
