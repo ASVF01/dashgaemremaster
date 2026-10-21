@@ -43,8 +43,8 @@ import dustKick0Asset from "@/assets/effects/dust-kick-0.png.asset.json";
 import dustJumpAsset from "@/assets/effects/dust-jump.png.asset.json";
 
 const dustKickImgs = [new Image(), new Image()];
-dustKickImgs[0].src = dustKick2Asset.url;
-dustKickImgs[1].src = dustKick0Asset.url;
+dustKickImgs[0].src = dustKick0Asset.url;
+dustKickImgs[1].src = dustKick2Asset.url;
 const dustJumpImg = new Image(); dustJumpImg.src = dustJumpAsset.url;
 const bossParryFlashImg = new Image(); bossParryFlashImg.src = bossParryFlashUrl;
 let sugarcoatAudio: HTMLAudioElement | null = null;
@@ -1611,8 +1611,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         x: p.x + p.w / 2,
         y: p.y + p.h + 2,
         facing: p.facing,
-        life: 0.38,
-        maxLife: 0.38,
+        life: 0.3,
+        maxLife: 0.3,
         kind: "jump",
       });
       sfx.jump();
@@ -1881,8 +1881,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
           x: p.x + p.w / 2 - moveSign * (p.w / 2 + 20),
           y: p.y + p.h + 2,
           facing: moveSign,
-          life: 0.32,
-          maxLife: 0.32,
+          life: 0.26,
+          maxLife: 0.26,
           kind: "kick",
         });
       }
@@ -3384,14 +3384,16 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     for (const dust of r.footstepDust) {
       const remaining = dust.life / dust.maxLife;
       const age = dust.maxLife - dust.life;
+      // _0 leads; frames flip faster than before so the burst reads instantly.
       const img = dust.kind === "jump"
         ? dustJumpImg
-        : dustKickImgs[Math.floor(age / (dust.maxLife / 2)) % 2];
+        : dustKickImgs[Math.floor(age / (dust.maxLife / 2.5)) % 2];
       if (!img.complete || img.naturalWidth === 0) continue;
-      const width = dust.kind === "jump" ? 62 + (1 - remaining) * 14 : 52 + (1 - remaining) * 10;
+      const width = dust.kind === "jump" ? 66 + (1 - remaining) * 20 : 54 + (1 - remaining) * 12;
       const height = width * img.naturalHeight / img.naturalWidth;
       ctx.save();
-      ctx.globalAlpha = Math.min(1, remaining * 1.8);
+      // Pop in at full strength immediately — no fade-in ramp at spawn.
+      ctx.globalAlpha = Math.min(1, remaining * 2.6);
       ctx.translate(dust.x, dust.y);
       ctx.scale(dust.facing, 1);
       ctx.drawImage(img, -width / 2, -height, width, height);
