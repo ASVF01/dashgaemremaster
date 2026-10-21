@@ -39,6 +39,7 @@ import loadingSfx from "@/assets/audio/encounter/loading.ogg.asset.json";
 import animMove1 from "@/assets/audio/AnimMove1.wav.asset.json";
 import animMove4 from "@/assets/audio/AnimMove4.wav.asset.json";
 import { anbOutcome, HALL_ENTRY_MS, inOfficeRooms, lockdownAllows, lookingAtAnb, nickyOutcome, staringAtThreat, tipsForNight } from "./encounterRules";
+import { lookOffset } from "./povLookRules";
 import newAnimInHallSfx from "@/assets/audio/NewAnimInHall.wav.asset.json";
 import runAwaySfx from "@/assets/audio/encounter/metal-run-away.wav.asset.json";
 import type { GridEnemyId } from "./useGridRoster";
@@ -660,10 +661,19 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   const peekRef = useRef(peek);
   peekRef.current = peek;
 
+  // Soft circular reticle: follows the raw cursor, hidden whenever an
+  // overlay (terminal, generator, grid, death) needs the normal pointer.
+  const cursorRef = useRef<HTMLDivElement | null>(null);
+  const cursorPx = useRef({ x: 0, y: 0 });
+  const cursorVisible = useRef(false);
+
   const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
     target.current.x = ((e.clientX - r.left) / r.width) * 2 - 1;
     target.current.y = ((e.clientY - r.top) / r.height) * 2 - 1;
+    cursorPx.current.x = e.clientX - r.left;
+    cursorPx.current.y = e.clientY - r.top;
+    cursorVisible.current = true;
   };
 
   useEffect(() => {
@@ -702,12 +712,18 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
         const scale = zoomCur.current + zoomNudge.current;
         const damp = zoomed ? 0 : 1;
         const entrySlide = cameraEntryState === "rush" ? Math.min(1, Math.max(0, (scale - 1.1) / 4.1)) : 0;
-        // Flat 2D pan: scale + translate only (original generator-era look).
-        const tyOff = 0;
-        const tx = (reducedMotion.matches ? 0 : -cur.current.x * 34 * p * damp) - 18 * entrySlide;
-        const ty = (reducedMotion.matches ? 0 : -cur.current.y * 12 * p * damp + tyOff * (scale - 1.1)) + 34 * entrySlide;
+        // Flat 2D pan: scale + translate only. The offset comes from the
+        // edge-weighted curve — dead zone at center, smooth clamp at edges.
+        const off = lookOffset(cur.current.x, cur.current.y, p);
+        const tx = (reducedMotion.matches ? 0 : off.x * damp) - 18 * entrySlide;
+        const ty = (reducedMotion.matches ? 0 : off.y * damp) + 34 * entrySlide;
         el.style.transform =
           `scale(${scale}) translate(${tx}px, ${ty}px)`;
+      }
+      if (cursorRef.current) {
+        cursorRef.current.style.opacity = cursorVisible.current ? "1" : "0";
+        cursorRef.current.style.transform =
+          `translate(${cursorPx.current.x}px, ${cursorPx.current.y}px) translate(-50%, -50%)`;
       }
       id = requestAnimationFrame(tick);
     };
@@ -718,10 +734,9 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
 
   return (
     <div
-      className="absolute inset-0 z-[50] select-none overflow-hidden bg-black"
-      style={{ perspective: "1200px" }}
+      className={`absolute inset-0 z-[50] select-none overflow-hidden bg-black ${nightReady && !paused && !terminalOpen && !generatorOpen && !cameraOpen && !dead && cameraEntry === "idle" ? "cursor-none" : ""}`}
       onMouseMove={onMove}
-      onMouseLeave={() => { target.current.x = 0; target.current.y = 0; }}
+      onMouseLeave={() => { target.current.x = 0; target.current.y = 0; cursorVisible.current = false; }}
     >
       {!nightReady && (
         <div
@@ -904,6 +919,15 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
       {dead && deathDone && (
         <div className="absolute inset-0 z-[140] flex flex-col items-center justify-center gap-6 bg-black/80">
           <Button variant="outline" className="font-pixel" onClick={() => onRetry?.()}>TRY AGAIN</Button>
+        </div>
+      )}
+      {nightReady && !paused && !terminalOpen && !generatorOpen && !cameraOpen && !dead && cameraEntry === "idle" && (
+        <div
+          ref={cursorRef}
+          aria-hidden="true"
+          className="pointer-events-none absolute left-0 top-0 z-[110] h-7 w-7 rounded-full border border-white/60 opacity-0 shadow-[0_0_10px_rgba(0,0,0,0.8)] transition-opacity duration-150"
+        >
+          <i className="absolute left-1/2 top-1/2 h-1 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/80" />
         </div>
       )}
     </div>
