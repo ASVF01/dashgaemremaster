@@ -64,3 +64,4 @@
 - [x] Make M&M's Guy playable with the supplied icon/sprite, ground-only stone scraping, voice on jumps/dashes/dive impacts and powered invboi audio.
 - [x] Character icons: drop the diagonal stripe and the diagonal cut so each sprite shows exactly as supplied (only the red X and yellow lock remain).
 
+- [x] Fix shop header overlapping (same as bestiary)

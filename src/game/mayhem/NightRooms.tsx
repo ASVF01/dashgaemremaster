@@ -38,7 +38,9 @@ import shieldSfx from "@/assets/audio/encounter/shield-break.mp3.asset.json";
 import loadingSfx from "@/assets/audio/encounter/loading.ogg.asset.json";
 import animMove1 from "@/assets/audio/AnimMove1.wav.asset.json";
 import animMove4 from "@/assets/audio/AnimMove4.wav.asset.json";
-import { anbOutcome, lockdownAllows, lookingAtAnb, nickyOutcome, tipsForNight } from "./encounterRules";
+import { anbOutcome, hearsRunAway, HALL_ENTRY_MS, inOfficeRooms, lockdownAllows, lookingAtAnb, nickyOutcome, staringAtThreat, tipsForNight } from "./encounterRules";
+import newAnimInHallSfx from "@/assets/audio/NewAnimInHall.wav.asset.json";
+import runAwaySfx from "@/assets/audio/encounter/metal-run-away.wav.asset.json";
 import type { GridEnemyId } from "./useGridRoster";
 
 const TIP_ARTS: Record<number, string> = { 1: tip1.url, 2: tip2.url, 3: tip3.url, 4: tip4.url };
@@ -211,6 +213,15 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   const twitchRef = useRef<HTMLAudioElement | null>(null);
   const [anbFrame, setAnbFrame] = useState(0);
   const stopTwitch = () => { twitchRef.current?.pause(); };
+  const entryCueRef = useRef<HTMLAudioElement | null>(null);
+  const stopEntryCue = () => { entryCueRef.current?.pause(); entryCueRef.current = null; };
+  const threatLeft = () => { stopEntryCue(); if (hearsRunAway(viewRef.current)) playOnce(runAwaySfx.url, 0.9); };
+  // Leaving the office during the 5.1s entry cue cuts it and plays the hall-entry sound.
+  useEffect(() => {
+    if (!entryCueRef.current || inOfficeRooms(view)) return;
+    stopEntryCue();
+    if (threatRef.current && threatElapsed.current < HALL_ENTRY_MS) playOnce(enterHallSfx.url, 0.9);
+  }, [view]);
 
   // Test keys: 1 summons Nicky, 2 summons AN-B into the hallway.
   const summonRef = useRef(grid.summon);
@@ -231,7 +242,8 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
     threatElapsed.current = 0;
     staredMs.current = 0;
     setThreat({ id: entering.id, phase: "active" });
-    playOnce(enterHallSfx.url, 0.9);
+    if (inOfficeRooms(viewRef.current)) entryCueRef.current = playOnce(newAnimInHallSfx.url, 0.9);
+    else playOnce(enterHallSfx.url, 0.9);
   }, [grid.characters, dead]);
 
   useEffect(() => {
@@ -246,9 +258,10 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
       threatElapsed.current += 100;
       const v = viewRef.current;
       if (threat.id === "gifted") {
-        const out = nickyOutcome(v, threatElapsed.current);
-        if (out === "kill") { setDead("blackout"); setThreat(null); }
-        else if (out === "leave") { grid.sendBack("gifted"); setThreat(null); }
+        if (staringAtThreat(v)) staredMs.current += 100;
+        const out = nickyOutcome(v, threatElapsed.current, staredMs.current);
+        if (out === "kill") { stopEntryCue(); setDead("blackout"); setThreat(null); }
+        else if (out === "leave") { threatLeft(); grid.sendBack("gifted"); setThreat(null); }
         return;
       }
       if (lookingAtAnb(v)) {
@@ -265,6 +278,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
         setThreat({ id: "anydroid", phase: "stun" });
       } else if (out === "breach") {
         stopTwitch();
+        stopEntryCue();
         setDead("blackout");
         setThreat(null);
       }
@@ -277,6 +291,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
     const t = window.setTimeout(() => {
       if (threat.phase === "stun") { setThreat({ id: "anydroid", phase: "leave" }); return; }
       playOnce(Math.random() < 0.5 ? animMove1.url : animMove4.url, 0.9);
+      threatLeft();
       grid.sendBack("anydroid");
       setThreat(null);
     }, threat.phase === "stun" ? 800 : 900);
