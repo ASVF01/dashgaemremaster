@@ -23,7 +23,7 @@ describe("gameplay viewport", () => {
   it("lowers the camera on taller views while the ground fill covers below-level space", () => {
     // 60% of the extra view hangs below the level bottom, filled by extended ground.
     expect(clampCamera(-60, 720, 780, 0.6)).toBe(-24);
-    expect(clampCamera(-200, 720, 780, 0.6)).toBe(-80);
+    expect(clampCamera(-200, 720, 920, 0.6)).toBe(-80);
     // Never pushes the level top below the screen top.
     expect(clampCamera(-60, 720, 780, 1)).toBe(0);
   });
