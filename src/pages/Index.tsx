@@ -5,6 +5,7 @@ import TouchControls from "@/game/TouchControls";
 import FpsOverlay from "@/game/FpsOverlay";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { useTouchControls } from "@/hooks/use-touch-controls";
 
 import MainMenu from "@/game/MainMenu";
 import { LEVELS, type LevelId } from "@/game/level";
@@ -56,6 +57,7 @@ const MARATHON_SEQUENCE: ReadonlyArray<LevelId> = [
 ];
 
 const Index = () => {
+  const touchControls = useTouchControls();
   const [screen, setScreen] = useState<Screen>("menu");
   const [levelId, setLevelId] = useState<LevelId>("tutorial");
   const [hud, setHud] = useState<HudState>({
@@ -567,12 +569,16 @@ const Index = () => {
     setMayhemCheckpoint({ level: levelId, night: mayhemNight });
   }, [mayhem, levelId, mayhemNight, nightClearActive]);
 
-  // ESC pauses / unpauses MAYHEM (its pause menu is the only way out).
+  // Desktop ESC leaves ordinary levels; MAYHEM retains its pause menu.
   useEffect(() => {
-    if (!mayhem) return;
+    if (!mayhem && screen !== "playing") return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape" || e.repeat) return;
       e.preventDefault();
+      if (!mayhem) {
+        backToMenu();
+        return;
+      }
       if (mayhemCleared || screen === "dead") return;
       setMayhemPaused((p) => !p);
     };
@@ -997,7 +1003,7 @@ const Index = () => {
           {/* touch controls overlay the canvas corners on touch devices —
               they don't push the canvas down or hide the HUD. */}
           <TouchControls visible={screen === "playing"} />
-          {screen === "playing" && !mayhem && (
+          {screen === "playing" && !mayhem && touchControls && (
             <Button
               variant="outline"
               size="icon"

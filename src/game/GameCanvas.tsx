@@ -15,6 +15,7 @@ import { sfx, unlockAudio, setCelestialMode, setThunderMode, setMetalMode, setGr
 import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, playChaseStarmanLayer, getStarmanElapsed, playSomSomBgm, getSomSomElapsed } from "@/game/bgm";
 import weSfxUrl from "@/assets/audio/impact_aura_charge.ogg";
 import { getSettings } from "@/game/settings";
+import { gameplayZoom, clampCamera } from "@/game/viewportRules";
 import { getSprite, type SpriteState } from "@/game/sprites";
 import { getSelectedCharacter } from "@/game/character";
 import spookUrl from "@/assets/sprites/spook.png";
@@ -2285,10 +2286,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     // `cameraX`/`cameraY` now describe the CENTER of the viewport in world
     // space (well, the top-left of the unzoomed 1:1 frame), and the render
     // scales around the screen center so the player stays in the middle.
-    // Zoom is MAYHEM-only — and only a gentle push-in; normal levels play
-    // at the classic 1:1 view.
-    const ZOOM_TARGET = levelIdRef.current.startsWith("mayhem") ? 1.2 : 1;
-    r.cameraZoom += (ZOOM_TARGET - r.cameraZoom) * Math.min(1, dt * 2.5);
+    const mayhemCamera = levelIdRef.current.startsWith("mayhem");
+    const ZOOM_TARGET = gameplayZoom(size.h, mayhemCamera);
+    r.cameraZoom = mayhemCamera
+      ? r.cameraZoom + (ZOOM_TARGET - r.cameraZoom) * Math.min(1, dt * 2.5)
+      : ZOOM_TARGET;
     const z = r.cameraZoom;
     const halfVisW = size.w / (z * 2);
     const halfVisH = size.h / (z * 2);
@@ -2331,39 +2333,43 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     } else if (levelIdRef.current === "just-run-bro") {
       const speedNow = Math.abs(p.vx);
       const shift = 80;
-      const targetCam = playerCenterX - size.w * 0.5 + shift + p.facing * 40 + p.vx * 0.06;
+      const targetCam = playerCenterX - halfVisW + shift + p.facing * 40 + p.vx * 0.06;
       const lerp = p.superDashing ? 1 : Math.min(1, dt * (4 + speedNow * 0.015));
       r.cameraX += (targetCam - r.cameraX) * lerp;
       const maxCamX = Math.max(0, r.level.width - size.w / z);
       if (r.cameraX < 0) r.cameraX = 0;
       if (r.cameraX > maxCamX) r.cameraX = maxCamX;
-      const targetCamY = playerCenterY - size.h * 0.55;
+      const targetCamY = playerCenterY - halfVisH * 1.1;
       r.cameraY += (targetCamY - r.cameraY) * Math.min(1, dt * 4);
       const maxCamY = Math.max(0, r.level.height - size.h / z);
       if (r.cameraY < 0) r.cameraY = 0;
       if (r.cameraY > maxCamY) r.cameraY = maxCamY;
     } else if (isMobileViewRef.current) {
-      const targetCam = playerCenterX - size.w * 0.5 + p.facing * 30;
+      const targetCam = playerCenterX - (mayhemCamera ? size.w * 0.5 : halfVisW) + p.facing * 30;
       r.cameraX += (targetCam - r.cameraX) * Math.min(1, dt * 5);
       const maxCamX = Math.max(0, r.level.width - size.w / z);
       if (r.cameraX < 0) r.cameraX = 0;
       if (r.cameraX > maxCamX) r.cameraX = maxCamX;
-      const targetCamY = playerCenterY - size.h * 0.55;
+      const targetCamY = playerCenterY - (mayhemCamera ? size.h * 0.55 : halfVisH * 1.1);
       r.cameraY += (targetCamY - r.cameraY) * Math.min(1, dt * 4);
       const maxCamY = Math.max(0, r.level.height - size.h / z);
       if (r.cameraY < 0) r.cameraY = 0;
       if (r.cameraY > maxCamY) r.cameraY = maxCamY;
     } else {
-      const targetCam = playerCenterX - size.w * 0.5 + p.facing * 80 + p.vx * 0.12;
+      const targetCam = playerCenterX - (mayhemCamera ? size.w * 0.5 : halfVisW) + p.facing * 80 + p.vx * 0.12;
       r.cameraX += (targetCam - r.cameraX) * Math.min(1, dt * 4);
       const maxCamX = Math.max(0, r.level.width - size.w / z);
       if (r.cameraX < 0) r.cameraX = 0;
       if (r.cameraX > maxCamX) r.cameraX = maxCamX;
-      const targetCamY = playerCenterY - size.h * 0.55 + p.vy * 0.08;
+      const targetCamY = playerCenterY - (mayhemCamera ? size.h * 0.55 : halfVisH * 1.1) + p.vy * 0.08;
       r.cameraY += (targetCamY - r.cameraY) * Math.min(1, dt * 4);
       const maxCamY = Math.max(0, r.level.height - size.h / z);
       if (r.cameraY < 0) r.cameraY = 0;
       if (r.cameraY > maxCamY) r.cameraY = maxCamY;
+    }
+    if (!mayhemCamera) {
+      r.cameraX = clampCamera(r.cameraX, r.level.width, size.w / z);
+      r.cameraY = clampCamera(r.cameraY, r.level.height, size.h / z);
     }
   }
 
@@ -2924,8 +2930,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     const z = r.cameraZoom;
     // Base camera zoom: scale around the PLAYER SPRITE's on-screen position
     // so the world pushes in on the player themselves, not the screen center.
-    const anchorX = r.player.x + r.player.w / 2 - camX;
-    const anchorY = r.player.y + r.player.h / 2 - camY;
+    const mayhemCamera = levelIdRef.current.startsWith("mayhem");
+    const anchorX = mayhemCamera ? r.player.x + r.player.w / 2 - camX : 0;
+    const anchorY = mayhemCamera ? r.player.y + r.player.h / 2 - camY : 0;
     ctx.translate(anchorX, anchorY);
     ctx.scale(z, z);
     ctx.translate(-anchorX, -anchorY);
@@ -2933,9 +2940,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     // on-screen position while charging the aim. With the base zoom anchored
     // on the player, their screen position stays put at (anchorX, anchorY).
     if (r.punchZoom !== 1) {
-      ctx.translate(anchorX, anchorY);
+      const punchX = r.player.x + r.player.w / 2 - camX;
+      const punchY = r.player.y + r.player.h / 2 - camY;
+      ctx.translate(punchX, punchY);
       ctx.scale(r.punchZoom, r.punchZoom);
-      ctx.translate(-anchorX, -anchorY);
+      ctx.translate(-punchX, -punchY);
     }
     ctx.translate(-camX, -camY);
 
