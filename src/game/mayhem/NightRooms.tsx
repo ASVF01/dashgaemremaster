@@ -214,6 +214,18 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   const [anbFrame, setAnbFrame] = useState(0);
   const stopTwitch = () => { twitchRef.current?.pause(); };
 
+  // Test keys: 1 summons Nicky, 2 summons AN-B into the hallway.
+  const summonRef = useRef(grid.summon);
+  summonRef.current = grid.summon;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code === "Digit1" || e.code === "Numpad1") summonRef.current("gifted");
+      if (e.code === "Digit2" || e.code === "Numpad2") summonRef.current("anydroid");
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   useEffect(() => {
     if (threatRef.current || dead) return;
     const entering = grid.characters.find((c) => c.inHall && (c.id === "gifted" || c.id === "anydroid"));
