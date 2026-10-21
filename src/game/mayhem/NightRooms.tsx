@@ -354,6 +354,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
 
   // The title card doubles as the loader. It remains visible long enough to
   // read while room art, camera feeds, terminal art, SFX, and music decode.
+  const loadingAudioRef = useRef<HTMLAudioElement | null>(null);
   useEffect(() => {
     let cancelled = false;
     let revealTimer: number | null = null;
@@ -361,21 +362,23 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
       revealTimer = window.setTimeout(resolve, INTRO_MIN_MS);
     });
     const loadingAudio = playOnce(loadingSfx.url, 0.8);
+    if (loadingAudio) loadingAudio.loop = true;
+    loadingAudioRef.current = loadingAudio;
     Promise.allSettled([preloadNightImages(), preloadMayhemSfx(), preloadNightBgm(), minimum]).then(() => {
       if (cancelled) return;
       setLoaded(true);
     });
-    void loadingAudio;
     return () => {
       cancelled = true;
       if (revealTimer != null) window.clearTimeout(revealTimer);
+      loadingAudio?.pause();
     };
   }, []);
 
   const beginNight = () => {
     if (!loaded || introLeaving) return;
     setIntroLeaving(true);
-    window.setTimeout(() => setNightReady(true), 480);
+    window.setTimeout(() => { loadingAudioRef.current?.pause(); setNightReady(true); }, 480);
   };
   useEffect(() => {
     if (!loaded || nightReady) return;
