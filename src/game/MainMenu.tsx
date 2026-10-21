@@ -1904,9 +1904,9 @@ function BestiaryScreen({ onClose }: { onClose: () => void }) {
   const INK   = "#1a1410";
   const ACCENT = "#c44a2c";       // hazard red-orange
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 overflow-hidden"
+      className="fixed inset-0 z-50 flex flex-col overflow-hidden"
       style={{
         background: PAPER,
         backgroundImage:
@@ -1917,7 +1917,7 @@ function BestiaryScreen({ onClose }: { onClose: () => void }) {
     >
       {/* Top bar — title + close */}
       <div
-        className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 sm:px-8 py-3"
+        className="relative z-20 flex shrink-0 items-center justify-between gap-3 px-4 sm:px-8 py-3"
         style={{
           background: KRAFT,
           borderBottom: `4px solid ${INK}`,
@@ -1926,15 +1926,15 @@ function BestiaryScreen({ onClose }: { onClose: () => void }) {
         }}
       >
         <div
-          className="font-marker text-2xl sm:text-4xl tracking-widest"
+          className="min-w-0 font-marker text-2xl sm:text-4xl"
           style={{ color: INK }}
         >
           ✶ BESTIARY ✶ <span className="opacity-60 text-base sm:text-xl">field guide</span>
         </div>
-        <button
+        <Button variant="ghost"
           type="button"
           onClick={handleClose}
-          className="font-marker text-base sm:text-xl px-4 py-1 hover:rotate-2 transition-transform"
+          className="h-auto shrink-0 rounded-none font-marker text-base sm:text-xl px-4 py-1 hover:rotate-2 transition-transform"
           style={{
             background: ACCENT,
             color: KRAFT,
@@ -1943,14 +1943,14 @@ function BestiaryScreen({ onClose }: { onClose: () => void }) {
           }}
         >
           ◀ CLOSE
-        </button>
+        </Button>
       </div>
 
       {/* Layout — left scrolling index, right featured creature dossier */}
-      <div className="absolute inset-0 pt-[68px] sm:pt-[84px] grid grid-cols-1 md:grid-cols-[280px_1fr] gap-0">
+      <div className="grid min-h-0 flex-1 grid-cols-1 grid-rows-[auto_minmax(0,1fr)] md:grid-cols-[280px_minmax(0,1fr)] md:grid-rows-1 gap-0">
         {/* LEFT — sticker-style index of creatures */}
         <aside
-          className="overflow-y-auto p-3 sm:p-4 space-y-3"
+          className="max-h-48 md:max-h-none min-h-0 overflow-y-auto p-3 sm:p-4 space-y-3"
           style={{
             background: "#2a1f17",
             borderRight: `3px dashed ${KRAFT}`,
@@ -2009,7 +2009,7 @@ function BestiaryScreen({ onClose }: { onClose: () => void }) {
         {/* RIGHT — large dossier card */}
         <section
           key={selected?.id}
-          className="overflow-y-auto p-4 sm:p-8"
+          className="min-h-0 min-w-0 overflow-y-auto p-4 sm:p-8"
           style={{
             transform: shown ? "translateY(0)" : "translateY(30px)",
             opacity: shown ? 1 : 0,
@@ -2036,10 +2036,10 @@ function BestiaryScreen({ onClose }: { onClose: () => void }) {
                 </h2>
               </div>
 
-              <div className="grid md:grid-cols-[1fr_1.2fr] gap-5 sm:gap-7">
+              <div className="grid items-start md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-5 sm:gap-7">
                 {/* Specimen image with hazard frame */}
                 <div
-                  className="relative aspect-square flex items-center justify-center"
+                  className="relative w-full min-w-0 aspect-square self-start flex items-center justify-center"
                   style={{
                     background: "#000",
                     border: `4px solid ${INK}`,
@@ -2049,7 +2049,7 @@ function BestiaryScreen({ onClose }: { onClose: () => void }) {
                   <img
                     src={selected.image}
                     alt={selected.name}
-                    className="w-[88%] h-[88%] object-contain"
+                    className="absolute inset-[6%] w-[88%] h-[88%] object-contain"
                     style={{ imageRendering: "pixelated" }}
                   />
                   {/* corner tape */}
@@ -2106,7 +2106,7 @@ function BestiaryScreen({ onClose }: { onClose: () => void }) {
           )}
         </section>
       </div>
-    </div>
+    </div>, document.body
   );
 }
 
