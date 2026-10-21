@@ -2995,7 +2995,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         : levelIdRef.current === "chase" ? (isGround ? "#26351f" : "#49331f")
         : (isGround ? "#e5dfc2" : "#f7f1dc");
       const stroke = isMayhemLevel ? (mayhemHotel ? "#b4936c" : mayhemOutside ? "#172318" : "#9aa5ad") : bossPlatforms ? "#ffffff" : levelIdRef.current === "chase" ? "#101a0f" : INK;
-      sketchRect(ctx, visX, pl.y, visW, pl.h, fill, stroke, isGround ? 3 : 2.6, isMayhemLevel ? 0.55 : isGround ? 1.6 : 1.2);
+      sketchRect(ctx, visX, pl.y, visW, pl.h + groundDepth, fill, stroke, isGround ? 3 : 2.6, isMayhemLevel ? 0.55 : isGround ? 1.6 : 1.2);
       if (isMayhemLevel && !mayhemOutside) {
         // Brushed metal outside; dark timber and brass trim inside the hotel.
         ctx.save();
@@ -3030,7 +3030,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       for (let hx = hStart; hx < hEnd; hx += 14) {
         ctx.beginPath();
         ctx.moveTo(hx, pl.y + 4);
-        ctx.lineTo(hx - 6, pl.y + pl.h - 4);
+        ctx.lineTo(hx - 6, pl.y + pl.h + groundDepth - 4);
         ctx.stroke();
       }
       ctx.restore();
