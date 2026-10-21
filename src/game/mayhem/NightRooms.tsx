@@ -39,6 +39,7 @@ import loadingSfx from "@/assets/audio/encounter/loading.ogg.asset.json";
 import animMove1 from "@/assets/audio/AnimMove1.wav.asset.json";
 import animMove4 from "@/assets/audio/AnimMove4.wav.asset.json";
 import { anbOutcome, HALL_ENTRY_MS, inOfficeRooms, lockdownAllows, lookingAtAnb, nickyOutcome, staringAtThreat, tipsForNight } from "./encounterRules";
+import { lookOffset } from "./povLookRules";
 import newAnimInHallSfx from "@/assets/audio/NewAnimInHall.wav.asset.json";
 import runAwaySfx from "@/assets/audio/encounter/metal-run-away.wav.asset.json";
 import type { GridEnemyId } from "./useGridRoster";
