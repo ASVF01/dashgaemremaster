@@ -1,5 +1,7 @@
 # Project Architecture Rules
 
+- Active game sessions use a fixed edge-to-edge stage and a viewport-sized canvas; scale logical dimensions uniformly on small screens to preserve world proportions, while keeping menu presentation independent.
+
 - Footstep artwork is captured at each step in world-space canvas runtime state and rendered behind the player; its lifetime is independent of player transforms so it never follows the sprite.
 
 - Character selection uses timed shutter phases with roster and INFO interactions gated until open; exit keeps the roster stationary, resets main-menu presentation while fully covered, and reveals it before unmounting. Presentation stays independent of saved character state.

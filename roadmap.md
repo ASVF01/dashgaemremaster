@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Make platformer gameplay edge-to-edge and hide the page header during runs; verified movement, exact viewport coverage at desktop/landscape sizes, and return to menu without runtime errors.
+
 - [x] Remove run lines, reduce afterimages, and add the supplied transparent dust at world-space footstep positions; verified running in the tutorial with detached ground dust and no errors.
 
 - [x] Clean up character-select exit: close over the unchanged roster, reset the menu while covered, and reopen onto it; verified the full exit and selection/sound tests.
