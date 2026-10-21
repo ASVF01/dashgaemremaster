@@ -38,7 +38,7 @@ import shieldSfx from "@/assets/audio/encounter/shield-break.mp3.asset.json";
 import loadingSfx from "@/assets/audio/encounter/loading.ogg.asset.json";
 import animMove1 from "@/assets/audio/AnimMove1.wav.asset.json";
 import animMove4 from "@/assets/audio/AnimMove4.wav.asset.json";
-import { anbOutcome, hearsRunAway, HALL_ENTRY_MS, inOfficeRooms, lockdownAllows, lookingAtAnb, nickyOutcome, staringAtThreat, tipsForNight } from "./encounterRules";
+import { anbOutcome, HALL_ENTRY_MS, inOfficeRooms, lockdownAllows, lookingAtAnb, nickyOutcome, staringAtThreat, tipsForNight } from "./encounterRules";
 import newAnimInHallSfx from "@/assets/audio/NewAnimInHall.wav.asset.json";
 import runAwaySfx from "@/assets/audio/encounter/metal-run-away.wav.asset.json";
 import type { GridEnemyId } from "./useGridRoster";
@@ -215,7 +215,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   const stopTwitch = () => { twitchRef.current?.pause(); };
   const entryCueRef = useRef<HTMLAudioElement | null>(null);
   const stopEntryCue = () => { entryCueRef.current?.pause(); entryCueRef.current = null; };
-  const threatLeft = () => { stopEntryCue(); if (hearsRunAway(viewRef.current)) playOnce(runAwaySfx.url, 0.9); };
+  const threatLeft = () => { stopEntryCue(); playOnce(runAwaySfx.url, 0.9); };
   // Leaving the office during the 5.1s entry cue cuts it and plays the hall-entry sound.
   useEffect(() => {
     if (!entryCueRef.current || inOfficeRooms(view)) return;

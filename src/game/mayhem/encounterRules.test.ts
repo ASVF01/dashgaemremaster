@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { anbOutcome, hearsRunAway, lockdownAllows, nickyOutcome, tipsForNight } from "./encounterRules";
+import { anbOutcome, lockdownAllows, nickyOutcome, tipsForNight } from "./encounterRules";
 
 describe("encounter rules", () => {
   it("Nicky only kills after 2.5s of staring", () => {
@@ -9,11 +9,6 @@ describe("encounter rules", () => {
   it("THE DOOR counts as the office for Nicky", () => {
     expect(nickyOutcome("door", 2500, 0)).toBe("leave");
     expect(nickyOutcome("office", 2400, 0)).toBe("wait");
-  });
-  it("threat leaving is heard from hallway or office, not storage", () => {
-    expect(hearsRunAway("hallway")).toBe(true);
-    expect(hearsRunAway("door")).toBe(true);
-    expect(hearsRunAway("storage")).toBe(false);
   });
   it("AN-B leaves after a 3s stare", () => {
     expect(anbOutcome(2900, 5000)).toBe("wait");
