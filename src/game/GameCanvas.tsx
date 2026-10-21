@@ -38,9 +38,14 @@ import receptionistAsset from "@/assets/mayhem/The_Receptionist.png.asset.json";
 import receptionistFullAsset from "@/assets/mayhem/receptionist/The_Receptionist_Full.png.asset.json";
 import receptionistWave1Asset from "@/assets/mayhem/The_Receptionist_Wave_1.png.asset.json";
 import receptionistWave2Asset from "@/assets/mayhem/The_Receptionist_Wave_2.png.asset.json";
-import dustKickAsset from "@/assets/effects/dust-kick.png.asset.json";
+import dustKick2Asset from "@/assets/effects/dust-kick-2.png.asset.json";
+import dustKick0Asset from "@/assets/effects/dust-kick-0.png.asset.json";
+import dustJumpAsset from "@/assets/effects/dust-jump.png.asset.json";
 
-const dustKickImg = new Image(); dustKickImg.src = dustKickAsset.url;
+const dustKickImgs = [new Image(), new Image()];
+dustKickImgs[0].src = dustKick2Asset.url;
+dustKickImgs[1].src = dustKick0Asset.url;
+const dustJumpImg = new Image(); dustJumpImg.src = dustJumpAsset.url;
 const bossParryFlashImg = new Image(); bossParryFlashImg.src = bossParryFlashUrl;
 let sugarcoatAudio: HTMLAudioElement | null = null;
 function playSugarcoat() {
@@ -307,7 +312,7 @@ interface GameRefs {
   player: Player;
   projectiles: Projectile[];
   particles: Particle[];
-  footstepDust: { x: number; y: number; facing: number; life: number; maxLife: number }[];
+  footstepDust: { x: number; y: number; facing: number; life: number; maxLife: number; kind?: "kick" | "jump" }[];
   afterimages: Afterimage[];
   afterTimer: number;
   chaserTrail: { x: number; y: number; w: number; h: number; life: number; maxLife: number }[];
