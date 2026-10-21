@@ -2971,9 +2971,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
 
     // platforms
     const bossPlatforms = levelIdRef.current === "roaring-knight";
+    // A lowered camera can look past the level bottom: ground platforms reach
+    // down to the screen edge so below-level space never shows as void.
+    const groundExtend = isMayhemLevel || bossPlatforms
+      ? 0
+      : Math.max(0, camY + h / z - r.level.height);
     for (const pl of r.level.platforms) {
       if (pl.x + pl.w < camX - 40 || pl.x > camX + w + 40) continue;
       const isGround = pl.kind === "ground";
+      const groundDepth = isGround && pl.y + pl.h >= r.level.height ? groundExtend : 0;
       const visX = Math.max(pl.x, camX - 40);
       const visR = Math.min(pl.x + pl.w, camX + w + 40);
       const visW = visR - visX;
