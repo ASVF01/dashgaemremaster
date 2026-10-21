@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Speed up slide dust, expand backward, and detach a fading tail at the last slide position; verify sliding and release.
+- [x] Speed up slide dust, expand backward, and detach a fading tail at the last slide position; frame/anchor tests and tutorial slide-release fade check pass.
 
 - [x] Replace slide particles with transparent attached dust in 1 → 4 → 3 → 2 order; sequencing/anchor tests pass and tutorial renders all four frames, stopping on release (local artwork interception).
 
