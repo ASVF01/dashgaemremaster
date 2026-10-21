@@ -1606,7 +1606,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       p.onGround = false;
       p.squash = 1;
       p.diving = false;
-      spawnParticle(r, { x: p.x + p.w / 2, y: p.y + p.h, color: INK, vy: -40, life: 0.3, size: 4, kind: "ring" });
+      // Jump dust replaces the old ring puff — world-anchored artwork at the feet.
+      r.footstepDust.push({
+        x: p.x + p.w / 2,
+        y: p.y + p.h + 2,
+        facing: p.facing,
+        life: 0.38,
+        maxLife: 0.38,
+        kind: "jump",
+      });
       sfx.jump();
     } else if (jumpJustPressed && !onGround && p.dashTime > 0 && !p.dashAirJumpUsed) {
       // mid-air dash-jump: lets the player leap while a dash is active
@@ -1875,6 +1883,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
           facing: moveSign,
           life: 0.32,
           maxLife: 0.32,
+          kind: "kick",
         });
       }
     } else if (!p.onGround) {
