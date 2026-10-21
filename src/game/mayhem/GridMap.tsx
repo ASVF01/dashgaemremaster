@@ -1,6 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { mayhemSfx } from "@/game/sfx";
 import { GRID_SIZE, OFFICE_CELL, type GridCharacter } from "./useGridRoster";
+import nickyIcon from "@/assets/mayhem/encounter/grid-nicky.png.asset.json";
+import nickyRageIcon from "@/assets/mayhem/encounter/grid-nicky-rage.png.asset.json";
+import anbIcon from "@/assets/mayhem/encounter/grid-anb.png.asset.json";
+
+function iconFor(c: GridCharacter, office: boolean): string | null {
+  if (c.id === "gifted") return office ? nickyRageIcon.url : nickyIcon.url;
+  if (c.id === "anydroid") return anbIcon.url;
+  return null;
+}
 
 export default function GridMap({ onClose, characters, moveCount, heat = 0 }: { onClose: () => void; characters: GridCharacter[]; moveCount: number; heat?: number }) {
   const [staticFlash, setStaticFlash] = useState(false);
@@ -29,7 +38,9 @@ export default function GridMap({ onClose, characters, moveCount, heat = 0 }: { 
             return (
               <div key={i} className={`relative flex items-center justify-center border ${office ? "border-white bg-[hsl(var(--hell-panel))]" : "border-[hsl(var(--hell-steel))]/40 bg-[hsl(var(--hell-panel))]/30"}`}>
                 {office && <span className="font-pixel text-[clamp(6px,0.8vw,10px)] text-white">HALL ENTRY</span>}
-                {here.map((c) => (
+                {here.map((c) => iconFor(c, office) ? (
+                  <img key={c.id} src={iconFor(c, office)!} alt={c.name} title={c.name} draggable={false} className="absolute inset-0 h-full w-full scale-[1.6] object-contain transition-all duration-500" />
+                ) : (
                   <span key={c.id} title={c.name} className="absolute inset-[12%] flex items-center justify-center rounded-full font-pixel text-[clamp(6px,0.8vw,10px)] text-black transition-all duration-500" style={{ background: c.color, boxShadow: `0 0 10px ${c.color}` }}>
                     {c.tag}
                   </span>

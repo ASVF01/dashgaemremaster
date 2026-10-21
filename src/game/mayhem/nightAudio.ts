@@ -1,6 +1,6 @@
 // MAYHEM night-shift music: its own WebAudio chain so it can be slowed,
 // pitched down, echoed and heavily muffled independently of the game BGM.
-import trackAsset from "@/assets/audio/bgm_play.mp3.asset.json";
+import trackAsset from "@/assets/audio/floating-stars.mp3.asset.json";
 
 const RATE = 0.85; // speed -15%
 const DETUNE = -216; // cents; 0.85 * 2^(-216/1200) ≈ 0.75 (pitch -25%)

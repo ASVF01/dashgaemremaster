@@ -16,6 +16,37 @@ import packArt from "@/assets/mayhem/storage_pack.png.asset.json";
 import packUsedArt from "@/assets/mayhem/storage_used.png.asset.json";
 
 import Terminal, { TERMINAL_ASSET_URLS } from "./Terminal";
+import hallNicky from "@/assets/mayhem/encounter/hall-nicky.png.asset.json";
+import hallAnb1 from "@/assets/mayhem/encounter/hall-anb-1.png.asset.json";
+import hallAnb2 from "@/assets/mayhem/encounter/hall-anb-2.png.asset.json";
+import keyholeNicky from "@/assets/mayhem/encounter/keyhole-nicky.png.asset.json";
+import keyholeAnb from "@/assets/mayhem/encounter/keyhole-anb.png.asset.json";
+import keyholeAnbStun from "@/assets/mayhem/encounter/keyhole-anb-stun.png.asset.json";
+import keyholeAnbLeave from "@/assets/mayhem/encounter/keyhole-anb-leave.png.asset.json";
+import gridNicky from "@/assets/mayhem/encounter/grid-nicky.png.asset.json";
+import gridNickyRage from "@/assets/mayhem/encounter/grid-nicky-rage.png.asset.json";
+import gridAnb from "@/assets/mayhem/encounter/grid-anb.png.asset.json";
+import tip1 from "@/assets/mayhem/encounter/tip-1.png.asset.json";
+import tip2 from "@/assets/mayhem/encounter/tip-2.png.asset.json";
+import tip3 from "@/assets/mayhem/encounter/tip-3.png.asset.json";
+import tip4 from "@/assets/mayhem/encounter/tip-4.png.asset.json";
+import enterHallSfx from "@/assets/audio/encounter/enter-hall.ogg.asset.json";
+import twitchSfx from "@/assets/audio/encounter/twitch-crushed.ogg.asset.json";
+import blockedSfx from "@/assets/audio/encounter/door-blocked.ogg.asset.json";
+import screamSfx from "@/assets/audio/encounter/scream2-crushed.ogg.asset.json";
+import shieldSfx from "@/assets/audio/encounter/shield-break.mp3.asset.json";
+import loadingSfx from "@/assets/audio/encounter/loading.ogg.asset.json";
+import animMove1 from "@/assets/audio/AnimMove1.wav.asset.json";
+import animMove4 from "@/assets/audio/AnimMove4.wav.asset.json";
+import NickyJumpscare, { JUMPSCARE_URLS } from "./NickyJumpscare";
+import { anbOutcome, lockdownAllows, lookingAtAnb, nickyOutcome, tipsForNight } from "./encounterRules";
+import type { GridEnemyId } from "./useGridRoster";
+
+const TIP_ARTS: Record<number, string> = { 1: tip1.url, 2: tip2.url, 3: tip3.url, 4: tip4.url };
+let sfxVol = 1;
+function playOnce(url: string, gain = 1) {
+  try { const a = new Audio(url); a.volume = Math.min(1, gain * sfxVol); void a.play().catch(() => {}); return a; } catch { return null; }
+}
 import { makeTerminalSession, type TerminalSession } from "./Terminal";
 import GridMap from "./GridMap";
 import gridShutdownSfx from "@/assets/audio/grid-shutdown.ogg.asset.json";
@@ -47,6 +78,9 @@ const NIGHT_IMAGE_URLS = [
   packArt.url,
   packUsedArt.url,
   ...TERMINAL_ASSET_URLS,
+  hallNicky.url, hallAnb1.url, hallAnb2.url, keyholeNicky.url, keyholeAnb.url, keyholeAnbStun.url, keyholeAnbLeave.url,
+  gridNicky.url, gridNickyRage.url, gridAnb.url,
+  ...JUMPSCARE_URLS,
 ];
 
 
@@ -117,7 +151,7 @@ function makeDust(): { id: number; left: number; top: number; size: number; dura
   }));
 }
 
-export default function NightRooms({ paused = false, upgrades = {}, onNightComplete }: { paused?: boolean; upgrades?: NightUpgrades; onNightComplete: () => void }) {
+export default function NightRooms({ paused = false, upgrades = {}, onNightComplete, onRetry }: { paused?: boolean; upgrades?: NightUpgrades; onNightComplete: () => void; onRetry?: () => void }) {
   const [settings] = useSettings();
   const [view, setView] = useState<View>("office");
   const [terminalOpen, setTerminalOpen] = useState(false);
@@ -144,6 +178,8 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   const [hp] = useState(100);
   const holdStart = useRef<number | null>(null);
   const raf = useRef<number | null>(null);
+  const nightReadyRef = useRef(false);
+  const deadRef = useRef(false);
   const viewRef = useRef(view);
   viewRef.current = view;
   const terminalOpenRef = useRef(terminalOpen);
@@ -160,7 +196,93 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   const [night] = useState(getMayhemNight);
   const pausedRef = useRef(paused);
   pausedRef.current = paused;
-  const grid = useGridRoster(mayhemAiLevel(night) * enemyMoveMultiplier(upgrades), nightReady, paused);
+  const [dead, setDead] = useState<null | "jumpscare" | "blackout">(null);
+  const [deathDone, setDeathDone] = useState(false);
+  nightReadyRef.current = nightReady;
+  deadRef.current = dead !== null;
+  const grid = useGridRoster(night, mayhemAiLevel(night) * enemyMoveMultiplier(upgrades), nightReady && !dead, paused);
+  const [tip] = useState(() => { const list = tipsForNight(night); return list[Math.floor(Math.random() * list.length)]; });
+  const [loaded, setLoaded] = useState(false);
+
+  // ---- hallway threats (Nicky / AN-B) ----
+  const [threat, setThreat] = useState<null | { id: GridEnemyId; phase: "active" | "stun" | "leave" }>(null);
+  const threatRef = useRef(threat);
+  threatRef.current = threat;
+  const threatElapsed = useRef(0);
+  const staredMs = useRef(0);
+  const twitchRef = useRef<HTMLAudioElement | null>(null);
+  const [anbFrame, setAnbFrame] = useState(0);
+  const stopTwitch = () => { twitchRef.current?.pause(); };
+
+  useEffect(() => {
+    if (threatRef.current || dead) return;
+    const entering = grid.characters.find((c) => c.inHall && (c.id === "gifted" || c.id === "anydroid"));
+    if (!entering) return;
+    threatElapsed.current = 0;
+    staredMs.current = 0;
+    setThreat({ id: entering.id, phase: "active" });
+    playOnce(enterHallSfx.url, 0.9);
+  }, [grid.characters, dead]);
+
+  useEffect(() => {
+    if (!threat || threat.id !== "anydroid") return;
+    const id = window.setInterval(() => setAnbFrame((f) => 1 - f), 220);
+    return () => window.clearInterval(id);
+  }, [threat]);
+
+  useEffect(() => {
+    if (!threat || threat.phase !== "active" || paused || dead) return;
+    const id = window.setInterval(() => {
+      threatElapsed.current += 100;
+      const v = viewRef.current;
+      if (threat.id === "gifted") {
+        const out = nickyOutcome(v, threatElapsed.current);
+        if (out === "kill") { setDead("jumpscare"); setThreat(null); }
+        else if (out === "leave") { grid.sendBack("gifted"); setThreat(null); }
+        return;
+      }
+      if (lookingAtAnb(v)) {
+        staredMs.current += 100;
+        if (!twitchRef.current) { twitchRef.current = new Audio(twitchSfx.url); twitchRef.current.loop = true; }
+        twitchRef.current.volume = Math.min(1, 0.8 * sfxVol);
+        if (twitchRef.current.paused) void twitchRef.current.play().catch(() => {});
+      } else stopTwitch();
+      const out = anbOutcome(staredMs.current, threatElapsed.current);
+      if (out === "stun") {
+        stopTwitch();
+        playOnce(screamSfx.url, 0.9);
+        playOnce(shieldSfx.url, 0.9);
+        setThreat({ id: "anydroid", phase: "stun" });
+      } else if (out === "breach") {
+        stopTwitch();
+        setDead("blackout");
+        setThreat(null);
+      }
+    }, 100);
+    return () => window.clearInterval(id);
+  }, [threat, paused, dead]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!threat || threat.id !== "anydroid" || threat.phase === "active") return;
+    const t = window.setTimeout(() => {
+      if (threat.phase === "stun") { setThreat({ id: "anydroid", phase: "leave" }); return; }
+      playOnce(Math.random() < 0.5 ? animMove1.url : animMove4.url, 0.9);
+      grid.sendBack("anydroid");
+      setThreat(null);
+    }, threat.phase === "stun" ? 800 : 900);
+    return () => window.clearTimeout(t);
+  }, [threat]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => () => { twitchRef.current?.pause(); }, []);
+  useEffect(() => { if (paused) stopTwitch(); }, [paused]);
+  useEffect(() => {
+    if (!dead) return;
+    stopNightBgm();
+    setCameraOpen(false);
+    setTerminalOpen(false);
+    setGeneratorOpen(false);
+    if (dead === "blackout") { const t = window.setTimeout(() => setDeathDone(true), 1600); return () => window.clearTimeout(t); }
+  }, [dead]);
 
   const closeGenerator = () => {
     if (!generatorOpenRef.current || generatorClosingRef.current) return;
@@ -226,16 +348,29 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
     const minimum = new Promise<void>((resolve) => {
       revealTimer = window.setTimeout(resolve, INTRO_MIN_MS);
     });
+    const loadingAudio = playOnce(loadingSfx.url, 0.8);
     Promise.allSettled([preloadNightImages(), preloadMayhemSfx(), preloadNightBgm(), minimum]).then(() => {
       if (cancelled) return;
-      setIntroLeaving(true);
-      revealTimer = window.setTimeout(() => setNightReady(true), 480);
+      setLoaded(true);
     });
+    void loadingAudio;
     return () => {
       cancelled = true;
       if (revealTimer != null) window.clearTimeout(revealTimer);
     };
   }, []);
+
+  const beginNight = () => {
+    if (!loaded || introLeaving) return;
+    setIntroLeaving(true);
+    window.setTimeout(() => setNightReady(true), 480);
+  };
+  useEffect(() => {
+    if (!loaded || nightReady) return;
+    const go = () => beginNight();
+    window.addEventListener("keydown", go);
+    return () => window.removeEventListener("keydown", go);
+  }); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [gridDown, setGridDown] = useState(false);
   const gridDownRef = useRef(false);
@@ -305,7 +440,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   // ---- keyboard navigation ----
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.repeat || pausedRef.current) return;
+      if (e.repeat || pausedRef.current || !nightReadyRef.current || deadRef.current) return;
       const k = e.key.toLowerCase();
       if (!["a", "d", "w", "s", "e", "g"].includes(k)) return;
       e.preventDefault();
@@ -353,6 +488,10 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
       }
       const from = viewRef.current;
       const to = nextView(from, k);
+      if (to !== from && threatRef.current && !lockdownAllows(to)) {
+        playOnce(blockedSfx.url, 0.9);
+        return;
+      }
       if (to !== from) {
         playMoveSound(from, to);
         // Room transitions reuse the mouse-look system: the head snaps
@@ -415,7 +554,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   useEffect(() => () => { if (raf.current != null) cancelAnimationFrame(raf.current); }, []);
 
   // Night sfx follow the SFX VOLUME slider.
-  useEffect(() => { setNightSfxVolume(settings.sfxVolume); }, [settings.sfxVolume]);
+  useEffect(() => { setNightSfxVolume(settings.sfxVolume); sfxVol = settings.sfxVolume; }, [settings.sfxVolume]);
 
   // ---- audio: silence every other sound, play the muffled night track ----
   useEffect(() => {
@@ -433,13 +572,22 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   }, [nightReady]);
 
 
-  const art =
-    view === "office" ? (redGuyMeowing ? officeMeowArt.url : officeArt.url) :
+  const threatArt = (() => {
+    if (!threat) return null;
+    if (view === "hallway") return threat.id === "gifted" ? hallNicky.url : (anbFrame ? hallAnb2.url : hallAnb1.url);
+    if (view === "keyhole") {
+      if (threat.id === "gifted") return keyholeNicky.url;
+      return threat.phase === "stun" ? keyholeAnbStun.url : threat.phase === "leave" ? keyholeAnbLeave.url : keyholeAnb.url;
+    }
+    return null;
+  })();
+  const art = threatArt ??
+    (view === "office" ? (redGuyMeowing ? officeMeowArt.url : officeArt.url) :
     view === "door" ? (hallu !== null ? herHalluBaseArt.url : doorArt.url) :
     view === "keyhole" || view === "storageKeyhole" ? keyholeArt.url :
     view === "storageDoor" ? doorArt.url :
     view === "hallway" ? hallwayArt.url :
-    packUsed ? packUsedArt.url : packArt.url;
+    packUsed ? packUsedArt.url : packArt.url);
 
   const monitorSpot = { left: "37.5%", top: "39%", width: "25%", height: "22%" };
   const redGuySpot = { left: "65.5%", top: "46%", width: "12%", height: "27%" };
@@ -543,11 +691,13 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
       onMouseLeave={() => { target.current.x = 0; target.current.y = 0; }}
     >
       {!nightReady && (
-        <div className={`mayhem-night-intro absolute inset-0 z-[120] flex items-center justify-center overflow-hidden bg-[hsl(var(--hell-black))] ${introLeaving ? "mayhem-night-intro-exit" : ""}`}>
-          <div aria-hidden="true" className="mayhem-night-intro-grid absolute inset-0" />
-          <div className="mayhem-night-intro-copy relative z-10 flex flex-col items-center text-center">
-            <div className="font-pixel text-[clamp(30px,6vw,72px)] leading-none text-[hsl(var(--hell-muted))]">NIGHT {night}</div>
-            <div className="mt-7 font-pixel text-[clamp(15px,2.5vw,28px)] text-[hsl(var(--hell-muted))]">12 AM</div>
+        <div
+          onClick={beginNight}
+          className={`mayhem-night-intro absolute inset-0 z-[120] overflow-hidden bg-black ${loaded ? "cursor-pointer" : ""} ${introLeaving ? "mayhem-night-intro-exit" : ""}`}
+        >
+          <img src={TIP_ARTS[tip]} alt={`Tip ${tip}`} draggable={false} className="absolute inset-0 h-full w-full object-contain" />
+          <div className="absolute inset-x-0 bottom-[6%] text-center font-pixel text-[clamp(11px,1.6vw,18px)] text-white drop-shadow-[0_0_6px_black]">
+            {loaded ? <span className="mayhem-tip-blink">Press or click anything to continue</span> : <span className="text-white/50">LOADING...</span>}
           </div>
         </div>
       )}
@@ -558,7 +708,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
         className={`absolute inset-0 will-change-transform transition-[filter] duration-300 ${terminalOpen ? "blur-[3px] brightness-75" : "blur-0 brightness-100"}`}
       >
         <img
-          key={view + (packUsed ? "-used" : "")}
+          key={view + (packUsed ? "-used" : "") + (threat ? "-" + threat.id : "")}
           src={art}
           alt={label}
           draggable={false}
@@ -711,6 +861,19 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
         >
           {generatorOpen ? <ChevronsDown /> : <ChevronsUp />}
         </Button>
+      )}
+      {threat && threat.phase === "active" && (
+        <div className="pointer-events-none absolute right-4 top-4 z-[91] font-pixel text-[10px] tracking-[0.3em] text-[hsl(var(--hell-warning))] mayhem-tip-blink">
+          {threat.id === "gifted" ? "SHE'S IN THE HALL — GET TO THE OFFICE" : "SOMETHING IS IN THE HALL"}
+        </div>
+      )}
+      {dead === "jumpscare" && <NickyJumpscare volume={settings.sfxVolume} onDone={() => setDeathDone(true)} />}
+      {dead === "blackout" && <div className="absolute inset-0 z-[130] bg-black"><div aria-hidden="true" className="hell-static absolute inset-0 opacity-50" /></div>}
+      {dead && deathDone && (
+        <div className="absolute inset-0 z-[140] flex flex-col items-center justify-center gap-6 bg-black/80">
+          <div className="font-pixel text-[clamp(18px,3vw,36px)] text-[hsl(var(--hell-muted))]">SHIFT FAILED</div>
+          <Button variant="outline" className="font-pixel" onClick={() => onRetry?.()}>TRY AGAIN</Button>
+        </div>
       )}
     </div>
   );
