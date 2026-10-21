@@ -38,9 +38,14 @@ import receptionistAsset from "@/assets/mayhem/The_Receptionist.png.asset.json";
 import receptionistFullAsset from "@/assets/mayhem/receptionist/The_Receptionist_Full.png.asset.json";
 import receptionistWave1Asset from "@/assets/mayhem/The_Receptionist_Wave_1.png.asset.json";
 import receptionistWave2Asset from "@/assets/mayhem/The_Receptionist_Wave_2.png.asset.json";
-import dustKickAsset from "@/assets/effects/dust-kick.png.asset.json";
+import dustKick2Asset from "@/assets/effects/dust-kick-2.png.asset.json";
+import dustKick0Asset from "@/assets/effects/dust-kick-0.png.asset.json";
+import dustJumpAsset from "@/assets/effects/dust-jump.png.asset.json";
 
-const dustKickImg = new Image(); dustKickImg.src = dustKickAsset.url;
+const dustKickImgs = [new Image(), new Image()];
+dustKickImgs[0].src = dustKick2Asset.url;
+dustKickImgs[1].src = dustKick0Asset.url;
+const dustJumpImg = new Image(); dustJumpImg.src = dustJumpAsset.url;
 const bossParryFlashImg = new Image(); bossParryFlashImg.src = bossParryFlashUrl;
 let sugarcoatAudio: HTMLAudioElement | null = null;
 function playSugarcoat() {
@@ -307,7 +312,7 @@ interface GameRefs {
   player: Player;
   projectiles: Projectile[];
   particles: Particle[];
-  footstepDust: { x: number; y: number; facing: number; life: number; maxLife: number }[];
+  footstepDust: { x: number; y: number; facing: number; life: number; maxLife: number; kind?: "kick" | "jump" }[];
   afterimages: Afterimage[];
   afterTimer: number;
   chaserTrail: { x: number; y: number; w: number; h: number; life: number; maxLife: number }[];
@@ -1601,7 +1606,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       p.onGround = false;
       p.squash = 1;
       p.diving = false;
-      spawnParticle(r, { x: p.x + p.w / 2, y: p.y + p.h, color: INK, vy: -40, life: 0.3, size: 4, kind: "ring" });
+      // Jump dust replaces the old ring puff — world-anchored artwork at the feet.
+      r.footstepDust.push({
+        x: p.x + p.w / 2,
+        y: p.y + p.h + 2,
+        facing: p.facing,
+        life: 0.38,
+        maxLife: 0.38,
+        kind: "jump",
+      });
       sfx.jump();
     } else if (jumpJustPressed && !onGround && p.dashTime > 0 && !p.dashAirJumpUsed) {
       // mid-air dash-jump: lets the player leap while a dash is active
@@ -1870,6 +1883,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
           facing: moveSign,
           life: 0.32,
           maxLife: 0.32,
+          kind: "kick",
         });
       }
     } else if (!p.onGround) {
@@ -2369,7 +2383,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     }
     if (!mayhemCamera) {
       r.cameraX = clampCamera(r.cameraX, r.level.width, size.w / z);
-      r.cameraY = clampCamera(r.cameraY, r.level.height, size.h / z);
+      // Lowered camera window on tall views: less empty sky shows, and the
+      // ground rendering fills whatever hangs below the level bottom.
+      r.cameraY = clampCamera(r.cameraY, r.level.height, size.h / z, 0.6);
     }
   }
 
@@ -2955,9 +2971,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
 
     // platforms
     const bossPlatforms = levelIdRef.current === "roaring-knight";
+    // A lowered camera can look past the level bottom: ground platforms reach
+    // down to the screen edge so below-level space never shows as void.
+    const groundExtend = isMayhemLevel || bossPlatforms
+      ? 0
+      : Math.max(0, camY + h / z - r.level.height);
     for (const pl of r.level.platforms) {
       if (pl.x + pl.w < camX - 40 || pl.x > camX + w + 40) continue;
       const isGround = pl.kind === "ground";
+      const groundDepth = isGround && pl.y + pl.h >= r.level.height ? groundExtend : 0;
       const visX = Math.max(pl.x, camX - 40);
       const visR = Math.min(pl.x + pl.w, camX + w + 40);
       const visW = visR - visX;
@@ -2973,7 +2995,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         : levelIdRef.current === "chase" ? (isGround ? "#26351f" : "#49331f")
         : (isGround ? "#e5dfc2" : "#f7f1dc");
       const stroke = isMayhemLevel ? (mayhemHotel ? "#b4936c" : mayhemOutside ? "#172318" : "#9aa5ad") : bossPlatforms ? "#ffffff" : levelIdRef.current === "chase" ? "#101a0f" : INK;
-      sketchRect(ctx, visX, pl.y, visW, pl.h, fill, stroke, isGround ? 3 : 2.6, isMayhemLevel ? 0.55 : isGround ? 1.6 : 1.2);
+      sketchRect(ctx, visX, pl.y, visW, pl.h + groundDepth, fill, stroke, isGround ? 3 : 2.6, isMayhemLevel ? 0.55 : isGround ? 1.6 : 1.2);
       if (isMayhemLevel && !mayhemOutside) {
         // Brushed metal outside; dark timber and brass trim inside the hotel.
         ctx.save();
@@ -3008,7 +3030,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       for (let hx = hStart; hx < hEnd; hx += 14) {
         ctx.beginPath();
         ctx.moveTo(hx, pl.y + 4);
-        ctx.lineTo(hx - 6, pl.y + pl.h - 4);
+        ctx.lineTo(hx - 6, pl.y + pl.h + groundDepth - 4);
         ctx.stroke();
       }
       ctx.restore();
@@ -3358,18 +3380,22 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     else drawGoal(ctx, r.level.goal.x, r.level.goal.y, r.level.goal.w, r.level.goal.h, r.time);
 
     // Ground-level dust is drawn behind the player and anchored in world space.
-    if (dustKickImg.complete && dustKickImg.naturalWidth > 0) {
-      for (const dust of r.footstepDust) {
-        const remaining = dust.life / dust.maxLife;
-        const width = 52 + (1 - remaining) * 10;
-        const height = width * dustKickImg.naturalHeight / dustKickImg.naturalWidth;
-        ctx.save();
-        ctx.globalAlpha = Math.min(1, remaining * 1.8);
-        ctx.translate(dust.x, dust.y);
-        ctx.scale(dust.facing, 1);
-        ctx.drawImage(dustKickImg, -width / 2, -height, width, height);
-        ctx.restore();
-      }
+    // Kick frames alternate while alive so each step reads as animated artwork.
+    for (const dust of r.footstepDust) {
+      const remaining = dust.life / dust.maxLife;
+      const age = dust.maxLife - dust.life;
+      const img = dust.kind === "jump"
+        ? dustJumpImg
+        : dustKickImgs[Math.floor(age / (dust.maxLife / 2)) % 2];
+      if (!img.complete || img.naturalWidth === 0) continue;
+      const width = dust.kind === "jump" ? 62 + (1 - remaining) * 14 : 52 + (1 - remaining) * 10;
+      const height = width * img.naturalHeight / img.naturalWidth;
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, remaining * 1.8);
+      ctx.translate(dust.x, dust.y);
+      ctx.scale(dust.facing, 1);
+      ctx.drawImage(img, -width / 2, -height, width, height);
+      ctx.restore();
     }
 
     // afterimages — draw before player so player sits on top
