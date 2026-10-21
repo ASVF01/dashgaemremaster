@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Make platformer gameplay edge-to-edge, hide the page header during runs, and verify gameplay and return to menu.
+- [x] Make platformer gameplay edge-to-edge and hide the page header during runs; verified movement, exact viewport coverage at desktop/landscape sizes, and return to menu without runtime errors.
 
 - [x] Remove run lines, reduce afterimages, and add the supplied transparent dust at world-space footstep positions; verified running in the tutorial with detached ground dust and no errors.
 
