@@ -3380,21 +3380,25 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     else drawGoal(ctx, r.level.goal.x, r.level.goal.y, r.level.goal.w, r.level.goal.h, r.time);
 
     // Ground-level dust is drawn behind the player and anchored in world space.
-    // Kick frames alternate while alive so each step reads as animated artwork.
+    // One-shot contact burst: expand backward from the planted foot, then dissolve.
     for (const dust of r.footstepDust) {
       const remaining = dust.life / dust.maxLife;
       const age = dust.maxLife - dust.life;
-      // _0 leads; frames flip faster than before so the burst reads instantly.
-      const img = dust.kind === "jump"
+      const progress = Math.max(0, Math.min(1, age / dust.maxLife));
+      const spread = 1 - Math.pow(1 - progress, 3);
+      const jumping = dust.kind === "jump";
+      // _0 hits first, then _2 opens out once; never flicker back to the contact pose.
+      const img = jumping
         ? dustJumpImg
-        : dustKickImgs[Math.floor(age / (dust.maxLife / 2.5)) % 2];
+        : dustKickImgs[progress < 0.3 ? 0 : 1];
       if (!img.complete || img.naturalWidth === 0) continue;
-      const width = dust.kind === "jump" ? 66 + (1 - remaining) * 20 : 54 + (1 - remaining) * 12;
-      const height = width * img.naturalHeight / img.naturalWidth;
+      const width = jumping ? 66 + spread * 20 : 54 + spread * 26;
+      const height = (jumping ? 66 + spread * 10 : 54 + spread * 6) * img.naturalHeight / img.naturalWidth;
       ctx.save();
-      // Pop in at full strength immediately — no fade-in ramp at spawn.
-      ctx.globalAlpha = Math.min(1, remaining * 2.6);
-      ctx.translate(dust.x, dust.y);
+      // Immediate opaque contact; a smooth tail fades without following the runner.
+      const fade = Math.max(0, (progress - 0.2) / 0.8);
+      ctx.globalAlpha = 1 - fade * fade * (3 - 2 * fade);
+      ctx.translate(dust.x - dust.facing * spread * (jumping ? 4 : 18), dust.y);
       ctx.scale(dust.facing, 1);
       ctx.drawImage(img, -width / 2, -height, width, height);
       ctx.restore();
