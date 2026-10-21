@@ -1,7 +1,7 @@
 # Roadmap
 
-- [ ] Lower the camera window on tall views: less empty sky, ground rendering fills below the level, never exposing below-level void; verify in the tutorial.
-- [ ] Animate footstep dust with the supplied dust_kick frames and replace the jump puff with dust_jump; store uploads as assets.
+- [x] Lower the camera window on tall views: less empty sky, ground rendering fills below the level, never exposing below-level void; verify in the tutorial.
+- [x] Animate footstep dust with the supplied dust_kick frames and replace the jump puff with dust_jump; store uploads as assets.
 
 - [x] Restore the pre-zoom camera framing with only a slight zoom in (flat 1.07 on ordinary levels, MAYHEM unchanged) while keeping the floor pinned to the bottom edge; verified with viewport-rule tests and a tutorial run.
 
