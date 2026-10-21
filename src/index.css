@@ -829,6 +829,8 @@
 /* Nicky jumpscare: drifting Denny grid + slow still morph */
 @keyframes nickyJsGrid { from { transform: translate(0, 0); } to { transform: translate(160px, 160px); } }
 .nicky-js-grid { animation: nickyJsGrid 2.4s linear infinite; }
+@keyframes nickyJsBg { from { background-color: hsl(115 75% 83%); } to { background-color: hsl(0 80% 55%); } }
+.nicky-js-bg { background-color: hsl(115 75% 83%); animation: nickyJsBg 3.4s ease-in 0.3s forwards; }
 @keyframes nickyJsWords { from { transform: translateX(0); } to { transform: translateX(-200px); } }
 .nicky-js-words { animation: nickyJsWords 4s linear infinite; }
 @keyframes nickyJsMorph { from { opacity: 0; } to { opacity: 1; } }

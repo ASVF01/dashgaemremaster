@@ -19,7 +19,7 @@ export default function NickyJumpscare({ volume, onDone }: { volume: number; onD
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="absolute inset-0 z-[130] overflow-hidden bg-white">
+    <div className="nicky-js-bg absolute inset-0 z-[130] overflow-hidden">
       <div
         aria-hidden="true"
         className="nicky-js-grid absolute -inset-[160px]"
