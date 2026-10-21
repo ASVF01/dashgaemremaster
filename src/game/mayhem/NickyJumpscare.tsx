@@ -25,6 +25,9 @@ export default function NickyJumpscare({ volume, onDone }: { volume: number; onD
         className="nicky-js-grid absolute -inset-[160px]"
         style={{ backgroundImage: `url(${denny.url})`, backgroundSize: "160px 160px" }}
       />
+      <div aria-hidden="true" className="nicky-js-words pointer-events-none absolute -inset-[200px] grid grid-cols-6 content-start gap-x-10 gap-y-8 font-pixel text-[clamp(14px,2vw,26px)] tracking-widest text-[hsl(var(--hell-warning))] opacity-70">
+        {Array.from({ length: 96 }, (_, i) => <span key={i} className="whitespace-nowrap">YOU'RE A FAILURE</span>)}
+      </div>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <div className="relative h-[70vh] w-[70vh] max-w-[90vw]">
           <img src={js1.url} alt="" draggable={false} className="absolute inset-0 h-full w-full object-contain" />

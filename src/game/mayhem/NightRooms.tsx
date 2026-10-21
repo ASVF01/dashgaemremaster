@@ -883,7 +883,6 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
       {dead === "blackout" && <div className="absolute inset-0 z-[130] bg-black"><div aria-hidden="true" className="hell-static absolute inset-0 opacity-50" /></div>}
       {dead && deathDone && (
         <div className="absolute inset-0 z-[140] flex flex-col items-center justify-center gap-6 bg-black/80">
-          <div className="font-pixel text-[clamp(18px,3vw,36px)] text-[hsl(var(--hell-muted))]">SHIFT FAILED</div>
           <Button variant="outline" className="font-pixel" onClick={() => onRetry?.()}>TRY AGAIN</Button>
         </div>
       )}
