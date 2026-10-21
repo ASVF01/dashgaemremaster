@@ -28,3 +28,4 @@
 - MAYHEM room looking is a flat 2D pan (scale + translate only); no perspective, rotation, or displacement distortion — the user rejected the FNAF-style curved effect.
 - MAYHEM NPC reactions are triggered by page-level dialogue completion and animated in canvas runtime state, keeping story timing aligned with world visuals.
 - MAYHEM night puzzle and terminal-error progress is owned by `NightRooms` and passed into overlays, so lowering a panel never resets an active repair.- MAYHEM night threats live on the 12×12 grid in `useGridRoster` (roster config + per-night move chance), owned by `NightRooms` so movement continues while the map is closed.
+- MAYHEM hallway threats (Nicky/AN-B) use pure timing rules in `encounterRules.ts`; NightRooms owns encounter state and grid `inHall` flags from `useGridRoster`, so outcomes stay testable and pause-safe.
