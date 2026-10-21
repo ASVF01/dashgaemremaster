@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
+import { useTouchControls } from "@/hooks/use-touch-controls";
 
 // Touch overlay that synthesizes the same keyboard codes the game already
 // listens for. Reusing the keyboard pipeline keeps every system (cheats,
@@ -14,15 +15,6 @@ function fire(type: "keydown" | "keyup", code: string) {
     cancelable: true,
   });
   window.dispatchEvent(evt);
-}
-
-function isTouchDevice(): boolean {
-  if (typeof window === "undefined") return false;
-  return (
-    "ontouchstart" in window ||
-    (navigator.maxTouchPoints ?? 0) > 0 ||
-    window.matchMedia("(pointer: coarse)").matches
-  );
 }
 
 type BtnProps = {
@@ -79,9 +71,7 @@ function HoldButton({ code, label, className, ariaLabel }: BtnProps) {
 }
 
 export default function TouchControls({ visible }: { visible: boolean }) {
-  const [touch, setTouch] = useState(false);
-
-  useEffect(() => { setTouch(isTouchDevice()); }, []);
+  const touch = useTouchControls();
 
   if (!visible || !touch) return null;
 

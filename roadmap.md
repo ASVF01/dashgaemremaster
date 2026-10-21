@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Hide desktop touch controls, use ESC to leave levels, and tighten the player camera without changing movement physics; verified desktop ESC, mobile controls, floor framing, and three viewport-rule tests.
+
 - [x] Make platformer gameplay edge-to-edge and hide the page header during runs; verified movement, exact viewport coverage at desktop/landscape sizes, and return to menu without runtime errors.
 
 - [x] Remove run lines, reduce afterimages, and add the supplied transparent dust at world-space footstep positions; verified running in the tutorial with detached ground dust and no errors.
