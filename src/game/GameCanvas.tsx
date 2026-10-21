@@ -2383,7 +2383,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     }
     if (!mayhemCamera) {
       r.cameraX = clampCamera(r.cameraX, r.level.width, size.w / z);
-      r.cameraY = clampCamera(r.cameraY, r.level.height, size.h / z);
+      // Lowered camera window on tall views: less empty sky shows, and the
+      // ground rendering fills whatever hangs below the level bottom.
+      r.cameraY = clampCamera(r.cameraY, r.level.height, size.h / z, 0.6);
     }
   }
 
@@ -3372,18 +3374,22 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     else drawGoal(ctx, r.level.goal.x, r.level.goal.y, r.level.goal.w, r.level.goal.h, r.time);
 
     // Ground-level dust is drawn behind the player and anchored in world space.
-    if (dustKickImg.complete && dustKickImg.naturalWidth > 0) {
-      for (const dust of r.footstepDust) {
-        const remaining = dust.life / dust.maxLife;
-        const width = 52 + (1 - remaining) * 10;
-        const height = width * dustKickImg.naturalHeight / dustKickImg.naturalWidth;
-        ctx.save();
-        ctx.globalAlpha = Math.min(1, remaining * 1.8);
-        ctx.translate(dust.x, dust.y);
-        ctx.scale(dust.facing, 1);
-        ctx.drawImage(dustKickImg, -width / 2, -height, width, height);
-        ctx.restore();
-      }
+    // Kick frames alternate while alive so each step reads as animated artwork.
+    for (const dust of r.footstepDust) {
+      const remaining = dust.life / dust.maxLife;
+      const age = dust.maxLife - dust.life;
+      const img = dust.kind === "jump"
+        ? dustJumpImg
+        : dustKickImgs[Math.floor(age / (dust.maxLife / 2)) % 2];
+      if (!img.complete || img.naturalWidth === 0) continue;
+      const width = dust.kind === "jump" ? 62 + (1 - remaining) * 14 : 52 + (1 - remaining) * 10;
+      const height = width * img.naturalHeight / img.naturalWidth;
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, remaining * 1.8);
+      ctx.translate(dust.x, dust.y);
+      ctx.scale(dust.facing, 1);
+      ctx.drawImage(img, -width / 2, -height, width, height);
+      ctx.restore();
     }
 
     // afterimages — draw before player so player sits on top
