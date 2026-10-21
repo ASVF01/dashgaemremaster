@@ -16,7 +16,7 @@ import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, 
 import weSfxUrl from "@/assets/audio/impact_aura_charge.ogg";
 import { getSettings } from "@/game/settings";
 import { gameplayZoom, clampCamera } from "@/game/viewportRules";
-import { slideDustFrame, slideDustAnchor } from "@/game/slideDustRules";
+import { slideDustFrame, slideDustAnchor, slideDustSpread } from "@/game/slideDustRules";
 import { getSprite, type SpriteState } from "@/game/sprites";
 import { getSelectedCharacter } from "@/game/character";
 import spookUrl from "@/assets/sprites/spook.png";
@@ -323,6 +323,8 @@ interface GameRefs {
   projectiles: Projectile[];
   particles: Particle[];
   slideDustTime: number;
+  activeSlideDust: { x: number; y: number; facing: number; elapsed: number } | null;
+  slideDustTails: { x: number; y: number; facing: number; elapsed: number; life: number }[];
   footstepDust: { x: number; y: number; facing: number; life: number; maxLife: number; kind?: "kick" | "jump" }[];
   afterimages: Afterimage[];
   afterTimer: number;
@@ -623,6 +625,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       projectiles: [],
       particles: [],
       slideDustTime: 0,
+      activeSlideDust: null,
+      slideDustTails: [],
       footstepDust: [],
       afterimages: [],
       afterTimer: 0,
@@ -1706,6 +1710,18 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     // Footstep artwork stays where the foot hit the ground, independent of the player.
     for (const dust of r.footstepDust) dust.life -= dt;
     r.footstepDust = r.footstepDust.filter((dust) => dust.life > 0);
+
+    for (const tail of r.slideDustTails) tail.life -= dt;
+    r.slideDustTails = r.slideDustTails.filter((tail) => tail.life > 0);
+    if (p.alive && p.sliding && p.onGround && Math.abs(p.vx) > 20) {
+      r.activeSlideDust = {
+        ...slideDustAnchor(p.x, p.y, p.w, p.h, p.facing),
+        facing: p.facing, elapsed: r.slideDustTime,
+      };
+    } else if (r.activeSlideDust) {
+      r.slideDustTails.push({ ...r.activeSlideDust, life: 0.28 });
+      r.activeSlideDust = null;
+    }
 
     // ----- Skid dust + walking SFX -----
     const speedAbs = Math.abs(p.vx);
@@ -3292,17 +3308,24 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         drawAfterimage(ctx, ai, t);
       }
 
-      // Slide dust is attached to live feet, not captured in the world-space trail.
-      const p = r.player;
-      if (p.alive && p.sliding && p.onGround && Math.abs(p.vx) > 20) {
-        const img = dustSlideImgs.get(slideDustFrame(r.slideDustTime));
+      // Active dust follows the feet; released dust expands from its last anchor.
+      const slideDust = [
+        ...r.slideDustTails.map((tail) => ({ ...tail, released: true })),
+        ...(r.activeSlideDust ? [{ ...r.activeSlideDust, life: 0.28, released: false }] : []),
+      ];
+      for (const dust of slideDust) {
+        const age = dust.released ? 0.28 - dust.life : 0;
+        const img = dustSlideImgs.get(slideDustFrame(dust.elapsed + age));
         if (img?.complete && img.naturalWidth > 0) {
-          const anchor = slideDustAnchor(p.x, p.y, p.w, p.h, p.facing);
-          const width = 112;
-          const height = width * img.naturalHeight / img.naturalWidth;
+          const spread = slideDustSpread(dust.elapsed);
+          const releaseSpread = slideDustSpread(age);
+          const width = 96 + spread * 32 + releaseSpread * 26;
+          const height = (96 + spread * 8 + releaseSpread * 6) * img.naturalHeight / img.naturalWidth;
+          const fade = Math.min(1, age / 0.28);
           ctx.save();
-          ctx.translate(anchor.x, anchor.y);
-          ctx.scale(p.facing, 1);
+          ctx.globalAlpha = 1 - fade * fade * (3 - 2 * fade);
+          ctx.translate(dust.x - dust.facing * (spread * 8 + releaseSpread * 18), dust.y);
+          ctx.scale(dust.facing, 1);
           ctx.drawImage(img, -width, -height, width, height);
           ctx.restore();
         }

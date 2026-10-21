@@ -3,7 +3,7 @@ import { slideDustAnchor, slideDustFrame } from "./slideDustRules";
 
 describe("slide dust", () => {
   it("plays the supplied frames in 1, 4, 3, 2 order and loops", () => {
-    expect([0, 0.081, 0.161, 0.241, 0.321].map(slideDustFrame)).toEqual([1, 4, 3, 2, 1]);
+    expect([0, 0.056, 0.111, 0.166, 0.221].map(slideDustFrame)).toEqual([1, 4, 3, 2, 1]);
   });
   it("stays attached to the current player position and follows facing", () => {
     expect(slideDustAnchor(100, 200, 30, 20, 1)).toEqual({ x: 107, y: 222 });

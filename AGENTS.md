@@ -4,7 +4,7 @@
 - Touch controls follow the primary coarse-pointer media query, not touch API presence or window width; ordinary gameplay camera keeps the visible world inside the level; when the view is taller than the level the camera window sits lowered (a tested fraction of the extra view hangs below the level) and ground platforms extend to the screen bottom, so fullscreen can never expose below-level void.
 
 - Footstep artwork is captured at each step in world-space canvas runtime state and rendered behind the player; its lifetime is independent of player transforms so it never follows the sprite.
-- Slide artwork uses a session-local clock and live player ground position, with pure frame/anchor rules; this keeps attached slide dust independent from detached footstep bursts.
+- Slide artwork follows live feet while active, then captures its last anchor and animation clock for a world-space fade; pure timing rules keep it independent of footstep bursts.
 
 - Character selection uses timed shutter phases with roster and INFO interactions gated until open; exit keeps the roster stationary, resets main-menu presentation while fully covered, and reveals it before unmounting. Presentation stays independent of saved character state.
 
