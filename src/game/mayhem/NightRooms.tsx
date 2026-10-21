@@ -213,6 +213,8 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   const twitchRef = useRef<HTMLAudioElement | null>(null);
   const [anbFrame, setAnbFrame] = useState(0);
   const stopTwitch = () => { twitchRef.current?.pause(); };
+  const [threatAtKeyhole, setThreatAtKeyhole] = useState(false);
+  useEffect(() => { if (!threat) setThreatAtKeyhole(false); }, [threat]);
   const entryCueRef = useRef<HTMLAudioElement | null>(null);
   const stopEntryCue = () => { entryCueRef.current?.pause(); entryCueRef.current = null; };
   const threatLeft = () => { stopEntryCue(); playOnce(runAwaySfx.url, 0.9); };
@@ -256,7 +258,10 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
     if (!threat || threat.phase !== "active" || paused || dead) return;
     const id = window.setInterval(() => {
       threatElapsed.current += 100;
-      const v = viewRef.current;
+      // For the first 5.1s they're only in the hallway; the keyhole stays empty.
+      const atKeyhole = threatElapsed.current >= HALL_ENTRY_MS;
+      if (atKeyhole) setThreatAtKeyhole(true);
+      const v = viewRef.current === "keyhole" && !atKeyhole ? "door" : viewRef.current;
       if (threat.id === "gifted") {
         if (staringAtThreat(v)) staredMs.current += 100;
         const out = nickyOutcome(v, threatElapsed.current, staredMs.current);
@@ -603,7 +608,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   const threatArt = (() => {
     if (!threat) return null;
     if (view === "hallway") return threat.id === "gifted" ? hallNicky.url : (anbFrame ? hallAnb2.url : hallAnb1.url);
-    if (view === "keyhole") {
+    if (view === "keyhole" && threatAtKeyhole) {
       if (threat.id === "gifted") return keyholeNicky.url;
       return threat.phase === "stun" ? keyholeAnbStun.url : threat.phase === "leave" ? keyholeAnbLeave.url : keyholeAnb.url;
     }
