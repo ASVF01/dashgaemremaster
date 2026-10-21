@@ -141,7 +141,7 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
 
       {charSelectOpen && <CharacterSelectScreen onExitCovered={() => setCharSelectZoomed(false)} onClose={() => { setCharSelectZoomed(false); setCharSelectOpen(false); }} />}
       {bestiaryOpen && <BestiaryScreen onClose={() => setBestiaryOpen(false)} />}
-      {shopOpen && <Shop onClose={() => setShopOpen(false)} />}
+      {shopOpen && createPortal(<Shop onClose={() => setShopOpen(false)} />, document.body)}
     </div>
   );
 }
