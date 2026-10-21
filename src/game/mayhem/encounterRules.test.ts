@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { anbOutcome, lockdownAllows, nickyOutcome, tipsForNight } from "./encounterRules";
+import { anbOutcome, hearsRunAway, lockdownAllows, nickyOutcome, tipsForNight } from "./encounterRules";
 
 describe("encounter rules", () => {
   it("Nicky only kills after 2.5s of staring", () => {
