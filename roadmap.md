@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Verify MAYHEM POV movement: center dead zone, bounded left/right pan, room turns, keyhole zoom, and normal pointers during panels and pause; camera tests and live Night 1 checks pass with local uploaded-art interception.
+
 - [x] Fix bestiary header overlap and overflowing combat notes; verified contained notes at multiple widths and Close returning to menu.
 
 - [x] Speed up slide dust, expand backward, and detach a fading tail at the last slide position; frame/anchor tests and tutorial slide-release fade check pass.
