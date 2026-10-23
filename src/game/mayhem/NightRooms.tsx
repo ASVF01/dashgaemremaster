@@ -925,9 +925,9 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
         <div
           ref={cursorRef}
           aria-hidden="true"
-          className="pointer-events-none absolute left-0 top-0 z-[110] h-7 w-7 rounded-full border border-white/60 opacity-0 shadow-[0_0_10px_rgba(0,0,0,0.8)] transition-opacity duration-150"
+          className="pointer-events-none absolute left-0 top-0 z-[110] h-7 w-7 rounded-full border border-[hsl(var(--hell-muted))]/60 opacity-0 shadow-[0_0_10px_hsl(var(--hell-black)/0.8)] transition-opacity duration-150"
         >
-          <i className="absolute left-1/2 top-1/2 h-1 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/80" />
+          <i className="absolute left-1/2 top-1/2 h-1 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[hsl(var(--hell-muted))]/80" />
         </div>
       )}
     </div>
