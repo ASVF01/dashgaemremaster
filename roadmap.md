@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Rework MAYHEM POV against the original Tealerland clip: replace tiny cursor drift and instant room swaps, then verify movement in a live night.
+- [ ] Rework MAYHEM POV with curved environmental head rotation and darkened room turns; verify movement in a live night.
 
 - [x] Verify MAYHEM POV movement: center dead zone, bounded left/right pan, room turns, keyhole zoom, and normal pointers during panels and pause; camera tests and live Night 1 checks pass with local uploaded-art interception.
 
