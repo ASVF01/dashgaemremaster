@@ -1,5 +1,6 @@
 import { useEffect, useRef, type MutableRefObject } from "react";
 import * as THREE from "three";
+import { roomLookAngles } from "./roomLookAngles";
 
 export interface RoomGaze { x: number; y: number }
 
@@ -23,7 +24,7 @@ export default function CurvedRoom({ src, gaze, onReady }: {
     const uniforms = {
       painting: { value: new THREE.Texture() },
       aspect: { value: 1 }, imageAspect: { value: 1 },
-      gaze: { value: new THREE.Vector2() },
+      rotation: { value: new THREE.Vector2() },
     };
     const material = new THREE.ShaderMaterial({
       uniforms,
@@ -33,7 +34,7 @@ export default function CurvedRoom({ src, gaze, onReady }: {
         uniform sampler2D painting;
         uniform float aspect;
         uniform float imageAspect;
-        uniform vec2 gaze;
+        uniform vec2 rotation;
         varying vec2 vUv;
         void main() {
           vec2 screen = (vUv - 0.5) * 2.0;
@@ -42,8 +43,8 @@ export default function CurvedRoom({ src, gaze, onReady }: {
           // on tall ones. The painting remains cover-cropped, never stretched.
           vec2 field = vec2(lens * min(aspect, 1.6), lens * min(1.0, 1.6 / aspect));
           vec3 ray = normalize(vec3(screen * field, -1.0));
-          float yaw = -gaze.x * 0.19;
-          float pitch = -gaze.y * 0.12;
+          float yaw = rotation.x;
+          float pitch = rotation.y;
           ray.yz = mat2(cos(pitch), -sin(pitch), sin(pitch), cos(pitch)) * ray.yz;
           ray.xz = mat2(cos(yaw), -sin(yaw), sin(yaw), cos(yaw)) * ray.xz;
           vec2 angular = vec2(atan(ray.x, -ray.z), atan(ray.y, length(ray.xz)));
@@ -82,7 +83,8 @@ export default function CurvedRoom({ src, gaze, onReady }: {
       const image = loaded.image as HTMLImageElement;
       uniforms.imageAspect.value = image.width / image.height;
       const draw = () => {
-        uniforms.gaze.value.set(gaze.current.x, gaze.current.y);
+        const angles = roomLookAngles(gaze.current.x, gaze.current.y);
+        uniforms.rotation.value.set(angles.yaw, angles.pitch);
         renderer.render(scene, camera);
         frame = requestAnimationFrame(draw);
       };
