@@ -9,8 +9,8 @@
 - Generator double-charge rewards use a pure helper with an explicit random roll and persist the bonus flag in owned progress; award feedback reads that flag and routes the boss parry sample through the night bus so muted platformer audio cannot suppress it.
 - Generator completion feedback animates displayed progress independently from owned progress, starting layered impact audio with the reward and count audio on the rise clock; final night completion waits for the rise.
 - NightRooms drives generator and flip-tab look offsets from the existing smoothed gaze through separate transform layers, preserving independent flip and reward animations.
-- MAYHEM room looking is a flat 2D pan (scale + translate only); no perspective, rotation, or displacement distortion — the user rejected the FNAF-style curved effect.
-- Room gaze uses the tested bounded, edge-weighted curve in `povLookRules.ts` with smoothed cursor input; the room reticle is hidden during overlays and pause so interactive panels retain their normal pointer.
+- MAYHEM room artwork is angularly re-projected by the isolated Three.js `CurvedRoom` renderer, with shared smoothed gaze and DOM fallback; this makes head turns visibly curved without changing authored paintings or gameplay.
+- Room changes darken the outgoing view before swapping artwork and reveal the incoming view during a directional sweep; the shared gaze stays frame-rate independent and panel pointers remain ordinary.
 - MAYHEM NPC reactions are triggered by page-level dialogue completion and animated in canvas runtime state, keeping story timing aligned with world visuals.
 - MAYHEM night puzzle and terminal-error progress is owned by `NightRooms` and passed into overlays, so lowering a panel never resets an active repair.- MAYHEM night threats live on the 12×12 grid in `useGridRoster` (roster config + per-night move chance), owned by `NightRooms` so movement continues while the map is closed.
 - MAYHEM hallway threats (Nicky/AN-B) use pure timing rules in `encounterRules.ts`; NightRooms owns encounter state and grid `inHall` flags from `useGridRoster`, so outcomes stay testable and pause-safe.

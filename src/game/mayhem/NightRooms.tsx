@@ -39,7 +39,7 @@ import loadingSfx from "@/assets/audio/encounter/loading.ogg.asset.json";
 import animMove1 from "@/assets/audio/AnimMove1.wav.asset.json";
 import animMove4 from "@/assets/audio/AnimMove4.wav.asset.json";
 import { anbOutcome, HALL_ENTRY_MS, inOfficeRooms, lockdownAllows, lookingAtAnb, nickyOutcome, staringAtThreat, tipsForNight } from "./encounterRules";
-import { lookOffset } from "./povLookRules";
+import CurvedRoom from "./CurvedRoom";
 import newAnimInHallSfx from "@/assets/audio/NewAnimInHall.wav.asset.json";
 import runAwaySfx from "@/assets/audio/encounter/metal-run-away.wav.asset.json";
 import type { GridEnemyId } from "./useGridRoster";
@@ -155,6 +155,9 @@ function makeDust(): { id: number; left: number; top: number; size: number; dura
 export default function NightRooms({ paused = false, upgrades = {}, onNightComplete, onRetry }: { paused?: boolean; upgrades?: NightUpgrades; onNightComplete: () => void; onRetry?: () => void }) {
   const [settings] = useSettings();
   const [view, setView] = useState<View>("office");
+  const [curvedReady, setCurvedReady] = useState(false);
+  const turnRef = useRef<{ to: View; elapsed: number; swapped: boolean; direction: number } | null>(null);
+  const turnShadeRef = useRef<HTMLDivElement>(null);
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [terminalSession, setTerminalSession] = useState<TerminalSession>(() => ({ initialized: false, error: null, videoTime: 0, videoDone: false, puzzleSeed: Math.floor(Math.random() * 0xFFFFFFFF) }));
   const [generatorOpen, setGeneratorOpen] = useState(false);
@@ -474,7 +477,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   // ---- keyboard navigation ----
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.repeat || pausedRef.current || !nightReadyRef.current || deadRef.current) return;
+      if (e.repeat || pausedRef.current || !nightReadyRef.current || deadRef.current || turnRef.current) return;
       const k = e.key.toLowerCase();
       if (!["a", "d", "w", "s", "e", "g"].includes(k)) return;
       e.preventDefault();
@@ -528,32 +531,12 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
       }
       if (to !== from) {
         playMoveSound(from, to);
-        // Room transitions reuse the mouse-look system: the head snaps
-        // toward the turn direction, then eases back to center exactly
-        // like a mouse sweep (same smoothing + rotation).
-        const turn = (() => {
-          // office → door (turning right toward the door)
-          if (from === "office" && to === "door") return { x: 0.85, y: 0, z: 0 };
-          // door → hallway (entering the hall: look swings right to center)
-          if (from === "door" && to === "hallway") return { x: 0.85, y: 0, z: 0 };
-          // hallway → door (stepping back: a quick zoom-out snap)
-          if (from === "hallway" && to === "door") return { x: 0, y: 0, z: -0.09 };
-          // hallway → storage (entering storage: look swings right to center)
-          if (from === "hallway" && to === "storage") return { x: 0.85, y: 0, z: 0 };
-          // door → office (turning away from the door: look swings left to center)
-          if (from === "door" && to === "office") return { x: -0.85, y: 0, z: 0 };
-          // generic turns follow the key direction
-          if (k === "a") return { x: -0.5, y: 0, z: 0 };
-          if (k === "d") return { x: 0.5, y: 0, z: 0 };
-          if (k === "w") return { x: 0, y: 0.55, z: 0 };
-          return { x: 0, y: 0, z: 0 };
-        })();
-        cur.current.x = turn.x;
-        cur.current.y = turn.y;
-        target.current.x = 0;
-        target.current.y = 0;
-        zoomNudge.current = turn.z;
-        setView(to);
+        if (to === "keyhole" || to === "storageKeyhole" || from === "keyhole" || from === "storageKeyhole") {
+          setView(to);
+          viewRef.current = to;
+        } else {
+          turnRef.current = { to, elapsed: 0, swapped: false, direction: k === "a" ? -1 : 1 };
+        }
       }
     };
     window.addEventListener("keydown", onKey);
@@ -646,14 +629,14 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
     "THE STORAGE";
 
   // ---- mouse look ----
-  // Cursor position (-1..1) drives a smoothed counter-drift of the room, so
-  // sweeping the mouse feels like turning your head. Keyhole views peek
-  // further because you're pressed against the door.
+  // Shared gaze drives angular projection and keeps hotspots aligned with
+  // the head-turn direction. Interface panels retain their independent drift.
   const lookRef = useRef<HTMLDivElement | null>(null);
   const generatorLookRef = useRef<HTMLDivElement | null>(null);
   const flipTabRef = useRef<HTMLButtonElement | null>(null);
   const target = useRef({ x: 0, y: 0 });
   const cur = useRef({ x: 0, y: 0 });
+  const projectedGaze = useRef({ x: 0, y: 0 });
   // Zoom nudge for the hallway→door step-back — eased back to center.
   const zoomNudge = useRef(0);
   const zoomCur = useRef(1.22);
@@ -678,11 +661,34 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
 
   useEffect(() => {
     let id = 0;
+    let previous = performance.now();
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const tick = () => {
+    const tick = (now: number) => {
+      const dt = Math.min(50, now - previous);
+      previous = now;
       if (pausedRef.current) { id = requestAnimationFrame(tick); return; }
-      cur.current.x += (target.current.x - cur.current.x) * 0.08;
-      cur.current.y += (target.current.y - cur.current.y) * 0.08;
+      const smoothing = 1 - Math.exp(-dt / 85);
+      cur.current.x += (target.current.x - cur.current.x) * smoothing;
+      cur.current.y += (target.current.y - cur.current.y) * smoothing;
+      let turnX = 0;
+      const turn = turnRef.current;
+      if (turn) {
+        turn.elapsed += dt;
+        const duration = reducedMotion.matches ? 160 : 620;
+        const progress = Math.min(1, turn.elapsed / duration);
+        const shade = Math.sin(progress * Math.PI);
+        if (turnShadeRef.current) turnShadeRef.current.style.opacity = String(Math.min(1, shade * 1.7));
+        turnX = reducedMotion.matches ? 0 : turn.direction * (progress < 0.5 ? progress * 2 : (progress - 1) * 2) * 1.5;
+        if (progress >= 0.5 && !turn.swapped) {
+          turn.swapped = true;
+          setView(turn.to);
+          viewRef.current = turn.to;
+        }
+        if (progress === 1) {
+          turnRef.current = null;
+          if (turnShadeRef.current) turnShadeRef.current.style.opacity = "0";
+        }
+      }
       const gx = reducedMotion.matches ? 0 : -cur.current.x * 14;
       const gy = reducedMotion.matches ? 0 : -cur.current.y * 5;
       if (generatorLookRef.current) {
@@ -712,11 +718,15 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
         const scale = zoomCur.current + zoomNudge.current;
         const damp = zoomed ? 0 : 1;
         const entrySlide = cameraEntryState === "rush" ? Math.min(1, Math.max(0, (scale - 1.1) / 4.1)) : 0;
-        // Flat 2D pan: scale + translate only. The offset comes from the
-        // edge-weighted curve — dead zone at center, smooth clamp at edges.
-        const off = lookOffset(cur.current.x, cur.current.y, p);
-        const tx = (reducedMotion.matches ? 0 : off.x * damp) - 18 * entrySlide;
-        const ty = (reducedMotion.matches ? 0 : off.y * damp) + 34 * entrySlide;
+        const activeGaze = !zoomed && !generatorOpenRef.current && !cameraOpenRef.current && !deadRef.current && nightReadyRef.current;
+        const x = reducedMotion.matches || !activeGaze ? 0 : cur.current.x + turnX;
+        const y = reducedMotion.matches || !activeGaze ? 0 : cur.current.y;
+        projectedGaze.current.x = x;
+        projectedGaze.current.y = y;
+        // This coarse DOM counter-pan also moves interactive hotspots with the
+        // projected artwork. The angular renderer supplies wall curvature.
+        const tx = -x * 52 * damp - 18 * entrySlide;
+        const ty = -y * 24 * damp + 34 * entrySlide;
         el.style.transform =
           `scale(${scale}) translate(${tx}px, ${ty}px)`;
       }
@@ -750,7 +760,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
         </div>
       )}
 
-      {/* mouse-look layer: the room drifts opposite the cursor */}
+      {/* Authored artwork, re-projected as a curved environmental view. */}
       <div
         ref={lookRef}
         className={`absolute inset-0 will-change-transform transition-[filter] duration-300 ${terminalOpen ? "blur-[3px] brightness-75" : "blur-0 brightness-100"}`}
@@ -760,9 +770,9 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
           src={art}
           alt={label}
           draggable={false}
-          className="absolute inset-0 h-full w-full object-cover"
-          style={{ animation: "mayhemRoomFade 180ms ease-out" }}
+          className={`absolute inset-0 h-full w-full object-cover ${curvedReady ? "invisible" : ""}`}
         />
+        <CurvedRoom src={art} gaze={projectedGaze} onReady={setCurvedReady} />
 
         {view === "door" && hallu !== null && (
           <img
@@ -843,6 +853,8 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
           </div>
         )}
       </div>
+
+      <div ref={turnShadeRef} aria-hidden="true" className="pointer-events-none absolute inset-0 z-[85] bg-background opacity-0" />
 
       <div aria-hidden="true" className="mayhem-pov-vignette pointer-events-none absolute inset-0" />
 

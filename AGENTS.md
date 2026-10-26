@@ -16,5 +16,6 @@
 - Continuous character friction audio is gated by tested ground, velocity and active-gameplay rules each frame and stopped on canvas cleanup, so jumps, pauses and scene changes cannot leave scraping audible.
 - Distinct level environments use dedicated canvas scenery renderers while shared collisions stay data-driven in `level.ts`, keeping visuals isolated from physics.
 - Boss cinematics live in boss runtime state and signal the page-level audio owner when combat begins, preventing visual and music timing drift.
+- MAYHEM environmental look uses an isolated Three.js angular projection with a painting fallback and shared smoothed gaze; room-turn shading covers artwork swaps without changing encounter logic.
 
 - Subdirectories have their own `AGENTS.md`; read it before changing files there.
