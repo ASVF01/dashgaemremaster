@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Rework MAYHEM POV with curved environmental head rotation and darkened room turns; verify movement in a live night.
+- [x] Rework MAYHEM POV with curved environmental head rotation and darkened room turns; verified live Night 1 looking, room changes, keyhole and tracking-grid interaction with local artwork interception; 46 MAYHEM tests pass.
 
 - [x] Verify MAYHEM POV movement: center dead zone, bounded left/right pan, room turns, keyhole zoom, and normal pointers during panels and pause; camera tests and live Night 1 checks pass with local uploaded-art interception.
 
