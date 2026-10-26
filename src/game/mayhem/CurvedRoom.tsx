@@ -42,8 +42,8 @@ export default function CurvedRoom({ src, gaze, onReady }: {
           // on tall ones. The painting remains cover-cropped, never stretched.
           vec2 field = vec2(lens * min(aspect, 1.6), lens * min(1.0, 1.6 / aspect));
           vec3 ray = normalize(vec3(screen * field, -1.0));
-          float yaw = gaze.x * 0.19;
-          float pitch = gaze.y * 0.12;
+          float yaw = -gaze.x * 0.19;
+          float pitch = -gaze.y * 0.12;
           ray.yz = mat2(cos(pitch), -sin(pitch), sin(pitch), cos(pitch)) * ray.yz;
           ray.xz = mat2(cos(yaw), -sin(yaw), sin(yaw), cos(yaw)) * ray.xz;
           vec2 angular = vec2(atan(ray.x, -ray.z), atan(ray.y, length(ray.xz)));
