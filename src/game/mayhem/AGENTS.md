@@ -10,6 +10,7 @@
 - Generator completion feedback animates displayed progress independently from owned progress, starting layered impact audio with the reward and count audio on the rise clock; final night completion waits for the rise.
 - NightRooms drives generator and flip-tab look offsets from the existing smoothed gaze through separate transform layers, preserving independent flip and reward animations.
 - MAYHEM room artwork is angularly re-projected by the isolated Three.js `CurvedRoom` renderer, with shared smoothed gaze and DOM fallback; this makes head turns visibly curved without changing authored paintings or gameplay.
+- CurvedRoom converts pointer coordinates into shader angles through tested `roomLookAngles` rules, keeping screen-space and projection-axis signs consistent.
 - Room changes darken the outgoing view before swapping artwork and reveal the incoming view during a directional sweep; the shared gaze stays frame-rate independent and panel pointers remain ordinary.
 - MAYHEM NPC reactions are triggered by page-level dialogue completion and animated in canvas runtime state, keeping story timing aligned with world visuals.
 - MAYHEM night puzzle and terminal-error progress is owned by `NightRooms` and passed into overlays, so lowering a panel never resets an active repair.- MAYHEM night threats live on the 12×12 grid in `useGridRoster` (roster config + per-night move chance), owned by `NightRooms` so movement continues while the map is closed.
