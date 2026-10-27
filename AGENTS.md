@@ -19,3 +19,4 @@
 - MAYHEM environmental look uses an isolated Three.js angular projection with a painting fallback and shared smoothed gaze; room-turn shading covers artwork swaps without changing encounter logic.
 
 - Subdirectories have their own `AGENTS.md`; read it before changing files there.
+- Title-screen and mode-selection presentation is isolated from existing game/settings destinations; use cropped user artwork and scoped semantic colors so menu redesigns cannot change gameplay or saved settings.

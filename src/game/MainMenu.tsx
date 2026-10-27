@@ -23,6 +23,7 @@ import { characterPage, CHARACTER_SELECT_HOLD_MS, CHARACTER_SELECT_EXIT_CLOSE_MS
 import "@/game/characterSelect.css";
 import roaringKnightImg from "@/assets/roaring_knight_titlecard.png";
 import celestialMarathonEmblem from "@/assets/celestial-marathon-emblem.png";
+import TitleScreen from "@/game/TitleScreen";
 
 
 export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" | "updates" | "credits" | "youtube" | "starvanisher" | "hell";
@@ -38,6 +39,8 @@ interface Props {
 
 export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAlternate, onCommenceMayhem, onContinueMayhem }: Props) {
   const [tab, setTab] = useState<MenuTab>("play");
+  const [titleOpen, setTitleOpen] = useState(true);
+  const [modesOpen, setModesOpen] = useState(false);
   const [charSelectOpen, setCharSelectOpen] = useState(false);
   const [charSelectZoomed, setCharSelectZoomed] = useState(false);
   const [bestiaryOpen, setBestiaryOpen] = useState(false);
@@ -65,6 +68,7 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
   };
 
   const switchTab = (next: MenuTab) => {
+    setTitleOpen(false);
     if (next === tab) return;
     unlockAudio();
     sfx.menuTab();
@@ -93,8 +97,14 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
 
 
   return (
-    <div className="fixed inset-0 z-[40] flex items-stretch justify-center bg-paper overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className={`fixed inset-0 ${titleOpen ? "z-[46]" : "z-[40]"} flex items-stretch justify-center bg-paper overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}>
+      {titleOpen && <TitleScreen modes={modesOpen} onModes={setModesOpen}
+        onSettings={() => switchTab("settings")} onCredits={() => switchTab("credits")}
+        onExtras={() => switchTab("extras")} onPlatformer={() => { setTitleOpen(false); setTab("play"); }}
+        onSurvival={() => switchTab("hell")} />}
+      {!titleOpen && <>
       <div className={`w-full max-w-5xl mx-auto px-6 pt-24 pb-8 flex flex-col menu-zoom-layer ${charSelectZoomed ? "menu-zoomed" : ""}`}>
+        <Button variant="ghost" className="self-start mb-4" onClick={() => { switchTab("play"); setTitleOpen(true); setModesOpen(false); }}><ChevronLeft /> TITLE SCREEN</Button>
         {/* Title */}
         <div className="text-center mb-6">
           <div className="font-marker text-6xl md:text-7xl text-ink leading-[0.9] -rotate-1 inline-block">
@@ -138,6 +148,7 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
           {tab === "hell" && <HellPreview onCommence={onCommenceMayhem} onContinue={onContinueMayhem} />}
         </div>
       </div>
+      </>}
 
       {charSelectOpen && <CharacterSelectScreen onExitCovered={() => setCharSelectZoomed(false)} onClose={() => { setCharSelectZoomed(false); setCharSelectOpen(false); }} />}
       {bestiaryOpen && <BestiaryScreen onClose={() => setBestiaryOpen(false)} />}
