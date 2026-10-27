@@ -97,7 +97,7 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
 
 
   return (
-    <div className="fixed inset-0 z-[40] flex items-stretch justify-center bg-paper overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className={`fixed inset-0 ${titleOpen ? "z-[46]" : "z-[40]"} flex items-stretch justify-center bg-paper overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}>
       {titleOpen && <TitleScreen modes={modesOpen} onModes={setModesOpen}
         onSettings={() => switchTab("settings")} onCredits={() => switchTab("credits")}
         onExtras={() => switchTab("extras")} onPlatformer={() => { setTitleOpen(false); setTab("play"); }}
