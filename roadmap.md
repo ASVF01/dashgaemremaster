@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Apply the user-drawn title screen and PLAY mode-selection sketch; preserve existing settings and game destinations, verify both screens.
+- [x] Apply the user-drawn title screen and PLAY mode-selection sketch; verified title, all three mode choices, settings and MAYHEM destinations at 1340×935 with local artwork interception; seven character-selection tests pass.
 
 - [x] Rework MAYHEM POV with curved environmental head rotation and darkened room turns; verified live Night 1 looking, room changes, keyhole and tracking-grid interaction with local artwork interception; 46 MAYHEM tests pass.
 
