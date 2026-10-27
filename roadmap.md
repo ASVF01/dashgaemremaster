@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Apply the user-drawn title screen and PLAY mode-selection sketch; preserve existing settings and game destinations, verify both screens.
+
 - [x] Rework MAYHEM POV with curved environmental head rotation and darkened room turns; verified live Night 1 looking, room changes, keyhole and tracking-grid interaction with local artwork interception; 46 MAYHEM tests pass.
 
 - [x] Verify MAYHEM POV movement: center dead zone, bounded left/right pan, room turns, keyhole zoom, and normal pointers during panels and pause; camera tests and live Night 1 checks pass with local uploaded-art interception.
