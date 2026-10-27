@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useCharacter } from '@/game/character';
 import { sfx } from '@/game/sfx';
 import extraArt from '@/assets/title-screen/extra-modes.png.asset.json';
 import platformerArt from '@/assets/title-screen/platformer.png.asset.json';
 import survivalArt from '@/assets/title-screen/survival.png.asset.json';
 import playerPortrait from '@/assets/title-screen/portrait-player.png.asset.json';
 import pinkPortrait from '@/assets/title-screen/portrait-pink.png.asset.json';
-import runSprite from '@/assets/sprites/run_1.png';
-import runSprite2 from '@/assets/sprites/run_2.png';
+import runSprite from '@/assets/sprites/run_fast_1.png';
+import runSprite2 from '@/assets/sprites/run_fast_2.png';
 import '@/game/titleScreen.css';
 
 type Props = {
@@ -31,7 +30,7 @@ function MovingBorder({ bottom = false }: { bottom?: boolean }) {
 }
 
 export default function TitleScreen({ modes, onModes, onSettings, onCredits, onExtras, onPlatformer, onSurvival }: Props) {
-  const character = useCharacter();
+  const [catUnlocked] = useState(() => { try { return localStorage.getItem('badge_jrb') === '1'; } catch { return false; } });
   const [portraitSwap, setPortraitSwap] = useState(false);
   const [runFrame, setRunFrame] = useState(false);
   useEffect(() => {
@@ -48,7 +47,7 @@ export default function TitleScreen({ modes, onModes, onSettings, onCredits, onE
     </div>}
     {modes && <Button variant="ghost" className="authored-back" onClick={() => command(() => onModes(false))}><ArrowLeft /> Back</Button>}
     <div className="authored-menu-content">
-      <h1 className="authored-title">Dash Gaem<strong>REMASTERED {character.unlocked.x3mode && <span className="authored-cat" aria-label="Cat badge unlocked">:3</span>}</strong></h1>
+      <h1 className="authored-title">Dash Gaem<strong>REMASTERED {catUnlocked && <span className="authored-cat" aria-label="Cat badge unlocked">:3</span>}</strong></h1>
       {!modes ? <div className="authored-console">
         <div className="authored-portrait"><img src={portraits[0]} alt="" /></div>
         <div className="authored-commands">

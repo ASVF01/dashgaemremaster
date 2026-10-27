@@ -4,7 +4,7 @@
   --menu-pink: 337 88% 50%;
   --menu-cyan: 195 100% 44%;
   --menu-red: 358 79% 29%;
-  position: fixed; inset: 0; overflow: auto; background: hsl(var(--menu-black)); color: hsl(var(--menu-white));
+  position: fixed; inset: 0; z-index: 46; overflow: auto; background: hsl(var(--menu-black)); color: hsl(var(--menu-white));
   font-family: 'Courier New', monospace; letter-spacing: 0;
 }
 .authored-menu-content { position: relative; z-index: 2; min-height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 100px 28px 120px; }
