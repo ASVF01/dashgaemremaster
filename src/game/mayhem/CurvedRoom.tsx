@@ -38,7 +38,7 @@ export default function CurvedRoom({ src, gaze, onReady }: {
         varying vec2 vUv;
         void main() {
           vec2 screen = (vUv - 0.5) * 2.0;
-          float lens = 0.66;
+          float lens = 0.42;
           // Constant horizontal field on wide views; constant vertical field
           // on tall ones. The painting remains cover-cropped, never stretched.
           vec2 field = vec2(lens * min(aspect, 1.6), lens * min(1.0, 1.6 / aspect));
