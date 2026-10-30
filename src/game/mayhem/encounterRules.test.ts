@@ -33,3 +33,13 @@ describe("encounter rules", () => {
     expect(tipsForNight(2)).toEqual([1, 2]);
   });
 });
+
+import { lockdownAllows as allowStepOut } from "./encounterRules";
+describe("hall-entry step-out window", () => {
+  it("lets the player leave the door for the hallway during the first 5.1s", () => {
+    expect(allowStepOut("hallway", "door", 2000)).toBe(true);
+  });
+  it("seals the office rooms after 5.1s", () => {
+    expect(allowStepOut("hallway", "door", 5100)).toBe(false);
+  });
+});
