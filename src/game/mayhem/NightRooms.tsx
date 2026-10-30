@@ -40,6 +40,9 @@ import animMove1 from "@/assets/audio/AnimMove1.wav.asset.json";
 import animMove4 from "@/assets/audio/AnimMove4.wav.asset.json";
 import { anbOutcome, HALL_ENTRY_MS, inOfficeRooms, lockdownAllows, lookingAtAnb, nickyOutcome, staringAtThreat, tipsForNight } from "./encounterRules";
 import CurvedRoom from "./CurvedRoom";
+import { projectRoomRect } from "./roomProjection";
+const spotKey = (s: { left: string; top: string; width: string; height: string }) =>
+  [s.left, s.top, s.width, s.height].map((v) => parseFloat(v) / 100).join(",");
 import newAnimInHallSfx from "@/assets/audio/NewAnimInHall.wav.asset.json";
 import runAwaySfx from "@/assets/audio/encounter/metal-run-away.wav.asset.json";
 import type { GridEnemyId } from "./useGridRoster";
@@ -156,6 +159,8 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   const [settings] = useSettings();
   const [view, setView] = useState<View>("office");
   const [curvedReady, setCurvedReady] = useState(false);
+  const curvedReadyRef = useRef(false);
+  curvedReadyRef.current = curvedReady;
   const turnRef = useRef<{ to: View; elapsed: number; swapped: boolean; direction: number } | null>(null);
   const turnShadeRef = useRef<HTMLDivElement>(null);
   const [terminalOpen, setTerminalOpen] = useState(false);
@@ -525,7 +530,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
       }
       const from = viewRef.current;
       const to = nextView(from, k);
-      if (to !== from && threatRef.current && !lockdownAllows(to, from)) {
+      if (to !== from && threatRef.current && !lockdownAllows(to, from, threatElapsed.current)) {
         playOnce(blockedSfx.url, 0.9);
         return;
       }
@@ -729,6 +734,14 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
         const ty = -y * 24 * damp + 34 * entrySlide;
         el.style.transform =
           `scale(${scale}) translate(${tx}px, ${ty}px)`;
+        // Keep hotspots on the artwork the curved renderer actually draws.
+        const aspect = el.clientWidth / Math.max(1, el.clientHeight);
+        el.querySelectorAll<HTMLElement>("[data-room-spot]").forEach((spot) => {
+          const [l, t, w, h] = spot.dataset.roomSpot!.split(",").map(Number);
+          const r = curvedReadyRef.current ? projectRoomRect(l, t, w, h, x, y, aspect) : { left: l, top: t, width: w, height: h };
+          spot.style.left = `${r.left * 100}%`; spot.style.top = `${r.top * 100}%`;
+          spot.style.width = `${r.width * 100}%`; spot.style.height = `${r.height * 100}%`;
+        });
       }
       if (cursorRef.current) {
         cursorRef.current.style.opacity = cursorVisible.current ? "1" : "0";
@@ -792,6 +805,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
               onClick={openCamera}
               className="absolute border-2 border-transparent hover:border-white/60"
               style={monitorSpot}
+              data-room-spot={spotKey(monitorSpot)}
             />
             <button
               type="button"
@@ -799,6 +813,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
               onClick={meowRedGuy}
               className="absolute cursor-pointer border-2 border-transparent hover:border-white/40"
               style={redGuySpot}
+              data-room-spot={spotKey(redGuySpot)}
             />
           </>
         )}
@@ -815,6 +830,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
             onTouchEnd={stopHold}
             className="absolute border-2 border-transparent hover:border-[hsl(var(--hell-warning))]/60"
             style={packSpot}
+              data-room-spot={spotKey(packSpot)}
           />
         )}
 
@@ -827,6 +843,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
               onClick={() => { mayhemSfx.terminalSelect(); setStorageDoorClosed((closed) => !closed); }}
               className="absolute border-2 border-transparent hover:border-[hsl(var(--hell-warning))]/70"
               style={storageDoorControlSpot}
+              data-room-spot={spotKey(storageDoorControlSpot)}
             />
           </>
         )}

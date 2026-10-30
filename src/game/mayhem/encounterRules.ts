@@ -18,8 +18,9 @@ export function inOfficeRooms(view: EncounterView) {
 /** While a hallway threat is active the player may only head toward the office.
  * Once inside the office rooms, they stay sealed in until the threat leaves.
  * Stepping back from the storage keyhole/door into storage counts as heading toward it. */
-export function lockdownAllows(to: EncounterView, from?: EncounterView): boolean {
-  if (from && inOfficeRooms(from)) return inOfficeRooms(to);
+export function lockdownAllows(to: EncounterView, from?: EncounterView, elapsedMs = Infinity): boolean {
+  // During the 5.1s hall-entry cue the player may still step out into the hallway.
+  if (from && inOfficeRooms(from)) return inOfficeRooms(to) || (to === "hallway" && elapsedMs < HALL_ENTRY_MS);
   if (to === "storage" && (from === "storageKeyhole" || from === "storageDoor")) return true;
   return inOfficeRooms(to) || to === "hallway";
 }
