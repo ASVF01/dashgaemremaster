@@ -2,9 +2,15 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { sfx } from '@/game/sfx';
-import extraArt from '@/assets/title-screen/extra-modes.png.asset.json';
-import platformerArt from '@/assets/title-screen/platformer.png.asset.json';
-import survivalArt from '@/assets/title-screen/survival.png.asset.json';
+import extraArt from '@/assets/title-screen/modes/Irrelevant_Modes_EXTRA_MODES.png.asset.json';
+import extraStart from '@/assets/title-screen/modes/Irrelevant_START_button_Not_Hovered_Over.png.asset.json';
+import extraStartHover from '@/assets/title-screen/modes/Irrelevant_START_button_Hovered_Over.png.asset.json';
+import platformerArt from '@/assets/title-screen/modes/Platformer_MAIN_MODE.png.asset.json';
+import platformerStart from '@/assets/title-screen/modes/Platformer_START_button_Not_Hovered_Over.png.asset.json';
+import platformerStartHover from '@/assets/title-screen/modes/Platformer_START_button_Hovered_Over.png.asset.json';
+import survivalArt from '@/assets/title-screen/modes/Survival_HORROR_MODE.png.asset.json';
+import survivalStart from '@/assets/title-screen/modes/Survival_START_button_Not_Hovered_Over.png.asset.json';
+import survivalStartHover from '@/assets/title-screen/modes/Survival_START_button_Hovered_Over.png.asset.json';
 import playerPortrait from '@/assets/title-screen/portrait-player.png.asset.json';
 import pinkPortrait from '@/assets/title-screen/portrait-pink.png.asset.json';
 import runSprite from '@/assets/sprites/run_fast_1.png';
@@ -17,6 +23,7 @@ type Props = {
   onSettings: () => void;
   onCredits: () => void;
   onExtras: () => void;
+  onIrrelevant: () => void;
   onPlatformer: () => void;
   onSurvival: () => void;
 };
@@ -24,12 +31,12 @@ type Props = {
 function MovingBorder({ bottom = false }: { bottom?: boolean }) {
   return <div aria-hidden="true" className={`authored-border ${bottom ? 'bottom' : 'top'}`}>
     <svg viewBox="0 0 1600 110" preserveAspectRatio="none">
-      <path d="M0 0H1600V35L1500 57L1380 40L1280 94L1160 51L1040 73L930 31L800 65L700 57L580 40L480 94L360 51L240 73L130 31L0 65Z" />
+      <path d="M0 0H1600V65L1500 57L1380 40L1280 94L1160 51L1040 73L930 31L800 65L700 57L580 40L480 94L360 51L240 73L130 31L0 65Z" />
     </svg>
   </div>;
 }
 
-export default function TitleScreen({ modes, onModes, onSettings, onCredits, onExtras, onPlatformer, onSurvival }: Props) {
+export default function TitleScreen({ modes, onModes, onSettings, onCredits, onExtras, onIrrelevant, onPlatformer, onSurvival }: Props) {
   const [catUnlocked] = useState(() => { try { return localStorage.getItem('badge_jrb') === '1'; } catch { return false; } });
   const [portraitSwap, setPortraitSwap] = useState(false);
   const [runFrame, setRunFrame] = useState(false);
@@ -59,12 +66,14 @@ export default function TitleScreen({ modes, onModes, onSettings, onCredits, onE
         <h2 className="authored-play-label">PLAY!</h2>
         <div className="authored-mode-grid">
           {[
-            { id: 'extra', label: 'Irrelevant Modes — Extra Modes', art: extraArt.url, action: onExtras },
-            { id: 'platformer', label: 'Platformer — Main Mode', art: platformerArt.url, action: onPlatformer },
-            { id: 'survival', label: 'Survival — Horror Mode', art: survivalArt.url, action: onSurvival },
+            { id: 'extra', label: 'Irrelevant Modes — Extra Modes', art: extraArt.url, start: extraStart.url, hover: extraStartHover.url, action: onIrrelevant },
+            { id: 'platformer', label: 'Platformer — Main Mode', art: platformerArt.url, start: platformerStart.url, hover: platformerStartHover.url, action: onPlatformer },
+            { id: 'survival', label: 'Survival — Horror Mode', art: survivalArt.url, start: survivalStart.url, hover: survivalStartHover.url, action: onSurvival },
           ].map(mode => <article key={mode.id} className={`authored-mode ${mode.id}`}>
             <div className="authored-mode-art"><img src={mode.art} alt={mode.label} /></div>
-            <Button className="authored-start" aria-label={`Start ${mode.label}`} onMouseEnter={() => sfx.menuHover()} onClick={() => command(mode.action)}>START</Button>
+            <button type="button" className="authored-start" aria-label={`Start ${mode.label}`} onMouseEnter={() => sfx.menuHover()} onClick={() => command(mode.action)}>
+              <img className="idle" src={mode.start} alt="" /><img className="hover" src={mode.hover} alt="" />
+            </button>
           </article>)}
         </div>
       </>}
