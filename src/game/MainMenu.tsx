@@ -73,7 +73,7 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
 
   const onTitle = view === "title" || view === "modes";
   return (
-    <div className="fixed inset-0 z-[46] bg-black">
+    <div className="fixed inset-0 z-[46]">
       {onTitle && <TitleScreen modes={view === "modes"} onModes={open => go(open ? "modes" : "title")}
         onSettings={() => go("settings")} onCredits={() => go("credits")} onExtras={() => go("xtraz")}
         onIrrelevant={() => go("irrelevant")} onPlatformer={() => go("platformer")} onSurvival={() => go("survival")} />}
@@ -108,63 +108,6 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
       {bestiaryOpen && <BestiaryScreen onClose={() => setBestiaryOpen(false)} />}
       {shopOpen && createPortal(<Shop onClose={() => setShopOpen(false)} />, document.body)}
     </div>
-  );
-}
-
-function TabBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      onClick={onClick}
-      onMouseEnter={() => { if (!active) sfx.menuHover(); }}
-      className={[
-        "scribble-border font-marker text-2xl px-5 py-2 transition-transform hover:-rotate-2",
-        active ? "bg-ink text-paper" : "bg-paper text-ink hover:bg-[hsl(var(--accent))/0.2]",
-      ].join(" ")}
-    >
-      {children}
-    </button>
-  );
-}
-
-function SvTabBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      onClick={onClick}
-      onMouseEnter={() => { if (!active) sfx.menuHover(); }}
-      className={[
-        "scribble-border px-5 py-2 transition-transform hover:scale-105 hover:-rotate-1 sv-font",
-        active ? "brightness-110 ring-2 ring-white" : "brightness-100",
-      ].join(" ")}
-      style={{
-        background: "linear-gradient(180deg, #3b8cff 0%, #2b7bff 50%, #1a5fd8 100%)",
-        color: "#000",
-        WebkitTextStroke: "1.5px #fff",
-        transform: "skewX(-8deg)",
-        boxShadow: active
-          ? "0 0 18px rgba(43,123,255,0.85), 4px 4px 0 #000"
-          : "0 0 12px rgba(43,123,255,0.55), 4px 4px 0 #000",
-        textShadow: "0 2px 0 rgba(255,255,255,0.35)",
-        fontSize: "1.4rem",
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
-function HellTabBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      onClick={onClick}
-      onMouseEnter={() => { if (!active) sfx.menuHover(); }}
-      className={[
-        "hell-tab relative overflow-hidden border-2 border-[hsl(var(--hell-steel))] px-7 py-2 font-pixel text-xl transition-transform hover:-rotate-1",
-        active ? "hell-tab-active" : "",
-      ].join(" ")}
-    >
-      <span aria-hidden="true" className="hell-tab-rain" />
-      <span className="relative z-10">{children}</span>
-    </button>
   );
 }
 
