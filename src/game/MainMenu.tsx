@@ -26,7 +26,7 @@ import celestialMarathonEmblem from "@/assets/celestial-marathon-emblem.png";
 import TitleScreen from "@/game/TitleScreen";
 
 
-export type MenuTab = "play" | "tutorial" | "keybinds" | "settings" | "extras" | "updates" | "credits" | "youtube" | "starvanisher" | "hell";
+export type MenuView = "title" | "modes" | "platformer" | "survival" | "irrelevant" | "starvanisher" | "soundtrack" | "settings" | "credits" | "xtraz" | "howto";
 
 interface Props {
   onPlay: (id: LevelId) => void;
@@ -37,120 +37,74 @@ interface Props {
   onContinueMayhem?: () => void;
 }
 
+const BACK_TARGET: Record<MenuView, MenuView> = {
+  title: "title", modes: "title", settings: "title", credits: "title", xtraz: "title",
+  platformer: "modes", survival: "modes", irrelevant: "modes",
+  starvanisher: "irrelevant", soundtrack: "irrelevant", howto: "platformer",
+};
+
+const VIEW_TITLE: Partial<Record<MenuView, string>> = {
+  platformer: "PLATFORMER [MAIN MODE]", survival: "SURVIVAL [HORROR MODE]", irrelevant: "IRRELEVANT MODES",
+  starvanisher: "STAR VANISHER", soundtrack: "BGM SOUNDTRACK", settings: "SETTINGS", credits: "CREDITS",
+  xtraz: "XTRAZ", howto: "HOW TO PLAY",
+};
+
 export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAlternate, onCommenceMayhem, onContinueMayhem }: Props) {
-  const [tab, setTab] = useState<MenuTab>("play");
-  const [titleOpen, setTitleOpen] = useState(true);
-  const [modesOpen, setModesOpen] = useState(false);
+  const [view, setView] = useState<MenuView>("title");
   const [charSelectOpen, setCharSelectOpen] = useState(false);
-  const [charSelectZoomed, setCharSelectZoomed] = useState(false);
   const [bestiaryOpen, setBestiaryOpen] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
-  const prevTabRef = useRef<MenuTab>("play");
+  const prevViewRef = useRef<MenuView>("title");
 
   useEffect(() => {
-    const prev = prevTabRef.current;
-    if (tab === "hell" && prev !== "hell") {
-      unlockAudio();
-      stopBgm();
-      playMayhemBgm();
-    } else if (prev === "hell" && tab !== "hell") {
-      unlockAudio();
-      stopBgm();
-      playMenuBgm();
-    }
-    prevTabRef.current = tab;
-  }, [tab]);
+    const prev = prevViewRef.current;
+    if (view === "survival" && prev !== "survival") { unlockAudio(); stopBgm(); playMayhemBgm(); }
+    else if (prev === "survival" && view !== "survival") { unlockAudio(); stopBgm(); playMenuBgm(); }
+    prevViewRef.current = view;
+  }, [view]);
 
-  const handlePlay = (id: LevelId) => {
-    unlockAudio();
-    sfx.menuConfirm();
-    onPlay(id);
-  };
+  const handlePlay = (id: LevelId) => { unlockAudio(); sfx.menuConfirm(); onPlay(id); };
+  const go = (next: MenuView) => { unlockAudio(); setView(next); };
+  const back = () => { sfx.menuClick(); setView(BACK_TARGET[view]); };
+  const overlay = (open: (v: boolean) => void) => { unlockAudio(); sfx.menuTab(); open(true); };
+  const command = (label: string, action: () => void) => (
+    <Button key={label} className="authored-command" onMouseEnter={() => sfx.menuHover()} onClick={() => { sfx.menuClick(); action(); }}>{label}</Button>
+  );
 
-  const switchTab = (next: MenuTab) => {
-    setTitleOpen(false);
-    if (next === tab) return;
-    unlockAudio();
-    sfx.menuTab();
-    setTab(next);
-  };
-
-  const openCharSelect = () => {
-    unlockAudio();
-    sfx.menuTab();
-    setCharSelectZoomed(true);
-    setCharSelectOpen(true);
-  };
-
-  const openBestiary = () => {
-    unlockAudio();
-    sfx.menuTab();
-    setBestiaryOpen(true);
-  };
-
-  const openShop = () => {
-    unlockAudio();
-    sfx.menuTab();
-    setShopOpen(true);
-  };
-
-
-
+  const onTitle = view === "title" || view === "modes";
   return (
-    <div className={`fixed inset-0 ${titleOpen ? "z-[46]" : "z-[40]"} flex items-stretch justify-center bg-paper overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}>
-      {titleOpen && <TitleScreen modes={modesOpen} onModes={setModesOpen}
-        onSettings={() => switchTab("settings")} onCredits={() => switchTab("credits")}
-        onExtras={() => switchTab("extras")} onPlatformer={() => { setTitleOpen(false); setTab("play"); }}
-        onSurvival={() => switchTab("hell")} />}
-      {!titleOpen && <>
-      <div className={`w-full max-w-5xl mx-auto px-6 pt-24 pb-8 flex flex-col menu-zoom-layer ${charSelectZoomed ? "menu-zoomed" : ""}`}>
-        <Button variant="ghost" className="self-start mb-4" onClick={() => { switchTab("play"); setTitleOpen(true); setModesOpen(false); }}><ChevronLeft /> TITLE SCREEN</Button>
-        {/* Title */}
-        <div className="text-center mb-6">
-          <div className="font-marker text-6xl md:text-7xl text-ink leading-[0.9] -rotate-1 inline-block">
-            DASH GAEM
-            <br />
-            <span className="text-[hsl(var(--accent))] inline-block rotate-2">REMASTERED</span>
-          </div>
-          <p className="font-scribble text-2xl text-ink/80 mt-3">
-            a chaotic stick-figure speed platformer
-          </p>
-        </div>
+    <div className="fixed inset-0 z-[46] bg-black">
+      {onTitle && <TitleScreen modes={view === "modes"} onModes={open => go(open ? "modes" : "title")}
+        onSettings={() => go("settings")} onCredits={() => go("credits")} onExtras={() => go("xtraz")}
+        onIrrelevant={() => go("irrelevant")} onPlatformer={() => go("platformer")} onSurvival={() => go("survival")} />}
+      {!onTitle && createPortal(
+        <section className="authored-panel" aria-label={VIEW_TITLE[view]}>
+          <Button variant="ghost" className="authored-back" onClick={back}><ChevronLeft /> Back</Button>
+          <div className="authored-panel-head"><h2 className="authored-panel-title">{VIEW_TITLE[view]}</h2></div>
+          {view === "platformer" && <>
+            <div className="authored-choice-grid mb-5">
+              {command("CHANGE CHARACTER", () => overlay(setCharSelectOpen))}
+              {command("HOW TO PLAY", () => go("howto"))}
+            </div>
+            <div className="authored-panel-body paper"><PlayTab onPlay={handlePlay} /></div>
+          </>}
+          {view === "howto" && <div className="authored-panel-body paper"><TutorialTab onStartTutorial={() => handlePlay("tutorial")} altTutorialPrompt={altTutorialPrompt} onPlayAsAlternate={onPlayAsAlternate} /></div>}
+          {view === "survival" && <div className="authored-panel-body"><HellPreview onCommence={onCommenceMayhem} onContinue={onContinueMayhem} /></div>}
+          {view === "irrelevant" && <div className="authored-choice-grid">
+            {command("STAR VANISHER", () => go("starvanisher"))}
+            {command("BGM SOUNDTRACK", () => go("soundtrack"))}
+          </div>}
+          {view === "starvanisher" && <div className="authored-panel-body paper"><StarVanisher onBack={() => setView("irrelevant")} /></div>}
+          {view === "soundtrack" && <div className="authored-panel-body paper"><BgmPlayer /></div>}
+          {view === "settings" && <div className="authored-panel-body paper space-y-8"><SettingsTab /><KeybindsTab /></div>}
+          {view === "credits" && <div className="authored-panel-body paper"><CreditsTab /></div>}
+          {view === "xtraz" && <div className="authored-choice-grid">
+            {command("SHOP", () => overlay(setShopOpen))}
+            {command("BESTIARY", () => overlay(setBestiaryOpen))}
+          </div>}
+        </section>, document.body)}
 
-        {/* Tabs */}
-        <nav className="flex flex-wrap gap-2 justify-center mb-6">
-          <TabBtn active={tab === "play"}     onClick={() => switchTab("play")}>PLAY</TabBtn>
-          <TabBtn active={tab === "tutorial"} onClick={() => switchTab("tutorial")}>HOW TO PLAY</TabBtn>
-          <TabBtn active={tab === "keybinds"} onClick={() => switchTab("keybinds")}>KEYBINDS</TabBtn>
-          <TabBtn active={tab === "settings"} onClick={() => switchTab("settings")}>SETTINGS</TabBtn>
-          <TabBtn active={tab === "extras"}   onClick={() => switchTab("extras")}>EXTRAS</TabBtn>
-          <TabBtn active={tab === "updates"}  onClick={() => switchTab("updates")}>UPDATES</TabBtn>
-          <TabBtn active={tab === "credits"}  onClick={() => switchTab("credits")}>CREDITS</TabBtn>
-          <TabBtn active={tab === "youtube"} onClick={() => switchTab("youtube")}>YOUTUBE</TabBtn>
-          <SvTabBtn active={tab === "starvanisher"} onClick={() => switchTab("starvanisher")}>STAR VANISHER...!!</SvTabBtn>
-          <HellTabBtn active={tab === "hell"} onClick={() => switchTab("hell")}>MAYHEM</HellTabBtn>
-          <TabBtn active={false} onClick={openShop}>SHOP</TabBtn>
-          <TabBtn active={false} onClick={openBestiary}>BESTIARY</TabBtn>
-          <TabBtn active={false} onClick={openCharSelect}>CHARACTER SELECT</TabBtn>
-        </nav>
-
-        {/* Body */}
-        <div className="flex-1">
-          {tab === "play"     && <PlayTab onPlay={handlePlay} />}
-          {tab === "tutorial" && <TutorialTab onStartTutorial={() => handlePlay("tutorial")} altTutorialPrompt={altTutorialPrompt} onPlayAsAlternate={onPlayAsAlternate} />}
-          {tab === "keybinds" && <KeybindsTab />}
-          {tab === "settings" && <SettingsTab />}
-          {tab === "extras"   && <ExtrasTab onPlay={handlePlay} />}
-          {tab === "updates"  && <UpdatesTab />}
-          {tab === "credits"  && <CreditsTab />}
-          {tab === "youtube"  && <YouTubeTab />}
-          {tab === "starvanisher" && <StarVanisher onBack={() => setTab("play")} />}
-          {tab === "hell" && <HellPreview onCommence={onCommenceMayhem} onContinue={onContinueMayhem} />}
-        </div>
-      </div>
-      </>}
-
-      {charSelectOpen && <CharacterSelectScreen onExitCovered={() => setCharSelectZoomed(false)} onClose={() => { setCharSelectZoomed(false); setCharSelectOpen(false); }} />}
+      {charSelectOpen && <CharacterSelectScreen onExitCovered={() => {}} onClose={() => setCharSelectOpen(false)} />}
       {bestiaryOpen && <BestiaryScreen onClose={() => setBestiaryOpen(false)} />}
       {shopOpen && createPortal(<Shop onClose={() => setShopOpen(false)} />, document.body)}
     </div>
