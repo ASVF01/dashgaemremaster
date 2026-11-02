@@ -20,9 +20,9 @@ export default function PlatformerSelect({ arts, onChange, onPlay }: Props) {
     <div className="pf-char">
       <button type="button" className="pf-change" onClick={onChange} onMouseEnter={() => sfx.menuHover()}>CHANGE</button>
       <div className="pf-portrait">
-        <span className="pf-name">[ {NAMES[selected] ?? selected} ]</span>
+
         {arts[selected] && <img src={arts[selected]} alt={NAMES[selected]} />}
-        <span className="pf-badge">D<br />G<br /><b>R</b></span>
+
       </div>
     </div>
     <div className="pf-levels">
