@@ -475,6 +475,69 @@ function noise(dur: number, vol = 0.4, hp = 200, lp = 4000, delay = 0) {
   src.stop(t0 + dur + 0.02);
 }
 
+// --- Clean FM UI voices -----------------------------------------------
+// Two-operator sine FM: a modulator feeding the carrier's frequency through
+// a gain whose envelope collapses fast, so each hit starts crystalline/bright
+// and settles into a pure glassy tone. Everything runs through a gentle
+// lowpass so nothing gets harsh.
+type FmOpts = {
+  freq: number;
+  to?: number;
+  dur: number;
+  ratio?: number;   // modulator frequency as a multiple of the carrier
+  index?: number;   // modulation depth in Hz (brightness of the transient)
+  vol?: number;
+  attack?: number;
+  release?: number;
+  delay?: number;
+  lp?: number;      // lowpass cutoff
+  glideDur?: number;
+};
+
+function fmVoice(o: FmOpts) {
+  const c = ac(); if (!c || !master) return;
+  const t0 = c.currentTime + (o.delay ?? 0);
+  const rel = o.release ?? 0.06;
+  const a = o.attack ?? 0.002;
+  const v = o.vol ?? 0.2;
+
+  const carrier = c.createOscillator();
+  carrier.type = "sine";
+  const mod = c.createOscillator();
+  mod.type = "sine";
+  const modGain = c.createGain();
+  const g = c.createGain();
+  const lpf = c.createBiquadFilter();
+  lpf.type = "lowpass";
+  lpf.frequency.value = o.lp ?? 6500;
+  lpf.Q.value = 0.7;
+
+  carrier.frequency.setValueAtTime(o.freq, t0);
+  if (o.to !== undefined) {
+    carrier.frequency.exponentialRampToValueAtTime(
+      Math.max(20, o.to), t0 + (o.glideDur ?? o.dur),
+    );
+  }
+  mod.frequency.setValueAtTime(o.freq * (o.ratio ?? 2), t0);
+  const depth = o.index ?? o.freq * 0.6;
+  modGain.gain.setValueAtTime(depth, t0);
+  modGain.gain.exponentialRampToValueAtTime(
+    Math.max(1, depth * 0.06), t0 + Math.min(0.09, o.dur * 0.6),
+  );
+  mod.connect(modGain);
+  modGain.connect(carrier.frequency);
+
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(v, t0 + a);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + o.dur + rel);
+  carrier.connect(g).connect(lpf).connect(master);
+
+  carrier.start(t0);
+  mod.start(t0);
+  carrier.stop(t0 + o.dur + rel + 0.02);
+  mod.stop(t0 + o.dur + rel + 0.02);
+}
+
 let characterPowered = false;
 function playCharacterVoice(event: string) {
   if (muted || !usesCharacterVoice(getSelectedCharacter(), event)) return;
@@ -844,9 +907,15 @@ export const sfx = {
     loadSample(wallOpenAsset.url);
   },
   menuHover() {
-    tone({ freq: 880, to: 1180, dur: 0.05, type: "triangle", vol: 0.07, attack: 0.002, release: 0.04 });
-    noise(0.025, 0.04, 2400, 8000);
+    // Clean FM: a ~35ms glassy chirp — bright transient that collapses
+    // straight into a pure tone, so it never buzzes or clicks.
+    fmVoice({
+      freq: 1180, to: 1480, dur: 0.030, glideDur: 0.022,
+      ratio: 3.5, index: 900, vol: 0.055, attack: 0.001, release: 0.028, lp: 8200,
+    });
+    noise(0.014, 0.022, 5200, 12000);
   },
+
   menuClick() {
     // crisp "tk" — short noise tick + tiny pitched ping
     noise(0.018, 0.18, 1800, 7000);
@@ -860,17 +929,36 @@ export const sfx = {
     noise(0.03, 0.10, 800, 4500);
   },
   menuConfirm() {
-    // upbeat little "ba-ding!" for PLAY / confirm actions
-    tone({ freq: 520, dur: 0.10, type: "triangle", vol: 0.22, attack: 0.005, release: 0.08 });
-    tone({ freq: 780, dur: 0.14, type: "triangle", vol: 0.22, attack: 0.005, release: 0.10, delay: 0.07 });
-    tone({ freq: 1040, dur: 0.20, type: "sine",     vol: 0.18, attack: 0.005, release: 0.16, delay: 0.14 });
-    noise(0.04, 0.12, 2000, 8000);
+    // Clean FM bell chime: E5 -> B5 with a crystalline glass transient,
+    // a soft sine body underneath, and a whisper of sparkle air on top.
+    fmVoice({
+      freq: 659.25, dur: 0.075, ratio: 3.01, index: 1250,
+      vol: 0.16, attack: 0.0015, release: 0.09, lp: 9000,
+    });
+    fmVoice({
+      freq: 987.77, dur: 0.16, ratio: 2.41, index: 1500,
+      vol: 0.17, attack: 0.0015, release: 0.20, delay: 0.062, lp: 9500,
+    });
+    // body: pure sine fifth beneath the chime for weight
+    tone({ freq: 493.88, dur: 0.16, type: "sine", vol: 0.09, attack: 0.004, release: 0.18, delay: 0.055 });
+    // glass sparkle
+    fmVoice({
+      freq: 1975.5, dur: 0.10, ratio: 5.02, index: 900,
+      vol: 0.05, attack: 0.001, release: 0.14, delay: 0.075, lp: 12000,
+    });
+    noise(0.028, 0.05, 6000, 14000);
   },
+
   menuBack() {
-    // descending tiny "blip" for back / cancel
-    tone({ freq: 700, to: 380, dur: 0.10, type: "triangle", vol: 0.16, attack: 0.002, release: 0.08 });
-    noise(0.02, 0.08, 1200, 5000);
+    // Clean FM: soft descending G4 -> C4 with a muted lowpass so it reads
+    // as "closing" rather than "cancelling with an error".
+    fmVoice({
+      freq: 392, to: 261.63, dur: 0.085, glideDur: 0.07,
+      ratio: 1.41, index: 210, vol: 0.13, attack: 0.002, release: 0.09, lp: 3200,
+    });
+    noise(0.018, 0.035, 900, 3600);
   },
+
   shineStart() { startShine(); },
   shineStop() { stopShine(); },
   laserStart() { if (!characterActionOverride("laserStart")) startLaser(); },
