@@ -475,6 +475,69 @@ function noise(dur: number, vol = 0.4, hp = 200, lp = 4000, delay = 0) {
   src.stop(t0 + dur + 0.02);
 }
 
+// --- Clean FM UI voices -----------------------------------------------
+// Two-operator sine FM: a modulator feeding the carrier's frequency through
+// a gain whose envelope collapses fast, so each hit starts crystalline/bright
+// and settles into a pure glassy tone. Everything runs through a gentle
+// lowpass so nothing gets harsh.
+type FmOpts = {
+  freq: number;
+  to?: number;
+  dur: number;
+  ratio?: number;   // modulator frequency as a multiple of the carrier
+  index?: number;   // modulation depth in Hz (brightness of the transient)
+  vol?: number;
+  attack?: number;
+  release?: number;
+  delay?: number;
+  lp?: number;      // lowpass cutoff
+  glideDur?: number;
+};
+
+function fmVoice(o: FmOpts) {
+  const c = ac(); if (!c || !master) return;
+  const t0 = c.currentTime + (o.delay ?? 0);
+  const rel = o.release ?? 0.06;
+  const a = o.attack ?? 0.002;
+  const v = o.vol ?? 0.2;
+
+  const carrier = c.createOscillator();
+  carrier.type = "sine";
+  const mod = c.createOscillator();
+  mod.type = "sine";
+  const modGain = c.createGain();
+  const g = c.createGain();
+  const lpf = c.createBiquadFilter();
+  lpf.type = "lowpass";
+  lpf.frequency.value = o.lp ?? 6500;
+  lpf.Q.value = 0.7;
+
+  carrier.frequency.setValueAtTime(o.freq, t0);
+  if (o.to !== undefined) {
+    carrier.frequency.exponentialRampToValueAtTime(
+      Math.max(20, o.to), t0 + (o.glideDur ?? o.dur),
+    );
+  }
+  mod.frequency.setValueAtTime(o.freq * (o.ratio ?? 2), t0);
+  const depth = o.index ?? o.freq * 0.6;
+  modGain.gain.setValueAtTime(depth, t0);
+  modGain.gain.exponentialRampToValueAtTime(
+    Math.max(1, depth * 0.06), t0 + Math.min(0.09, o.dur * 0.6),
+  );
+  mod.connect(modGain);
+  modGain.connect(carrier.frequency);
+
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(v, t0 + a);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + o.dur + rel);
+  carrier.connect(g).connect(lpf).connect(master);
+
+  carrier.start(t0);
+  mod.start(t0);
+  carrier.stop(t0 + o.dur + rel + 0.02);
+  mod.stop(t0 + o.dur + rel + 0.02);
+}
+
 let characterPowered = false;
 function playCharacterVoice(event: string) {
   if (muted || !usesCharacterVoice(getSelectedCharacter(), event)) return;
