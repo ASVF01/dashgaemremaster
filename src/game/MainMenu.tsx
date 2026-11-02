@@ -24,6 +24,7 @@ import "@/game/characterSelect.css";
 import roaringKnightImg from "@/assets/roaring_knight_titlecard.png";
 import celestialMarathonEmblem from "@/assets/celestial-marathon-emblem.png";
 import TitleScreen from "@/game/TitleScreen";
+import PlatformerSelect from "@/game/PlatformerSelect";
 
 
 export type MenuView = "title" | "modes" | "platformer" | "survival" | "irrelevant" | "starvanisher" | "soundtrack" | "settings" | "credits" | "xtraz" | "howto";
@@ -82,11 +83,8 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
           <Button variant="ghost" className="authored-back" onClick={back}><ChevronLeft /> Back</Button>
           <div className="authored-panel-head"><h2 className="authored-panel-title">{VIEW_TITLE[view]}</h2></div>
           {view === "platformer" && <>
-            <div className="authored-choice-grid mb-5">
-              {command("CHANGE CHARACTER", () => overlay(setCharSelectOpen))}
-              {command("HOW TO PLAY", () => go("howto"))}
-            </div>
-            <div className="authored-panel-body paper"><PlayTab onPlay={handlePlay} /></div>
+            <PlatformerSelect arts={Object.fromEntries(WIP_CHARACTERS.map(c => [c.id, c.art]))} onChange={() => overlay(setCharSelectOpen)} onPlay={handlePlay} />
+            <div className="authored-choice-grid mt-5">{command("HOW TO PLAY", () => go("howto"))}</div>
           </>}
           {view === "howto" && <div className="authored-panel-body paper"><TutorialTab onStartTutorial={() => handlePlay("tutorial")} altTutorialPrompt={altTutorialPrompt} onPlayAsAlternate={onPlayAsAlternate} /></div>}
           {view === "survival" && <div className="authored-panel-body"><HellPreview onCommence={onCommenceMayhem} onContinue={onContinueMayhem} /></div>}
