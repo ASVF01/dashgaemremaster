@@ -80,4 +80,4 @@
 - [x] Fix the unproportional START buttons: the overlay now covers each card's drawn button band at the artwork's own aspect ratio (390×60) instead of a pinned 40px height; verified undistorted text, clean edges, hover swap and level entry.
 - [x] Play the supplied night-start sting when the Night card appears, and allow head movement in the room behind the card; verified the 5.3s sample starting with the card text and the room panning with the mouse while the card is up.
 
-- [ ] Add the update log (UPDATES tab) to EXTRAS so it is reachable from the console.
+- [x] Add the update log to EXTRAS; verified EXTRAS lists UPDATE LOG v1.4 down to v1.0 and the Credits screen shows the glowing 695.85 total; 125 tests pass.
