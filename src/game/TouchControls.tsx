@@ -73,8 +73,13 @@ function HoldButton({ code, label, className, ariaLabel }: BtnProps) {
 
 export default function TouchControls({ visible }: { visible: boolean }) {
   const touch = useTouchControls();
+  const [binds] = useKeybinds();
 
   if (!visible || !touch) return null;
+
+  // Buttons synthesise the player's actual bound key, so rebinding Z/X/C/V
+  // (or the older keys) keeps the touch overlay in sync automatically.
+  const codeFor = (action: ActionId, fallback: string) => binds[action]?.[0] ?? fallback;
 
   // Overlay layout: lives INSIDE the game stage (absolute) so it never
   // pushes the canvas around. Buttons sit at the bottom corners with a
