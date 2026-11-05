@@ -3312,6 +3312,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         ? dustJumpImg
         : dustKickImgs[progress < 0.3 ? 0 : 1];
       if (!img.complete || img.naturalWidth === 0) continue;
+      // Dark scenes (chase night, MAYHEM, boss, post-impact) get the light
+      // variant so the dust stays visible instead of reading as black.
+      const darkScene = isChaseLevel || isMayhemLevel || isBossLevel || postImpact;
+      const dustSrc: CanvasImageSource = (darkScene && lightDustVariant(img)) || img;
       const width = jumping ? 66 + spread * 20 : 54 + spread * 26;
       const height = (jumping ? 66 + spread * 10 : 54 + spread * 6) * img.naturalHeight / img.naturalWidth;
       ctx.save();
