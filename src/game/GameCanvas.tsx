@@ -56,6 +56,29 @@ const dustKickImgs = [new Image(), new Image()];
 dustKickImgs[0].src = dustKick0Asset.url;
 dustKickImgs[1].src = dustKick2Asset.url;
 const dustJumpImg = new Image(); dustJumpImg.src = dustJumpAsset.url;
+
+// The supplied kick/jump dust artwork is black-on-transparent, which reads as
+// soft grey on the paper levels but vanishes into the dark chase/MAYHEM/boss
+// backdrops. For those scenes we stamp the same pixels in light grey (alpha
+// and shape untouched) via a lazily built offscreen variant.
+const lightDustCache = new WeakMap<HTMLImageElement, HTMLCanvasElement>();
+function lightDustVariant(img: HTMLImageElement): HTMLCanvasElement | null {
+  if (!img.complete || img.naturalWidth === 0) return null;
+  let c = lightDustCache.get(img);
+  if (!c) {
+    c = document.createElement("canvas");
+    c.width = img.naturalWidth;
+    c.height = img.naturalHeight;
+    const g = c.getContext("2d");
+    if (!g) return null;
+    g.drawImage(img, 0, 0);
+    g.globalCompositeOperation = "source-in";
+    g.fillStyle = "#d8d8d8";
+    g.fillRect(0, 0, c.width, c.height);
+    lightDustCache.set(img, c);
+  }
+  return c;
+}
 const bossParryFlashImg = new Image(); bossParryFlashImg.src = bossParryFlashUrl;
 let sugarcoatAudio: HTMLAudioElement | null = null;
 function playSugarcoat() {
@@ -3289,6 +3312,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         ? dustJumpImg
         : dustKickImgs[progress < 0.3 ? 0 : 1];
       if (!img.complete || img.naturalWidth === 0) continue;
+      // Dark scenes (chase night, MAYHEM, boss, post-impact) get the light
+      // variant so the dust stays visible instead of reading as black.
+      const darkScene = isChaseLevel || isMayhemLevel || isBossLevel || postImpact;
+      const dustSrc: CanvasImageSource = (darkScene && lightDustVariant(img)) || img;
       const width = jumping ? 66 + spread * 20 : 54 + spread * 26;
       const height = (jumping ? 66 + spread * 10 : 54 + spread * 6) * img.naturalHeight / img.naturalWidth;
       ctx.save();
@@ -3298,7 +3325,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       ctx.globalAlpha = 1 - fade * fade * (3 - 2 * fade);
       ctx.translate(dust.x - dust.facing * spread * (jumping ? 4 : 18), dust.y);
       ctx.scale(dust.facing, 1);
-      ctx.drawImage(img, -width / 2, -height, width, height);
+      ctx.drawImage(dustSrc, -width / 2, -height, width, height);
       ctx.restore();
     }
 
