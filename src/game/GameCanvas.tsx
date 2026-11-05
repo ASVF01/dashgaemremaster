@@ -10,7 +10,7 @@ import {
 import { buildLevel, type Level, type LevelId } from "@/game/level";
 import { sketchLine, sketchRect, sketchCircle, jaggedBolt, INK } from "@/game/draw";
 import { isPressed, matchesAction, getLiveBinds } from "@/game/keybinds";
-import { sfx, unlockAudio, setCelestialMode, setThunderMode, setMetalMode, setGrassMode } from "@/game/sfx";
+import { sfx, unlockAudio, setCelestialMode, setThunderMode, setMetalMode, setWoodMode, setGrassMode } from "@/game/sfx";
 
 import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, playChaseStarmanLayer, getStarmanElapsed, playSomSomBgm, getSomSomElapsed } from "@/game/bgm";
 import weSfxUrl from "@/assets/audio/impact_aura_charge.ogg";
@@ -701,7 +701,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     const isMayhemOutside = levelId === "mayhem-outside";
     // MAYHEM hotel interiors use industrial movement sounds; the outdoor
     // approach shares THE CHASE's grass foley instead.
-    setMetalMode(levelId.startsWith("mayhem") && !isMayhemOutside);
+    // Hotel interiors are wooden; metal mode stays available but unused.
+    setMetalMode(false);
+    setWoodMode(levelId === "mayhem-main" || levelId === "mayhem-floor-1" || levelId === "mayhem-floor-2");
     setGrassMode(levelId === "chase" || isMayhemOutside);
     // Pre-place the invboi star if this level configures one (e.g. meet-invboi).
     if (level.invboiStart) {
@@ -746,7 +748,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
   // with the menu music here. Restart on retry is also driven by the
   // parent via screen/levelId/resetKey transitions.
   useEffect(() => {
-    return () => { stopBgm(); sfx.shineStop(); sfx.rainStop(); sfx.windStop(); sfx.slideStop(); sfx.laserStop(); setCelestialMode(false); setThunderMode(false); setMetalMode(false); setGrassMode(false); };
+    return () => { stopBgm(); sfx.shineStop(); sfx.rainStop(); sfx.windStop(); sfx.slideStop(); sfx.laserStop(); setCelestialMode(false); setThunderMode(false); setMetalMode(false); setWoodMode(false); setGrassMode(false); };
   }, []);
 
   // BGM: pause/resume with the game's pause state — but keep playing when
@@ -2908,7 +2910,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       const mayhemOutside = levelIdRef.current === "mayhem-outside";
       const fill = isMayhemLevel
         ? mayhemHotel
-          ? (isGround ? "#241b20" : "#47333a")
+          ? (isGround ? "#2e2118" : "#4d3625")
           : mayhemOutside
             ? (isGround ? "#283a26" : "#34383b")
             : (isGround ? "#15191f" : "#20262e")
@@ -2918,7 +2920,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       const stroke = isMayhemLevel ? (mayhemHotel ? "#b4936c" : mayhemOutside ? "#172318" : "#9aa5ad") : bossPlatforms ? "#ffffff" : levelIdRef.current === "chase" ? "#101a0f" : INK;
       sketchRect(ctx, visX, pl.y, visW, pl.h + groundDepth, fill, stroke, isGround ? 3 : 2.6, isMayhemLevel ? 0.55 : isGround ? 1.6 : 1.2);
       if (isMayhemLevel && !mayhemOutside) {
-        // Brushed metal outside; dark timber and brass trim inside the hotel.
+        // Hotel interior: warm timber planks with brass top trim, wood grain
+        // instead of rivets, and runner rugs along the floors.
         ctx.save();
         ctx.strokeStyle = mayhemHotel ? "rgba(232,199,148,0.62)" : "rgba(220,230,235,0.55)";
         ctx.lineWidth = 2;
@@ -2926,7 +2929,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         ctx.moveTo(visX, pl.y + 2);
         ctx.lineTo(visR, pl.y + 2);
         ctx.stroke();
-        ctx.strokeStyle = mayhemHotel ? "rgba(42,22,28,0.72)" : "rgba(0,0,0,0.55)";
+        ctx.strokeStyle = mayhemHotel ? "rgba(24,14,8,0.7)" : "rgba(0,0,0,0.55)";
         ctx.lineWidth = 1.5;
         for (let sx = Math.ceil(visX / 96) * 96; sx < visR; sx += 96) {
           ctx.beginPath();
@@ -2934,17 +2937,49 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
           ctx.lineTo(sx, pl.y + pl.h - 5);
           ctx.stroke();
         }
-        ctx.fillStyle = mayhemHotel ? "rgba(198,155,94,0.58)" : "rgba(180,190,198,0.55)";
-        for (let sx = Math.ceil(visX / 48) * 48; sx < visR; sx += 48) {
-          ctx.beginPath();
-          ctx.arc(sx, pl.y + Math.min(12, pl.h * 0.35), 2, 0, Math.PI * 2);
-          ctx.fill();
+        if (mayhemHotel) {
+          // wood grain: short wavy horizontal strokes between plank seams
+          ctx.strokeStyle = "rgba(18,10,6,0.5)";
+          ctx.lineWidth = 1.1;
+          for (let gy = pl.y + 14; gy < pl.y + pl.h - 6; gy += 18) {
+            for (let gx = Math.ceil(visX / 130) * 130 + (Math.abs(gy * 7) % 60); gx < visR - 44; gx += 130) {
+              ctx.beginPath();
+              ctx.moveTo(gx, gy);
+              ctx.quadraticCurveTo(gx + 20, gy + 2.5, gx + 42, gy);
+              ctx.stroke();
+            }
+          }
+        } else {
+          ctx.fillStyle = "rgba(180,190,198,0.55)";
+          for (let sx = Math.ceil(visX / 48) * 48; sx < visR; sx += 48) {
+            ctx.beginPath();
+            ctx.arc(sx, pl.y + Math.min(12, pl.h * 0.35), 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
         }
         ctx.restore();
+        if (mayhemHotel && isGround) {
+          // Runner rugs on the floor: dark red, gold border, fringed ends.
+          ctx.save();
+          for (let rx = Math.ceil((visX - 120) / 560) * 560 + 120; rx + 210 < visR; rx += 560) {
+            ctx.fillStyle = "#5e1f24";
+            ctx.fillRect(rx, pl.y - 12, 210, 12);
+            ctx.strokeStyle = "rgba(210,164,96,0.85)";
+            ctx.lineWidth = 1.4;
+            ctx.strokeRect(rx + 6, pl.y - 10.5, 198, 9);
+            ctx.strokeStyle = "rgba(210,164,96,0.65)";
+            ctx.lineWidth = 1;
+            for (let fy = pl.y - 10; fy < pl.y - 2; fy += 3) {
+              ctx.beginPath(); ctx.moveTo(rx - 4, fy); ctx.lineTo(rx, fy + 1); ctx.stroke();
+              ctx.beginPath(); ctx.moveTo(rx + 210, fy); ctx.lineTo(rx + 214, fy + 1); ctx.stroke();
+            }
+          }
+          ctx.restore();
+        }
       }
       // hatching — only over the visible slice
       ctx.save();
-      ctx.strokeStyle = isMayhemLevel ? "rgba(180,190,198,0.16)" : bossPlatforms ? "rgba(255,255,255,0.45)" : "rgba(20,20,20,0.35)";
+      ctx.strokeStyle = isMayhemLevel ? (mayhemHotel ? "rgba(224,196,150,0.13)" : "rgba(180,190,198,0.16)") : bossPlatforms ? "rgba(255,255,255,0.45)" : "rgba(20,20,20,0.35)";
       ctx.lineWidth = 1;
       const hStart = Math.max(pl.x + 6, visX);
       const hEnd = Math.min(pl.x + pl.w - 4, visR);
