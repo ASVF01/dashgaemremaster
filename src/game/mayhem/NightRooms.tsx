@@ -16,6 +16,7 @@ import packArt from "@/assets/mayhem/storage_pack.png.asset.json";
 import packUsedArt from "@/assets/mayhem/storage_used.png.asset.json";
 
 import Terminal, { TERMINAL_ASSET_URLS } from "./Terminal";
+import deathVideo from "@/assets/mayhem/encounter/death-video.mp4.asset.json";
 import hallNicky from "@/assets/mayhem/encounter/hall-nicky.png.asset.json";
 import hallAnb1 from "@/assets/mayhem/encounter/hall-anb-1.png.asset.json";
 import hallAnb2 from "@/assets/mayhem/encounter/hall-anb-2.png.asset.json";
@@ -323,7 +324,12 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
     setCameraOpen(false);
     setTerminalOpen(false);
     setGeneratorOpen(false);
-    if (dead === "blackout") { const t = window.setTimeout(() => setDeathDone(true), 1600); return () => window.clearTimeout(t); }
+    if (dead === "blackout") {
+      // Death video plays 4.3s, hard cut to black for 1s, then back to the night screen.
+      const cut = window.setTimeout(() => setDeathDone(true), 4300);
+      const back = window.setTimeout(() => onRetry?.(), 5300);
+      return () => { window.clearTimeout(cut); window.clearTimeout(back); };
+    }
   }, [dead]);
 
   const closeGenerator = () => {
@@ -943,10 +949,18 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
           {generatorOpen ? <ChevronsDown /> : <ChevronsUp />}
         </Button>
       )}
-      {dead === "blackout" && <div className="absolute inset-0 z-[130] bg-black"><div aria-hidden="true" className="hell-static absolute inset-0 opacity-50" /></div>}
-      {dead && deathDone && (
-        <div className="absolute inset-0 z-[140] flex flex-col items-center justify-center gap-6 bg-black/80">
-          <Button variant="outline" className="font-pixel" onClick={() => onRetry?.()}>TRY AGAIN</Button>
+      {dead === "blackout" && (
+        <div className="absolute inset-0 z-[130] bg-black">
+          {!deathDone && (
+            <video
+              src={deathVideo.url}
+              autoPlay
+              playsInline
+              ref={(v) => { if (v) v.volume = Math.min(1, sfxVol); }}
+              className="absolute inset-0 h-full w-full object-contain"
+              style={{ imageRendering: "pixelated" }}
+            />
+          )}
         </div>
       )}
       {nightReady && !paused && !terminalOpen && !generatorOpen && !cameraOpen && !dead && cameraEntry === "idle" && (
