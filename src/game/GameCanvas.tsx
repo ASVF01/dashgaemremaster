@@ -56,6 +56,29 @@ const dustKickImgs = [new Image(), new Image()];
 dustKickImgs[0].src = dustKick0Asset.url;
 dustKickImgs[1].src = dustKick2Asset.url;
 const dustJumpImg = new Image(); dustJumpImg.src = dustJumpAsset.url;
+
+// The supplied kick/jump dust artwork is black-on-transparent, which reads as
+// soft grey on the paper levels but vanishes into the dark chase/MAYHEM/boss
+// backdrops. For those scenes we stamp the same pixels in light grey (alpha
+// and shape untouched) via a lazily built offscreen variant.
+const lightDustCache = new WeakMap<HTMLImageElement, HTMLCanvasElement>();
+function lightDustVariant(img: HTMLImageElement): HTMLCanvasElement | null {
+  if (!img.complete || img.naturalWidth === 0) return null;
+  let c = lightDustCache.get(img);
+  if (!c) {
+    c = document.createElement("canvas");
+    c.width = img.naturalWidth;
+    c.height = img.naturalHeight;
+    const g = c.getContext("2d");
+    if (!g) return null;
+    g.drawImage(img, 0, 0);
+    g.globalCompositeOperation = "source-in";
+    g.fillStyle = "#d8d8d8";
+    g.fillRect(0, 0, c.width, c.height);
+    lightDustCache.set(img, c);
+  }
+  return c;
+}
 const bossParryFlashImg = new Image(); bossParryFlashImg.src = bossParryFlashUrl;
 let sugarcoatAudio: HTMLAudioElement | null = null;
 function playSugarcoat() {
