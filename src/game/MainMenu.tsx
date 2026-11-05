@@ -98,10 +98,23 @@ export default function MainMenu({ onPlay, dark, onToggleDark, altTutorialPrompt
           {view === "soundtrack" && <div className="authored-panel-body paper"><ExtrasTab onPlay={handlePlay} /></div>}
           {view === "settings" && <div className="authored-panel-body authored-console-settings space-y-8"><SettingsTab dark={dark} onToggleDark={onToggleDark} /><KeybindsTab /></div>}
           {view === "credits" && <div className="authored-panel-body authored-console-settings"><CreditsTab /></div>}
-          {view === "xtraz" && <div className="authored-choice-grid">
-            {command("SHOP", () => overlay(setShopOpen))}
-            {command("BESTIARY", () => overlay(setBestiaryOpen))}
-            {command("EXTRAS", () => go("soundtrack"))}
+          {view === "xtraz" && <div className="xtraz-hub">
+            {([
+              ["SHOP", "spend those T tokens", "shop", () => overlay(setShopOpen)],
+              ["BESTIARY", "know what's hunting you", "eye", () => overlay(setBestiaryOpen)],
+              ["EXTRAS", "music, sounds & secrets", "tape", () => { sfx.menuConfirm(); go("soundtrack"); }],
+            ] as const).map(([label, sub, icon, action]) => (
+              <button key={label} type="button" className={`xtraz-card xtraz-${icon}`} onMouseEnter={() => sfx.menuHover()}
+                onClick={action}>
+                <svg className="xtraz-doodle" viewBox="0 0 64 64" aria-hidden>
+                  {icon === "shop" && <g><path d="M14 24 Q12 52 18 54 L46 55 Q52 52 50 24 Z" /><path d="M22 24 Q22 10 32 10 Q42 11 42 24" /><circle cx="32" cy="38" r="7" /><path d="M32 33 V43" /></g>}
+                  {icon === "eye" && <g><path d="M6 32 Q32 8 58 32 Q32 56 6 32 Z" /><circle cx="32" cy="32" r="9" /><circle cx="32" cy="32" r="3" className="fill" /><path d="M14 12 L22 22 M24 8 L28 18 M40 8 L37 18" /></g>}
+                  {icon === "tape" && <g><rect x="6" y="14" width="52" height="36" rx="4" /><circle cx="22" cy="31" r="6" /><circle cx="42" cy="31" r="6" /><path d="M16 50 L20 42 H44 L48 50" /><path d="M54 6 L56 11 L61 12 L56 14 L54 19 L52 14 L47 12 L52 11 Z" className="fill" /></g>}
+                </svg>
+                <span className="xtraz-label">{label}</span>
+                <span className="xtraz-sub">{sub}</span>
+              </button>
+            ))}
           </div>}
         </section>, document.body)}
 
