@@ -377,7 +377,8 @@ function drawBorders(ctx: CanvasRenderingContext2D, W: number, H: number, time: 
   ctx.restore();
 }
 
-// Procedural black stick figure on the left edge, firing with outstretched hands.
+// Procedural black stick figure, inset from the left edge, firing from a raised hand.
+const BEAM_X = 110; // x where the beam leaves the raised hand
 let figY = H * 0.5;
 function drawShooter(ctx: CanvasRenderingContext2D, st: State, time: number) {
   const s = st.star;
@@ -388,18 +389,21 @@ function drawShooter(ctx: CanvasRenderingContext2D, st: State, time: number) {
   const breathe = Math.sin(time * 3) * 2;
   const recoil = firing ? -6 * Math.min(1, st.beam / 0.3) : 0;
   const jit = charging ? (Math.random() - 0.5) * 2.5 : 0;
-  const hx = 40 + recoil * 0.4, hy = figY; // hands meet at the beam origin
-  const sx = 4 + recoil + jit, sy = figY - 4 + breathe * 0.3; // shoulder
-  const headX = sx - 4, headY = sy - 20 + breathe * 0.4;
-  const hipX = sx - 8 + recoil * 0.5, hipY = sy + 34 + (charging ? 4 : 0);
-  const spread = charging ? 16 : 12;
+  const hx = BEAM_X + recoil * 0.4, hy = figY; // raised hand, beam origin
+  const sx = hx - 34 + recoil + jit, sy = hy + 16 + breathe * 0.3; // shoulder, below/behind the hand
+  const headX = sx - 2, headY = sy - 22 + breathe * 0.4;
+  const hipX = sx - 6 + recoil * 0.5, hipY = sy + 32 + (charging ? 4 : 0);
+  const spread = charging ? 18 : 14;
   const path = () => {
     ctx.beginPath();
-    ctx.moveTo(sx, sy - 8); ctx.lineTo(hipX, hipY); // spine
-    ctx.moveTo(sx, sy); ctx.lineTo(hx, hy - 3); // arms, both outstretched
-    ctx.moveTo(sx, sy + 3); ctx.lineTo(hx, hy + 3);
-    ctx.moveTo(hipX, hipY); ctx.lineTo(hipX - spread, hipY + 30); // legs
-    ctx.moveTo(hipX, hipY); ctx.lineTo(hipX + spread * 0.6, hipY + 30);
+    ctx.moveTo(sx, sy - 6); ctx.lineTo(hipX, hipY); // spine
+    // raised arm: shoulder -> elbow up-forward -> hand at the beam origin
+    ctx.moveTo(sx, sy); ctx.lineTo(sx + 16, sy - 14); ctx.lineTo(hx, hy);
+    // lowered arm: shoulder -> down-back
+    ctx.moveTo(sx, sy + 4); ctx.lineTo(sx - 10, sy + 16); ctx.lineTo(sx - 20, sy + 26);
+    // legs: front leg lunging toward the target, back leg braced
+    ctx.moveTo(hipX, hipY); ctx.lineTo(hipX + 16, hipY + 14); ctx.lineTo(hipX + 26, hipY + 30);
+    ctx.moveTo(hipX, hipY); ctx.lineTo(hipX - spread, hipY + 30);
   };
   ctx.save();
   ctx.lineCap = "round"; ctx.lineJoin = "round";
@@ -428,9 +432,9 @@ function drawBoss(ctx: CanvasRenderingContext2D, st: State, time: number) {
     const k = st.beam / 0.28;
     const bh = 22 * (0.5 + k);
     ctx.save();
-    ctx.translate(40, st.beamY);
+    ctx.translate(BEAM_X, st.beamY);
     ctx.globalAlpha = 0.35 + k * 0.65;
-    const len = Math.max(0, st.beamX - 40);
+    const len = Math.max(0, st.beamX - BEAM_X);
     const grad = ctx.createLinearGradient(0, 0, len, 0);
     grad.addColorStop(0, sk.core);
     grad.addColorStop(1, sk.edge);
@@ -1309,9 +1313,9 @@ export default function StarVanisher({ onBack }: { onBack?: () => void } = {}) {
           bg.addColorStop(0, sk.core);
           bg.addColorStop(1, sk.edge);
           ctx.fillStyle = bg;
-          ctx.fillRect(40, s.cy - bh / 2, s.cx - 40, bh);
+          ctx.fillRect(BEAM_X, s.cy - bh / 2, s.cx - BEAM_X, bh);
           ctx.fillStyle = sk.core;
-          ctx.fillRect(40, s.cy - bh / 6, s.cx - 40, bh / 3);
+          ctx.fillRect(BEAM_X, s.cy - bh / 6, s.cx - BEAM_X, bh / 3);
           ctx.globalAlpha = 1;
         }
       }
