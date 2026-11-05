@@ -4339,17 +4339,22 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       ctx.fillStyle = "#25272a";
       ctx.beginPath(); ctx.moveTo(10870, groundY - 300); ctx.lineTo(11015, groundY - 390); ctx.lineTo(11160, groundY - 300); ctx.closePath(); ctx.fill();
 
-      // Layered rain: short distant streaks and sharper foreground drops at varied speeds.
+      // Rain as long slanted streaks sliding down-left fast, in two depth
+      // layers — never dots. Each drop's head travels along its own slant
+      // path so the streak reads as falling rain, not drifting particles.
       for (let layer = 0; layer < 2; layer++) {
-        const count = layer === 0 ? 120 : 72;
-        const speed = layer === 0 ? 520 : 860;
-        ctx.strokeStyle = layer === 0 ? "rgba(188,202,210,0.25)" : "rgba(220,232,238,0.52)";
-        ctx.lineWidth = layer === 0 ? 0.8 : 1.35;
+        const count = layer === 0 ? 110 : 70;
+        const speed = layer === 0 ? 640 : 980;
+        const spanH = groundY + 220;
+        ctx.strokeStyle = layer === 0 ? "rgba(178,196,206,0.22)" : "rgba(214,228,236,0.5)";
+        ctx.lineWidth = layer === 0 ? 1 : 1.6;
         for (let i = 0; i < count; i++) {
-          const rx = camX - 100 + ((i * (83 + layer * 28) + time * (170 + layer * 120)) % (w + 260));
-          const ry = ((i * (127 + layer * 18) + time * speed) % (groundY + 150)) - 100;
-          const len = 10 + ((i * 7) % (layer === 0 ? 12 : 24));
-          ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx - len * 0.28, ry + len); ctx.stroke();
+          const seed = i * 137.51 + layer * 911.7;
+          const fall = (time * speed + seed * 13.7) % spanH;
+          const ry = fall - 120;
+          const rx = camX - 120 + ((seed * 7.31) % (w + 240)) - fall * 0.32;
+          const len = (layer === 0 ? 16 : 26) + (i % 5) * 4;
+          ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx - len * 0.32, ry + len); ctx.stroke();
         }
       }
       ctx.restore();
