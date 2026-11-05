@@ -350,6 +350,36 @@ function grassScrape(dur = 0.22, intensity = 1) {
   noise(Math.min(dur, 0.16), 0.08 * intensity, 1700, 5200, 0.015);
 }
 
+// ---------- WOOD MODE (MAYHEM's hotel interior) ----------
+// Replaces the movement foley with hollow plank knocks and soft creaks.
+// The dash is deliberately NOT overridden — it keeps the default swing sample.
+let woodMode = false;
+export function setWoodMode(on: boolean) {
+  if (woodMode === on) return;
+  woodMode = on;
+  // Rebuild an active slide loop so its filters immediately match the surface.
+  if (slideActive) {
+    stopSlideLoop();
+    if (!shimmerReplaces()) startSlideLoop();
+  }
+}
+export function isWoodMode() { return woodMode; }
+function woodReplaces() { return woodMode && !shimmerReplaces(); }
+
+function woodKnock(base = 190, intensity = 1) {
+  // Hollow plank thud: fast low sine drop, a woody partial, short banded tick.
+  const f = base * (0.9 + Math.random() * 0.2);
+  tone({ freq: f, to: f * 0.5, dur: 0.09, type: "sine", vol: 0.3 * intensity, attack: 0.001, release: 0.06 });
+  tone({ freq: f * 2.1, to: f * 1.2, dur: 0.05, type: "triangle", vol: 0.1 * intensity, attack: 0.001, release: 0.04 });
+  noise(0.03, 0.16 * intensity, 300, 2400);
+}
+
+function woodCreak(dur = 0.18, intensity = 1) {
+  // Soft dragging creak — muffled noise with a low wobbling partial.
+  noise(dur, 0.1 * intensity, 140, 1400);
+  tone({ freq: 320, to: 240, dur: Math.min(0.14, dur), type: "sawtooth", vol: 0.03 * intensity, attack: 0.01, release: 0.08 });
+}
+
 function metalHit(base = 420, intensity = 1) {
   const f = base * (0.92 + Math.random() * 0.16);
   tone({ freq: f, to: f * 0.42, dur: 0.12, type: "square", vol: 0.24 * intensity, attack: 0.001, release: 0.08 });
@@ -621,6 +651,9 @@ export const sfx = {
     if (metalReplaces()) {
       metalHit(520, 0.62);
       metalScrape(0.08, 0.42);
+    } else if (woodReplaces()) {
+      woodKnock(240, 0.7);
+      woodCreak(0.07, 0.5);
     } else if (grassReplaces()) {
       grassCrunch(0.85, false);
       grassScrape(0.09, 0.45);
@@ -637,6 +670,9 @@ export const sfx = {
     if (metalReplaces()) {
       metalHit(360, 1.08);
       metalScrape(0.1, 0.34);
+    } else if (woodReplaces()) {
+      woodKnock(150, 1.15);
+      woodCreak(0.1, 0.4);
     } else if (grassReplaces()) {
       grassCrunch(1.15, true);
       grassScrape(0.13, 0.55);
@@ -654,6 +690,9 @@ export const sfx = {
     if (metalReplaces()) {
       metalScrape(0.34, 0.9);
       metalHit(680, 0.25);
+    } else if (woodReplaces()) {
+      woodCreak(0.34, 1);
+      woodKnock(300, 0.3);
     } else if (grassReplaces()) {
       grassScrape(0.38, 1);
       grassCrunch(0.65, false);
@@ -668,6 +707,8 @@ export const sfx = {
     if (characterActionOverride("slideEnd")) return;
     if (metalReplaces()) {
       metalHit(430, 0.55);
+    } else if (woodReplaces()) {
+      woodKnock(210, 0.6);
     } else if (grassReplaces()) {
       grassScrape(0.14, 0.7);
       grassCrunch(0.5, false);
@@ -683,6 +724,8 @@ export const sfx = {
     if (characterActionOverride("step")) return;
     if (metalReplaces()) {
       metalHit(620 + Math.random() * 100, 0.34);
+    } else if (woodReplaces()) {
+      woodKnock(200 + Math.random() * 60, 0.4);
     } else if (grassReplaces()) {
       grassCrunch(0.72, false);
     } else if (!shimmerReplaces()) {
@@ -701,6 +744,8 @@ export const sfx = {
     if (characterActionOverride("run")) return;
     if (metalReplaces()) {
       metalHit(520 + Math.random() * 160, 0.42);
+    } else if (woodReplaces()) {
+      woodKnock(220 + Math.random() * 70, 0.5);
     } else if (grassReplaces()) {
       grassCrunch(0.95, true);
     } else if (!shimmerReplaces()) {
@@ -717,6 +762,9 @@ export const sfx = {
     if (metalReplaces()) {
       metalScrape(0.24, 1.1);
       tone({ freq: 2100, to: 900, dur: 0.16, type: "square", vol: 0.07, attack: 0.002, release: 0.09 });
+    } else if (woodReplaces()) {
+      woodCreak(0.24, 1.1);
+      woodKnock(260, 0.5);
     } else if (grassReplaces()) {
       grassScrape(0.26, 1.15);
       grassCrunch(0.75, true);
@@ -1269,8 +1317,8 @@ function startSlideLoop() {
   const src = c.createBufferSource();
   src.buffer = buf; src.loop = true;
   // Surface-specific texture: metal is bright, grass is low and leafy.
-  const hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = metalMode ? 760 : grassMode ? 150 : 280;
-  const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = metalMode ? 5600 : grassMode ? 2100 : 2600;
+  const hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = metalMode ? 760 : woodMode ? 120 : grassMode ? 150 : 280;
+  const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = metalMode ? 5600 : woodMode ? 1500 : grassMode ? 2100 : 2600;
   const out = c.createGain();
   out.gain.setValueAtTime(0.0001, t0);
   out.gain.exponentialRampToValueAtTime(slideTargetVol, t0 + 0.06);
@@ -1280,7 +1328,7 @@ function startSlideLoop() {
   // very light low body so it doesn't feel hollow; metal mode gets a harsher industrial grind
   const rumble = c.createOscillator();
   rumble.type = metalMode ? "square" : "triangle";
-  rumble.frequency.value = metalMode ? 146 : grassMode ? 68 : 95;
+  rumble.frequency.value = metalMode ? 146 : woodMode ? 60 : grassMode ? 68 : 95;
   const rumbleGain = c.createGain();
   rumbleGain.gain.value = 0.012;
   rumble.connect(rumbleGain).connect(out);
@@ -1291,7 +1339,7 @@ function startSlideLoop() {
 
 function setSlideIntensity(v: number) {
   // v in [0,1] — modulates volume + brightness, kept quiet to feel like footsteps.
-  slideTargetVol = 0.025 + Math.max(0, Math.min(1, v)) * (metalMode ? 0.12 : grassMode ? 0.105 : 0.09);
+  slideTargetVol = 0.025 + Math.max(0, Math.min(1, v)) * (metalMode ? 0.12 : woodMode ? 0.08 : grassMode ? 0.105 : 0.09);
   if (!slide) return;
   const c = ac(); if (!c) return;
   const t = c.currentTime;
@@ -1300,7 +1348,7 @@ function setSlideIntensity(v: number) {
     slide.out.gain.setValueAtTime(slide.out.gain.value, t);
     slide.out.gain.linearRampToValueAtTime(slideTargetVol, t + 0.1);
     slide.lp.frequency.cancelScheduledValues(t);
-    slide.lp.frequency.linearRampToValueAtTime(metalMode ? 3200 + v * 3000 : grassMode ? 1350 + v * 1300 : 1800 + v * 1400, t + 0.1);
+    slide.lp.frequency.linearRampToValueAtTime(metalMode ? 3200 + v * 3000 : woodMode ? 1100 + v * 900 : grassMode ? 1350 + v * 1300 : 1800 + v * 1400, t + 0.1);
   } catch { /* noop */ }
 }
 

@@ -81,3 +81,4 @@
 - [x] Play the supplied night-start sting when the Night card appears, and allow head movement in the room behind the card; verified the 5.3s sample starting with the card text and the room panning with the mouse while the card is up.
 
 - [x] Add the update log to EXTRAS; verified EXTRAS lists UPDATE LOG v1.4 down to v1.0 and the Credits screen shows the glowing 695.85 total; 125 tests pass.
+- [x] MAYHEM hotel interior: wood look + rugs + wood movement SFX; dash uses default SFX
