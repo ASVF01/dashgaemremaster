@@ -101,11 +101,11 @@ export default function MainMenu({ onPlay, dark, onToggleDark, altTutorialPrompt
           {view === "xtraz" && <div className="xtraz-hub">
             {([
               ["SHOP", "spend those T tokens", "shop", () => overlay(setShopOpen)],
-              ["BESTIARY", "know what's hunting you", "eye", () => go("__bestiary")],
-              ["EXTRAS", "music, sounds & secrets", "tape", () => go("soundtrack")],
+              ["BESTIARY", "know what's hunting you", "eye", () => overlay(setBestiaryOpen)],
+              ["EXTRAS", "music, sounds & secrets", "tape", () => { sfx.menuConfirm(); go("soundtrack"); }],
             ] as const).map(([label, sub, icon, action]) => (
               <button key={label} type="button" className={`xtraz-card xtraz-${icon}`} onMouseEnter={() => sfx.menuHover()}
-                onClick={() => { if (icon === "eye") { overlay(setBestiaryOpen); return; } sfx.menuConfirm(); action(); }}>
+                onClick={action}>
                 <svg className="xtraz-doodle" viewBox="0 0 64 64" aria-hidden>
                   {icon === "shop" && <g><path d="M14 24 Q12 52 18 54 L46 55 Q52 52 50 24 Z" /><path d="M22 24 Q22 10 32 10 Q42 11 42 24" /><circle cx="32" cy="38" r="7" /><path d="M32 33 V43" /></g>}
                   {icon === "eye" && <g><path d="M6 32 Q32 8 58 32 Q32 56 6 32 Z" /><circle cx="32" cy="32" r="9" /><circle cx="32" cy="32" r="3" className="fill" /><path d="M14 12 L22 22 M24 8 L28 18 M40 8 L37 18" /></g>}

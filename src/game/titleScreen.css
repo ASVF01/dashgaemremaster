@@ -180,3 +180,24 @@
   box-shadow: 1px 2px 0 hsl(var(--ink) / 0.6);
   pointer-events: none;
 }
+
+/* XTRAZ hub — hand-drawn arcade cards */
+.authored-panel:has(.xtraz-hub) .authored-panel-title { border: none; font-size: clamp(28px, 5vw, 52px); font-weight: 900; letter-spacing: .12em; color: hsl(var(--menu-white)); text-shadow: 4px 4px 0 hsl(var(--menu-pink)); padding: 18px 12px; position: relative; rotate: -1.2deg;
+  background: hsl(var(--menu-black)); outline: 4px solid hsl(var(--menu-white)); outline-offset: -2px; border-radius: 255px 18px 225px 16px / 14px 225px 18px 255px; box-shadow: 8px 8px 0 hsl(var(--menu-pink)); }
+.xtraz-hub { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 32px; width: min(100%, 1040px); margin: 44px auto 0; }
+.xtraz-card { position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 34px 20px 28px; cursor: pointer;
+  background: hsl(var(--menu-black)); color: hsl(var(--menu-white)); font-family: 'Courier New', monospace;
+  border: 5px solid hsl(var(--menu-white)); border-radius: 18px 225px 16px 255px / 255px 16px 225px 18px;
+  box-shadow: 9px 9px 0 var(--xc); transition: transform 140ms cubic-bezier(.3,1.6,.5,1), box-shadow 120ms; }
+.xtraz-card::before { content: ""; position: absolute; inset: 7px; border: 2px dashed var(--xc); border-radius: inherit; opacity: .55; pointer-events: none; }
+.xtraz-shop { --xc: hsl(var(--menu-pink)); rotate: -2deg; }
+.xtraz-eye { --xc: hsl(0 70% 42%); rotate: 1.5deg; }
+.xtraz-tape { --xc: hsl(186 90% 55%); rotate: -1deg; }
+.xtraz-card:hover, .xtraz-card:focus-visible { transform: translateY(-6px) scale(1.04) rotate(1deg); outline: none; }
+.xtraz-card:active { transform: translate(7px, 7px); box-shadow: 2px 2px 0 var(--xc); }
+.xtraz-doodle { width: 84px; height: 84px; fill: none; stroke: var(--xc); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(3px 3px 0 hsl(var(--menu-white) / .25)); }
+.xtraz-doodle .fill { fill: var(--xc); }
+.xtraz-card:hover .xtraz-doodle { animation: xtraz-wiggle 360ms steps(3) infinite; }
+@keyframes xtraz-wiggle { 0% { rotate: -6deg; } 50% { rotate: 6deg; } 100% { rotate: -6deg; } }
+.xtraz-label { font-size: 30px; font-weight: 900; letter-spacing: .1em; text-shadow: 3px 3px 0 var(--xc); }
+.xtraz-sub { font-size: 13px; opacity: .75; font-style: italic; }
