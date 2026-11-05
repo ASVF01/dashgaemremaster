@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useTouchControls } from "@/hooks/use-touch-controls";
+import { useKeybinds, type ActionId } from "@/game/keybinds";
 
 // Touch overlay that synthesizes the same keyboard codes the game already
 // listens for. Reusing the keyboard pipeline keeps every system (cheats,
