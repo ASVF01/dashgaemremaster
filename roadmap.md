@@ -77,3 +77,4 @@
 
 - [x] Fix shop header overlapping (same as bestiary)
 - [x] Set default bindings to Z jump / X parry / C slide-dive / V dash (older keys kept as alternates), with tested save migration and updated HUD + tutorial key hints; verified Z jumping in a live level.
+- [x] Fix the unproportional START buttons: the overlay now covers each card's drawn button band at the artwork's own aspect ratio (390×60) instead of a pinned 40px height; verified undistorted text, clean edges, hover swap and level entry.
