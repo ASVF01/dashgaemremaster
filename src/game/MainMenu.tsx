@@ -1254,11 +1254,11 @@ export function ExtrasTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
       <UpdatesTab />
 
       {/* SECRETS */}
-      <div className="scribble-border bg-paper p-5">
-        <div className="font-marker text-3xl text-ink -rotate-1 mb-3">SECRETS</div>
+      <div className="scribble-border bg-paper p-5 taped">
+        <div className="font-marker text-3xl text-ink -rotate-1 mb-3 hl-swipe">SECRETS</div>
         <div className="grid sm:grid-cols-2 gap-3">
           {SECRETS.map((s) => (
-            <div key={s.name} className="scribble-border bg-paper p-3">
+            <div key={s.name} className="scribble-border bg-paper p-3 taped">
               <div className="font-marker text-2xl text-ink mb-1">{s.name}</div>
               <div className="font-scribble text-lg text-ink/85"><b>How:</b> {s.how}</div>
               <div className="font-scribble text-lg text-ink/70"><b>Reward:</b> {s.reward}</div>
@@ -1281,8 +1281,8 @@ export function ExtrasTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
       <BgmPlayer />
 
       {/* SFX GALLERY */}
-      <div className="scribble-border bg-paper p-5">
-        <div className="font-marker text-3xl text-ink -rotate-1 mb-3">SFX GALLERY</div>
+      <div className="scribble-border bg-paper p-5 taped">
+        <div className="font-marker text-3xl text-ink -rotate-1 mb-3 hl-swipe">SFX GALLERY</div>
         <p className="font-scribble text-base text-ink/70 mb-3">
           Click any sound to preview it. Loops toggle on/off.
         </p>
@@ -1297,7 +1297,7 @@ export function ExtrasTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
             </button>
           ))}
         </div>
-        <div className="font-marker text-xl text-ink/70 mb-2">LOOPING SOUNDS</div>
+        <div className="font-marker text-xl text-ink/70 mb-2 hl-swipe hl-sub">LOOPING SOUNDS</div>
         <div className="flex flex-wrap gap-2">
           {SFX_LOOPS.map((l) => {
             const on = !!active[l.id];
@@ -1318,8 +1318,8 @@ export function ExtrasTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
       </div>
 
       {/* SPRITE GALLERY */}
-      <div className="scribble-border bg-paper p-5">
-        <div className="font-marker text-3xl text-ink -rotate-1 mb-3">SPRITE GALLERY</div>
+      <div className="scribble-border bg-paper p-5 taped">
+        <div className="font-marker text-3xl text-ink -rotate-1 mb-3 hl-swipe">SPRITE GALLERY</div>
         <p className="font-scribble text-base text-ink/70 mb-3">
           Every player sprite, in all its scribbly glory.
         </p>
@@ -1490,7 +1490,7 @@ function UpdatesTab() {
   return (
     <div className="max-w-3xl mx-auto">
       <div className="text-center mb-4">
-        <div className="font-marker text-4xl text-ink -rotate-1 inline-block">UPDATE LOG</div>
+        <div className="font-marker text-4xl text-ink -rotate-1 inline-block hl-swipe">UPDATE LOG</div>
         <p className="font-scribble text-lg text-ink/70 mt-1">
           what's new, what's fixed, what's broken on purpose
         </p>
@@ -1535,7 +1535,7 @@ function UpdatesTab() {
           ) : (
           <div
             key={u.version}
-            className="scribble-border bg-paper p-4"
+            className="scribble-border bg-paper p-4 update-card"
             style={{ transform: `rotate(${i % 2 === 0 ? -0.4 : 0.4}deg)` }}
           >
             <div className="flex items-baseline justify-between flex-wrap gap-2 mb-2">
