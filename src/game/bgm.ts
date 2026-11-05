@@ -301,6 +301,21 @@ function playSrc(src: string, restart = false) {
   const c = ac();
   if (!c) return;
 
+  // INVBOI tracks that aren't decoded yet: progressively slow the song that
+  // is currently playing (tape wind-down) until the INVBOI theme takes over.
+  if (INVBOI_TRACKS.has(src) && !bufferCache.has(src) && playing && !playing.stopped && playing.src !== src) {
+    try {
+      const now = c.currentTime;
+      for (const s of [playing.source, playing.nextSource]) {
+        if (!s) continue;
+        const pr = s.playbackRate;
+        pr.cancelScheduledValues(now);
+        pr.setValueAtTime(pr.value, now);
+        pr.linearRampToValueAtTime(Math.max(0.2, pr.value * 0.25), now + 4);
+      }
+    } catch { /* noop */ }
+  }
+
   loadBuffer(src).then((buffer) => {
     if (requestId !== playRequestId || !c || !masterGain) return;
     const hadPrevious = !!playing;
