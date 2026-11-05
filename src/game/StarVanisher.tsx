@@ -1313,9 +1313,9 @@ export default function StarVanisher({ onBack }: { onBack?: () => void } = {}) {
           bg.addColorStop(0, sk.core);
           bg.addColorStop(1, sk.edge);
           ctx.fillStyle = bg;
-          ctx.fillRect(40, s.cy - bh / 2, s.cx - 40, bh);
+          ctx.fillRect(BEAM_X, s.cy - bh / 2, s.cx - BEAM_X, bh);
           ctx.fillStyle = sk.core;
-          ctx.fillRect(40, s.cy - bh / 6, s.cx - 40, bh / 3);
+          ctx.fillRect(BEAM_X, s.cy - bh / 6, s.cx - BEAM_X, bh / 3);
           ctx.globalAlpha = 1;
         }
       }
