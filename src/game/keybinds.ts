@@ -14,7 +14,20 @@ export const ACTIONS: { id: ActionId; label: string; desc: string }[] = [
   { id: "dash",  label: "DASH",       desc: "burst forward (2.5s cooldown)" },
 ];
 
+// Default bindings: Z jump, X parry, C slide/dive, V dash. Older keys stay
+// bound as alternates so muscle memory (and the touch overlay) keeps working.
 export const DEFAULT_BINDS: Keybinds = {
+  left:  ["ArrowLeft", "KeyA"],
+  right: ["ArrowRight", "KeyD"],
+  jump:  ["KeyZ", "Space", "ArrowUp"],
+  slide: ["KeyC", "ShiftLeft", "ArrowDown"],
+  parry: ["KeyX", "KeyJ", "ShiftRight"],
+  dash:  ["KeyV", "KeyK"],
+};
+
+// The pre-Z/X/C/V defaults. Saved binds identical to these were never
+// customised, so they get upgraded instead of shadowing the new defaults.
+const LEGACY_DEFAULT_BINDS: Keybinds = {
   left:  ["ArrowLeft", "KeyA"],
   right: ["ArrowRight", "KeyD"],
   jump:  ["Space", "KeyW", "ArrowUp"],
@@ -22,6 +35,12 @@ export const DEFAULT_BINDS: Keybinds = {
   parry: ["KeyJ", "ShiftRight"],
   dash:  ["KeyK"],
 };
+
+function sameBinds(a: Keybinds, b: Keybinds): boolean {
+  return (Object.keys(b) as ActionId[]).every(
+    (id) => a[id]?.length === b[id].length && a[id].every((c, i) => c === b[id][i]),
+  );
+}
 
 const STORAGE_KEY = "scribble-rush.keybinds.v1";
 
@@ -31,6 +50,10 @@ export function loadBinds(): Keybinds {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_BINDS;
     const parsed = JSON.parse(raw);
+    if (sameBinds({ ...LEGACY_DEFAULT_BINDS, ...parsed }, LEGACY_DEFAULT_BINDS)) {
+      saveBinds(DEFAULT_BINDS);
+      return DEFAULT_BINDS;
+    }
     return { ...DEFAULT_BINDS, ...parsed };
   } catch {
     return DEFAULT_BINDS;

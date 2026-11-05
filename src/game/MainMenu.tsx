@@ -718,10 +718,11 @@ function TutorialTab({ onStartTutorial, altTutorialPrompt = false, onPlayAsAlter
       <Card title="THE BASICS">
         <ul className="font-scribble text-xl text-ink/85 space-y-1.5">
           <li>● <b>RUN</b> with ← / → (or A / D)</li>
-          <li>● <b>JUMP</b> with SPACE — hold for higher jumps</li>
-          <li>● <b>SLIDE</b> with ↓ / S — duck under low ceilings + boost</li>
+          <li>● <b>JUMP</b> with Z — hold for higher jumps</li>
+          <li>● <b>SLIDE</b> with C — duck under low ceilings + boost</li>
           <li>● <b>STOMP</b> enemies by landing on their heads</li>
-          <li>● <b>PARRY</b> with J — deflects shots and counters enemies</li>
+          <li>● <b>PARRY</b> with X — deflects shots and counters enemies</li>
+          <li>● <b>DASH</b> with V — burst forward</li>
         </ul>
       </Card>
       <Card title="GO FAST">
@@ -735,7 +736,7 @@ function TutorialTab({ onStartTutorial, altTutorialPrompt = false, onPlayAsAlter
       </Card>
       <Card title="PARRY WINDOW">
         <p className="font-scribble text-xl text-ink/85 leading-snug">
-          Tap <b>J</b> right before a hit. A flash of <span className="text-[hsl(var(--electric))] font-marker">YELLOW</span>{" "}
+          Tap <b>X</b> right before a hit. A flash of <span className="text-[hsl(var(--electric))] font-marker">YELLOW</span>{" "}
           means you nailed it — projectiles reflect, enemies explode, and you get a fat combo bonus.
           Miss it and you eat damage. Get good.
         </p>
