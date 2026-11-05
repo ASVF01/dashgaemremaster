@@ -164,7 +164,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   const [curvedReady, setCurvedReady] = useState(false);
   const curvedReadyRef = useRef(false);
   curvedReadyRef.current = curvedReady;
-  const turnRef = useRef<{ to: View; elapsed: number; swapped: boolean; direction: number } | null>(null);
+  const turnRef = useRef<{ to: View; elapsed: number; swapped: boolean; direction: number; forward?: boolean } | null>(null);
   const turnShadeRef = useRef<HTMLDivElement>(null);
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [terminalSession, setTerminalSession] = useState<TerminalSession>(() => ({ initialized: false, error: null, videoTime: 0, videoDone: false, puzzleSeed: Math.floor(Math.random() * 0xFFFFFFFF) }));
@@ -188,6 +188,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   const [nightReady, setNightReady] = useState(false);
   const [introLeaving, setIntroLeaving] = useState(false);
   const [nightTitle, setNightTitle] = useState(false);
+  const [tipGone, setTipGone] = useState(false);
   const [hp] = useState(100);
   const holdStart = useRef<number | null>(null);
   const raf = useRef<number | null>(null);
@@ -412,9 +413,11 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   }, []);
 
   const beginNight = () => {
-    if (!loaded || introLeaving || nightTitle) return;
+    if (!loaded || introLeaving) return;
     setIntroLeaving(true);
-    window.setTimeout(() => { loadingAudioRef.current?.pause(); setNightTitle(true); }, 480);
+    // Mount the night screen underneath so the tip art crossfades into it.
+    setNightTitle(true);
+    window.setTimeout(() => { loadingAudioRef.current?.pause(); setTipGone(true); }, 480);
   };
   useEffect(() => {
     if (!loaded || nightReady) return;
@@ -549,7 +552,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
           setView(to);
           viewRef.current = to;
         } else {
-          turnRef.current = { to, elapsed: 0, swapped: false, direction: k === "a" ? -1 : 1 };
+          turnRef.current = { to, elapsed: 0, swapped: false, direction: k === "a" ? -1 : 1, forward: k === "w" };
         }
       }
     };
@@ -648,6 +651,15 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   const lookRef = useRef<HTMLDivElement | null>(null);
   const generatorLookRef = useRef<HTMLDivElement | null>(null);
   const flipTabRef = useRef<HTMLButtonElement | null>(null);
+  const navRef = useRef<HTMLDivElement | null>(null);
+  type Exit = { key: string; label: string; side: "left" | "right" | "up" | "down" | "center" };
+  const exits: Exit[] =
+    view === "office" ? [{ key: "W", label: "CCTV", side: "up" }, { key: "A", label: "THE DOOR", side: "left" }] :
+    view === "door" ? [{ key: "W", label: "HALLWAY", side: "up" }, { key: "D", label: "OFFICE", side: "right" }, { key: "E", label: "KEYHOLE", side: "center" }] :
+    view === "hallway" ? [{ key: "A", label: "STORAGE", side: "left" }, { key: "D", label: "OFFICE", side: "right" }] :
+    view === "storage" ? [{ key: "A", label: "THE DOOR", side: "left" }, { key: "D", label: "HALLWAY", side: "right" }, { key: "S", label: "TERMINAL", side: "down" }, { key: "E", label: "KEYHOLE", side: "center" }] :
+    view === "storageDoor" ? [{ key: "D", label: "STORAGE", side: "right" }, { key: "E", label: storageDoorClosed ? "OPEN DOOR" : "CLOSE DOOR", side: "center" }] :
+    [{ key: "E", label: "STOP LOOKING", side: "center" }];
   const target = useRef({ x: 0, y: 0 });
   const cur = useRef({ x: 0, y: 0 });
   const projectedGaze = useRef({ x: 0, y: 0 });
@@ -685,14 +697,21 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
       cur.current.x += (target.current.x - cur.current.x) * smoothing;
       cur.current.y += (target.current.y - cur.current.y) * smoothing;
       let turnX = 0;
+      let turnScale = 0;
       const turn = turnRef.current;
       if (turn) {
         turn.elapsed += dt;
-        const duration = reducedMotion.matches ? 160 : 620;
+        const duration = reducedMotion.matches ? 160 : turn.forward ? 700 : 620;
         const progress = Math.min(1, turn.elapsed / duration);
-        const shade = Math.sin(progress * Math.PI);
-        if (turnShadeRef.current) turnShadeRef.current.style.opacity = String(Math.min(1, shade * 1.7));
-        turnX = reducedMotion.matches ? 0 : turn.direction * (progress < 0.5 ? progress * 2 : (progress - 1) * 2) * 1.5;
+        // Head-turn physics: accelerate away, decelerate into the new view.
+        const out = progress < 0.5 ? Math.pow(progress * 2, 2.6) : 0;
+        const inn = progress >= 0.5 ? Math.pow(1 - (progress - 0.5) * 2, 3) : 0;
+        const shade = progress < 0.5 ? Math.pow(progress * 2, 1.6) : Math.pow(1 - (progress - 0.5) * 2, 1.4);
+        if (turnShadeRef.current) turnShadeRef.current.style.opacity = String(Math.min(1, shade * 1.4));
+        if (!reducedMotion.matches) {
+          if (turn.forward) turnScale = progress < 0.5 ? out * 0.9 : -inn * 0.18;
+          else turnX = turn.direction * (progress < 0.5 ? out : -inn) * 1.5;
+        }
         if (progress >= 0.5 && !turn.swapped) {
           turn.swapped = true;
           setView(turn.to);
@@ -729,7 +748,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
         const zoomT = cameraEntryState === "pullback" ? 1.05 : cameraEntryState === "rush" ? 3.0 : zoomed ? 1.3 : keyhole ? 1.55 : 1.22;
         const zoomEase = cameraEntryState === "rush" ? 0.16 : 0.075;
         zoomCur.current += (zoomT - zoomCur.current) * zoomEase;
-        const scale = zoomCur.current + zoomNudge.current;
+        const scale = zoomCur.current + zoomNudge.current + turnScale;
         const damp = zoomed ? 0 : 1;
         const entrySlide = cameraEntryState === "rush" ? Math.min(1, Math.max(0, (scale - 1.1) / 4.1)) : 0;
         const activeGaze = !zoomed && !generatorOpenRef.current && !cameraOpenRef.current && !deadRef.current && nightReadyRef.current;
@@ -752,6 +771,12 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
           spot.style.width = `${r.width * 100}%`; spot.style.height = `${r.height * 100}%`;
         });
       }
+      if (navRef.current) {
+        const nx = reducedMotion.matches ? 0 : -(cur.current.x + turnX) * 70;
+        const ny = reducedMotion.matches ? 0 : -cur.current.y * 32;
+        navRef.current.style.transform = `translate(${nx}px, ${ny}px)`;
+        navRef.current.style.opacity = turnRef.current ? "0" : "1";
+      }
       if (cursorRef.current) {
         cursorRef.current.style.opacity = cursorVisible.current ? "1" : "0";
         cursorRef.current.style.transform =
@@ -770,10 +795,10 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
       onMouseMove={onMove}
       onMouseLeave={() => { target.current.x = 0; target.current.y = 0; cursorVisible.current = false; }}
     >
-      {!nightReady && !nightTitle && (
+      {!nightReady && !tipGone && (
         <div
           onClick={beginNight}
-          className={`mayhem-night-intro absolute inset-0 z-[120] overflow-hidden bg-black ${loaded ? "cursor-pointer" : ""} ${introLeaving ? "mayhem-night-intro-exit" : ""}`}
+          className={`mayhem-night-intro absolute inset-0 z-[130] overflow-hidden bg-black ${loaded ? "cursor-pointer" : ""} ${introLeaving ? "mayhem-night-intro-exit" : ""}`}
         >
           <img src={TIP_ARTS[tip]} alt={`Tip ${tip}`} draggable={false} className="absolute inset-0 h-full w-full object-contain" />
           <div className="absolute inset-x-0 bottom-[6%] text-center font-pixel text-[clamp(11px,1.6vw,18px)] text-white drop-shadow-[0_0_6px_black]">
@@ -898,25 +923,33 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
 
       <div aria-hidden="true" className="hell-static pointer-events-none absolute inset-0 opacity-40" />
 
-      <div className="pointer-events-none absolute left-4 top-4 z-[90] w-[clamp(220px,26vw,340px)] border border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))]/85 p-2.5 font-pixel text-[10px] text-[hsl(var(--hell-muted))] shadow-[0_0_18px_hsl(var(--hell-black))]">
-        <div className="mb-2 flex items-center justify-between">
-          <span>HP</span>
-          <span>{hp} / 100</span>
-        </div>
-        <div className="grid h-5 grid-cols-10 gap-1 border border-[hsl(var(--hell-steel))] p-0.5">
-          {Array.from({ length: 10 }, (_, segment) => (
-            <i
-              key={segment}
-              className={segment < Math.ceil(hp / 10) ? "bg-[hsl(var(--hell-warning))]" : "bg-[hsl(var(--hell-panel))]"}
-            />
-          ))}
-        </div>
+      <div className="mayhem-ink-hp pointer-events-none absolute left-5 top-5 z-[90]" aria-label={`HP ${hp} of 100`}>
+        <svg viewBox="0 0 300 70" width="clamp(200px,22vw,300px)" className="block w-[clamp(200px,22vw,300px)] overflow-visible">
+          <defs>
+            <filter id="ink-wobble"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="7" /><feDisplacementMap in="SourceGraphic" scale="4" /></filter>
+          </defs>
+          <g filter="url(#ink-wobble)">
+            <text x="6" y="26" className="mayhem-ink-hp-label">HP</text>
+            <path d="M8 36 L292 33 L294 64 L6 66 Z" className="mayhem-ink-hp-back" />
+            <path d={`M12 40 L${12 + 276 * hp / 100} 38 L${12 + 276 * hp / 100} 60 L11 62 Z`} className="mayhem-ink-hp-fill" />
+            {Array.from({ length: 9 }, (_, i) => <path key={i} d={`M${12 + (i + 1) * 27.6 - 4} 40 L${12 + (i + 1) * 27.6 + 2} 60`} className="mayhem-ink-hp-hatch" />)}
+            <path d="M8 36 L292 33 L294 64 L6 66 Z" className="mayhem-ink-hp-frame" />
+          </g>
+        </svg>
       </div>
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-1 bg-gradient-to-t from-black/85 to-transparent px-4 pb-4 pt-10 text-center">
-        <div className="font-pixel text-[10px] tracking-[0.3em] text-white/80">{label}</div>
-        <div className="font-pixel text-[9px] text-[hsl(var(--hell-muted))]">{hint}</div>
-      </div>
+      {nightReady && !paused && !dead && !terminalOpen && !generatorOpen && !cameraOpen && cameraEntry === "idle" && (
+        <div className="pointer-events-none absolute inset-0 z-[88] [perspective:700px]" aria-label={`${label} exits`}>
+          <div ref={navRef} className="absolute inset-0 transition-opacity duration-150">
+            {exits.map((exit) => (
+              <div key={exit.key} className={`mayhem-nav mayhem-nav-${exit.side}`}>
+                <span className="mayhem-nav-key">{exit.key}</span>
+                <span className="mayhem-nav-label">{exit.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {terminalOpen && <Terminal paused={paused} session={terminalSession} onSessionChange={setTerminalSession} onClose={() => { mayhemSfx.terminalClose(); setTerminalOpen(false); }} onResetGrid={() => setGridDown(false)} />}
       {generatorOpen && <GeneratorPanel upgrades={upgrades} lookRef={generatorLookRef} night={night} paused={paused || generatorClosing} closing={generatorClosing} progress={generatorProgress} onProgress={setGeneratorProgress} onClose={closeGenerator} onComplete={() => {
