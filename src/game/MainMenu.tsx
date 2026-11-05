@@ -1229,7 +1229,7 @@ const SFX_LOOPS: { id: string; label: string; start: () => void; stop: () => voi
   { id: "slideLoop", label: "SLIDE LOOP",      start: () => sfx.slideStart(), stop: () => sfx.slideStop() },
 ];
 
-function ExtrasTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
+export function ExtrasTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
   const [active, setActive] = useState<Record<string, boolean>>({});
 
   // Stop any running loops on unmount so they don't bleed into gameplay.
@@ -1250,6 +1250,9 @@ function ExtrasTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
 
   return (
     <div className="space-y-5">
+      {/* UPDATE LOG */}
+      <UpdatesTab />
+
       {/* SECRETS */}
       <div className="scribble-border bg-paper p-5">
         <div className="font-marker text-3xl text-ink -rotate-1 mb-3">SECRETS</div>
@@ -1347,15 +1350,56 @@ function ExtrasTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
 }
 
 // ---------------- CREDITS ----------------
-function CreditsTab() {
+
+// Total Lovable credits spent building this game (project spend, Aug–Nov 2026).
+const CREDITS_SPENT = "695.85";
+
+const CREDIT_SPARKS = Array.from({ length: 14 }, (_, i) => {
+  const rand = (salt: number) => {
+    const v = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453;
+    return v - Math.floor(v);
+  };
+  return {
+    left: Math.round(rand(1) * 94),
+    delay: Number((rand(2) * 2.4).toFixed(2)),
+    duration: Number((1.6 + rand(3) * 1.5).toFixed(2)),
+    size: 2 + Math.round(rand(4) * 3),
+  };
+});
+
+function CreditTotal() {
+  return (
+    <span className="credit-total">
+      <span className="credit-total__halo" aria-hidden="true" />
+      <span className="credit-total__num">{CREDITS_SPENT}</span>
+      <span className="credit-total__particles" aria-hidden="true">
+        {CREDIT_SPARKS.map((s, i) => (
+          <i
+            key={i}
+            style={{
+              left: `${s.left}%`,
+              width: `${s.size}px`,
+              height: `${s.size}px`,
+              animationDelay: `${s.delay}s`,
+              animationDuration: `${s.duration}s`,
+            }}
+          />
+        ))}
+      </span>
+    </span>
+  );
+}
+
+export function CreditsTab() {
   return (
     <div className="scribble-border bg-paper p-6 max-w-2xl mx-auto text-center">
       <div className="font-marker text-3xl text-ink -rotate-1 mb-3">CREDITS</div>
       <p className="font-scribble text-xl text-ink/85 mb-2">
-        Inspired by the following: <b>AVOOOID!!! Hero</b>, <b>RUN!! Hero</b>, <b>Pizza Tower</b>, <b>Five Nights at Freddy's</b> <b>Zenless Zone Zero</b> " for some odd reason..] and of course, <b>my comic series</b> you don't know about. :)0
+        Inspired by the following: <b>AVOOOID!!! Hero</b>, <b>RUN!! Hero</b>, <b>Pizza Tower</b>, <b>Five Nights at Freddy's</b> <b>Zenless Zone Zero</b> " for some odd reason..] and of course, <b>my comic series</b> you don't know about. :)
       </p>
       <p className="font-scribble text-lg text-ink/70">
-        A Vibe Coded Web-Game that costed me a total of [how ever much credits, also the credit number should be glowing blue and cyan with light blue particles] credits, which is wonderful.
+        A Vibe Coded Web-Game that costed me a total of <CreditTotal /> credits,
+        which is wonderful.
       </p>
     </div>
   );
