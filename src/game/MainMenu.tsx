@@ -151,7 +151,7 @@ function HellPreview({ onCommence, onContinue }: { onCommence?: () => void; onCo
       </p>
       {!settingsOpen && (
         <div className="mayhem-menu absolute inset-0 z-30 flex flex-col items-center justify-center px-4">
-          <div className="hell-title font-pixel text-center text-[clamp(24px,5vw,58px)]">Scary Pink Haired Lady Simulator [ make this text center aligned, lovable. ]</div>
+          <div className="hell-title font-pixel text-center text-[clamp(24px,5vw,58px)]">Scary Pink Haired Lady Simulator</div>
           <div className="mt-5 flex w-full max-w-sm flex-col gap-2.5">
             {checkpoint && onContinue && (
               <button
