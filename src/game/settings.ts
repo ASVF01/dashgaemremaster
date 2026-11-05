@@ -7,6 +7,8 @@ export type Settings = {
   noJumpWhileSliding: boolean;
   /** Show on-screen FPS counter. */
   showFps: boolean;
+  /** Show the run timer in the platformer HUD. */
+  showTimer: boolean;
   /** Reduce screen shake intensity. */
   reduceShake: boolean;
   /** Reduce particle/glitch fx for performance / motion sensitivity. */
@@ -22,6 +24,7 @@ export type Settings = {
 export const DEFAULT_SETTINGS: Settings = {
   noJumpWhileSliding: true,
   showFps: false,
+  showTimer: false,
   reduceShake: false,
   reducedFx: false,
   lowHpHeartbeat: true,

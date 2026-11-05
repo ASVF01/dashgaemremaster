@@ -21,6 +21,7 @@ import { selectCharacter, unlockCharacter, useCharacter } from "@/game/character
 import { getSettings } from "@/game/settings";
 import { recordLevelResult } from "@/game/levelStats";
 import MayhemPause from "@/game/mayhem/MayhemPause";
+import PlatformerPause from "@/game/PlatformerPause";
 import NightRooms from "@/game/mayhem/NightRooms";
 import NightClear from "@/game/mayhem/NightClear";
 import DialogueBox from "@/game/mayhem/DialogueBox";
@@ -83,6 +84,8 @@ const Index = () => {
   // entire session; the only exit is its own pause menu.
   const [mayhem, setMayhem] = useState(false);
   const [mayhemPaused, setMayhemPaused] = useState(false);
+  const [platformerPaused, setPlatformerPaused] = useState(false);
+  useEffect(() => { if (screen !== "playing") setPlatformerPaused(false); }, [screen]);
   const [nightAttempt, setNightAttempt] = useState(0);
   const [mayhemCleared, setMayhemCleared] = useState(false);
   const [nightClearActive, setNightClearActive] = useState(false);
@@ -578,7 +581,8 @@ const Index = () => {
       if (e.key !== "Escape" || e.repeat) return;
       e.preventDefault();
       if (!mayhem) {
-        backToMenu();
+        if (invboiIntroOpen || chaseIntroOpen) return;
+        setPlatformerPaused((p) => !p);
         return;
       }
       if (mayhemCleared || screen === "dead") return;
@@ -586,7 +590,7 @@ const Index = () => {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [mayhem, mayhemCleared, screen]);
+  }, [mayhem, mayhemCleared, screen, invboiIntroOpen, chaseIntroOpen]);
 
   // Award the "just run bro" badge and head back to the main menu.
   const finishCutscene = useCallback(() => {
@@ -743,7 +747,7 @@ const Index = () => {
               if (marathonStep == null) playBgmFor("roaring-knight", true);
             }}
             goalLocked={mayhem && levelId === "mayhem-main" && !mayhemTicket}
-             paused={screen !== "playing" || invboiIntroOpen || chaseIntroOpen || mayhemPaused || mayhemCleared || mayhemNight || mayhemDialogue != null || merchantOpen}
+             paused={screen !== "playing" || platformerPaused || invboiIntroOpen || chaseIntroOpen || mayhemPaused || mayhemCleared || mayhemNight || mayhemDialogue != null || merchantOpen}
             keepAudio={screen === "dead" || screen === "win" || invboiIntroOpen || chaseIntroOpen || marathonStep != null || mayhem}
             startAsInvboi={marathonStep != null}
             resetKey={resetKey}
@@ -763,6 +767,18 @@ const Index = () => {
             >
               MENU (ESC)
             </button>
+          )}
+          {!mayhem && screen === "playing" && !platformerPaused && !invboiIntroOpen && !chaseIntroOpen && (
+            <button
+              type="button"
+              onClick={() => { sfx.menuClick(); setPlatformerPaused(true); }}
+              className="absolute right-3 top-3 z-30 scribble-border bg-paper px-3 py-1.5 font-marker text-xs text-ink"
+            >
+              PAUSE (ESC)
+            </button>
+          )}
+          {!mayhem && platformerPaused && screen === "playing" && (
+            <PlatformerPause onResume={() => setPlatformerPaused(false)} onQuit={() => { setPlatformerPaused(false); backToMenu(); }} />
           )}
           {mayhem && mayhemPaused && (
             <MayhemPause onResume={() => setMayhemPaused(false)} onQuit={quitMayhem} />
