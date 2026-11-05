@@ -42,6 +42,7 @@ import animMove4 from "@/assets/audio/AnimMove4.wav.asset.json";
 import { anbOutcome, HALL_ENTRY_MS, inOfficeRooms, lockdownAllows, lookingAtAnb, nickyOutcome, staringAtThreat, tipsForNight } from "./encounterRules";
 import CurvedRoom from "./CurvedRoom";
 import NightIntro from "./NightIntro";
+import { nightLookActive } from "./nightIntroRules";
 import { projectRoomRect } from "./roomProjection";
 import {
   HP_DRIFT_EASE_MS,
