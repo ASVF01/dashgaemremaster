@@ -432,9 +432,9 @@ function drawBoss(ctx: CanvasRenderingContext2D, st: State, time: number) {
     const k = st.beam / 0.28;
     const bh = 22 * (0.5 + k);
     ctx.save();
-    ctx.translate(40, st.beamY);
+    ctx.translate(BEAM_X, st.beamY);
     ctx.globalAlpha = 0.35 + k * 0.65;
-    const len = Math.max(0, st.beamX - 40);
+    const len = Math.max(0, st.beamX - BEAM_X);
     const grad = ctx.createLinearGradient(0, 0, len, 0);
     grad.addColorStop(0, sk.core);
     grad.addColorStop(1, sk.edge);
