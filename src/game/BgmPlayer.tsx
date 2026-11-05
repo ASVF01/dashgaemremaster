@@ -256,10 +256,10 @@ export default function BgmPlayer() {
   };
 
   return (
-    <div className="scribble-border bg-paper p-5 relative">
+    <div className="scribble-border bg-paper p-5 relative taped">
 
       <div className="flex items-end justify-between gap-3 mb-3 flex-wrap">
-        <div className="font-marker text-3xl text-ink -rotate-1">BGM PLAYER</div>
+        <div className="font-marker text-3xl text-ink -rotate-1 hl-swipe">BGM PLAYER</div>
         <div className="font-scribble text-xs uppercase tracking-[0.3em] text-ink/50 border-b border-dashed border-ink/30 pb-0.5">
           side a — {TRACKS.length} tracks
         </div>
@@ -371,7 +371,7 @@ export default function BgmPlayer() {
       </div>
 
       {/* Track list */}
-      <div className="font-marker text-xl text-ink/70 mb-2">TRACKS</div>
+      <div className="font-marker text-xl text-ink/70 mb-2 hl-swipe hl-sub">TRACKS</div>
       <div className="grid sm:grid-cols-2 gap-2">
         {TRACKS.map((t, i) => {
           const active = i === idx;
