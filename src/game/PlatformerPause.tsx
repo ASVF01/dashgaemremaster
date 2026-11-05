@@ -30,7 +30,7 @@ export default function PlatformerPause({ onResume, onQuit }: { onResume: () => 
           <span>SHOW TIMER</span><span>{settings.showTimer ? "ON" : "OFF"}</span>
         </button>
         <button type="button" className="scribble-border bg-paper py-2 font-bungee text-ink hover:bg-[hsl(var(--accent))]"
-          onMouseEnter={() => sfx.menuHover()} onClick={() => { sfx.menuBack?.(); onQuit(); }}>QUIT TO MENU</button>
+          onMouseEnter={() => sfx.menuHover()} onClick={() => { sfx.menuBack(); onQuit(); }}>QUIT TO MENU</button>
       </div>
     </div>
   );
