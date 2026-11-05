@@ -26,6 +26,7 @@ type Props = {
   onIrrelevant: () => void;
   onPlatformer: () => void;
   onSurvival: () => void;
+  onCharacter: () => void;
 };
 
 function MovingBorder({ bottom = false }: { bottom?: boolean }) {
@@ -36,7 +37,7 @@ function MovingBorder({ bottom = false }: { bottom?: boolean }) {
   </div>;
 }
 
-export default function TitleScreen({ modes, onModes, onSettings, onCredits, onExtras, onIrrelevant, onPlatformer, onSurvival }: Props) {
+export default function TitleScreen({ modes, onModes, onSettings, onCredits, onExtras, onIrrelevant, onPlatformer, onSurvival, onCharacter }: Props) {
   const [catUnlocked] = useState(() => { try { return localStorage.getItem('badge_jrb') === '1'; } catch { return false; } });
   const [portraitSwap, setPortraitSwap] = useState(false);
   const [runFrame, setRunFrame] = useState(false);
@@ -45,14 +46,14 @@ export default function TitleScreen({ modes, onModes, onSettings, onCredits, onE
     const runners = window.setInterval(() => setRunFrame(value => !value), 120);
     return () => { window.clearInterval(portraits); window.clearInterval(runners); };
   }, []);
-  const command = (action: () => void) => { sfx.menuClick(); action(); };
+  const command = (action: () => void) => { sfx.menuConfirm(); action(); };
   const portraits = portraitSwap ? [pinkPortrait.url, playerPortrait.url] : [playerPortrait.url, pinkPortrait.url];
   return <section className="authored-menu" data-modes={modes} aria-label={modes ? 'Choose a game mode' : 'Title screen'}>
     {!modes && <div className="authored-runners" aria-hidden="true">
       <img className="authored-runner" src={runFrame ? runSprite : runSprite2} alt="" />
       <img className="authored-runner" src={runFrame ? runSprite2 : runSprite} alt="" />
     </div>}
-    {modes && <Button variant="ghost" className="authored-back" onClick={() => command(() => onModes(false))}><ArrowLeft /> Back</Button>}
+    {modes && <Button variant="ghost" className="authored-back" onClick={() => { sfx.menuBack(); onModes(false); }}><ArrowLeft /> Back</Button>}
     <div className="authored-menu-content">
       <h1 className="authored-title">Dash Gaem<strong>REMASTERED {catUnlocked && <span className="authored-cat" aria-label="Cat badge unlocked">:3</span>}</strong></h1>
       {!modes ? <div className="authored-console">
@@ -71,11 +72,12 @@ export default function TitleScreen({ modes, onModes, onSettings, onCredits, onE
             { id: 'survival', label: 'Survival — Horror Mode', art: survivalArt.url, start: survivalStart.url, hover: survivalStartHover.url, action: onSurvival },
           ].map(mode => <article key={mode.id} className={`authored-mode ${mode.id}`}>
             <div className="authored-mode-art"><img src={mode.art} alt={mode.label} /></div>
-            <button type="button" className="authored-start" aria-label={`Start ${mode.label}`} onMouseEnter={() => sfx.menuHover()} onClick={() => command(mode.action)}>
+            <Button type="button" variant="ghost" className="authored-start" aria-label={`Start ${mode.label}`} onMouseEnter={() => sfx.menuHover()} onClick={() => command(mode.action)}>
               <img className="idle" src={mode.start} alt="" /><img className="hover" src={mode.hover} alt="" />
-            </button>
+            </Button>
           </article>)}
         </div>
+        <Button className="authored-command authored-character-access" onMouseEnter={() => sfx.menuHover()} onClick={onCharacter}>Character Select</Button>
       </>}
     </div>
     <MovingBorder /><MovingBorder bottom />

@@ -40,6 +40,7 @@ import animMove1 from "@/assets/audio/AnimMove1.wav.asset.json";
 import animMove4 from "@/assets/audio/AnimMove4.wav.asset.json";
 import { anbOutcome, HALL_ENTRY_MS, inOfficeRooms, lockdownAllows, lookingAtAnb, nickyOutcome, staringAtThreat, tipsForNight } from "./encounterRules";
 import CurvedRoom from "./CurvedRoom";
+import NightIntro from "./NightIntro";
 import { projectRoomRect } from "./roomProjection";
 const spotKey = (s: { left: string; top: string; width: string; height: string }) =>
   [s.left, s.top, s.width, s.height].map((v) => parseFloat(v) / 100).join(",");
@@ -85,6 +86,7 @@ const NIGHT_IMAGE_URLS = [
   ...TERMINAL_ASSET_URLS,
   hallNicky.url, hallAnb1.url, hallAnb2.url, keyholeNicky.url, keyholeAnb.url, keyholeAnbStun.url, keyholeAnbLeave.url,
   gridNicky.url, gridNickyRage.url, gridAnb.url,
+  ...Object.values(TIP_ARTS), herHalluBaseArt.url, herHalluArt1.url, herHalluArt2.url, herHalluArt3.url,
 ];
 
 
@@ -184,6 +186,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   const [hold, setHold] = useState(0); // 0..1 progress on the health pack
   const [nightReady, setNightReady] = useState(false);
   const [introLeaving, setIntroLeaving] = useState(false);
+  const [nightTitle, setNightTitle] = useState(false);
   const [hp] = useState(100);
   const holdStart = useRef<number | null>(null);
   const raf = useRef<number | null>(null);
@@ -403,9 +406,9 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   }, []);
 
   const beginNight = () => {
-    if (!loaded || introLeaving) return;
+    if (!loaded || introLeaving || nightTitle) return;
     setIntroLeaving(true);
-    window.setTimeout(() => { loadingAudioRef.current?.pause(); setNightReady(true); }, 480);
+    window.setTimeout(() => { loadingAudioRef.current?.pause(); setNightTitle(true); }, 480);
   };
   useEffect(() => {
     if (!loaded || nightReady) return;
@@ -761,7 +764,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
       onMouseMove={onMove}
       onMouseLeave={() => { target.current.x = 0; target.current.y = 0; cursorVisible.current = false; }}
     >
-      {!nightReady && (
+      {!nightReady && !nightTitle && (
         <div
           onClick={beginNight}
           className={`mayhem-night-intro absolute inset-0 z-[120] overflow-hidden bg-black ${loaded ? "cursor-pointer" : ""} ${introLeaving ? "mayhem-night-intro-exit" : ""}`}
@@ -772,6 +775,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
           </div>
         </div>
       )}
+      {!nightReady && nightTitle && <NightIntro night={night} assetsReady={loaded} onDone={() => setNightReady(true)} />}
 
       {/* Authored artwork, re-projected as a curved environmental view. */}
       <div
@@ -938,11 +942,6 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
         >
           {generatorOpen ? <ChevronsDown /> : <ChevronsUp />}
         </Button>
-      )}
-      {threat && threat.phase === "active" && (
-        <div className="pointer-events-none absolute right-4 top-4 z-[91] font-pixel text-[10px] tracking-[0.3em] text-[hsl(var(--hell-warning))] mayhem-tip-blink">
-          {threat.id === "gifted" ? "SHE'S IN THE HALL — GET TO THE OFFICE" : "SOMETHING IS IN THE HALL"}
-        </div>
       )}
       {dead === "blackout" && <div className="absolute inset-0 z-[130] bg-black"><div aria-hidden="true" className="hell-static absolute inset-0 opacity-50" /></div>}
       {dead && deathDone && (

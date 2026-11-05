@@ -2,6 +2,7 @@ import { useState } from "react";
 import { LEVELS, type LevelId } from "@/game/level";
 import { useCharacter } from "@/game/character";
 import { sfx } from "@/game/sfx";
+import { Button } from "@/components/ui/button";
 
 const NAMES: Record<string, string> = { stick: "The Player", green: "green", dasher: "The Dasher", shadow: "THE ALTERNATE", x3mode: "X3", mmguy: "M&M's Guy" };
 
@@ -18,7 +19,7 @@ export default function PlatformerSelect({ arts, onChange, onPlay }: Props) {
 
   return <div className="pf-select">
     <div className="pf-char">
-      <button type="button" className="pf-change" onClick={onChange} onMouseEnter={() => sfx.menuHover()}>CHANGE</button>
+      <Button type="button" className="pf-change" onClick={onChange} onMouseEnter={() => sfx.menuHover()}>CHANGE</Button>
       <div className="pf-portrait">
 
         {arts[selected] && <img src={arts[selected]} alt={NAMES[selected]} />}
@@ -26,7 +27,7 @@ export default function PlatformerSelect({ arts, onChange, onPlay }: Props) {
       </div>
     </div>
     <div className="pf-levels">
-      <button type="button" className="pf-arrow" aria-label="Previous level" onClick={() => step(-1)}>◀</button>
+      <Button type="button" className="pf-arrow" aria-label="Previous level" onClick={() => step(-1)}>◀</Button>
       <div className="pf-center">
         <div key={level.id} className="pf-preview" style={{ ["--pf-dir" as string]: dir }}>
           <span className="pf-level-name">{level.name}</span>
@@ -34,11 +35,11 @@ export default function PlatformerSelect({ arts, onChange, onPlay }: Props) {
           <span className="pf-sub">{level.subtitle}</span>
           <span className="pf-logo">Dash<br />Gaem<br /><b>Remastered</b></span>
         </div>
-        <button type="button" className="pf-start" disabled={!!level.locked} onClick={() => onPlay(level.id)} onMouseEnter={() => sfx.menuHover()}>
+        <Button type="button" className="pf-start" disabled={!!level.locked} onClick={() => onPlay(level.id)} onMouseEnter={() => sfx.menuHover()}>
           {level.locked ? "LOCKED" : "START"}
-        </button>
+        </Button>
       </div>
-      <button type="button" className="pf-arrow" aria-label="Next level" onClick={() => step(1)}>▶</button>
+      <Button type="button" className="pf-arrow" aria-label="Next level" onClick={() => step(1)}>▶</Button>
     </div>
   </div>;
 }

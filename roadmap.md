@@ -1,5 +1,10 @@
 # Roadmap
 
+- [x] Audit approved outstanding requests; deferred art, Night 5 brainstorming, desktop packaging and promotion remain untouched. Dust artwork already renders untinted.
+- [x] Finish Settings music/theme controls, Extra Modes (Star Vanisher only), PLAY character access and outlined character shutters; live navigation and saved switches verified.
+- [x] Supply an editable copy of the original startup artwork and wire FM confirm/back cues to title/menu commands; 23 focused tests pass.
+- [x] Add authored post-tip night start (0.5s static, staggered text, 3.5s hold, staggered exit and office fade), with loading gate; verified Night 1 → office and removed hallway text warnings.
+
 - [x] Apply the user-drawn title screen and PLAY mode-selection sketch; verified title, all three mode choices, settings and MAYHEM destinations at 1340×935 with local artwork interception; seven character-selection tests pass.
 
 - [x] Rework MAYHEM POV with curved environmental head rotation and darkened room turns; verified live Night 1 looking, room changes, keyhole and tracking-grid interaction with local artwork interception; 46 MAYHEM tests pass.

@@ -30,6 +30,8 @@ import PlatformerSelect from "@/game/PlatformerSelect";
 export type MenuView = "title" | "modes" | "platformer" | "survival" | "irrelevant" | "starvanisher" | "soundtrack" | "settings" | "credits" | "xtraz" | "howto";
 
 interface Props {
+  dark: boolean;
+  onToggleDark: () => void;
   onPlay: (id: LevelId) => void;
   altTutorialPrompt?: boolean;
   onPlayAsAlternate?: () => void;
@@ -50,7 +52,7 @@ const VIEW_TITLE: Partial<Record<MenuView, string>> = {
   xtraz: "XTRAZ", howto: "HOW TO PLAY",
 };
 
-export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAlternate, onCommenceMayhem, onContinueMayhem }: Props) {
+export default function MainMenu({ onPlay, dark, onToggleDark, altTutorialPrompt = false, onPlayAsAlternate, onCommenceMayhem, onContinueMayhem }: Props) {
   const [view, setView] = useState<MenuView>("title");
   const [charSelectOpen, setCharSelectOpen] = useState(false);
   const [bestiaryOpen, setBestiaryOpen] = useState(false);
@@ -66,16 +68,17 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
 
   const handlePlay = (id: LevelId) => { unlockAudio(); sfx.menuConfirm(); onPlay(id); };
   const go = (next: MenuView) => { unlockAudio(); setView(next); };
-  const back = () => { sfx.menuClick(); setView(BACK_TARGET[view]); };
-  const overlay = (open: (v: boolean) => void) => { unlockAudio(); sfx.menuTab(); open(true); };
+  const back = () => { sfx.menuBack(); setView(BACK_TARGET[view]); };
+  const overlay = (open: (v: boolean) => void) => { unlockAudio(); sfx.menuConfirm(); open(true); };
   const command = (label: string, action: () => void) => (
-    <Button key={label} className="authored-command" onMouseEnter={() => sfx.menuHover()} onClick={() => { sfx.menuClick(); action(); }}>{label}</Button>
+    <Button key={label} className="authored-command" onMouseEnter={() => sfx.menuHover()} onClick={() => { sfx.menuConfirm(); action(); }}>{label}</Button>
   );
 
   const onTitle = view === "title" || view === "modes";
   return (
     <div className="fixed inset-0 z-[46]">
       {onTitle && <TitleScreen modes={view === "modes"} onModes={open => go(open ? "modes" : "title")}
+        onCharacter={() => overlay(setCharSelectOpen)}
         onSettings={() => go("settings")} onCredits={() => go("credits")} onExtras={() => go("xtraz")}
         onIrrelevant={() => go("irrelevant")} onPlatformer={() => go("platformer")} onSurvival={() => go("survival")} />}
       {!onTitle && createPortal(
@@ -90,12 +93,11 @@ export default function MainMenu({ onPlay, altTutorialPrompt = false, onPlayAsAl
           {view === "survival" && <div className="authored-panel-body"><HellPreview onCommence={onCommenceMayhem} onContinue={onContinueMayhem} /></div>}
           {view === "irrelevant" && <div className="authored-choice-grid">
             {command("STAR VANISHER", () => go("starvanisher"))}
-            {command("BGM SOUNDTRACK", () => go("soundtrack"))}
           </div>}
           {view === "starvanisher" && <div className="authored-panel-body paper"><StarVanisher onBack={() => setView("irrelevant")} /></div>}
           {view === "soundtrack" && <div className="authored-panel-body paper"><BgmPlayer /></div>}
-          {view === "settings" && <div className="authored-panel-body paper space-y-8"><SettingsTab /><KeybindsTab /></div>}
-          {view === "credits" && <div className="authored-panel-body paper"><CreditsTab /></div>}
+          {view === "settings" && <div className="authored-panel-body authored-console-settings space-y-8"><SettingsTab dark={dark} onToggleDark={onToggleDark} /><KeybindsTab /></div>}
+          {view === "credits" && <div className="authored-panel-body authored-console-settings"><CreditsTab /></div>}
           {view === "xtraz" && <div className="authored-choice-grid">
             {command("SHOP", () => overlay(setShopOpen))}
             {command("BESTIARY", () => overlay(setBestiaryOpen))}
@@ -848,8 +850,9 @@ function KeybindsTab() {
 }
 
 // ---------------- SETTINGS TAB ----------------
-function SettingsTab() {
+function SettingsTab({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => void }) {
   const [settings, setSettings, resetSettings] = useSettings();
+  const [musicMuted, setMusicMuted] = useSharedTabMute();
   const [resetOpen, setResetOpen] = useState(false);
 
   // Apply audio volumes live as the user drags.
@@ -877,6 +880,14 @@ function SettingsTab() {
       </div>
 
       <div className="space-y-3">
+        <div className="authored-settings-toggle-row">
+          <span>Mute Music</span>
+          <Button variant="outline" role="switch" aria-label="Mute Music" aria-checked={musicMuted} onClick={() => { sfx.menuConfirm(); setMusicMuted(!musicMuted); }}>{musicMuted ? "ON" : "OFF"}</Button>
+        </div>
+        <div className="authored-settings-toggle-row">
+          <span>Dark Mode</span>
+          <Button variant="outline" role="switch" aria-label="Dark Mode" aria-checked={dark} onClick={() => { sfx.menuConfirm(); onToggleDark(); }}>{dark ? "ON" : "OFF"}</Button>
+        </div>
         <ToggleRow
           label="No jump while sliding"
           desc="Stops jump-spam during a slide. Disable for old-school slide-hop."

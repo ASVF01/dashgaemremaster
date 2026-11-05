@@ -20,3 +20,4 @@
 
 - Subdirectories have their own `AGENTS.md`; read it before changing files there.
 - Title-screen and mode-selection presentation is isolated from existing game/settings destinations; use cropped user artwork and scoped semantic colors so menu redesigns cannot change gameplay or saved settings.
+- Console Settings uses the existing shared music-mute bus and page-owned theme state, preserving saved preferences while hiding the legacy header on the menu.
