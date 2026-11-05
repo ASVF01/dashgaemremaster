@@ -506,7 +506,7 @@ export function playChaseStarmanLayer() {
     slightMuffle.Q.value = 0.35;
     const gain = c.createGain();
     // Below the chase track but clearly audible.
-    gain.gain.setValueAtTime(0.32, startAt);
+    gain.gain.setValueAtTime(0.55, startAt);
     source.connect(slightMuffle).connect(gain).connect(masterGain);
     source.start(startAt);
     chaseInvboiLayer = { source, gain, startedAt: startAt, rate: 1 };

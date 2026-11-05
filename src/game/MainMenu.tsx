@@ -43,12 +43,12 @@ interface Props {
 const BACK_TARGET: Record<MenuView, MenuView> = {
   title: "title", modes: "title", settings: "title", credits: "title", xtraz: "title",
   platformer: "modes", survival: "modes", irrelevant: "modes",
-  starvanisher: "irrelevant", soundtrack: "irrelevant", howto: "platformer",
+  starvanisher: "irrelevant", soundtrack: "xtraz", howto: "platformer",
 };
 
 const VIEW_TITLE: Partial<Record<MenuView, string>> = {
   platformer: "PLATFORMER [MAIN MODE]", survival: "SURVIVAL [HORROR MODE]", irrelevant: "IRRELEVANT MODES",
-  starvanisher: "STAR VANISHER", soundtrack: "BGM SOUNDTRACK", settings: "SETTINGS", credits: "CREDITS",
+  starvanisher: "STAR VANISHER", soundtrack: "EXTRAS", settings: "SETTINGS", credits: "CREDITS",
   xtraz: "XTRAZ", howto: "HOW TO PLAY",
 };
 
@@ -95,13 +95,13 @@ export default function MainMenu({ onPlay, dark, onToggleDark, altTutorialPrompt
             {command("STAR VANISHER", () => go("starvanisher"))}
           </div>}
           {view === "starvanisher" && <div className="authored-panel-body paper"><StarVanisher onBack={() => setView("irrelevant")} /></div>}
-          {view === "soundtrack" && <div className="authored-panel-body paper"><BgmPlayer /></div>}
+          {view === "soundtrack" && <div className="authored-panel-body paper"><ExtrasTab onPlay={handlePlay} /></div>}
           {view === "settings" && <div className="authored-panel-body authored-console-settings space-y-8"><SettingsTab dark={dark} onToggleDark={onToggleDark} /><KeybindsTab /></div>}
           {view === "credits" && <div className="authored-panel-body authored-console-settings"><CreditsTab /></div>}
           {view === "xtraz" && <div className="authored-choice-grid">
             {command("SHOP", () => overlay(setShopOpen))}
             {command("BESTIARY", () => overlay(setBestiaryOpen))}
-            {command("EXTRA MODES", () => go("irrelevant"))}
+            {command("EXTRAS", () => go("soundtrack"))}
           </div>}
         </section>, document.body)}
 
