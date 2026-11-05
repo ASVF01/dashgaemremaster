@@ -1352,7 +1352,7 @@ function CreditsTab() {
     <div className="scribble-border bg-paper p-6 max-w-2xl mx-auto text-center">
       <div className="font-marker text-3xl text-ink -rotate-1 mb-3">CREDITS</div>
       <p className="font-scribble text-xl text-ink/85 mb-2">
-        Inspired by the following: AVOOOID!!! Hero, RUN!! Hero, Pizza Tower, Five Nights at Freddy's Zenless Zone Zero " for some odd reason..] and of course, my comic series you don't know about. :)0
+        Inspired by the following: <b>AVOOOID!!! Hero</b>, <b>RUN!! Hero</b>, <b>Pizza Tower</b>, <b>Five Nights at Freddy's</b> <b>Zenless Zone Zero</b> " for some odd reason..] and of course, <b>my comic series</b> you don't know about. :)0
       </p>
       <p className="font-scribble text-lg text-ink/70">
         A Vibe Coded Web-Game that costed me a total of [how ever much credits, also the credit number should be glowing blue and cyan with light blue particles] credits, which is wonderful.
