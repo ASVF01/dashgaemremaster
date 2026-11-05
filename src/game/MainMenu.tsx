@@ -1229,7 +1229,7 @@ const SFX_LOOPS: { id: string; label: string; start: () => void; stop: () => voi
   { id: "slideLoop", label: "SLIDE LOOP",      start: () => sfx.slideStart(), stop: () => sfx.slideStop() },
 ];
 
-function ExtrasTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
+export function ExtrasTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
   const [active, setActive] = useState<Record<string, boolean>>({});
 
   // Stop any running loops on unmount so they don't bleed into gameplay.
@@ -1250,6 +1250,9 @@ function ExtrasTab({ onPlay }: { onPlay: (id: LevelId) => void }) {
 
   return (
     <div className="space-y-5">
+      {/* UPDATE LOG */}
+      <UpdatesTab />
+
       {/* SECRETS */}
       <div className="scribble-border bg-paper p-5">
         <div className="font-marker text-3xl text-ink -rotate-1 mb-3">SECRETS</div>
