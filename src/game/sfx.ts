@@ -275,6 +275,12 @@ export function silenceAllSfx() {
   try { stopLaser(); } catch { /* noop */ }
   setMuted(true);
 }
+/** Stops every continuous gameplay loop (slide, rain, wind, shine, laser, scrape, shimmer). */
+export function stopGameplayLoops() {
+  const stops = [stopLaser, stopRain, stopWind, stopShine, stopStoneScrape, stopSlideShimmer, stopSlideLoop];
+  slideActive = false;
+  for (const stop of stops) { try { stop(); } catch { /* noop */ } }
+}
 export function setSfxVolume(v: number) {
   baseVol = Math.max(0, Math.min(1, v)) * 0.5; // cap so 1.0 = current loud-ish max
   if (master && !muted) master.gain.value = baseVol;

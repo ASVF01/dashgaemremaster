@@ -16,7 +16,7 @@ import cutsceneJustRunBro from "@/assets/video/mcdonalds_sprite_2.mp4";
 import cutsceneBossDeath from "@/assets/video/boss_death_cutscene.mp4";
 import introCardImg from "@/assets/intro_card.png";
 import introBeginUrl from "@/assets/audio/intro_begin.ogg";
-import { sfx, unlockAudio, setSfxVolume, silenceAllSfx, setMuted as setSfxMuted } from "@/game/sfx";
+import { sfx, unlockAudio, setSfxVolume, silenceAllSfx, stopGameplayLoops, setMuted as setSfxMuted } from "@/game/sfx";
 import { selectCharacter, unlockCharacter, useCharacter } from "@/game/character";
 import { getSettings } from "@/game/settings";
 import { recordLevelResult } from "@/game/levelStats";
@@ -59,6 +59,7 @@ const MARATHON_SEQUENCE: ReadonlyArray<LevelId> = [
 const Index = () => {
   const touchControls = useTouchControls();
   const [screen, setScreen] = useState<Screen>("menu");
+  useEffect(() => { if (screen === "menu") stopGameplayLoops(); }, [screen]);
   const [levelId, setLevelId] = useState<LevelId>("tutorial");
   const [hud, setHud] = useState<HudState>({
     hp: 3, mach: 0, speed: 0, score: 0, combo: 0, progress: 0, timeMs: 0, parryReady: true, parryCooldown: 0, dashCooldown: 0, dashCooldownMax: 2.5, playerScreenX: 0, playerScreenY: 0,
