@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canExitNightTitle, NIGHT_STATIC_MS, NIGHT_TITLE_HOLD_MS } from "./nightIntroRules";
+import { canExitNightTitle, nightLookActive, NIGHT_STATIC_MS, NIGHT_TITLE_HOLD_MS } from "./nightIntroRules";
 
 describe("authored night start", () => {
   it("shows static for 0.5 seconds", () => expect(NIGHT_STATIC_MS).toBe(500));
@@ -11,5 +11,10 @@ describe("authored night start", () => {
   it("cannot finish while assets are still loading", () => {
     expect(canExitNightTitle(99999, false)).toBe(false);
     expect(canExitNightTitle(99999, true)).toBe(true);
+  });
+  it("lets the player turn their head from the moment the Night card appears", () => {
+    expect(nightLookActive(false, false)).toBe(false);
+    expect(nightLookActive(false, true)).toBe(true);
+    expect(nightLookActive(true, false)).toBe(true);
   });
 });
