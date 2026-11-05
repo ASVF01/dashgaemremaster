@@ -837,3 +837,33 @@
 .nicky-js-morph { opacity: 0; animation: nickyJsMorph 3.4s ease-in 0.3s forwards; }
 @keyframes mayhemTipBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.15; } }
 .mayhem-tip-blink { animation: mayhemTipBlink 1s steps(2, jump-none) infinite; }
+
+/* TIC-80 cursors (Dé, rw-designer, CC Noncommercial). src/game/cursorTheme.ts
+   publishes each pointer — CDN image + authored hotspot + native fallback —
+   as one of these custom properties before the first paint. Kept unlayered so
+   they win over Tailwind's cursor utilities. */
+* { cursor: var(--cursor-arrow, auto); }
+html, body, #root { cursor: var(--cursor-arrow, auto); }
+
+button, a, summary, label, select,
+[role="button"], [role="link"], [role="tab"], [role="menuitem"], [role="option"], [role="combobox"],
+.cursor-pointer, input[type="button"], input[type="submit"], input[type="checkbox"],
+input[type="radio"], input[type="range"] {
+  cursor: var(--cursor-link, pointer);
+}
+
+input[type="text"], input[type="email"], input[type="password"], input[type="number"],
+input[type="search"], input[type="tel"], input[type="url"], input[type="date"],
+textarea, [contenteditable="true"] {
+  cursor: var(--cursor-text, text);
+}
+
+:disabled, [disabled], [aria-disabled="true"], .cursor-not-allowed,
+.mayhem-menu-disabled, .pf-start:disabled {
+  cursor: var(--cursor-blocked, not-allowed);
+}
+
+.cursor-crosshair, .mayhem-preview { cursor: var(--cursor-aim, crosshair); }
+
+/* MAYHEM's in-room reticle replaces the OS cursor — nothing may bring it back. */
+.cursor-none, .cursor-none * { cursor: none !important; }
