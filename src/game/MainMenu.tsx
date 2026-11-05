@@ -125,23 +125,6 @@ export default function MainMenu({ onPlay, dark, onToggleDark, altTutorialPrompt
   );
 }
 
-const MAYHEM_RAIN_PARTICLES = Array.from({ length: 140 }, (_, index) => ({
-  left: (index * 37 + 11) % 103,
-  length: 9 + ((index * 17) % 23),
-  opacity: 0.24 + ((index * 13) % 44) / 100,
-  duration: 0.62 + ((index * 19) % 55) / 100,
-  delay: -((index * 31) % 120) / 100,
-  drift: -34 - ((index * 23) % 48),
-}));
-
-type MayhemRainStyle = CSSProperties & {
-  "--rain-length": string;
-  "--rain-opacity": number;
-  "--rain-duration": string;
-  "--rain-delay": string;
-  "--rain-drift": string;
-};
-
 function HellPreview({ onCommence, onContinue }: { onCommence?: () => void; onContinue?: () => void }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [checkpoint] = useState(getMayhemCheckpoint);
@@ -1516,20 +1499,8 @@ function UpdatesTab() {
               className="hell-preview relative overflow-hidden border-2 border-[hsl(var(--hell-steel))] p-5 sm:p-6"
             >
               <div aria-hidden="true" className="mayhem-rain-field absolute inset-0 overflow-hidden">
-                {MAYHEM_RAIN_PARTICLES.slice(0, 60).map((particle, index) => (
-                  <i
-                    key={index}
-                    className="mayhem-raindrop"
-                    style={{
-                      left: `${particle.left}%`,
-                      "--rain-length": `${particle.length}px`,
-                      "--rain-opacity": particle.opacity,
-                      "--rain-duration": `${particle.duration}s`,
-                      "--rain-delay": `${particle.delay}s`,
-                      "--rain-drift": `${particle.drift}px`,
-                    } as MayhemRainStyle}
-                  />
-                ))}
+                <i className="mayhem-rain-sheet mayhem-rain-sheet--far" />
+                <i className="mayhem-rain-sheet mayhem-rain-sheet--near" />
               </div>
               <div aria-hidden="true" className="hell-static absolute inset-0" />
               <div className="relative z-10">

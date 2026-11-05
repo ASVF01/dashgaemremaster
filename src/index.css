@@ -369,6 +369,12 @@
   }
   .mayhem-art { transform-origin: center; transition: transform 180ms ease-out; user-select: none; }
   .mayhem-rain-field { pointer-events: none; }
+  /* Tiled streak sheets (like the old MAYHEM menu): short slanted grey
+     strokes in a texture that slides down-left, not individual particles. */
+  @keyframes mayhem-rain-sheet { from { background-position: 0 0; } to { background-position: -40px 160px; } }
+  .mayhem-rain-sheet { position: absolute; inset: 0; background-repeat: repeat; animation: mayhem-rain-sheet linear infinite; will-change: background-position; }
+  .mayhem-rain-sheet--far { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='160'%3E%3Cg stroke='%23d8d8d8' stroke-width='1.4' stroke-linecap='round' opacity='0.35'%3E%3Cpath d='M14 6l-3 14M58 30l-3 13M97 12l-3 15M36 78l-3 13M82 92l-3 14M112 64l-3 12M8 120l-3 14M64 132l-3 13M104 140l-3 12M46 2l-2 10'/%3E%3C/g%3E%3C/svg%3E"); background-size: 90px 120px; animation-duration: 0.55s; }
+  .mayhem-rain-sheet--near { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='160'%3E%3Cg stroke='%23d8d8d8' stroke-width='1.4' stroke-linecap='round' opacity='0.6'%3E%3Cpath d='M14 6l-3 14M58 30l-3 13M97 12l-3 15M36 78l-3 13M82 92l-3 14M112 64l-3 12M8 120l-3 14M64 132l-3 13M104 140l-3 12M46 2l-2 10'/%3E%3C/g%3E%3C/svg%3E"); background-position: 37px 51px; animation-duration: 0.38s; }
   .mayhem-raindrop {
     position: absolute;
     top: 0;
@@ -435,7 +441,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .hell-tab-rain, .hell-static, .hell-title, .hell-eye, .hell-monitor span, .mayhem-raindrop, .mayhem-menu-grid { animation: none !important; }
+    .hell-tab-rain, .hell-static, .hell-title, .hell-eye, .hell-monitor span, .mayhem-raindrop, .mayhem-rain-sheet, .mayhem-menu-grid { animation: none !important; }
     .mayhem-rain-field { display: none; }
     .mayhem-art { transition: none !important; }
   }
