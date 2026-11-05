@@ -106,3 +106,91 @@
 @keyframes pf-nudge-l { 50% { transform: translateX(-5px) scale(1.08); } }
 @keyframes pf-nudge-r { 50% { transform: translateX(5px) scale(1.08); } }
 @media (max-width: 760px) { .pf-select { grid-template-columns: 1fr; } .pf-levels { grid-template-columns: 50px 1fr 50px; } }
+
+/* ---------- EXTRAS hand-drawn skin ---------- */
+/* Crayon grain, taped notes, pushpins and highlighter swipes for the
+   paper panels (EXTRAS, HOW TO PLAY, STAR VANISHER). Token-driven so
+   dark mode keeps working. */
+.authored-panel-body.paper {
+  --tape-a: var(--accent);
+  --tape-b: 187 90% 55%;
+  position: relative;
+  border: 3px solid hsl(var(--ink));
+  outline: 2px dashed hsl(var(--ink) / 0.5);
+  outline-offset: 7px;
+  border-radius: 22px 8px 26px 10px / 10px 26px 8px 22px;
+  box-shadow: 8px 10px 0 hsl(var(--ink) / 0.8);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.dark .authored-panel-body.paper {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* corner doodles */
+.authored-panel-body.paper::before {
+  content: "✦";
+  position: absolute; top: 8px; right: 16px;
+  font-family: 'Permanent Marker', cursive;
+  font-size: 30px; line-height: 1;
+  color: hsl(var(--ink) / 0.3);
+  transform: rotate(12deg);
+  pointer-events: none;
+}
+.authored-panel-body.paper::after {
+  content: "★";
+  position: absolute; bottom: 8px; left: 14px;
+  font-family: 'Permanent Marker', cursive;
+  font-size: 22px; line-height: 1;
+  color: hsl(var(--ink) / 0.25);
+  transform: rotate(-9deg);
+  pointer-events: none;
+}
+/* wobbly hand-drawn boxes */
+.authored-panel-body.paper div.scribble-border {
+  border-radius: 16px 5px 18px 6px / 6px 18px 5px 16px;
+}
+.authored-panel-body.paper button.scribble-border {
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+}
+.authored-panel-body.paper button.scribble-border:nth-of-type(3n) { rotate: -1.1deg; }
+.authored-panel-body.paper button.scribble-border:nth-of-type(3n+1) { rotate: 0.9deg; }
+/* washi tape on taped cards */
+.authored-panel-body.paper .taped { position: relative; }
+.authored-panel-body.paper .taped::before {
+  content: "";
+  position: absolute; top: -13px; left: 50%;
+  width: 96px; height: 24px;
+  transform: translateX(-50%) rotate(-2.5deg);
+  background: hsl(var(--tape-a) / 0.5);
+  clip-path: polygon(4% 8%, 96% 0%, 100% 82%, 93% 100%, 5% 94%, 0% 18%);
+  pointer-events: none; z-index: 1;
+}
+.authored-panel-body.paper .taped:nth-of-type(even)::before {
+  background: hsl(var(--tape-b) / 0.45);
+  transform: translateX(-50%) rotate(2deg);
+}
+/* pushpin on update-log cards */
+.authored-panel-body.paper .update-card { position: relative; }
+.authored-panel-body.paper .update-card::after {
+  content: "";
+  position: absolute; top: -9px; left: 50%;
+  width: 16px; height: 16px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, hsl(var(--accent)), hsl(var(--accent) / 0.75) 60%, hsl(var(--ink)) 130%);
+  box-shadow: 1px 2px 0 hsl(var(--ink) / 0.6);
+  pointer-events: none;
+}
+/* highlighter swipe behind section headers */
+.hl-swipe {
+  background-image: linear-gradient(100deg,
+    transparent 1%, hsl(var(--accent) / 0.4) 4%,
+    hsl(var(--accent) / 0.4) 96%, transparent 99%);
+  padding: 0 0.35em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.hl-swipe.hl-sub {
+  background-image: linear-gradient(100deg,
+    transparent 1%, hsl(var(--tape-b, 187 90% 55%) / 0.35) 5%,
+    hsl(var(--tape-b, 187 90% 55%) / 0.35) 95%, transparent 99%);
+}
