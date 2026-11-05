@@ -45,7 +45,6 @@ import NightIntro from "./NightIntro";
 import { projectRoomRect } from "./roomProjection";
 import {
   HP_DRIFT_EASE_MS,
-  HP_TILT_BASE_DEG,
   hudDrift,
   hudEase,
   hudHiddenWhileTurning,
