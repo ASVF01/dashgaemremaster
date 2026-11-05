@@ -179,15 +179,7 @@ function HellPreview({ onCommence, onContinue }: { onCommence?: () => void; onCo
             >
               SETTINGS
             </button>
-            <a
-              href="/vr"
-              onClick={() => sfx.menuConfirm()}
-              onMouseEnter={() => sfx.menuHover()}
-              className="mayhem-menu-button text-center"
-            >
-              VR MODE [ PROTOTYPE ]
-            </a>
-            <button
+             <button
               type="button"
               disabled
               title="Video link coming later"
