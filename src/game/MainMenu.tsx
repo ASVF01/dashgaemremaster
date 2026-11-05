@@ -897,6 +897,12 @@ function SettingsTab({ dark, onToggleDark }: { dark: boolean; onToggleDark: () =
           onChange={(v) => update("noJumpWhileSliding", v)}
         />
         <ToggleRow
+          label="Show timer"
+          desc="Show the run timer at the top of the screen in platformer levels."
+          value={settings.showTimer}
+          onChange={(v) => update("showTimer", v)}
+        />
+        <ToggleRow
           label="Show FPS"
           desc="Display a tiny frames-per-second counter in the top-right."
           value={settings.showFps}

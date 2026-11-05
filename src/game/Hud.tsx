@@ -1,12 +1,14 @@
 import type { HudState } from "@/game/GameCanvas";
 import { getSelectedCharacter } from "@/game/character";
 import { AlternateHpBar, BaseHpBar } from "@/game/HpBar";
+import { useSettings } from "@/game/settings";
 
 export default function Hud({ hud, minimal = false }: { hud: HudState; minimal?: boolean }) {
   const seconds = (hud.timeMs / 1000).toFixed(2);
   const sm = !!hud.starman;
   const showParryCd = !sm && hud.parryCooldown > 0.05;
   const showDashCd = !sm && hud.dashCooldown > 0.05;
+  const [settings] = useSettings();
   const isAlt = getSelectedCharacter() === "x3mode";
 
   return (
@@ -19,11 +21,11 @@ export default function Hud({ hud, minimal = false }: { hud: HudState; minimal?:
         {/* TIMER + LEVEL PROGRESS stacked */}
         {!minimal && (
         <div className="flex flex-col items-center gap-1">
-          <div className="scribble-border bg-paper px-2 sm:px-4 py-1 sm:py-2">
+          {settings.showTimer && <div className="scribble-border bg-paper px-2 sm:px-4 py-1 sm:py-2">
             <div className="font-bungee text-ink text-lg sm:text-2xl leading-none">
               {seconds}<span className="text-[10px] sm:text-sm">s</span>
             </div>
-          </div>
+          </div>}
           <div className="scribble-border bg-paper px-2 py-1 w-[140px] sm:w-[200px]">
             <div className="font-marker text-ink text-[9px] sm:text-[10px] tracking-widest mb-0.5 text-center">
               LEVEL PROGRESS
