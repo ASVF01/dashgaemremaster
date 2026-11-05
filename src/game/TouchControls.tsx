@@ -97,10 +97,10 @@ export default function TouchControls({ visible }: { visible: boolean }) {
 
       {/* RIGHT cluster: actions */}
       <div className="absolute right-2 bottom-2 sm:right-3 sm:bottom-3 grid grid-cols-3 gap-1.5 sm:gap-2">
-        <HoldButton code="ShiftLeft" label="SLIDE" className="w-12 h-10 sm:w-14 sm:h-12 text-[10px]" />
-        <HoldButton code="Space"     label="JUMP"  className="w-12 h-10 sm:w-14 sm:h-12 text-[10px]" />
-        <HoldButton code="KeyK"      label="DASH"  className="w-12 h-10 sm:w-14 sm:h-12 text-[10px]" />
-        <HoldButton code="KeyJ"      label="PARRY" className="w-12 h-10 sm:w-14 sm:h-12 text-[10px] col-start-2" />
+        <HoldButton code={codeFor("slide", "KeyC")} label="SLIDE" className="w-12 h-10 sm:w-14 sm:h-12 text-[10px]" />
+        <HoldButton code={codeFor("jump", "KeyZ")}  label="JUMP"  className="w-12 h-10 sm:w-14 sm:h-12 text-[10px]" />
+        <HoldButton code={codeFor("dash", "KeyV")}  label="DASH"  className="w-12 h-10 sm:w-14 sm:h-12 text-[10px]" />
+        <HoldButton code={codeFor("parry", "KeyX")} label="PARRY" className="w-12 h-10 sm:w-14 sm:h-12 text-[10px] col-start-2" />
       </div>
     </div>
   );
