@@ -3325,7 +3325,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       ctx.globalAlpha = 1 - fade * fade * (3 - 2 * fade);
       ctx.translate(dust.x - dust.facing * spread * (jumping ? 4 : 18), dust.y);
       ctx.scale(dust.facing, 1);
-      ctx.drawImage(img, -width / 2, -height, width, height);
+      ctx.drawImage(dustSrc, -width / 2, -height, width, height);
       ctx.restore();
     }
 
