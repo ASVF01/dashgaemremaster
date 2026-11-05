@@ -76,3 +76,4 @@
 - [x] Character icons: drop the diagonal stripe and the diagonal cut so each sprite shows exactly as supplied (only the red X and yellow lock remain).
 
 - [x] Fix shop header overlapping (same as bestiary)
+- [x] Set default bindings to Z jump / X parry / C slide-dive / V dash (older keys kept as alternates), with tested save migration and updated HUD + tutorial key hints; verified Z jumping in a live level.
