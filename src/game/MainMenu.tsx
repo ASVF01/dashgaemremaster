@@ -146,9 +146,6 @@ function HellPreview({ onCommence, onContinue }: { onCommence?: () => void; onCo
       <div aria-hidden="true" className="mayhem-menu-grid absolute inset-0 z-[1]" />
       <div aria-hidden="true" className="hell-static absolute inset-0 z-10" />
       <h2 id="mayhem-title" className="sr-only">MAYHEM</h2>
-      <p className="mayhem-caption absolute left-4 top-4 z-20 max-w-[18rem] font-pixel text-[clamp(8px,1.25vw,14px)] leading-relaxed sm:left-7 sm:top-6">
-        WHERE THERE IS LIGHT THERE IS DARKNESS
-      </p>
       {!settingsOpen && (
         <div className="mayhem-menu absolute inset-0 z-30 flex flex-col items-center justify-center px-4">
           <div className="hell-title font-pixel text-center text-[clamp(24px,5vw,58px)]">Scary Pink Haired Lady Simulator</div>
