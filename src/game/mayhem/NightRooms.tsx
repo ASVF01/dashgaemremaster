@@ -201,6 +201,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   const holdStart = useRef<number | null>(null);
   const raf = useRef<number | null>(null);
   const nightReadyRef = useRef(false);
+  const nightTitleRef = useRef(false);
   const deadRef = useRef(false);
   const viewRef = useRef(view);
   viewRef.current = view;
@@ -221,6 +222,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   const [dead, setDead] = useState<null | "blackout">(null);
   const [deathDone, setDeathDone] = useState(false);
   nightReadyRef.current = nightReady;
+  nightTitleRef.current = nightTitle;
   deadRef.current = dead !== null;
   const grid = useGridRoster(night, mayhemAiLevel(night) * enemyMoveMultiplier(upgrades), nightReady && !dead, paused);
   const [tip] = useState(() => { const list = tipsForNight(night); return list[Math.floor(Math.random() * list.length)]; });
@@ -764,7 +766,8 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
         const scale = zoomCur.current + zoomNudge.current + turnScale;
         const damp = zoomed ? 0 : 1;
         const entrySlide = cameraEntryState === "rush" ? Math.min(1, Math.max(0, (scale - 1.1) / 4.1)) : 0;
-        const activeGaze = !zoomed && !generatorOpenRef.current && !cameraOpenRef.current && !deadRef.current && nightReadyRef.current;
+        const activeGaze = !zoomed && !generatorOpenRef.current && !cameraOpenRef.current && !deadRef.current
+          && nightLookActive(nightReadyRef.current, nightTitleRef.current);
         const x = reducedMotion.matches || !activeGaze ? 0 : cur.current.x + turnX;
         const y = reducedMotion.matches || !activeGaze ? 0 : cur.current.y;
         projectedGaze.current.x = x;
@@ -833,7 +836,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
           </div>
         </div>
       )}
-      {!nightReady && nightTitle && <NightIntro night={night} assetsReady={loaded} onDone={() => setNightReady(true)} />}
+      {!nightReady && nightTitle && <NightIntro night={night} assetsReady={loaded} onTitleShown={() => mayhemSfx.nightStart()} onDone={() => setNightReady(true)} />}
 
       {/* Authored artwork, re-projected as a curved environmental view. */}
       <div
