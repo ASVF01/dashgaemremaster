@@ -101,6 +101,7 @@ export default function MainMenu({ onPlay, dark, onToggleDark, altTutorialPrompt
           {view === "xtraz" && <div className="authored-choice-grid">
             {command("SHOP", () => overlay(setShopOpen))}
             {command("BESTIARY", () => overlay(setBestiaryOpen))}
+            {command("EXTRA MODES", () => go("irrelevant"))}
           </div>}
         </section>, document.body)}
 
