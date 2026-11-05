@@ -43,7 +43,7 @@ interface Props {
 const BACK_TARGET: Record<MenuView, MenuView> = {
   title: "title", modes: "title", settings: "title", credits: "title", xtraz: "title",
   platformer: "modes", survival: "modes", irrelevant: "modes",
-  starvanisher: "irrelevant", soundtrack: "irrelevant", howto: "platformer",
+  starvanisher: "irrelevant", soundtrack: "xtraz", howto: "platformer",
 };
 
 const VIEW_TITLE: Partial<Record<MenuView, string>> = {
@@ -101,7 +101,7 @@ export default function MainMenu({ onPlay, dark, onToggleDark, altTutorialPrompt
           {view === "xtraz" && <div className="authored-choice-grid">
             {command("SHOP", () => overlay(setShopOpen))}
             {command("BESTIARY", () => overlay(setBestiaryOpen))}
-            {command("EXTRA MODES", () => go("irrelevant"))}
+            {command("EXTRAS", () => go("soundtrack"))}
           </div>}
         </section>, document.body)}
 

@@ -2492,7 +2492,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         ctx.fillStyle = glow;
         ctx.fillRect(0, 0, w, h);
       }
-    } else if (isChaseLevel && bgT <= 0 && !postImpact) {
+    } else if (isChaseLevel && !postImpact) {
       const forestSky = ctx.createLinearGradient(0, 0, 0, h);
       forestSky.addColorStop(0, "#111b18");
       forestSky.addColorStop(0.58, "#263c2d");
@@ -2507,15 +2507,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     } else {
       if (postImpact) {
         ctx.fillStyle = "#000";
-      } else if (bgT >= 1) {
-        ctx.fillStyle = "#000";
-      } else if (bgT > 0) {
-        ctx.fillStyle = "#f0ead6";
-        ctx.fillRect(0, 0, w, h);
-        ctx.fillStyle = `rgba(0,0,0,${bgT})`;
       } else {
         ctx.fillStyle = "#f0ead6";
       }
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    // INVBOI: dim the level's own backdrop instead of swapping to black.
+    if (bgT > 0 && !postImpact && !isBossLevel && !isMayhemLevel) {
+      ctx.fillStyle = `rgba(0,0,0,${0.5 * bgT})`;
       ctx.fillRect(0, 0, w, h);
     }
 
@@ -2764,7 +2764,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     // classic star rain.
     const floaty = levelIdRef.current.startsWith("mayhem");
 
-    if (density > 0 && r.rainStars.length < maxRainStars) {
+    if (false && density > 0 && r.rainStars.length < maxRainStars) {
       // Stratified column spawning, but DETERMINISTIC per frame: rotate
       // through every column at least once before repeating, so no column
       // is ever starved within a frame. Guarantees gap-free coverage.
@@ -3292,6 +3292,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       const width = jumping ? 66 + spread * 20 : 54 + spread * 26;
       const height = (jumping ? 66 + spread * 10 : 54 + spread * 6) * img.naturalHeight / img.naturalWidth;
       ctx.save();
+      ctx.filter = "none"; ctx.globalCompositeOperation = "source-over";
       // Immediate opaque contact; a smooth tail fades without following the runner.
       const fade = Math.max(0, (progress - 0.2) / 0.8);
       ctx.globalAlpha = 1 - fade * fade * (3 - 2 * fade);
@@ -3323,6 +3324,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
           const height = (96 + spread * 8 + releaseSpread * 6) * img.naturalHeight / img.naturalWidth;
           const fade = Math.min(1, age / 0.28);
           ctx.save();
+          ctx.filter = "none"; ctx.globalCompositeOperation = "source-over";
           ctx.globalAlpha = 1 - fade * fade * (3 - 2 * fade);
           ctx.translate(dust.x - dust.facing * (spread * 8 + releaseSpread * 18), dust.y);
           ctx.scale(dust.facing, 1);
@@ -3465,7 +3467,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
 
     // INVBOI: white fade-in flash when the rainbow-star downpour begins
     // at t=RAIN_START. Triangle envelope over 0.5s.
-    if (r.player.starman && !isSomSom && starElapsed >= RAIN_START && starElapsed < RAIN_START + 0.5) {
+    if (false && r.player.starman && !isSomSom && starElapsed >= RAIN_START && starElapsed < RAIN_START + 0.5) {
       const f = (starElapsed - RAIN_START) / 0.5; // 0 → 1
       const alpha = f < 0.5 ? f * 2 : (1 - f) * 2;
       ctx.save();
