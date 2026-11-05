@@ -2,17 +2,19 @@ import { useEffect, useRef, useState } from "react";
 import { canExitNightTitle, NIGHT_REVEAL_MS, NIGHT_STATIC_MS, NIGHT_TITLE_EXIT_MS } from "./nightIntroRules";
 import "./nightIntro.css";
 
-export default function NightIntro({ night, assetsReady, onDone }: { night: number; assetsReady: boolean; onDone: () => void }) {
+export default function NightIntro({ night, assetsReady, onDone, onTitleShown }: { night: number; assetsReady: boolean; onDone: () => void; onTitleShown: () => void }) {
   const [phase, setPhase] = useState("static");
   const ready = useRef(assetsReady);
   const done = useRef(onDone);
+  const titleShown = useRef(onTitleShown);
   ready.current = assetsReady;
   done.current = onDone;
+  titleShown.current = onTitleShown;
   useEffect(() => {
     const started = performance.now();
     let exit: number | undefined;
     let reveal: number | undefined;
-    const enter = window.setTimeout(() => setPhase("hold"), NIGHT_STATIC_MS);
+    const enter = window.setTimeout(() => { setPhase("hold"); titleShown.current(); }, NIGHT_STATIC_MS);
     const check = window.setInterval(() => {
       if (!canExitNightTitle(performance.now() - started, ready.current)) return;
       window.clearInterval(check);

@@ -1,6 +1,7 @@
 # MAYHEM rules
 
 - NightIntro owns the post-tip static/text/reveal sequence; pure timing rules gate exit on asset readiness while NightRooms keeps gameplay inactive until reveal ends.
+- NightIntro signals the page-level audio owner the instant its text appears so the night-start sting stays locked to the picture, and tested `nightLookActive` lets the room's smoothed gaze run from the moment the card mounts while gameplay stays frozen.
 
 - Receptionist merchant dialogue cues use an isolated overlay that owns shop audio; session upgrades are passed from the page into NightRooms and pure merchant rules, keeping effects testable and enemy activation deferred.
 - DialogueBox reports its active line to external character artwork; merchant expression assignments live alongside its script so artwork changes stay synchronized without duplicating dialogue progression.

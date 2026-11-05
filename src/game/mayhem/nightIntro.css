@@ -13,7 +13,7 @@
 @keyframes night-static-glitch { to { transform: translateY(31px); opacity: .15; } }
 @media (prefers-reduced-motion: reduce) { .authored-night-static { animation: none; opacity: .15; } .authored-night-copy h2, .authored-night-copy p { animation-duration: 1ms; } }
 /* Hand-drawn ink HP bar */
-.mayhem-ink-hp { transform: rotate(-1.5deg); filter: drop-shadow(3px 3px 0 hsl(var(--select-black) / .6)); }
+.mayhem-ink-hp { transform: rotate(-1.5deg); filter: drop-shadow(3px 3px 0 hsl(var(--select-black) / .6)); transition: opacity 260ms ease; will-change: transform, opacity; }
 .mayhem-ink-hp-label { font-family: 'Press Start 2P', monospace; font-size: 18px; fill: hsl(var(--hell-warning)); stroke: hsl(var(--select-black)); stroke-width: 5px; paint-order: stroke; }
 .mayhem-ink-hp-back { fill: hsl(var(--select-black) / .75); }
 .mayhem-ink-hp-fill { fill: hsl(var(--hell-warning)); }

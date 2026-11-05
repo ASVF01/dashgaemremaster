@@ -42,7 +42,16 @@ import animMove4 from "@/assets/audio/AnimMove4.wav.asset.json";
 import { anbOutcome, HALL_ENTRY_MS, inOfficeRooms, lockdownAllows, lookingAtAnb, nickyOutcome, staringAtThreat, tipsForNight } from "./encounterRules";
 import CurvedRoom from "./CurvedRoom";
 import NightIntro from "./NightIntro";
+import { nightLookActive } from "./nightIntroRules";
 import { projectRoomRect } from "./roomProjection";
+import {
+  HP_DRIFT_EASE_MS,
+  hudDrift,
+  hudEase,
+  hudHiddenWhileTurning,
+  hpSway,
+  hpTilt,
+} from "./hudDriftRules";
 const spotKey = (s: { left: string; top: string; width: string; height: string }) =>
   [s.left, s.top, s.width, s.height].map((v) => parseFloat(v) / 100).join(",");
 import newAnimInHallSfx from "@/assets/audio/NewAnimInHall.wav.asset.json";
@@ -193,6 +202,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   const holdStart = useRef<number | null>(null);
   const raf = useRef<number | null>(null);
   const nightReadyRef = useRef(false);
+  const nightTitleRef = useRef(false);
   const deadRef = useRef(false);
   const viewRef = useRef(view);
   viewRef.current = view;
@@ -213,6 +223,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   const [dead, setDead] = useState<null | "blackout">(null);
   const [deathDone, setDeathDone] = useState(false);
   nightReadyRef.current = nightReady;
+  nightTitleRef.current = nightTitle;
   deadRef.current = dead !== null;
   const grid = useGridRoster(night, mayhemAiLevel(night) * enemyMoveMultiplier(upgrades), nightReady && !dead, paused);
   const [tip] = useState(() => { const list = tipsForNight(night); return list[Math.floor(Math.random() * list.length)]; });
@@ -652,6 +663,11 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
   const generatorLookRef = useRef<HTMLDivElement | null>(null);
   const flipTabRef = useRef<HTMLButtonElement | null>(null);
   const navRef = useRef<HTMLDivElement | null>(null);
+  // The HP panel rides its own plane: a slower ease, a shorter swing and an
+  // idle sway, so it never reads as bolted onto the WASD prompts.
+  const hpRef = useRef<HTMLDivElement | null>(null);
+  const hpLook = useRef({ x: 0, y: 0 });
+  const hpClock = useRef(0);
   type Exit = { key: string; label: string; side: "left" | "right" | "up" | "down" | "center" };
   const exits: Exit[] =
     view === "office" ? [{ key: "W", label: "CCTV", side: "up" }, { key: "A", label: "THE DOOR", side: "left" }] :
@@ -751,7 +767,8 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
         const scale = zoomCur.current + zoomNudge.current + turnScale;
         const damp = zoomed ? 0 : 1;
         const entrySlide = cameraEntryState === "rush" ? Math.min(1, Math.max(0, (scale - 1.1) / 4.1)) : 0;
-        const activeGaze = !zoomed && !generatorOpenRef.current && !cameraOpenRef.current && !deadRef.current && nightReadyRef.current;
+        const activeGaze = !zoomed && !generatorOpenRef.current && !cameraOpenRef.current && !deadRef.current
+          && nightLookActive(nightReadyRef.current, nightTitleRef.current);
         const x = reducedMotion.matches || !activeGaze ? 0 : cur.current.x + turnX;
         const y = reducedMotion.matches || !activeGaze ? 0 : cur.current.y;
         projectedGaze.current.x = x;
@@ -772,10 +789,24 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
         });
       }
       if (navRef.current) {
-        const nx = reducedMotion.matches ? 0 : -(cur.current.x + turnX) * 70;
-        const ny = reducedMotion.matches ? 0 : -cur.current.y * 32;
-        navRef.current.style.transform = `translate(${nx}px, ${ny}px)`;
-        navRef.current.style.opacity = turnRef.current ? "0" : "1";
+        const nav = hudDrift("nav", cur.current.x + turnX, cur.current.y);
+        navRef.current.style.transform = reducedMotion.matches
+          ? "translate(0px, 0px)"
+          : `translate(${nav.x}px, ${nav.y}px)`;
+        navRef.current.style.opacity = hudHiddenWhileTurning(!!turnRef.current) ? "0" : "1";
+      }
+      const hpEase = hudEase(dt, HP_DRIFT_EASE_MS);
+      hpLook.current.x += (cur.current.x - hpLook.current.x) * hpEase;
+      hpLook.current.y += (cur.current.y - hpLook.current.y) * hpEase;
+      hpClock.current += dt;
+      if (hpRef.current) {
+        const still = reducedMotion.matches;
+        const drift = hudDrift("hp", hpLook.current.x, hpLook.current.y);
+        const sway = still ? 0 : hpSway(hpClock.current);
+        hpRef.current.style.transform =
+          `translate(${still ? 0 : drift.x}px, ${(still ? 0 : drift.y) + sway}px) ` +
+          `rotate(${hpTilt(still ? 0 : hpLook.current.x)}deg)`;
+        hpRef.current.style.opacity = hudHiddenWhileTurning(!!turnRef.current) ? "0" : "1";
       }
       if (cursorRef.current) {
         cursorRef.current.style.opacity = cursorVisible.current ? "1" : "0";
@@ -806,7 +837,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
           </div>
         </div>
       )}
-      {!nightReady && nightTitle && <NightIntro night={night} assetsReady={loaded} onDone={() => setNightReady(true)} />}
+      {!nightReady && nightTitle && <NightIntro night={night} assetsReady={loaded} onTitleShown={() => mayhemSfx.nightStart()} onDone={() => setNightReady(true)} />}
 
       {/* Authored artwork, re-projected as a curved environmental view. */}
       <div
@@ -923,7 +954,7 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
 
       <div aria-hidden="true" className="hell-static pointer-events-none absolute inset-0 opacity-40" />
 
-      <div className="mayhem-ink-hp pointer-events-none absolute left-5 top-5 z-[90]" aria-label={`HP ${hp} of 100`}>
+      <div ref={hpRef} className="mayhem-ink-hp pointer-events-none absolute left-5 top-5 z-[90]" aria-label={`HP ${hp} of 100`}>
         <svg viewBox="0 0 300 70" width="clamp(200px,22vw,300px)" className="block w-[clamp(200px,22vw,300px)] overflow-visible">
           <defs>
             <filter id="ink-wobble"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="7" /><feDisplacementMap in="SourceGraphic" scale="4" /></filter>

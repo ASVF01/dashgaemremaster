@@ -32,6 +32,7 @@ import animKeyholeAsset from "@/assets/audio/AnimKeyhole.ogg.asset.json";
 import animMove1Asset from "@/assets/audio/AnimMove1.wav.asset.json";
 import animMove4Asset from "@/assets/audio/AnimMove4.wav.asset.json";
 import jumpscareAsset from "@/assets/audio/JumpscareRevised3.ogg.asset.json";
+import nightStartAsset from "@/assets/audio/fnaf3NightStart.mp3.asset.json";
 import chaserHitUrl from "@/assets/audio/trtf-5-jumpscare.mp3";
 import knightRoarAsset from "@/assets/audio/snd_knightroar.wav.asset.json";
 import knightDrawPowerAsset from "@/assets/audio/snd_knight_drawpower.wav.asset.json";
@@ -240,6 +241,7 @@ const MAYHEM_SAMPLE_URLS = [
   animMove1Asset.url,
   animMove4Asset.url,
   jumpscareAsset.url,
+  nightStartAsset.url,
 ];
 
 export function preloadMayhemSfx(): Promise<void> {
@@ -1537,6 +1539,11 @@ function nNoise(dur: number, vol = 0.4, hp = 200, lp = 4000, delay = 0, lpTo?: n
 }
 
 export const mayhemSfx = {
+  // "Night N" title card sting — the supplied night-start sound, played on the
+  // night bus so it stays audible while the platformer sfx bus is muted.
+  nightStart() {
+    nSample(nightStartAsset.url, { vol: 0.8 });
+  },
   // terminal panel sliding up — uploaded FirewallOpenV2 sample
   terminalOpen() {
     nSample(firewallOpenAsset.url, { vol: 0.7 });

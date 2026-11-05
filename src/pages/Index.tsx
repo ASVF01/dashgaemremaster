@@ -1041,7 +1041,7 @@ const Index = () => {
       {/* One-time intro card on app start. Fades in, holds 9s, fades out. */}
       {introPhase !== "done" && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black transition-opacity duration-[800ms] ease-out cursor-pointer"
+          className={`fixed inset-0 z-[100] flex items-center justify-center bg-black transition-opacity duration-[800ms] ease-out cursor-pointer ${introPhase === "out" ? "pointer-events-none" : ""}`}
           style={{ opacity: introPhase === "in" ? 0 : introPhase === "out" ? 0 : 1 }}
           onClick={skipIntro}
           role="button"
