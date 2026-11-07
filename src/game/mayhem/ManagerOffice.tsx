@@ -23,7 +23,7 @@ import "./managerOffice.css";
 const FACE_ASPECT = 553 / 949;
 const DESK_DEPTH = 0.62;
 const UTIL_DEPTH = 0.7;
-const FURNITURE_SCALE = 1.35;
+const FURNITURE_SCALE = 1.9;
 
 function vol() { return Math.max(0, Math.min(1, getSettings().sfxVolume ?? 0.7)); }
 function playOnce(url: string, v = 1) {
