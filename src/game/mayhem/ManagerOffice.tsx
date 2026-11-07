@@ -17,7 +17,7 @@ import {
   OFFICE_FURNITURE_SCALE, OFFICE_DESK_DEPTH, OFFICE_UTIL_DEPTH,
   WIRE_COLORS, type OfficeView, type WireColor,
 } from "./managerOfficeRules";
-import Terminal, { makeTerminalSession, type TerminalSession } from "./Terminal";
+import GeneratorPanel, { makeGeneratorProgress, type GeneratorProgress } from "./GeneratorPanel";
 import { mayhemSfx } from "@/game/sfx";
 import "./managerOffice.css";
 
@@ -90,7 +90,7 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
   const [crawling, setCrawling] = useState(false);
   const crawlAudio = useRef<HTMLAudioElement | null>(null);
   const [termOpen, setTermOpen] = useState(false);
-  const [termSession, setTermSession] = useState<TerminalSession>(() => makeTerminalSession());
+  const [genProgress, setGenProgress] = useState<GeneratorProgress>(() => makeGeneratorProgress());
   const overlayOpen = tipOpen || taskOpen || termOpen;
 
   // Box dimensions: the front face exactly covers the screen when facing it.
@@ -186,7 +186,7 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
     const w = w0 * FURNITURE_SCALE, h = h0 * FURNITURE_SCALE;
     return {
       width: w * k, height: h * k, marginLeft: (-w * k) / 2, marginTop: (-h * k) / 2,
-      transform: `${turn}translateY(${H / 2 - (h * k) / 2}px) translateZ(${(-S / 2) * k}px)`,
+      transform: `${turn}translateY(${H / 2 - (h * k) / 2 - H * 0.12 * k}px) translateZ(${(-S / 2) * k}px)`,
     };
   };
 
@@ -251,7 +251,7 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
       {/* HUD */}
       <div className="mo-hud">
         <div>TEST ROOM · HP {hp}</div>
-        <div className="mo-hint">mouse to edges = look · W vent · S desk · A door · G terminal · hold Z light · \ or ESC exit</div>
+        <div className="mo-hint">mouse to edges = look · W vent · S desk · A door · G generator · hold Z light · \ or ESC exit</div>
         {view === "ceiling" && (
           <button className="mo-test" onClick={() => setCrawling((c) => !c)}>
             {crawling ? "stop crawl" : "test: NEO-MATA crawl"}
@@ -268,8 +268,9 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
       )}
       {termOpen && (
         <div className="mo-term">
-          <Terminal paused={false} session={termSession} onSessionChange={setTermSession}
-            onClose={() => { mayhemSfx.terminalClose(); lookRight.current = false; setTermOpen(false); }} />
+          <GeneratorPanel night={5} paused={false} progress={genProgress} onProgress={setGenProgress}
+            onClose={() => { mayhemSfx.terminalClose(); lookRight.current = false; setTermOpen(false); }}
+            onComplete={() => { lookRight.current = false; setTermOpen(false); }} />
         </div>
       )}
       {taskOpen && (
