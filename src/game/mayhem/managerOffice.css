@@ -70,3 +70,7 @@
 .mo-gen-bar > div { height: 100%; background: hsl(140 70% 45%); transition: width 0.4s ease-out; }
 .mo-gen-bar > span { position: absolute; inset: 0; text-align: center; font-size: 12px; line-height: 14px; color: hsl(0 0% 100%); mix-blend-mode: difference; }
 .mo-crt .mo-wires { inset: 84px 28px 40px; height: calc(100% - 124px); }
+.mo-gen-bar { position: relative; height: 18px; margin: 8px 0; border: 2px solid hsl(140 65% 45%); }
+.mo-gen-bar > div { height: 100%; background: hsl(140 70% 45%); transition: width 0.4s ease-out; }
+.mo-gen-bar > span { position: absolute; inset: 0; text-align: center; font-size: 12px; line-height: 14px; color: hsl(0 0% 100%); mix-blend-mode: difference; }
+.mo-crt .mo-wires { inset: 84px 28px 40px; height: calc(100% - 124px); }
