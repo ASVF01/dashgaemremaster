@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { officeYaw, viewForKey, shuffledPorts, tryConnect, taskComplete, WIRE_COLORS, OFFICE_MAX_YAW } from "./managerOfficeRules";
+import { officeYaw, viewForKey, shuffledPorts, tryConnect, taskComplete, WIRE_COLORS, OFFICE_MAX_YAW, officePitch } from "./managerOfficeRules";
 
 describe("manager office look", () => {
   it("centered cursor faces the desk, edges face the side walls", () => {
     expect(officeYaw(0)).toBe(0);
     expect(officeYaw(1)).toBeCloseTo(OFFICE_MAX_YAW);
     expect(officeYaw(-1)).toBeCloseTo(-OFFICE_MAX_YAW);
+    expect(OFFICE_MAX_YAW).toBe(90);
+    expect(officePitch("ceiling")).toBe(90);
   });
   it("only W and S change the view; A and D do nothing", () => {
     expect(viewForKey("KeyW", "desk")).toBe("ceiling");

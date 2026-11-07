@@ -98,7 +98,7 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
     let yaw = 0, pitch = 0, last = performance.now(), raf = 0;
     const tick = (now: number) => {
       const dt = (now - last) / 1000; last = now;
-      const ty = overlayRef.current ? yaw : officeYaw(cursorX.current) * (viewRef.current === "ceiling" ? 0.25 : 1);
+      const ty = overlayRef.current ? yaw : officeYaw(cursorX.current);
       yaw = approach(yaw, ty, dt);
       pitch = approach(pitch, officePitch(viewRef.current), dt, 6);
       if (worldRef.current) {
@@ -167,6 +167,9 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
             )}
           </div>
         </div>
+
+        {/* FLOOR: plain grey like the walls */}
+        <div className="mo-face mo-floor" style={face(S, S, `rotateX(90deg) translateZ(${-H / 2}px)`)} />
 
         {/* CEILING: vent */}
         <div className="mo-face" style={face(S, S, `rotateX(-90deg) translateZ(${-H / 2}px)`)}>

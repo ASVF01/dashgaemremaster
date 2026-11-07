@@ -3,8 +3,8 @@
 // left/right; W/S (or tapping top/bottom) tilt between desk and ceiling vent.
 import { edgeWeight } from "./povLookRules";
 
-export const OFFICE_MAX_YAW = 62; // degrees: enough to face the door / utilities walls
-export const OFFICE_CEILING_PITCH = 86; // degrees tilted up when looking at the vent
+export const OFFICE_MAX_YAW = 90; // degrees: face the door / utilities walls head-on
+export const OFFICE_CEILING_PITCH = 90; // degrees tilted up when looking at the vent
 export const OFFICE_DEADZONE = 0.12;
 export const OFFICE_TURN_RATE = 7; // exp smoothing per second
 
