@@ -84,3 +84,4 @@
 - [x] MAYHEM hotel interior: wood look + rugs + wood movement SFX; dash uses default SFX
 
 - [x] Night 5 Manager's Office test room on "\": 3D box look, door/blue nope button, tip note, wire-patch terminal, medkit, shaking vent + SHOCK. Threats/boss not added (by request).
+- [x] Manager's Office: edge-scroll look that holds its angle, desks as free-standing 3D layers, background cut from between desk legs, A door / G look right + terminal / hold Z flashlight, one vent jolt per crawl footstep.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { officeYaw, viewForKey, shuffledPorts, tryConnect, taskComplete, WIRE_COLORS, OFFICE_MAX_YAW, officePitch } from "./managerOfficeRules";
+import { officeYaw, viewForKey, shuffledPorts, tryConnect, taskComplete, WIRE_COLORS, OFFICE_MAX_YAW, officePitch, edgeScrollYaw, ventStepsCrossed } from "./managerOfficeRules";
 
 describe("manager office look", () => {
   it("centered cursor faces the desk, edges face the side walls", () => {
@@ -14,6 +14,21 @@ describe("manager office look", () => {
     expect(viewForKey("KeyS", "ceiling")).toBe("desk");
     expect(viewForKey("KeyA", "desk")).toBe("desk");
     expect(viewForKey("KeyD", "ceiling")).toBe("ceiling");
+  });
+});
+
+describe("edge-scroll look and vent steps", () => {
+  it("cursor at the left edge turns left and the view stays when centered", () => {
+    let yaw = 0;
+    for (let i = 0; i < 60; i++) yaw = edgeScrollYaw(yaw, -1, 0.05);
+    expect(yaw).toBe(-90);
+    expect(edgeScrollYaw(yaw, 0, 0.05)).toBe(-90);
+    expect(edgeScrollYaw(30, 0.2, 0.05)).toBe(30);
+  });
+  it("vent jolts once per step, including across the loop", () => {
+    expect(ventStepsCrossed(0, 0.2)).toBe(1);
+    expect(ventStepsCrossed(0.2, 1.4)).toBe(0);
+    expect(ventStepsCrossed(3.1, 0.2)).toBe(1);
   });
 });
 

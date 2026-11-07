@@ -19,6 +19,30 @@ export function officePitch(view: OfficeView): number {
   return view === "ceiling" ? OFFICE_CEILING_PITCH : 0;
 }
 
+export const OFFICE_EDGE_ZONE = 0.55; // |cursor x| beyond this pans the head
+export const OFFICE_PAN_SPEED = 160; // degrees per second at the very edge
+
+/**
+ * Edge-scroll look: pushing the cursor toward a side turns the head that way,
+ * and the head stays there when the cursor stops or comes back to the middle.
+ */
+export function edgeScrollYaw(yaw: number, x: number, dt: number): number {
+  const ax = Math.abs(x);
+  if (ax <= OFFICE_EDGE_ZONE) return yaw;
+  const push = Math.min(1, (ax - OFFICE_EDGE_ZONE) / (1 - OFFICE_EDGE_ZONE));
+  const next = yaw + Math.sign(x) * push * OFFICE_PAN_SPEED * Math.min(dt, 0.05);
+  return Math.max(-OFFICE_MAX_YAW, Math.min(OFFICE_MAX_YAW, next));
+}
+
+/** Step hits (seconds) in ventwalk1.wav; the vent jolts once on each. */
+export const VENT_STEP_TIMES = [0.164, 1.454, 2.513];
+
+/** Steps crossed when audio time moves from prev to now (handles loop wrap). */
+export function ventStepsCrossed(prev: number, now: number): number {
+  if (now >= prev) return VENT_STEP_TIMES.filter((t) => t > prev && t <= now).length;
+  return VENT_STEP_TIMES.filter((t) => t > prev || t <= now).length;
+}
+
 /** Keyboard: only W and S move the view (left/right is mouse-only). */
 export function viewForKey(code: string, current: OfficeView): OfficeView {
   if (code === "KeyW") return "ceiling";

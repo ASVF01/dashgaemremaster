@@ -13,16 +13,29 @@ import ventImg from "@/assets/manager/vent.png.asset.json";
 import nopeSfx from "@/assets/manager/nope.mp3.asset.json";
 import ventWalkSfx from "@/assets/manager/ventwalk.wav.asset.json";
 import {
-  approach, officePitch, officeYaw, shuffledPorts, taskComplete, tryConnect, viewForKey,
+  approach, edgeScrollYaw, officePitch, ventStepsCrossed, OFFICE_MAX_YAW, shuffledPorts, taskComplete, tryConnect, viewForKey,
   WIRE_COLORS, type OfficeView, type WireColor,
 } from "./managerOfficeRules";
 import "./managerOffice.css";
 
 const FACE_ASPECT = 553 / 949;
+const DESK_DEPTH = 0.62;
+const UTIL_DEPTH = 0.7;
 
 function vol() { return Math.max(0, Math.min(1, getSettings().sfxVolume ?? 0.7)); }
 function playOnce(url: string, v = 1) {
   const a = new Audio(url); a.volume = vol() * v; a.play().catch(() => {});
+}
+function click() {
+  try {
+    const ctx = new AudioContext();
+    const o = ctx.createOscillator(); const g = ctx.createGain();
+    o.type = "square"; o.frequency.value = 1800;
+    g.gain.setValueAtTime(0.12 * vol(), ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.03);
+    o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.04);
+    setTimeout(() => ctx.close(), 200);
+  } catch { /* noop */ }
 }
 function zap() {
   try {
@@ -57,6 +70,10 @@ export default function ManagerOffice() {
 function OfficeRoom({ onExit }: { onExit: () => void }) {
   const worldRef = useRef<HTMLDivElement>(null);
   const cursorX = useRef(0);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const ventRef = useRef<HTMLImageElement>(null);
+  const lookRight = useRef(false);
+  const [flash, setFlash] = useState(false);
   const [view, setView] = useState<OfficeView>("desk");
   const viewRef = useRef(view); viewRef.current = view;
   const [size, setSize] = useState({ w: window.innerWidth, h: window.innerHeight });
@@ -77,11 +94,25 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
 
   useEffect(() => {
     const onResize = () => setSize({ w: window.innerWidth, h: window.innerHeight });
-    const onMove = (e: PointerEvent) => { cursorX.current = (e.clientX / window.innerWidth) * 2 - 1; };
+    const onMove = (e: PointerEvent) => {
+      cursorX.current = (e.clientX / window.innerWidth) * 2 - 1;
+      stageRef.current?.style.setProperty("--fx", `${e.clientX}px`);
+      stageRef.current?.style.setProperty("--fy", `${e.clientY}px`);
+    };
     const onKey = (e: KeyboardEvent) => {
       if (e.code === "Escape") { onExit(); return; }
+      if (e.code === "KeyZ") { if (!e.repeat) { setFlash(true); click(); } return; }
+      if (e.repeat) return;
+      if (e.code === "KeyA") { setDoorShut((d) => !d); return; }
+      if (e.code === "KeyG") {
+        setTaskOpen((o) => { lookRight.current = !o; return !o; });
+        setView("desk");
+        return;
+      }
       setView((v) => viewForKey(e.code, v));
     };
+    const onUp = (e: KeyboardEvent) => { if (e.code === "KeyZ") { setFlash(false); click(); } };
+    window.addEventListener("keyup", onUp);
     window.addEventListener("resize", onResize);
     window.addEventListener("pointermove", onMove);
     window.addEventListener("keydown", onKey);
@@ -89,17 +120,28 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
       window.removeEventListener("resize", onResize);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keyup", onUp);
     };
   }, [onExit]);
 
   // One stepper: smooth yaw/pitch toward their targets.
   const overlayRef = useRef(overlayOpen); overlayRef.current = overlayOpen;
   useEffect(() => {
-    let yaw = 0, pitch = 0, last = performance.now(), raf = 0;
+    let yaw = 0, pitch = 0, last = performance.now(), raf = 0, audioT = 0;
     const tick = (now: number) => {
       const dt = (now - last) / 1000; last = now;
-      const ty = overlayRef.current ? yaw : officeYaw(cursorX.current);
-      yaw = approach(yaw, ty, dt);
+      if (lookRight.current) yaw = approach(yaw, OFFICE_MAX_YAW, dt);
+      else if (!overlayRef.current) yaw = edgeScrollYaw(yaw, cursorX.current, dt);
+      // One vent jolt per crawl footstep in the sound.
+      const a = crawlAudio.current;
+      if (a) {
+        const t = a.currentTime;
+        if (ventStepsCrossed(audioT, t) > 0 && ventRef.current) {
+          const v = ventRef.current;
+          v.classList.remove("mo-shake"); void v.offsetWidth; v.classList.add("mo-shake");
+        }
+        audioT = t;
+      } else audioT = 0;
       pitch = approach(pitch, officePitch(viewRef.current), dt, 6);
       if (worldRef.current) {
         worldRef.current.style.transform = `translateZ(${P}px) rotateX(${pitch}deg) rotateY(${yaw}deg)`;
@@ -123,6 +165,13 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
     width: w, height: h, marginLeft: -w / 2, marginTop: -h / 2, transform,
   });
 
+  // A desk at fraction k of the wall distance, shrunk by k so it keeps its painted size,
+  // with its legs resting on the floor.
+  const prop = (w: number, h: number, turn: string, k: number): React.CSSProperties => ({
+    width: w * k, height: h * k, marginLeft: (-w * k) / 2, marginTop: (-h * k) / 2,
+    transform: `${turn}translateY(${H / 2 - (h * k) / 2}px) translateZ(${(-S / 2) * k}px)`,
+  });
+
   // Mobile: tap top/bottom strips to tilt.
   const onStagePointer = (e: React.PointerEvent) => {
     if (e.pointerType !== "touch") return;
@@ -133,7 +182,7 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
   };
 
   return (
-    <div className="mo-stage" style={{ perspective: `${P}px` }} onPointerDown={onStagePointer}>
+    <div ref={stageRef} className="mo-stage" style={{ perspective: `${P}px` }} onPointerDown={onStagePointer}>
       <div ref={worldRef} className="mo-world">
         {/* LEFT: door */}
         <div className="mo-face" style={face(S, H, `rotateY(90deg) translateZ(${-S / 2}px)`)}>
@@ -144,28 +193,30 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
             aria-label="Blue button" onClick={() => playOnce(nopeSfx.url)} />
         </div>
 
-        {/* FRONT: room + desk */}
+        {/* FRONT: room */}
         <div className="mo-face" style={face(S, H, `translateZ(${-S / 2}px)`)}>
           <img src={frontRoom.url} alt="Manager's office" draggable={false} />
-          <div className="mo-table">
-            <img src={frontTable.url} alt="Manager's desk" draggable={false} />
-            <button className="mo-hot" style={{ left: "37.5%", top: "6%", width: "28%", height: "41%" }}
-              aria-label="Terminal" onClick={() => setTaskOpen(true)} />
-            <button className="mo-hot" style={{ left: "17.8%", top: "70%", width: "10%", height: "18%" }}
-              aria-label="Tip note" onClick={() => setTipOpen(true)} />
-          </div>
         </div>
 
         {/* RIGHT: utilities */}
         <div className="mo-face" style={face(S, H, `rotateY(-90deg) translateZ(${-S / 2}px)`)}>
           <img src={utilRoom.url} alt="Utilities room" draggable={false} />
-          <div className="mo-util">
-            <img src={medUsed ? utilUsed.url : utilFull.url} alt="Utilities desk" draggable={false} />
-            {!medUsed && (
-              <button className="mo-hot" style={{ left: "57.5%", top: "5%", width: "15.5%", height: "66%" }}
-                aria-label="First aid kit" onClick={() => { setMedUsed(true); setHp(100); }} />
-            )}
-          </div>
+        </div>
+
+        {/* DESKS: standalone layers standing on the floor, in front of the walls */}
+        <div className="mo-face mo-prop" style={prop(0.745 * S, 0.564 * H, "", DESK_DEPTH)}>
+          <img src={frontTable.url} alt="Manager's desk" draggable={false} />
+          <button className="mo-hot" style={{ left: "37.5%", top: "6%", width: "28%", height: "41%" }}
+            aria-label="Terminal" onClick={() => { lookRight.current = false; setTaskOpen(true); }} />
+          <button className="mo-hot" style={{ left: "17.8%", top: "70%", width: "10%", height: "18%" }}
+            aria-label="Tip note" onClick={() => setTipOpen(true)} />
+        </div>
+        <div className="mo-face mo-prop" style={prop(S, 0.374 * H, "rotateY(-90deg) ", UTIL_DEPTH)}>
+          <img src={medUsed ? utilUsed.url : utilFull.url} alt="Utilities desk" draggable={false} />
+          {!medUsed && (
+            <button className="mo-hot" style={{ left: "57.5%", top: "5%", width: "15.5%", height: "66%" }}
+              aria-label="First aid kit" onClick={() => { setMedUsed(true); setHp(100); }} />
+          )}
         </div>
 
         {/* FLOOR: plain grey like the walls */}
@@ -174,7 +225,7 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
         {/* CEILING: vent */}
         <div className="mo-face" style={face(S, S, `rotateX(-90deg) translateZ(${-H / 2}px)`)}>
           <img src={ceilingImg.url} alt="Ceiling" draggable={false} />
-          <img src={ventImg.url} alt="Vent" draggable={false} className={`mo-vent ${crawling ? "mo-shake" : ""}`} />
+          <img ref={ventRef} src={ventImg.url} alt="Vent" draggable={false} className="mo-vent" />
           <button className="mo-shock" onClick={() => { zap(); setCrawling(false); }}>SHOCK</button>
         </div>
       </div>
@@ -182,13 +233,15 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
       {/* HUD */}
       <div className="mo-hud">
         <div>TEST ROOM · HP {hp}</div>
-        <div className="mo-hint">mouse = look · W vent · S desk · \ or ESC exit</div>
+        <div className="mo-hint">mouse to edges = look · W vent · S desk · A door · G terminal · hold Z light · \ or ESC exit</div>
         {view === "ceiling" && (
           <button className="mo-test" onClick={() => setCrawling((c) => !c)}>
             {crawling ? "stop crawl" : "test: NEO-MATA crawl"}
           </button>
         )}
       </div>
+
+      {flash && <div className="mo-flash" aria-hidden />}
 
       {tipOpen && (
         <div className="mo-overlay" onClick={() => setTipOpen(false)}>
@@ -199,7 +252,7 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
         <WireTask
           done={taskDone}
           onDone={() => setTaskDone(true)}
-          onClose={() => setTaskOpen(false)}
+          onClose={() => { lookRight.current = false; setTaskOpen(false); }}
         />
       )}
     </div>
