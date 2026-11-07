@@ -23,6 +23,7 @@ import { recordLevelResult } from "@/game/levelStats";
 import MayhemPause from "@/game/mayhem/MayhemPause";
 import PlatformerPause from "@/game/PlatformerPause";
 import NightRooms from "@/game/mayhem/NightRooms";
+import ManagerOffice from "@/game/mayhem/ManagerOffice";
 import NightClear from "@/game/mayhem/NightClear";
 import DialogueBox from "@/game/mayhem/DialogueBox";
 import { MAYHEM_SCRIPTS } from "@/game/mayhem/dialogue";
@@ -632,6 +633,7 @@ const Index = () => {
 
   return (
     <main className="min-h-screen w-full bg-paper text-ink overflow-hidden relative">
+      <ManagerOffice />
       {/* small-screen portrait lock: ask the player to rotate */}
       <div className="fixed inset-0 z-[200] bg-paper text-ink hidden portrait-lock items-center justify-center px-6 text-center">
         <div>

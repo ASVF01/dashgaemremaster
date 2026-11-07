@@ -1,0 +1,43 @@
+.mo-stage { position: fixed; inset: 0; z-index: 90; overflow: hidden; background: hsl(0 0% 2%); cursor: default; }
+.mo-world { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform-style: preserve-3d; }
+.mo-face { position: absolute; left: 0; top: 0; }
+.mo-face > img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; user-select: none; }
+.mo-table { position: absolute; left: 12.75%; bottom: 0; width: 74.5%; height: 56.4%; }
+.mo-util { position: absolute; left: 0; bottom: 0; width: 100%; height: 37.4%; }
+.mo-table > img, .mo-util > img { width: 100%; height: 100%; display: block; }
+.mo-hot { position: absolute; background: transparent; border: 0; cursor: pointer; }
+.mo-hot:hover { outline: 3px dashed hsl(0 0% 100% / 0.35); outline-offset: 2px; }
+.mo-vent { position: absolute; left: 40%; top: 38%; width: 20%; height: auto !important; inset: auto; }
+.mo-face > img.mo-vent { inset: auto; left: 40%; top: 38%; width: 20%; height: auto; }
+.mo-shake { animation: mo-shake 0.09s steps(2) infinite; }
+@keyframes mo-shake {
+  0% { transform: translate(-1.2%, 0.8%) rotate(-0.6deg); }
+  50% { transform: translate(1.4%, -1%) rotate(0.7deg); }
+  100% { transform: translate(-0.6%, 1.2%) rotate(-0.3deg); }
+}
+.mo-shock {
+  position: absolute; left: 61%; top: 41%; width: 10%; aspect-ratio: 1;
+  border-radius: 50%; border: 0.6vw solid hsl(0 0% 6%);
+  background: hsl(0 80% 46%); color: hsl(0 0% 100%);
+  font-family: "Permanent Marker", system-ui, sans-serif; font-size: 1.6vw;
+  box-shadow: 0 0.6vw 0 hsl(0 70% 22%); cursor: pointer;
+}
+.mo-shock:active { transform: translateY(0.4vw); box-shadow: 0 0.2vw 0 hsl(0 70% 22%); }
+.mo-hud { position: fixed; left: 16px; top: 14px; color: hsl(0 0% 92%); font: 600 14px ui-monospace, monospace; z-index: 2; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.mo-hint { opacity: 0.6; font-weight: 400; }
+.mo-test { background: hsl(0 0% 12%); color: hsl(140 70% 60%); border: 1px solid hsl(140 70% 40%); padding: 4px 10px; cursor: pointer; }
+.mo-overlay { position: fixed; inset: 0; z-index: 3; background: hsl(0 0% 0% / 0.75); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.mo-tip { max-width: 92vw; max-height: 92vh; image-rendering: auto; }
+.mo-crt { position: relative; width: min(640px, 90vw); aspect-ratio: 4 / 3; background: hsl(0 0% 2%); border: 6px solid hsl(140 65% 45%); border-radius: 28px; padding: 18px 28px; cursor: default; color: hsl(140 70% 60%); font-family: ui-monospace, monospace; display: flex; flex-direction: column; }
+.mo-crt-title { text-align: center; font-weight: 700; letter-spacing: 0.05em; }
+.mo-crt-foot { text-align: center; opacity: 0.5; font-size: 12px; }
+.mo-wires { position: absolute; inset: 56px 28px 40px; width: calc(100% - 56px); height: calc(100% - 96px); pointer-events: none; }
+.mo-ports { flex: 1; display: flex; justify-content: space-between; padding: 8px 0; }
+.mo-ports > div { display: flex; flex-direction: column; justify-content: space-around; }
+.mo-port { width: 44px; height: 44px; border-radius: 8px; border: 3px solid hsl(0 0% 90%); cursor: pointer; }
+.mo-port:disabled { opacity: 0.45; cursor: default; }
+.mo-port.held { outline: 3px solid hsl(0 0% 100%); outline-offset: 4px; }
+.mo-p-cyan { background: hsl(185 90% 50%); } .mo-w-cyan { stroke: hsl(185 90% 50%); }
+.mo-p-pink { background: hsl(330 90% 62%); } .mo-w-pink { stroke: hsl(330 90% 62%); }
+.mo-p-yellow { background: hsl(55 95% 55%); } .mo-w-yellow { stroke: hsl(55 95% 55%); }
+.mo-p-lime { background: hsl(100 80% 50%); } .mo-w-lime { stroke: hsl(100 80% 50%); }

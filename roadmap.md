@@ -82,3 +82,5 @@
 
 - [x] Add the update log to EXTRAS; verified EXTRAS lists UPDATE LOG v1.4 down to v1.0 and the Credits screen shows the glowing 695.85 total; 125 tests pass.
 - [x] MAYHEM hotel interior: wood look + rugs + wood movement SFX; dash uses default SFX
+
+- [x] Night 5 Manager's Office test room on "\": 3D box look, door/blue nope button, tip note, wire-patch terminal, medkit, shaking vent + SHOCK. Threats/boss not added (by request).
