@@ -69,6 +69,33 @@ export function approach(current: number, target: number, dt: number, rate = OFF
   return target + (current - target) * Math.exp(-rate * Math.min(dt, 0.05));
 }
 
+// ---------- Furniture (desks standing on the floor) ----------
+/** Painted size multiplier for the desks: big enough to read, never filling the screen. */
+export const OFFICE_FURNITURE_SCALE = 0.85;
+/** How far into the room a desk stands (1 = flush with the wall, must stay under 1). */
+export const OFFICE_DESK_DEPTH = 0.9;
+export const OFFICE_UTIL_DEPTH = 0.9;
+
+/**
+ * Where a floor-standing desk actually lands on screen. A plane parked at depth k
+ * is magnified by 1/k by the room's perspective, so shrinking a desk (or pushing it
+ * back) lifts its top edge toward the middle of the view instead of burying it.
+ */
+export function propScreenBox(
+  viewportW: number, viewportH: number, roomH: number,
+  layoutW: number, layoutH: number, k: number,
+) {
+  const rise = roomH / 2 - layoutH / 2; // legs rest on the floor
+  const center = viewportH / 2 + rise / k;
+  const width = layoutW / k;
+  const height = layoutH / k;
+  return {
+    width, height,
+    left: viewportW / 2 - width / 2, right: viewportW / 2 + width / 2,
+    top: center - height / 2, bottom: center + height / 2,
+  };
+}
+
 // ---------- Wire patch task ----------
 export const WIRE_COLORS = ["cyan", "pink", "yellow", "lime"] as const;
 export type WireColor = (typeof WIRE_COLORS)[number];

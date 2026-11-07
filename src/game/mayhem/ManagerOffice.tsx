@@ -14,6 +14,7 @@ import nopeSfx from "@/assets/manager/nope.mp3.asset.json";
 import ventWalkSfx from "@/assets/manager/ventwalk.wav.asset.json";
 import {
   approach, edgeZone, stepYawTarget, officePitch, ventStepsCrossed, OFFICE_MAX_YAW, shuffledPorts, taskComplete, tryConnect, viewForKey,
+  OFFICE_FURNITURE_SCALE, OFFICE_DESK_DEPTH, OFFICE_UTIL_DEPTH,
   WIRE_COLORS, type OfficeView, type WireColor,
 } from "./managerOfficeRules";
 import Terminal, { makeTerminalSession, type TerminalSession } from "./Terminal";
@@ -21,9 +22,9 @@ import { mayhemSfx } from "@/game/sfx";
 import "./managerOffice.css";
 
 const FACE_ASPECT = 553 / 949;
-const DESK_DEPTH = 0.62;
-const UTIL_DEPTH = 0.7;
-const FURNITURE_SCALE = 1.9;
+const DESK_DEPTH = OFFICE_DESK_DEPTH;
+const UTIL_DEPTH = OFFICE_UTIL_DEPTH;
+const FURNITURE_SCALE = OFFICE_FURNITURE_SCALE;
 
 function vol() { return Math.max(0, Math.min(1, getSettings().sfxVolume ?? 0.7)); }
 function playOnce(url: string, v = 1) {

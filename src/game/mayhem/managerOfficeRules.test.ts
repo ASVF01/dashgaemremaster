@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { officeYaw, viewForKey, shuffledPorts, tryConnect, taskComplete, WIRE_COLORS, OFFICE_MAX_YAW, officePitch, edgeScrollYaw, ventStepsCrossed } from "./managerOfficeRules";
+import { officeYaw, viewForKey, shuffledPorts, tryConnect, taskComplete, WIRE_COLORS, OFFICE_MAX_YAW, officePitch, edgeScrollYaw, ventStepsCrossed, propScreenBox, OFFICE_FURNITURE_SCALE, OFFICE_DESK_DEPTH, OFFICE_UTIL_DEPTH } from "./managerOfficeRules";
 
 describe("manager office look", () => {
   it("centered cursor faces the desk, edges face the side walls", () => {
@@ -55,5 +55,34 @@ describe("instant edge turn", () => {
     expect(stepYawTarget(-90, 0, edgeZone(0))).toBe(-90);
     expect(stepYawTarget(-90, 0, edgeZone(0.9))).toBe(0);
     expect(stepYawTarget(0, 0, edgeZone(0.9))).toBe(90);
+  });
+});
+
+describe("office furniture placement", () => {
+  const VW = 1280, VH = 800, ROOM_H = 831.9, S = 1427.8;
+  const desk = (scale: number, k: number) =>
+    propScreenBox(VW, VH, ROOM_H, 0.745 * S * scale * k, 0.564 * ROOM_H * scale * k, k);
+  const util = (scale: number, k: number) =>
+    propScreenBox(VW, VH, ROOM_H, S * scale * k, 0.374 * ROOM_H * scale * k, k);
+
+  it("the manager's desk stays on screen and shows its top", () => {
+    const b = desk(OFFICE_FURNITURE_SCALE, OFFICE_DESK_DEPTH);
+    expect(b.left).toBeGreaterThan(0);
+    expect(b.right).toBeLessThan(VW);
+    expect(b.width / VW).toBeGreaterThan(0.5);
+    expect(b.top / VH).toBeGreaterThan(0.45);
+    expect(b.bottom).toBeGreaterThanOrEqual(VH);
+  });
+  it("the utilities desk sits low in the view", () => {
+    const b = util(OFFICE_FURNITURE_SCALE, OFFICE_UTIL_DEPTH);
+    expect(b.top / VH).toBeGreaterThan(0.6);
+    expect(b.bottom).toBeGreaterThanOrEqual(VH);
+  });
+  it("desks stand in front of the walls so the wall art can't cover them", () => {
+    expect(OFFICE_DESK_DEPTH).toBeLessThan(1);
+    expect(OFFICE_UTIL_DEPTH).toBeLessThan(1);
+  });
+  it("shrinking the desk lifts its top edge toward the middle", () => {
+    expect(desk(1.9, 0.62).top).toBeLessThan(desk(OFFICE_FURNITURE_SCALE, OFFICE_DESK_DEPTH).top);
   });
 });
