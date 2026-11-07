@@ -14,17 +14,11 @@ import nopeSfx from "@/assets/manager/nope.mp3.asset.json";
 import ventWalkSfx from "@/assets/manager/ventwalk.wav.asset.json";
 import {
   approach, edgeZone, stepYawTarget, officePitch, ventStepsCrossed, OFFICE_MAX_YAW, shuffledPorts, taskComplete, tryConnect, viewForKey,
-  OFFICE_FURNITURE_SCALE, OFFICE_DESK_DEPTH, OFFICE_UTIL_DEPTH,
   WIRE_COLORS, type OfficeView, type WireColor,
 } from "./managerOfficeRules";
-import GeneratorPanel, { makeGeneratorProgress, type GeneratorProgress } from "./GeneratorPanel";
 import { mayhemSfx } from "@/game/sfx";
 import "./managerOffice.css";
 
-const FACE_ASPECT = 553 / 949;
-const DESK_DEPTH = OFFICE_DESK_DEPTH;
-const UTIL_DEPTH = OFFICE_UTIL_DEPTH;
-const FURNITURE_SCALE = OFFICE_FURNITURE_SCALE;
 
 function vol() { return Math.max(0, Math.min(1, getSettings().sfxVolume ?? 0.7)); }
 function playOnce(url: string, v = 1) {
@@ -86,17 +80,10 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
   const [hp, setHp] = useState(50);
   const [tipOpen, setTipOpen] = useState(false);
   const [taskOpen, setTaskOpen] = useState(false);
-  const [taskDone, setTaskDone] = useState(false);
+  const [genRounds, setGenRounds] = useState(0);
   const [crawling, setCrawling] = useState(false);
   const crawlAudio = useRef<HTMLAudioElement | null>(null);
-  const [termOpen, setTermOpen] = useState(false);
-  const [genProgress, setGenProgress] = useState<GeneratorProgress>(() => makeGeneratorProgress());
-  const overlayOpen = tipOpen || taskOpen || termOpen;
-
-  // Box dimensions: the front face exactly covers the screen when facing it.
-  const P = Math.max(size.w / 2, size.h / (2 * FACE_ASPECT)) * 1.04;
-  const S = 2 * P;
-  const H = S * FACE_ASPECT;
+  const overlayOpen = tipOpen || taskOpen;
 
   useEffect(() => {
     const onResize = () => setSize({ w: window.innerWidth, h: window.innerHeight });
@@ -111,8 +98,7 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
       if (e.repeat) return;
       if (e.code === "KeyA") { setDoorShut((d) => !d); return; }
       if (e.code === "KeyG") {
-        setTermOpen((o) => {
-          lookRight.current = !o;
+        setTaskOpen((o) => {
           if (o) mayhemSfx.terminalClose(); else mayhemSfx.terminalOpen();
           return !o;
         });
@@ -158,14 +144,25 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
         audioT = t;
       } else audioT = 0;
       pitch = approach(pitch, officePitch(viewRef.current), dt, 6);
-      if (worldRef.current) {
-        worldRef.current.style.transform = `translateZ(${P}px) rotateX(${pitch}deg) rotateY(${yaw}deg)`;
+      const w = worldRef.current;
+      if (w) {
+        // Flat 2D panels faked into a cube-turn: each slides and folds around its edge.
+        const ox = yaw / OFFICE_MAX_YAW, oy = pitch / 90;
+        w.querySelectorAll<HTMLElement>("[data-cx]").forEach((el) => {
+          const rx = Number(el.dataset.cx) - ox;
+          const ryy = Number(el.dataset.cy) + oy;
+          const fx = Math.max(-1, Math.min(1, rx)), fy = Math.max(-1, Math.min(1, ryy));
+          el.style.transformOrigin = `${fx > 0 ? 0 : 100}% ${fy > 0 ? 0 : 100}%`;
+          el.style.transform = `translate(${rx * 100}%, ${ryy * 100}%) perspective(1600px) rotateY(${fx * 38}deg) rotateX(${-fy * 30}deg)`;
+          el.style.filter = `brightness(${1 - Math.min(0.6, (Math.abs(fx) + Math.abs(fy)) * 0.6)})`;
+          el.style.visibility = Math.abs(rx) >= 1 || Math.abs(ryy) >= 1 ? "hidden" : "visible";
+        });
       }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [P]);
+  }, []);
 
   // Vent crawl loop + cleanup.
   useEffect(() => {
@@ -175,20 +172,6 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
     crawlAudio.current = a;
     return () => { a.pause(); crawlAudio.current = null; };
   }, [crawling]);
-
-  const face = (w: number, h: number, transform: string): React.CSSProperties => ({
-    width: w, height: h, marginLeft: -w / 2, marginTop: -h / 2, transform,
-  });
-
-  // A desk at fraction k of the wall distance, shrunk by k so it keeps its painted size,
-  // with its legs resting on the floor.
-  const prop = (w0: number, h0: number, turn: string, k: number): React.CSSProperties => {
-    const w = w0 * FURNITURE_SCALE, h = h0 * FURNITURE_SCALE;
-    return {
-      width: w * k, height: h * k, marginLeft: (-w * k) / 2, marginTop: (-h * k) / 2,
-      transform: `${turn}translateY(${H / 2 - (h * k) / 2 - H * 0.12 * k}px) translateZ(${(-S / 2) * k}px)`,
-    };
-  };
 
   // Mobile: tap top/bottom strips to tilt.
   const onStagePointer = (e: React.PointerEvent) => {
@@ -200,10 +183,10 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
   };
 
   return (
-    <div ref={stageRef} className="mo-stage" style={{ perspective: `${P}px` }} onPointerDown={onStagePointer}>
+    <div ref={stageRef} className="mo-stage" onPointerDown={onStagePointer}>
       <div ref={worldRef} className="mo-world">
         {/* LEFT: door */}
-        <div className="mo-face" style={face(S, H, `rotateY(90deg) translateZ(${-S / 2}px)`)}>
+        <div className="mo-panel" data-cx="-1" data-cy="0">
           <img src={doorShut ? doorClosed.url : doorOpen.url} alt="Office door" draggable={false} />
           <button className="mo-hot" style={{ left: "70.6%", top: "37.8%", width: "7.8%", height: "13.4%" }}
             aria-label="Door button" onClick={() => { setDoorShut((d) => !d); }} />
@@ -211,42 +194,40 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
             aria-label="Blue button" onClick={() => playOnce(nopeSfx.url)} />
         </div>
 
-        {/* FRONT: room */}
-        <div className="mo-face" style={face(S, H, `translateZ(${-S / 2}px)`)}>
+        {/* FRONT: room + desk */}
+        <div className="mo-panel" data-cx="0" data-cy="0">
           <img src={frontRoom.url} alt="Manager's office" draggable={false} />
+          <div className="mo-floorfade" />
+          <div className="mo-desk" style={{ width: "62%", left: "19%", bottom: "4%" }}>
+            <img src={frontTable.url} alt="Manager's desk" draggable={false} />
+            <button className="mo-hot" style={{ left: "37.5%", top: "6%", width: "28%", height: "41%" }}
+              aria-label="Generator" onClick={() => setTaskOpen(true)} />
+            <button className="mo-hot" style={{ left: "17.8%", top: "70%", width: "10%", height: "18%" }}
+              aria-label="Tip note" onClick={() => setTipOpen(true)} />
+          </div>
         </div>
 
         {/* RIGHT: utilities */}
-        <div className="mo-face" style={face(S, H, `rotateY(-90deg) translateZ(${-S / 2}px)`)}>
+        <div className="mo-panel" data-cx="1" data-cy="0">
           <img src={utilRoom.url} alt="Utilities room" draggable={false} />
+          <div className="mo-floorfade" />
+          <div className="mo-desk" style={{ width: "86%", left: "7%", bottom: "5%" }}>
+            <img src={medUsed ? utilUsed.url : utilFull.url} alt="Utilities desk" draggable={false} />
+            {!medUsed && (
+              <button className="mo-hot" style={{ left: "57.5%", top: "5%", width: "15.5%", height: "66%" }}
+                aria-label="First aid kit" onClick={() => { setMedUsed(true); setHp(100); }} />
+            )}
+          </div>
         </div>
-
-        {/* DESKS: standalone layers standing on the floor, in front of the walls */}
-        <div className="mo-face mo-prop" style={prop(0.745 * S, 0.564 * H, "", DESK_DEPTH)}>
-          <img src={frontTable.url} alt="Manager's desk" draggable={false} />
-          <button className="mo-hot" style={{ left: "37.5%", top: "6%", width: "28%", height: "41%" }}
-            aria-label="Terminal" onClick={() => { lookRight.current = false; setTaskOpen(true); }} />
-          <button className="mo-hot" style={{ left: "17.8%", top: "70%", width: "10%", height: "18%" }}
-            aria-label="Tip note" onClick={() => setTipOpen(true)} />
-        </div>
-        <div className="mo-face mo-prop" style={prop(S, 0.374 * H, "rotateY(-90deg) ", UTIL_DEPTH)}>
-          <img src={medUsed ? utilUsed.url : utilFull.url} alt="Utilities desk" draggable={false} />
-          {!medUsed && (
-            <button className="mo-hot" style={{ left: "57.5%", top: "5%", width: "15.5%", height: "66%" }}
-              aria-label="First aid kit" onClick={() => { setMedUsed(true); setHp(100); }} />
-          )}
-        </div>
-
-        {/* FLOOR: plain grey like the walls */}
-        <div className="mo-face mo-floor" style={face(S, S, `rotateX(90deg) translateZ(${-H / 2}px)`)} />
 
         {/* CEILING: vent */}
-        <div className="mo-face" style={face(S, S, `rotateX(-90deg) translateZ(${-H / 2}px)`)}>
+        <div className="mo-panel" data-cx="0" data-cy="-1">
           <img src={ceilingImg.url} alt="Ceiling" draggable={false} />
           <img ref={ventRef} src={ventImg.url} alt="Vent" draggable={false} className="mo-vent" />
           <button className="mo-shock" onClick={() => { zap(); setCrawling(false); }}>SHOCK</button>
         </div>
       </div>
+      <div className="mo-vignette" aria-hidden />
 
       {/* HUD */}
       <div className="mo-hud">
@@ -266,25 +247,24 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
           <img src={finalTip.url} alt="Your final tip" className="mo-tip" draggable={false} />
         </div>
       )}
-      {termOpen && (
-        <div className="mo-term">
-          <GeneratorPanel night={5} paused={false} progress={genProgress} onProgress={setGenProgress}
-            onClose={() => { mayhemSfx.terminalClose(); lookRight.current = false; setTermOpen(false); }}
-            onComplete={() => { lookRight.current = false; setTermOpen(false); }} />
-        </div>
-      )}
       {taskOpen && (
         <WireTask
-          done={taskDone}
-          onDone={() => setTaskDone(true)}
-          onClose={() => { lookRight.current = false; setTaskOpen(false); }}
+          key={genRounds}
+          rounds={genRounds}
+          onDone={() => setTimeout(() => setGenRounds((r) => Math.min(GENERATOR_ROUNDS, r + 1)), 700)}
+          onClose={() => setTaskOpen(false)}
         />
       )}
     </div>
   );
 }
 
-function WireTask({ done, onDone, onClose }: { done: boolean; onDone: () => void; onClose: () => void }) {
+const GENERATOR_ROUNDS = 12;
+
+/** Stevenson's generator: each matched wire patch pushes the generator toward 100%. */
+function WireTask({ rounds, onDone, onClose }: { rounds: number; onDone: () => void; onClose: () => void }) {
+  const done = rounds >= GENERATOR_ROUNDS;
+  const pct = Math.round((rounds / GENERATOR_ROUNDS) * 100);
   const [ports] = useState(() => shuffledPorts());
   const [linked, setLinked] = useState<WireColor[]>(done ? [...WIRE_COLORS] : []);
   const [held, setHeld] = useState<WireColor | null>(null);
@@ -294,7 +274,8 @@ function WireTask({ done, onDone, onClose }: { done: boolean; onDone: () => void
   return (
     <div className="mo-overlay" onClick={onClose}>
       <div className="mo-crt" onClick={(e) => e.stopPropagation()}>
-        <div className="mo-crt-title">{finished ? "REROUTE COMPLETE" : "WIRE PATCH — match the colors"}</div>
+        <div className="mo-crt-title">STEVENSON'S GENERATOR — {done ? "ONLINE" : finished ? "PATCHED" : "match the wires"}</div>
+        <div className="mo-gen-bar"><div style={{ width: `${pct}%` }} /><span>{pct}%</span></div>
         <svg className="mo-wires" viewBox="0 0 100 100" preserveAspectRatio="none">
           {linked.map((c) => (
             <line key={c} x1={12} y1={15 + WIRE_COLORS.indexOf(c) * 23} x2={88} y2={15 + ports.indexOf(c) * 23}
