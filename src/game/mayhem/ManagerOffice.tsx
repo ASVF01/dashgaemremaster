@@ -13,14 +13,17 @@ import ventImg from "@/assets/manager/vent.png.asset.json";
 import nopeSfx from "@/assets/manager/nope.mp3.asset.json";
 import ventWalkSfx from "@/assets/manager/ventwalk.wav.asset.json";
 import {
-  approach, edgeScrollYaw, officePitch, ventStepsCrossed, OFFICE_MAX_YAW, shuffledPorts, taskComplete, tryConnect, viewForKey,
+  approach, edgeZone, stepYawTarget, officePitch, ventStepsCrossed, OFFICE_MAX_YAW, shuffledPorts, taskComplete, tryConnect, viewForKey,
   WIRE_COLORS, type OfficeView, type WireColor,
 } from "./managerOfficeRules";
+import Terminal, { makeTerminalSession, type TerminalSession } from "./Terminal";
+import { mayhemSfx } from "@/game/sfx";
 import "./managerOffice.css";
 
 const FACE_ASPECT = 553 / 949;
 const DESK_DEPTH = 0.62;
 const UTIL_DEPTH = 0.7;
+const FURNITURE_SCALE = 1.35;
 
 function vol() { return Math.max(0, Math.min(1, getSettings().sfxVolume ?? 0.7)); }
 function playOnce(url: string, v = 1) {
@@ -85,7 +88,9 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
   const [taskDone, setTaskDone] = useState(false);
   const [crawling, setCrawling] = useState(false);
   const crawlAudio = useRef<HTMLAudioElement | null>(null);
-  const overlayOpen = tipOpen || taskOpen;
+  const [termOpen, setTermOpen] = useState(false);
+  const [termSession, setTermSession] = useState<TerminalSession>(() => makeTerminalSession());
+  const overlayOpen = tipOpen || taskOpen || termOpen;
 
   // Box dimensions: the front face exactly covers the screen when facing it.
   const P = Math.max(size.w / 2, size.h / (2 * FACE_ASPECT)) * 1.04;
@@ -105,7 +110,11 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
       if (e.repeat) return;
       if (e.code === "KeyA") { setDoorShut((d) => !d); return; }
       if (e.code === "KeyG") {
-        setTaskOpen((o) => { lookRight.current = !o; return !o; });
+        setTermOpen((o) => {
+          lookRight.current = !o;
+          if (o) mayhemSfx.terminalClose(); else mayhemSfx.terminalOpen();
+          return !o;
+        });
         setView("desk");
         return;
       }
@@ -127,11 +136,16 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
   // One stepper: smooth yaw/pitch toward their targets.
   const overlayRef = useRef(overlayOpen); overlayRef.current = overlayOpen;
   useEffect(() => {
-    let yaw = 0, pitch = 0, last = performance.now(), raf = 0, audioT = 0;
+    let yaw = 0, target = 0, zone = 0, pitch = 0, last = performance.now(), raf = 0, audioT = 0;
     const tick = (now: number) => {
       const dt = (now - last) / 1000; last = now;
-      if (lookRight.current) yaw = approach(yaw, OFFICE_MAX_YAW, dt);
-      else if (!overlayRef.current) yaw = edgeScrollYaw(yaw, cursorX.current, dt);
+      if (lookRight.current) target = OFFICE_MAX_YAW;
+      else if (!overlayRef.current) {
+        const z = edgeZone(cursorX.current);
+        target = stepYawTarget(target, zone, z);
+        zone = z;
+      }
+      yaw = approach(yaw, target, dt, 14);
       // One vent jolt per crawl footstep in the sound.
       const a = crawlAudio.current;
       if (a) {
@@ -167,10 +181,13 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
 
   // A desk at fraction k of the wall distance, shrunk by k so it keeps its painted size,
   // with its legs resting on the floor.
-  const prop = (w: number, h: number, turn: string, k: number): React.CSSProperties => ({
-    width: w * k, height: h * k, marginLeft: (-w * k) / 2, marginTop: (-h * k) / 2,
-    transform: `${turn}translateY(${H / 2 - (h * k) / 2}px) translateZ(${(-S / 2) * k}px)`,
-  });
+  const prop = (w0: number, h0: number, turn: string, k: number): React.CSSProperties => {
+    const w = w0 * FURNITURE_SCALE, h = h0 * FURNITURE_SCALE;
+    return {
+      width: w * k, height: h * k, marginLeft: (-w * k) / 2, marginTop: (-h * k) / 2,
+      transform: `${turn}translateY(${H / 2 - (h * k) / 2}px) translateZ(${(-S / 2) * k}px)`,
+    };
+  };
 
   // Mobile: tap top/bottom strips to tilt.
   const onStagePointer = (e: React.PointerEvent) => {
@@ -246,6 +263,12 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
       {tipOpen && (
         <div className="mo-overlay" onClick={() => setTipOpen(false)}>
           <img src={finalTip.url} alt="Your final tip" className="mo-tip" draggable={false} />
+        </div>
+      )}
+      {termOpen && (
+        <div className="mo-term">
+          <Terminal paused={false} session={termSession} onSessionChange={setTermSession}
+            onClose={() => { mayhemSfx.terminalClose(); lookRight.current = false; setTermOpen(false); }} />
         </div>
       )}
       {taskOpen && (

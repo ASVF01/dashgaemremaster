@@ -34,6 +34,20 @@ export function edgeScrollYaw(yaw: number, x: number, dt: number): number {
   return Math.max(-OFFICE_MAX_YAW, Math.min(OFFICE_MAX_YAW, next));
 }
 
+/** -1 / 0 / 1: which side edge zone the cursor is in. */
+export function edgeZone(x: number): -1 | 0 | 1 {
+  return x < -OFFICE_EDGE_ZONE ? -1 : x > OFFICE_EDGE_ZONE ? 1 : 0;
+}
+
+/**
+ * Instant turn: entering a side zone swings the head one wall that way
+ * (center → side, or the opposite side → center) and it stays put after.
+ */
+export function stepYawTarget(target: number, prevZone: number, zone: number): number {
+  if (zone === 0 || zone === prevZone) return target;
+  return Math.max(-OFFICE_MAX_YAW, Math.min(OFFICE_MAX_YAW, target + zone * OFFICE_MAX_YAW));
+}
+
 /** Step hits (seconds) in ventwalk1.wav; the vent jolts once on each. */
 export const VENT_STEP_TIMES = [0.164, 1.454, 2.513];
 

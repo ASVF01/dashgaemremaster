@@ -56,3 +56,4 @@
     hsl(50 100% 92% / 0.35) 0%, hsl(50 100% 85% / 0.12) 60%, transparent 100%);
   mix-blend-mode: screen;
 }
+.mo-term { position: fixed; inset: 0; z-index: 4; }

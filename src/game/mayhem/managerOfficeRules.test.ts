@@ -46,3 +46,14 @@ describe("wire patch task", () => {
     expect(taskComplete(done)).toBe(true);
   });
 });
+
+import { edgeZone, stepYawTarget } from "./managerOfficeRules";
+describe("instant edge turn", () => {
+  it("snaps one wall per edge entry and holds", () => {
+    expect(stepYawTarget(0, 0, edgeZone(-0.9))).toBe(-90);
+    expect(stepYawTarget(-90, -1, edgeZone(-0.9))).toBe(-90);
+    expect(stepYawTarget(-90, 0, edgeZone(0))).toBe(-90);
+    expect(stepYawTarget(-90, 0, edgeZone(0.9))).toBe(0);
+    expect(stepYawTarget(0, 0, edgeZone(0.9))).toBe(90);
+  });
+});
