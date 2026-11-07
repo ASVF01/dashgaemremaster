@@ -14,16 +14,15 @@ import nopeSfx from "@/assets/manager/nope.mp3.asset.json";
 import ventWalkSfx from "@/assets/manager/ventwalk.wav.asset.json";
 import {
   approach, edgeZone, stepYawTarget, officePitch, ventStepsCrossed, OFFICE_MAX_YAW, shuffledPorts, taskComplete, tryConnect, viewForKey,
-  OFFICE_FURNITURE_SCALE, OFFICE_DESK_DEPTH, OFFICE_UTIL_DEPTH,
   WIRE_COLORS, type OfficeView, type WireColor,
 } from "./managerOfficeRules";
 import { mayhemSfx } from "@/game/sfx";
+import { useSettings } from "@/game/settings";
+import { useGeneratorMusic } from "./useGeneratorMusic";
+import generatorArt from "@/assets/mayhem/generator-panel.png.asset.json";
 import "./managerOffice.css";
 
 const FACE_ASPECT = 553 / 949;
-const DESK_DEPTH = OFFICE_DESK_DEPTH;
-const UTIL_DEPTH = OFFICE_UTIL_DEPTH;
-const FURNITURE_SCALE = OFFICE_FURNITURE_SCALE;
 
 function vol() { return Math.max(0, Math.min(1, getSettings().sfxVolume ?? 0.7)); }
 function playOnce(url: string, v = 1) {
@@ -90,10 +89,9 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
   const crawlAudio = useRef<HTMLAudioElement | null>(null);
   const overlayOpen = tipOpen || taskOpen;
 
-  // Box dimensions: the front face exactly covers the screen when facing it.
-  const P = Math.max(size.w / 2, size.h / (2 * FACE_ASPECT)) * 1.04;
-  const S = 2 * P;
-  const H = S * FACE_ASPECT;
+  // Flat panel size: each wall picture covers the screen when facing it.
+  const PW = Math.max(size.w, size.h / FACE_ASPECT);
+  const PH = PW * FACE_ASPECT;
 
   useEffect(() => {
     const onResize = () => setSize({ w: window.innerWidth, h: window.innerHeight });
@@ -155,36 +153,31 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
       } else audioT = 0;
       pitch = approach(pitch, officePitch(viewRef.current), dt, 6);
       if (worldRef.current) {
-        worldRef.current.style.transform = `translateZ(${P}px) rotateX(${pitch}deg) rotateY(${yaw}deg)`;
+        // Flat 2D: same yaw/pitch curves as the 3D camera, mapped to a straight slide.
+        const x = -(yaw / OFFICE_MAX_YAW) * PW;
+        const y = (pitch / 90) * PH;
+        worldRef.current.style.transform = `translate(${x}px, ${y}px)`;
       }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [P]);
+  }, [PW, PH]);
 
-  // Vent crawl loop + cleanup.
+  // Vent crawl: plays once through, one jolt per footstep, then stops.
   useEffect(() => {
     if (!crawling) return;
-    const a = new Audio(ventWalkSfx.url); a.loop = true; a.volume = vol();
+    const a = new Audio(ventWalkSfx.url); a.loop = false; a.volume = vol();
+    a.onended = () => setCrawling(false);
     a.play().catch(() => {});
     crawlAudio.current = a;
     return () => { a.pause(); crawlAudio.current = null; };
   }, [crawling]);
 
-  const face = (w: number, h: number, transform: string): React.CSSProperties => ({
-    width: w, height: h, marginLeft: -w / 2, marginTop: -h / 2, transform,
+  // Flat panel at grid column col (-1 left, 0 front, 1 right) and row (0 room, -1 ceiling).
+  const panel = (col: number, row = 0): React.CSSProperties => ({
+    width: PW, height: PH, left: col * PW - PW / 2, top: row * PH - PH / 2,
   });
-
-  // A desk at fraction k of the wall distance, shrunk by k so it keeps its painted size,
-  // with its legs resting on the floor.
-  const prop = (w0: number, h0: number, turn: string, k: number): React.CSSProperties => {
-    const w = w0 * FURNITURE_SCALE, h = h0 * FURNITURE_SCALE;
-    return {
-      width: w * k, height: h * k, marginLeft: (-w * k) / 2, marginTop: (-h * k) / 2,
-      transform: `${turn}translateY(${H / 2 - (h * k) / 2 - H * 0.12 * k}px) translateZ(${(-S / 2) * k}px)`,
-    };
-  };
 
   // Mobile: tap top/bottom strips to tilt.
   const onStagePointer = (e: React.PointerEvent) => {
@@ -196,10 +189,10 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
   };
 
   return (
-    <div ref={stageRef} className="mo-stage" style={{ perspective: `${P}px` }} onPointerDown={onStagePointer}>
+    <div ref={stageRef} className="mo-stage" onPointerDown={onStagePointer}>
       <div ref={worldRef} className="mo-world">
         {/* LEFT: door */}
-        <div className="mo-face" style={face(S, H, `rotateY(90deg) translateZ(${-S / 2}px)`)}>
+        <div className="mo-face" style={panel(-1)}>
           <img src={doorShut ? doorClosed.url : doorOpen.url} alt="Office door" draggable={false} />
           <button className="mo-hot" style={{ left: "70.6%", top: "37.8%", width: "7.8%", height: "13.4%" }}
             aria-label="Door button" onClick={() => { setDoorShut((d) => !d); }} />
@@ -208,36 +201,36 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
         </div>
 
         {/* FRONT: room */}
-        <div className="mo-face" style={face(S, H, `translateZ(${-S / 2}px)`)}>
+        <div className="mo-face" style={panel(0)}>
           <img src={frontRoom.url} alt="Manager's office" draggable={false} />
+          <div className="mo-desk">
+            <img src={frontTable.url} alt="Manager's desk" draggable={false} />
+            <button className="mo-hot" style={{ left: "37.5%", top: "6%", width: "28%", height: "41%" }}
+              aria-label="Generator" onClick={() => { mayhemSfx.terminalOpen(); setTaskOpen(true); }} />
+            <button className="mo-hot" style={{ left: "17.8%", top: "70%", width: "10%", height: "18%" }}
+              aria-label="Tip note" onClick={() => setTipOpen(true)} />
+          </div>
         </div>
 
         {/* RIGHT: utilities */}
-        <div className="mo-face" style={face(S, H, `rotateY(-90deg) translateZ(${-S / 2}px)`)}>
+        <div className="mo-face" style={panel(1)}>
           <img src={utilRoom.url} alt="Utilities room" draggable={false} />
+          <div className="mo-util-desk">
+            <img src={medUsed ? utilUsed.url : utilFull.url} alt="Utilities desk" draggable={false} />
+            {!medUsed && (
+              <button className="mo-hot" style={{ left: "57.5%", top: "5%", width: "15.5%", height: "66%" }}
+                aria-label="First aid kit" onClick={() => { setMedUsed(true); setHp(100); }} />
+            )}
+          </div>
         </div>
 
-        {/* DESKS: standalone layers standing on the floor, in front of the walls */}
-        <div className="mo-face mo-prop" style={prop(0.745 * S, 0.564 * H, "", DESK_DEPTH)}>
-          <img src={frontTable.url} alt="Manager's desk" draggable={false} />
-          <button className="mo-hot" style={{ left: "37.5%", top: "6%", width: "28%", height: "41%" }}
-            aria-label="Generator" onClick={() => setTaskOpen(true)} />
-          <button className="mo-hot" style={{ left: "17.8%", top: "70%", width: "10%", height: "18%" }}
-            aria-label="Tip note" onClick={() => setTipOpen(true)} />
-        </div>
-        <div className="mo-face mo-prop" style={prop(S, 0.374 * H, "rotateY(-90deg) ", UTIL_DEPTH)}>
-          <img src={medUsed ? utilUsed.url : utilFull.url} alt="Utilities desk" draggable={false} />
-          {!medUsed && (
-            <button className="mo-hot" style={{ left: "57.5%", top: "5%", width: "15.5%", height: "66%" }}
-              aria-label="First aid kit" onClick={() => { setMedUsed(true); setHp(100); }} />
-          )}
-        </div>
-
-        {/* FLOOR: plain grey like the walls */}
-        <div className="mo-face mo-floor" style={face(S, S, `rotateX(90deg) translateZ(${-H / 2}px)`)} />
-
-        {/* CEILING: vent */}
-        <div className="mo-face" style={face(S, S, `rotateX(-90deg) translateZ(${-H / 2}px)`)}>
+        {/* CEILING: one strip above all three walls, vent above the desk */}
+        {[-1, 1].map((c) => (
+          <div key={c} className="mo-face" style={panel(c, -1)}>
+            <img src={ceilingImg.url} alt="" draggable={false} />
+          </div>
+        ))}
+        <div className="mo-face" style={panel(0, -1)}>
           <img src={ceilingImg.url} alt="Ceiling" draggable={false} />
           <img ref={ventRef} src={ventImg.url} alt="Vent" draggable={false} className="mo-vent" />
           <button className="mo-shock" onClick={() => { zap(); setCrawling(false); }}>SHOCK</button>
@@ -267,7 +260,7 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
           key={genRounds}
           rounds={genRounds}
           onDone={() => setTimeout(() => setGenRounds((r) => Math.min(GENERATOR_ROUNDS, r + 1)), 700)}
-          onClose={() => setTaskOpen(false)}
+          onClose={() => { mayhemSfx.terminalClose(); setTaskOpen(false); }}
         />
       )}
     </div>
@@ -286,11 +279,21 @@ function WireTask({ rounds, onDone, onClose }: { rounds: number; onDone: () => v
   const finished = taskComplete(linked);
   useEffect(() => { if (finished && !done) onDone(); }, [finished, done, onDone]);
 
+  const [settings] = useSettings();
+  const beatRef = useRef<HTMLDivElement>(null);
+  useGeneratorMusic(pct, true, false, settings.bgmVolume, beatRef);
+
   return (
-    <div className="mo-overlay" onClick={onClose}>
-      <div className="mo-crt" onClick={(e) => e.stopPropagation()}>
-        <div className="mo-crt-title">STEVENSON'S GENERATOR — {done ? "ONLINE" : finished ? "PATCHED" : "match the wires"}</div>
-        <div className="mo-gen-bar"><div style={{ width: `${pct}%` }} /><span>{pct}%</span></div>
+    <div className="mo-overlay mo-gen-overlay" onClick={onClose}>
+      <div className="gen-look-layer" onClick={(e) => e.stopPropagation()}>
+      <div className="gen-panel">
+        <img className="gen-art" src={generatorArt.url} alt="Stevenson’s Ultra Power Generator 9000, COMPANY PACE" draggable={false} />
+        <output className="gen-percent" aria-label="Generator progress">{pct}%</output>
+        <div className="gen-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}>
+          <div className="gen-progress-fill" style={{ width: `${pct}%` }} />
+        </div>
+        <div ref={beatRef} className="gen-task mo-crt">
+        <div className="mo-crt-title">{done ? "ONLINE" : finished ? "PATCHED" : "match the wires"}</div>
         <svg className="mo-wires" viewBox="0 0 100 100" preserveAspectRatio="none">
           {linked.map((c) => (
             <line key={c} x1={12} y1={15 + WIRE_COLORS.indexOf(c) * 23} x2={88} y2={15 + ports.indexOf(c) * 23}
@@ -307,7 +310,9 @@ function WireTask({ rounds, onDone, onClose }: { rounds: number; onDone: () => v
               onClick={() => { if (held) { setLinked((l) => tryConnect(l, held, c)); setHeld(null); } }} />
           ))}</div>
         </div>
-        <div className="mo-crt-foot">click outside to close</div>
+        </div>
+      </div>
+      <div className="mo-crt-foot">click outside to close</div>
       </div>
     </div>
   );
