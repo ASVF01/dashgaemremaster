@@ -69,3 +69,20 @@
 .mo-gen-bar > div { height: 100%; background: hsl(140 70% 45%); transition: width 0.4s ease-out; }
 .mo-gen-bar > span { position: absolute; inset: 0; text-align: center; font-size: 12px; line-height: 14px; color: hsl(0 0% 100%); mix-blend-mode: difference; }
 .mo-crt .mo-wires { inset: 84px 28px 40px; height: calc(100% - 124px); }
+.mo-con-body { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; }
+.mo-con-col { display: flex; flex-direction: column; gap: 14px; align-items: center; width: 100%; }
+.mo-con-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.mo-con-btn { font: inherit; font-size: 22px; letter-spacing: 0.15em; padding: 10px 22px; background: transparent; color: inherit; border: 2px solid currentColor; cursor: pointer; }
+.mo-con-btn:hover:not(:disabled) { background: hsl(140 70% 60% / 0.15); }
+.mo-con-btn:disabled { opacity: 0.45; cursor: default; }
+.mo-con-btn.bad { color: hsl(0 80% 60%); }
+.mo-con-hint { font-size: 20px; letter-spacing: 0.3em; }
+.mo-simon { display: grid; grid-template-columns: repeat(3, 72px); gap: 12px; }
+.mo-simon-b { height: 72px; border: 3px solid hsl(0 0% 85%); opacity: 0.4; cursor: pointer; }
+.mo-simon-b.lit, .mo-simon-b:active { opacity: 1; }
+.mo-s0 { background: hsl(0 80% 55%); } .mo-s1 { background: hsl(210 80% 55%); } .mo-s2 { background: hsl(50 90% 55%); }
+.mo-s3 { background: hsl(120 70% 45%); } .mo-s4 { background: hsl(300 70% 60%); } .mo-s5 { background: hsl(25 90% 55%); }
+.mo-con-wires { position: absolute; inset: 0; }
+.mo-con-wires .mo-wires { position: absolute; inset: 0; width: 100%; height: 100%; }
+.mo-con-wires .mo-ports { height: 100%; }
+.mo-con-body .mo-gen-bar { width: 80%; }

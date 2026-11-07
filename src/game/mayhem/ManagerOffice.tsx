@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getSettings } from "@/game/settings";
 import doorOpen from "@/assets/manager/door_open.png.asset.json";
 import doorClosed from "@/assets/manager/door_closed.png.asset.json";
@@ -13,13 +13,11 @@ import ventImg from "@/assets/manager/vent.png.asset.json";
 import nopeSfx from "@/assets/manager/nope.mp3.asset.json";
 import ventWalkSfx from "@/assets/manager/ventwalk.wav.asset.json";
 import {
-  approach, edgeZone, stepYawTarget, officePitch, ventStepsCrossed, OFFICE_MAX_YAW, shuffledPorts, taskComplete, tryConnect, viewForKey,
-  WIRE_COLORS, type OfficeView, type WireColor,
+  approach, edgeZone, stepYawTarget, officePitch, ventStepsCrossed, OFFICE_MAX_YAW, viewForKey, type OfficeView,
 } from "./managerOfficeRules";
 import { mayhemSfx } from "@/game/sfx";
-import { useSettings } from "@/game/settings";
-import { useGeneratorMusic } from "./useGeneratorMusic";
-import generatorArt from "@/assets/mayhem/generator-panel.png.asset.json";
+import DeskConsole from "./DeskConsole";
+import { completeRound, startConsole, CONSOLE_TASKS, TASK_ROUNDS } from "./officeConsoleRules";
 import "./managerOffice.css";
 
 const FACE_ASPECT = 553 / 949;
@@ -84,7 +82,8 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
   const [hp, setHp] = useState(50);
   const [tipOpen, setTipOpen] = useState(false);
   const [taskOpen, setTaskOpen] = useState(false);
-  const [genRounds, setGenRounds] = useState(0);
+  const [consoleProg, setConsoleProg] = useState(startConsole);
+  const advanceConsole = useCallback(() => setConsoleProg(completeRound), []);
   const [crawling, setCrawling] = useState(false);
   const crawlAudio = useRef<HTMLAudioElement | null>(null);
   const overlayOpen = tipOpen || taskOpen;
@@ -236,8 +235,8 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
 
       {/* HUD */}
       <div className="mo-hud">
-        <div>TEST ROOM · HP {hp}</div>
-        <div className="mo-hint">mouse to edges = look · W vent · S desk · A door · G generator · hold Z light · \ or ESC exit</div>
+        <div>TEST ROOM · HP {hp} · {consoleProg.done ? "TASKS DONE" : `TASK ${consoleProg.task + 1}/5 [${consoleProg.round}/${TASK_ROUNDS[CONSOLE_TASKS[consoleProg.task]]}]`}</div>
+        <div className="mo-hint">mouse to edges = look · W vent · S desk · A door · G console · E surge · hold Z light · \ or ESC exit</div>
         {view === "ceiling" && (
           <button className="mo-test" onClick={() => setCrawling((c) => !c)}>
             {crawling ? "stop crawl" : "test: NEO-MATA crawl"}
@@ -253,64 +252,9 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
         </div>
       )}
       {taskOpen && (
-        <WireTask
-          key={genRounds}
-          rounds={genRounds}
-          onDone={() => setTimeout(() => setGenRounds((r) => Math.min(GENERATOR_ROUNDS, r + 1)), 700)}
-          onClose={() => { mayhemSfx.terminalClose(); setTaskOpen(false); }}
-        />
+        <DeskConsole progress={consoleProg} onRound={advanceConsole}
+          onClose={() => { mayhemSfx.terminalClose(); setTaskOpen(false); }} />
       )}
-    </div>
-  );
-}
-
-const GENERATOR_ROUNDS = 12;
-
-/** Stevenson's generator: each matched wire patch pushes the generator toward 100%. */
-function WireTask({ rounds, onDone, onClose }: { rounds: number; onDone: () => void; onClose: () => void }) {
-  const done = rounds >= GENERATOR_ROUNDS;
-  const pct = Math.round((rounds / GENERATOR_ROUNDS) * 100);
-  const [ports] = useState(() => shuffledPorts());
-  const [linked, setLinked] = useState<WireColor[]>(done ? [...WIRE_COLORS] : []);
-  const [held, setHeld] = useState<WireColor | null>(null);
-  const finished = taskComplete(linked);
-  useEffect(() => { if (finished && !done) onDone(); }, [finished, done, onDone]);
-
-  const [settings] = useSettings();
-  const beatRef = useRef<HTMLDivElement>(null);
-  useGeneratorMusic(pct, true, false, settings.bgmVolume, beatRef);
-
-  return (
-    <div className="mo-overlay mo-gen-overlay" onClick={onClose}>
-      <div className="gen-look-layer" onClick={(e) => e.stopPropagation()}>
-      <div className="gen-panel">
-        <img className="gen-art" src={generatorArt.url} alt="Stevenson’s Ultra Power Generator 9000, COMPANY PACE" draggable={false} />
-        <output className="gen-percent" aria-label="Generator progress">{pct}%</output>
-        <div className="gen-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}>
-          <div className="gen-progress-fill" style={{ width: `${pct}%` }} />
-        </div>
-        <div ref={beatRef} className="gen-task mo-crt">
-        <div className="mo-crt-title">{done ? "ONLINE" : finished ? "PATCHED" : "match the wires"}</div>
-        <svg className="mo-wires" viewBox="0 0 100 100" preserveAspectRatio="none">
-          {linked.map((c) => (
-            <line key={c} x1={12} y1={15 + WIRE_COLORS.indexOf(c) * 23} x2={88} y2={15 + ports.indexOf(c) * 23}
-              className={`mo-w-${c}`} strokeWidth={3} vectorEffect="non-scaling-stroke" />
-          ))}
-        </svg>
-        <div className="mo-ports">
-          <div>{WIRE_COLORS.map((c) => (
-            <button key={c} className={`mo-port mo-p-${c} ${held === c ? "held" : ""}`}
-              disabled={linked.includes(c)} onClick={() => setHeld(c)} aria-label={`${c} plug`} />
-          ))}</div>
-          <div>{ports.map((c) => (
-            <button key={c} className={`mo-port mo-p-${c}`} disabled={linked.includes(c)} aria-label={`${c} port`}
-              onClick={() => { if (held) { setLinked((l) => tryConnect(l, held, c)); setHeld(null); } }} />
-          ))}</div>
-        </div>
-        </div>
-      </div>
-      <div className="mo-crt-foot">click outside to close</div>
-      </div>
     </div>
   );
 }
