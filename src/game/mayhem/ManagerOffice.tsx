@@ -92,6 +92,8 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
   // Flat panel size: each wall picture covers the screen when facing it.
   const PW = Math.max(size.w, size.h / FACE_ASPECT);
   const PH = PW * FACE_ASPECT;
+  // Box turn: camera fixed at the cube centre, so the facing wall always fills the screen (no pull-back).
+  const P = PW / 2;
 
   useEffect(() => {
     const onResize = () => setSize({ w: window.innerWidth, h: window.innerHeight });
@@ -153,16 +155,13 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
       } else audioT = 0;
       pitch = approach(pitch, officePitch(viewRef.current), dt, 6);
       if (worldRef.current) {
-        // Flat 2D: same yaw/pitch curves as the 3D camera, mapped to a straight slide.
-        const x = -(yaw / OFFICE_MAX_YAW) * PW;
-        const y = (pitch / 90) * PH;
-        worldRef.current.style.transform = `translate(${x}px, ${y}px)`;
+        worldRef.current.style.transform = `translateZ(${P}px) rotateX(${pitch}deg) rotateY(${yaw}deg)`;
       }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [PW, PH]);
+  }, [P]);
 
   // Vent crawl: plays once through, one jolt per footstep, then stops.
   useEffect(() => {
@@ -175,9 +174,12 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
   }, [crawling]);
 
   // Flat panel at grid column col (-1 left, 0 front, 1 right) and row (0 room, -1 ceiling).
-  const panel = (col: number, row = 0): React.CSSProperties => ({
-    width: PW, height: PH, left: col * PW - PW / 2, top: row * PH - PH / 2,
-  });
+  const panel = (col: number, row = 0): React.CSSProperties => {
+    const h = row ? PW : PH;
+    const turn = row ? "rotateX(-90deg)" : col ? `rotateY(${-col * 90}deg)` : "";
+    const depth = row ? PH / 2 : P;
+    return { width: PW, height: h, left: -PW / 2, top: -h / 2, transform: `${turn} translateZ(${-depth}px)` };
+  };
 
   // Mobile: tap top/bottom strips to tilt.
   const onStagePointer = (e: React.PointerEvent) => {
@@ -189,7 +191,7 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
   };
 
   return (
-    <div ref={stageRef} className="mo-stage" onPointerDown={onStagePointer}>
+    <div ref={stageRef} className="mo-stage" style={{ perspective: `${P}px` }} onPointerDown={onStagePointer}>
       <div ref={worldRef} className="mo-world">
         {/* LEFT: door */}
         <div className="mo-face" style={panel(-1)}>
@@ -225,11 +227,6 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
         </div>
 
         {/* CEILING: one strip above all three walls, vent above the desk */}
-        {[-1, 1].map((c) => (
-          <div key={c} className="mo-face" style={panel(c, -1)}>
-            <img src={ceilingImg.url} alt="" draggable={false} />
-          </div>
-        ))}
         <div className="mo-face" style={panel(0, -1)}>
           <img src={ceilingImg.url} alt="Ceiling" draggable={false} />
           <img ref={ventRef} src={ventImg.url} alt="Vent" draggable={false} className="mo-vent" />
