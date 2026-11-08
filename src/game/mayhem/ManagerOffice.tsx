@@ -13,7 +13,7 @@ import ventImg from "@/assets/manager/vent.png.asset.json";
 import nopeSfx from "@/assets/manager/nope.mp3.asset.json";
 import ventWalkSfx from "@/assets/manager/ventwalk.wav.asset.json";
 import {
-  approach, edgeZone, stepYawTarget, officePitch, ventStepsCrossed, OFFICE_MAX_YAW, viewForKey, type OfficeView,
+  approach, edgeZone, yawTargetForView, officePitch, ventStepsCrossed, OFFICE_MAX_YAW, viewForKey, type OfficeView,
 } from "./managerOfficeRules";
 import { mayhemSfx } from "@/game/sfx";
 import DeskConsole from "./DeskConsole";
@@ -135,10 +135,11 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
     let yaw = 0, target = 0, zone = 0, pitch = 0, last = performance.now(), raf = 0, audioT = 0;
     const tick = (now: number) => {
       const dt = (now - last) / 1000; last = now;
-      if (lookRight.current) target = OFFICE_MAX_YAW;
+      const ceiling = viewRef.current === "ceiling";
+      if (lookRight.current && !ceiling) target = OFFICE_MAX_YAW;
       else if (!overlayRef.current) {
-        const z = edgeZone(cursorX.current);
-        target = stepYawTarget(target, zone, z);
+        const z = ceiling ? 0 : edgeZone(cursorX.current);
+        target = yawTargetForView(viewRef.current, target, zone, z);
         zone = z;
       }
       yaw = approach(yaw, target, dt, 14);

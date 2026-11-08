@@ -48,6 +48,16 @@ export function stepYawTarget(target: number, prevZone: number, zone: number): n
   return Math.max(-OFFICE_MAX_YAW, Math.min(OFFICE_MAX_YAW, target + zone * OFFICE_MAX_YAW));
 }
 
+/**
+ * Where the head should face for the current view. Looking up at the vent
+ * pins the head straight up (0°) so tilting never spins the body around;
+ * desk view keeps the normal edge stepping.
+ */
+export function yawTargetForView(view: OfficeView, target: number, prevZone: number, zone: number): number {
+  if (view === "ceiling") return 0;
+  return stepYawTarget(target, prevZone, zone);
+}
+
 /** Step hits (seconds) in ventwalk1.wav; the vent jolts once on each. */
 export const VENT_STEP_TIMES = [0.164, 1.454, 2.513];
 

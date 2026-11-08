@@ -1,7 +1,7 @@
 /** Night 5 desk console: pure task progression rules (5 tasks). */
 export type ConsoleTask = "power" | "code" | "simon" | "wire" | "surge";
 export const CONSOLE_TASKS: ConsoleTask[] = ["power", "code", "simon", "wire", "surge"];
-export const TASK_ROUNDS: Record<ConsoleTask, number> = { power: 1, code: 10, simon: 7, wire: 12, surge: 1 };
+export const TASK_ROUNDS: Record<ConsoleTask, number> = { power: 1, code: 10, simon: 5, wire: 12, surge: 1 };
 
 export type ConsoleProgress = { task: number; round: number; done: boolean };
 export const startConsole = (): ConsoleProgress => ({ task: 0, round: 0, done: false });
@@ -35,9 +35,11 @@ export function makeCodeRound(rand: () => number = Math.random): CodeRound {
 }
 
 export const SIMON_BUTTONS = 6;
-/** Round r (0-based) of 7 shows a sequence of r + 3 flashes. */
+/** Simon never gets longer than this (user cap: stay fair while threats are live). */
+export const SIMON_MAX_LEN = 5;
+/** Round r (0-based) of 5 shows a sequence of r + 3 flashes, capped at 5. */
 export function makeSimonSequence(round: number, rand: () => number = Math.random): number[] {
-  return Array.from({ length: round + 3 }, () => Math.floor(rand() * SIMON_BUTTONS));
+  return Array.from({ length: Math.min(round + 3, SIMON_MAX_LEN) }, () => Math.floor(rand() * SIMON_BUTTONS));
 }
 
 /** Surge charge: holding E fills ~25%/s, each tap adds 4%. */

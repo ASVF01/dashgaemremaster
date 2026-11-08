@@ -47,7 +47,7 @@ describe("wire patch task", () => {
   });
 });
 
-import { edgeZone, stepYawTarget } from "./managerOfficeRules";
+import { edgeZone, stepYawTarget, yawTargetForView } from "./managerOfficeRules";
 describe("instant edge turn", () => {
   it("snaps one wall per edge entry and holds", () => {
     expect(stepYawTarget(0, 0, edgeZone(-0.9))).toBe(-90);
@@ -55,6 +55,13 @@ describe("instant edge turn", () => {
     expect(stepYawTarget(-90, 0, edgeZone(0))).toBe(-90);
     expect(stepYawTarget(-90, 0, edgeZone(0.9))).toBe(0);
     expect(stepYawTarget(0, 0, edgeZone(0.9))).toBe(90);
+  });
+  it("looking up at the vent pins the head straight up", () => {
+    // A desk-view edge push turns a wall...
+    expect(yawTargetForView("desk", 0, 0, edgeZone(0.9))).toBe(90);
+    // ...but from the vent, the same push (and a held-right target) stays centered.
+    expect(yawTargetForView("ceiling", 0, 0, edgeZone(0.9))).toBe(0);
+    expect(yawTargetForView("ceiling", 90, 1, edgeZone(-0.9))).toBe(0);
   });
 });
 
