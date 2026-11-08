@@ -245,7 +245,9 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
         )}
       </div>
 
-      {flash && <div className="mo-flash" aria-hidden />}
+      {consoleProg.task === 0 && !consoleProg.done
+        ? <div className={`mo-dark${flash ? " lit" : ""}`} aria-hidden />
+        : flash && <div className="mo-flash" aria-hidden />}
 
       {tipOpen && (
         <div className="mo-overlay" onClick={() => setTipOpen(false)}>

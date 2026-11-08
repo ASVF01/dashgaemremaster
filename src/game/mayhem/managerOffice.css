@@ -64,6 +64,15 @@
     hsl(50 100% 92% / 0.35) 0%, hsl(50 100% 85% / 0.12) 60%, transparent 100%);
   mix-blend-mode: screen;
 }
+/* Task 1: power is out — pitch black, flashlight cuts a hole; CRT standby glow at desk. */
+.mo-dark {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background: hsl(0 0% 0% / 0.97);
+}
+.mo-dark.lit {
+  background: radial-gradient(circle 24vmin at var(--fx, 50%) var(--fy, 50%),
+    transparent 0%, hsl(0 0% 0% / 0.55) 55%, hsl(0 0% 0% / 0.97) 100%);
+}
 .mo-term { position: fixed; inset: 0; z-index: 4; }
 .mo-gen-bar { position: relative; height: 18px; margin: 8px 0; border: 2px solid hsl(140 65% 45%); }
 .mo-gen-bar > div { height: 100%; background: hsl(140 70% 45%); transition: width 0.4s ease-out; }
