@@ -86,3 +86,37 @@
 .mo-con-wires .mo-wires { position: absolute; inset: 0; width: 100%; height: 100%; }
 .mo-con-wires .mo-ports { height: 100%; }
 .mo-con-body .mo-gen-bar { width: 80%; }
+
+/* Task 1 power rig */
+.mo-pw { position: relative; width: 100%; height: 330px; touch-action: none; user-select: none; }
+.mo-pw.lit { animation: mo-pw-flick 0.9s steps(1) 1; }
+@keyframes mo-pw-flick { 0%,30%,60% { filter: brightness(2.2); } 15%,45% { filter: brightness(0.4); } 100% { filter: none; } }
+.mo-pw-cable { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+.mo-pw-cable path { fill: none; stroke: hsl(0 0% 12%); stroke-width: 9; stroke-linecap: round; }
+.mo-pw-label { font-size: 12px; letter-spacing: 0.15em; opacity: 0.8; }
+.mo-pw-gen, .mo-pw-console { position: absolute; top: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px; border: 2px solid currentColor; background: hsl(0 0% 6%); }
+.mo-pw-gen { left: 0; width: 140px; }
+.mo-pw-console { right: 0; width: 130px; }
+.mo-pw-lever { width: 44px; height: 54px; background: hsl(0 0% 20%); border: 2px solid hsl(0 0% 45%); position: relative; cursor: pointer; padding: 0; }
+.mo-pw-lever:disabled { cursor: default; }
+.mo-pw-arm { position: absolute; left: 50%; bottom: 50%; width: 8px; height: 26px; margin-left: -4px; background: hsl(0 0% 75%); transform-origin: 50% 100%; transform: rotate(150deg); transition: transform 0.12s ease-in; border-radius: 4px; }
+.mo-pw-lever.on .mo-pw-arm { transform: rotate(0deg); }
+.mo-pw-leds { display: flex; gap: 8px; }
+.mo-pw-leds i { width: 10px; height: 10px; border-radius: 50%; background: hsl(0 0% 25%); }
+.mo-pw-leds i.red { background: hsl(0 85% 55%); box-shadow: 0 0 8px hsl(0 85% 55%); }
+.mo-pw-leds i.green { background: hsl(130 80% 55%); box-shadow: 0 0 8px hsl(130 80% 55%); }
+.mo-pw-socket { width: 54px; height: 54px; border-radius: 50%; background: hsl(0 0% 14%); border: 3px solid hsl(0 0% 40%); display: flex; justify-content: center; align-items: center; gap: 10px; }
+.mo-pw-socket b { width: 6px; height: 16px; background: hsl(0 0% 2%); }
+.mo-pw-socket.on { border-color: hsl(130 80% 55%); box-shadow: 0 0 12px hsl(130 80% 55%); }
+.mo-pw-plug { position: absolute; width: 40px; height: 40px; margin: -20px 0 0 -20px; background: hsl(40 80% 50%); border: 3px solid hsl(0 0% 10%); border-radius: 6px; cursor: grab; z-index: 2; }
+.mo-pw-plug.held { cursor: grabbing; transform: scale(1.1); }
+.mo-pw-plug.dead { opacity: 0.5; cursor: default; }
+.mo-pw-crank { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; width: 260px; }
+.mo-pw-crank.dead { opacity: 0.4; pointer-events: none; }
+.mo-pw-hub { width: 140px; height: 140px; border-radius: 50%; border: 3px dashed currentColor; position: relative; cursor: grab; }
+.mo-pw-hub::after { content: ""; position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px; border-radius: 50%; background: hsl(0 0% 60%); }
+.mo-pw-crankarm { position: absolute; inset: 0; pointer-events: none; }
+.mo-pw-crankarm::before { content: ""; position: absolute; left: 50%; top: 8px; width: 10px; height: 62px; margin-left: -5px; background: hsl(0 0% 65%); border-radius: 5px; }
+.mo-pw-knob { position: absolute; left: 50%; top: 0; width: 26px; height: 26px; margin-left: -13px; border-radius: 50%; background: hsl(0 70% 45%); border: 2px solid hsl(0 0% 10%); }
+.mo-pw-gauge { width: 100%; height: 14px; border: 2px solid currentColor; }
+.mo-pw-gauge div { height: 100%; background: currentColor; }

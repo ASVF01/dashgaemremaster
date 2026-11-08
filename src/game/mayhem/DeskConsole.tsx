@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { getSettings } from "@/game/settings";
+import windupSfx from "@/assets/crank_windup.wav.asset.json";
+import lightsSfx from "@/assets/lights_on.mp3.asset.json";
 import { shuffledPorts, taskComplete, tryConnect, WIRE_COLORS, type WireColor } from "./managerOfficeRules";
 import {
   addSurge, CONSOLE_TASKS, makeCodeRound, makeSimonSequence, SIMON_BUTTONS, SURGE_HOLD_PER_SEC, SURGE_TAP, TASK_ROUNDS,
@@ -32,18 +35,118 @@ export default function DeskConsole({ progress, onRound, onClose }: { progress: 
   );
 }
 
+function sfx(url: string, v = 1) {
+  const a = new Audio(url); a.volume = Math.max(0, Math.min(1, (getSettings().sfxVolume ?? 0.7) * v)); a.play().catch(() => {});
+}
+function snap() {
+  try {
+    const ctx = new AudioContext(); const o = ctx.createOscillator(); const g = ctx.createGain();
+    o.type = "square"; o.frequency.setValueAtTime(320, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.08);
+    g.gain.setValueAtTime(0.3 * (getSettings().sfxVolume ?? 0.7), ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+    o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.12); setTimeout(() => ctx.close(), 300);
+  } catch { /* noop */ }
+}
+
+/** One full crank turn = this much charge. 5 turns to 100%. */
+const CRANK_PER_TURN = 20;
+
 function PowerTask({ onDone }: { onDone: () => void }) {
   const [sw, setSw] = useState(false);
-  const [plug, setPlug] = useState(false);
-  const [crank, setCrank] = useState(0);
-  useEffect(() => { if (crank >= 100) { const t = setTimeout(onDone, 600); return () => clearTimeout(t); } }, [crank, onDone]);
+  const [plug, setPlug] = useState<{ x: number; y: number } | null>(null); // drag pos while held
+  const [plugged, setPlugged] = useState(false);
+  const [angle, setAngle] = useState(0); // total degrees cranked
+  const [lights, setLights] = useState(false);
+  const rigRef = useRef<HTMLDivElement>(null);
+  const socketRef = useRef<HTMLDivElement>(null);
+  const hubRef = useRef<HTMLDivElement>(null);
+  const crankLast = useRef<number | null>(null);
+  const nextClick = useRef(30);
+  const charge = Math.min(100, (angle / 360) * CRANK_PER_TURN);
+
+  useEffect(() => {
+    if (charge < 100 || lights) return;
+    setLights(true); sfx(lightsSfx.url);
+    const t = setTimeout(onDone, 2700); return () => clearTimeout(t);
+  }, [charge, lights, onDone]);
+
+  const rel = (e: React.PointerEvent) => {
+    const r = rigRef.current!.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  };
+  const plugDown = (e: React.PointerEvent) => {
+    if (!sw || plugged) return;
+    (e.target as Element).setPointerCapture(e.pointerId); setPlug(rel(e));
+  };
+  const plugMove = (e: React.PointerEvent) => { if (plug) setPlug(rel(e)); };
+  const plugUp = (e: React.PointerEvent) => {
+    if (!plug) return;
+    const s = socketRef.current!.getBoundingClientRect();
+    const near = Math.hypot(e.clientX - (s.left + s.width / 2), e.clientY - (s.top + s.height / 2)) < 60;
+    setPlug(null);
+    if (near) { setPlugged(true); snap(); }
+  };
+
+  const hubAngle = (e: React.PointerEvent) => {
+    const r = hubRef.current!.getBoundingClientRect();
+    return (Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2)) * 180) / Math.PI;
+  };
+  const crankDown = (e: React.PointerEvent) => {
+    if (!plugged || lights) return;
+    (e.target as Element).setPointerCapture(e.pointerId); crankLast.current = hubAngle(e);
+  };
+  const crankMove = (e: React.PointerEvent) => {
+    if (crankLast.current == null || lights) return;
+    const a = hubAngle(e); let d = a - crankLast.current;
+    if (d > 180) d -= 360; if (d < -180) d += 360;
+    crankLast.current = a;
+    if (d <= 0) return; // clockwise only, ratchet holds
+    setAngle((prev) => {
+      const n = prev + d;
+      if (n >= nextClick.current) { nextClick.current = n + 45; sfx(windupSfx.url, 0.8); }
+      return n;
+    });
+  };
+  const crankUp = () => { crankLast.current = null; };
+
+  // Plug head position: hanging off Stevenson when idle, under finger when dragging, in socket when plugged.
+  const rig = rigRef.current?.getBoundingClientRect();
+  const sock = socketRef.current?.getBoundingClientRect();
+  const home = { x: 70, y: 150 };
+  const head = plugged && rig && sock ? { x: sock.left - rig.left + sock.width / 2, y: sock.top - rig.top + sock.height / 2 } : plug ?? home;
+  const src = { x: 70, y: 96 };
+  const midY = Math.max(src.y, head.y) + 50;
+
   return (
-    <div className="mo-con-col">
-      <button className="mo-con-btn" disabled={sw} onClick={() => setSw(true)}>{sw ? "SWITCH ON" : "1. FLIP SWITCH"}</button>
-      <button className="mo-con-btn" disabled={!sw || plug} onClick={() => setPlug(true)}>{plug ? "PLUGGED IN" : "2. PLUG IN"}</button>
-      <button className="mo-con-btn" disabled={!plug || crank >= 100} onClick={() => setCrank((c) => Math.min(100, c + 10))}>
-        {crank >= 100 ? "LIGHTS ON!" : `3. CRANK (${crank}%)`}
-      </button>
+    <div className={`mo-pw ${lights ? "lit" : ""}`} ref={rigRef}>
+      <svg className="mo-pw-cable" width="100%" height="100%">
+        <path d={`M${src.x},${src.y} C${src.x},${midY} ${head.x},${midY} ${head.x},${head.y}`} />
+      </svg>
+
+      <div className="mo-pw-gen">
+        <div className="mo-pw-label">STEVENSON 9000</div>
+        <button className={`mo-pw-lever ${sw ? "on" : ""}`} disabled={sw} onClick={() => { setSw(true); snap(); }} aria-label="Flip power switch">
+          <span className="mo-pw-arm" />
+        </button>
+        <div className="mo-pw-leds"><i className={sw ? "" : "red"} /><i className={sw ? "green" : ""} /></div>
+      </div>
+
+      <div className={`mo-pw-plug ${plug ? "held" : ""} ${!sw ? "dead" : ""}`} style={{ left: head.x, top: head.y }}
+        onPointerDown={plugDown} onPointerMove={plugMove} onPointerUp={plugUp} aria-label="Power plug" />
+
+      <div className="mo-pw-console">
+        <div className="mo-pw-label">CONSOLE IN</div>
+        <div ref={socketRef} className={`mo-pw-socket ${plugged ? "on" : ""}`}><b /><b /></div>
+      </div>
+
+      <div className={`mo-pw-crank ${plugged ? "" : "dead"}`}>
+        <div ref={hubRef} className="mo-pw-hub" onPointerDown={crankDown} onPointerMove={crankMove} onPointerUp={crankUp} onPointerCancel={crankUp}>
+          <div className="mo-pw-crankarm" style={{ transform: `rotate(${angle}deg)` }}><span className="mo-pw-knob" /></div>
+        </div>
+        <div className="mo-pw-gauge"><div style={{ width: `${charge}%` }} /></div>
+        <div className="mo-con-hint">
+          {lights ? "LIGHTS ON!" : !sw ? "flip the switch" : !plugged ? "drag the plug into the console" : `spin the crank clockwise · ${Math.floor(charge)}%`}
+        </div>
+      </div>
     </div>
   );
 }
