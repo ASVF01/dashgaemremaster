@@ -156,13 +156,19 @@ function CodeTask({ onDone }: { onDone: () => void }) {
   const [wrong, setWrong] = useState(-1);
   const hint = r.options[r.answer].split("").map((d, i) => (i === r.hintPos ? d : "_")).join(" ");
   return (
-    <div className="mo-con-col">
-      <div className="mo-con-grid">
-        {r.options.map((o, i) => (
-          <button key={o} className={`mo-con-btn ${wrong === i ? "bad" : ""}`} onClick={() => (i === r.answer ? onDone() : setWrong(i))}>{o}</button>
-        ))}
+    <div className="mo-code-rig">
+      <div className="mo-con-col">
+        <div className="mo-con-label">CONSOLE</div>
+        <div className="mo-con-grid">
+          {r.options.map((o, i) => (
+            <button key={o} className={`mo-con-btn ${wrong === i ? "bad" : ""}`} onClick={() => (i === r.answer ? onDone() : setWrong(i))}>{o}</button>
+          ))}
+        </div>
       </div>
-      <div className="mo-con-hint">HINT: {hint}</div>
+      <div className="mo-stev">
+        <div className="mo-con-label">STEVENSON TERMINAL</div>
+        <div className="mo-stev-screen">{hint}</div>
+      </div>
     </div>
   );
 }
