@@ -1,5 +1,7 @@
 # Project Architecture Rules
 
+- Manager's Office music uses an office-owned HTML audio lifecycle with a pre-crushed asset, live settings/mute subscriptions, and a dry playback path; pause the shared soundtrack during the office and release/resume on exit so closing the console cannot restart or layer music.
+
 - Active game sessions use a fixed edge-to-edge stage and a viewport-sized canvas; scale logical dimensions uniformly on small screens to preserve world proportions, while keeping menu presentation independent.
 - Touch controls follow the primary coarse-pointer media query, not touch API presence or window width; ordinary gameplay camera keeps the visible world inside the level; when the view is taller than the level the camera window sits lowered (a tested fraction of the extra view hangs below the level) and ground platforms extend to the screen bottom, so fullscreen can never expose below-level void.
 

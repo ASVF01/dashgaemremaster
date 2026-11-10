@@ -17,6 +17,7 @@ import {
 } from "./managerOfficeRules";
 import { mayhemSfx } from "@/game/sfx";
 import DeskConsole from "./DeskConsole";
+import { useOfficeMusic } from "./useOfficeMusic";
 import { completeRound, startConsole, CONSOLE_TASKS, TASK_ROUNDS } from "./officeConsoleRules";
 import "./managerOffice.css";
 
@@ -68,6 +69,7 @@ export default function ManagerOffice() {
 }
 
 function OfficeRoom({ onExit }: { onExit: () => void }) {
+  useOfficeMusic();
   const worldRef = useRef<HTMLDivElement>(null);
   const cursorX = useRef(0);
   const stageRef = useRef<HTMLDivElement>(null);

@@ -1,7 +1,7 @@
 /** Night 5 desk console: pure task progression rules (5 tasks). */
 export type ConsoleTask = "power" | "code" | "simon" | "wire" | "surge";
 export const CONSOLE_TASKS: ConsoleTask[] = ["power", "code", "simon", "wire", "surge"];
-export const TASK_ROUNDS: Record<ConsoleTask, number> = { power: 1, code: 10, simon: 5, wire: 12, surge: 1 };
+export const TASK_ROUNDS: Record<ConsoleTask, number> = { power: 1, code: 10, simon: 5, wire: 1, surge: 1 };
 
 export type ConsoleProgress = { task: number; round: number; done: boolean };
 export const startConsole = (): ConsoleProgress => ({ task: 0, round: 0, done: false });

@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Finish Task 4 after one matched wire board, remove both table shadows, and add the supplied dry bitcrushed office soundtrack at 0.82× speed; verify the full console flow and music lifecycle.
+
 - [x] Audit approved outstanding requests; deferred art, Night 5 brainstorming, desktop packaging and promotion remain untouched. Dust artwork already renders untinted.
 - [x] Finish Settings music/theme controls, Extra Modes (Star Vanisher only), PLAY character access and outlined character shutters; live navigation and saved switches verified.
 - [x] Supply an editable copy of the original startup artwork and wire FM confirm/back cues to title/menu commands; 23 focused tests pass.

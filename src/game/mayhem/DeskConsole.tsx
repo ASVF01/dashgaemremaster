@@ -225,8 +225,7 @@ function WireTask({ onDone }: { onDone: () => void }) {
   const [ports] = useState(() => shuffledPorts());
   const [linked, setLinked] = useState<WireColor[]>([]);
   const [held, setHeld] = useState<WireColor | null>(null);
-  const finished = taskComplete(linked);
-  useEffect(() => { if (finished) { const t = setTimeout(onDone, 400); return () => clearTimeout(t); } }, [finished, onDone]);
+  const completed = useRef(false);
   return (
     <div className="mo-con-wires">
       <svg className="mo-wires" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -237,11 +236,18 @@ function WireTask({ onDone }: { onDone: () => void }) {
       </svg>
       <div className="mo-ports">
         <div>{WIRE_COLORS.map((c) => (
-          <button key={c} className={`mo-port mo-p-${c} ${held === c ? "held" : ""}`} disabled={linked.includes(c)} onClick={() => setHeld(c)} aria-label={`${c} plug`} />
+          <button key={c} className={`mo-port mo-p-${c} ${held === c ? "held" : ""}`} disabled={linked.includes(c)} onClick={() => { mayhemSfx.terminalSelect(); setHeld(c); }} aria-label={`${c} plug`} />
         ))}</div>
         <div>{ports.map((c) => (
           <button key={c} className={`mo-port mo-p-${c}`} disabled={linked.includes(c)} aria-label={`${c} port`}
-            onClick={() => { if (held) { setLinked((l) => tryConnect(l, held, c)); setHeld(null); } }} />
+            onClick={() => {
+              if (!held || completed.current) return;
+              const next = tryConnect(linked, held, c);
+              if (next.length > linked.length) mayhemSfx.puzzleConnect(); else buzz();
+              setLinked(next);
+              setHeld(null);
+              if (taskComplete(next)) { completed.current = true; onDone(); }
+            }} />
         ))}</div>
       </div>
     </div>
