@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { getSettings } from "@/game/settings";
+import { mayhemSfx } from "@/game/sfx";
 import windupSfx from "@/assets/crank_windup.wav.asset.json";
 import lightsSfx from "@/assets/lights_on.mp3.asset.json";
 import { shuffledPorts, taskComplete, tryConnect, WIRE_COLORS, type WireColor } from "./managerOfficeRules";
@@ -18,13 +19,16 @@ export default function DeskConsole({ progress, onRound, onClose }: { progress: 
     <div className="mo-overlay" onClick={onClose}>
       <div className="mo-crt" onClick={(e) => e.stopPropagation()}>
         <div className="mo-crt-title">{progress.done ? "ALL TASKS COMPLETE" : `${TITLES[kind]}${total > 1 ? ` [${progress.round}/${total}]` : ""}`}</div>
-        <div className="mo-con-body">
+        <div className="mo-con-body" onPointerOver={(e) => {
+          const btn = (e.target as Element).closest("button");
+          if (btn && !btn.contains(e.relatedTarget as Node | null)) mayhemSfx.generatorHover();
+        }}>
           {progress.done ? <p>Console online. (Boss not added yet.)</p> : (
             <>
               {kind === "power" && <PowerTask onDone={onRound} />}
-              {kind === "code" && <CodeTask key={progress.round} onDone={onRound} />}
-              {kind === "simon" && <SimonTask key={progress.round} round={progress.round} onDone={onRound} />}
-              {kind === "wire" && <WireTask key={progress.round} onDone={onRound} />}
+              {kind === "code" && <CodeTask key={progress.round} onDone={() => { mayhemSfx.generatorImpact(false); onRound(); }} />}
+              {kind === "simon" && <SimonTask key={progress.round} round={progress.round} onDone={() => { mayhemSfx.generatorImpact(false); onRound(); }} />}
+              {kind === "wire" && <WireTask key={progress.round} onDone={() => { mayhemSfx.generatorImpact(false); onRound(); }} />}
               {kind === "surge" && <SurgeTask onDone={onRound} />}
             </>
           )}
@@ -44,6 +48,15 @@ function snap() {
     o.type = "square"; o.frequency.setValueAtTime(320, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.08);
     g.gain.setValueAtTime(0.3 * (getSettings().sfxVolume ?? 0.7), ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
     o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.12); setTimeout(() => ctx.close(), 300);
+  } catch { /* noop */ }
+}
+
+function buzz() {
+  try {
+    const ctx = new AudioContext(); const o = ctx.createOscillator(); const g = ctx.createGain();
+    o.type = "sawtooth"; o.frequency.value = 90;
+    g.gain.setValueAtTime(0.25 * (getSettings().sfxVolume ?? 0.7), ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+    o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.36); setTimeout(() => ctx.close(), 500);
   } catch { /* noop */ }
 }
 
@@ -68,8 +81,8 @@ function PowerTask({ onDone }: { onDone: () => void }) {
   const doneTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (charge < 100 || doneTimer.current != null) return;
-    setLights(true); sfx(lightsSfx.url);
-    doneTimer.current = setTimeout(onDone, 2700);
+    setLights(true); sfx(lightsSfx.url); mayhemSfx.generatorImpact(false);
+    doneTimer.current = setTimeout(onDone, 0); // lights come on the instant the crank finishes
   }, [charge, onDone]);
 
   const rel = (e: React.PointerEvent) => {
@@ -164,7 +177,7 @@ function CodeTask({ onDone }: { onDone: () => void }) {
         <div className="mo-con-label">CONSOLE</div>
         <div className="mo-con-grid">
           {r.options.map((o, i) => (
-            <button key={o} className={`mo-con-btn ${wrong === i ? "bad" : ""}`} onClick={() => (i === r.answer ? onDone() : setWrong(i))}>{o}</button>
+            <button key={o} className={`mo-con-btn ${wrong === i ? "bad" : ""}`} onClick={() => { if (i === r.answer) onDone(); else { setWrong(i); buzz(); } }}>{o}</button>
           ))}
         </div>
       </div>
@@ -187,19 +200,20 @@ function SimonTask({ round, onDone }: { round: number; onDone: () => void }) {
     const id = setInterval(() => {
       if (on) { setLit(-1); on = false; i++; if (i >= seq.length) { clearInterval(id); setShowing(false); } }
       else { setLit(seq[i]); on = true; }
-    }, 320);
+    }, 600);
     return () => clearInterval(id);
   }, [showing, seq]);
   const press = (b: number) => {
     if (showing) return;
-    if (b !== seq[pos]) { setSeq(makeSimonSequence(round)); setPos(0); setShowing(true); return; }
+    mayhemSfx.generatorCount();
+    if (b !== seq[pos]) { buzz(); setSeq(makeSimonSequence(round)); setPos(0); setShowing(true); return; }
     if (pos + 1 >= seq.length) onDone(); else setPos(pos + 1);
   };
   return (
     <div className="mo-con-col">
       <div className="mo-simon">
         {Array.from({ length: SIMON_BUTTONS }, (_, b) => (
-          <button key={b} className={`mo-simon-b mo-s${b} ${lit === b ? "lit" : ""}`} onClick={() => press(b)} aria-label={`Button ${b + 1}`} />
+          <button key={b} className={`mo-simon-b mo-s${b} ${lit === b ? "lit" : ""}`} onClick={() => press(b)} aria-label={`Button ${"ABCDEF"[b]}`}>{"ABCDEF"[b]}</button>
         ))}
       </div>
       <div className="mo-con-hint">{showing ? "watch…" : `repeat ${pos}/${seq.length}`}</div>

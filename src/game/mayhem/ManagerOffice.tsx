@@ -81,7 +81,7 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
   const [medUsed, setMedUsed] = useState(false);
   const [hp, setHp] = useState(50);
   const [tipOpen, setTipOpen] = useState(false);
-  const [taskOpen, setTaskOpen] = useState(false);
+  const [taskOpen, setTaskOpen] = useState(true); // Task 1 is the first thing the player does
   const [consoleProg, setConsoleProg] = useState(startConsole);
   const advanceConsole = useCallback(() => setConsoleProg(completeRound), []);
   const [crawling, setCrawling] = useState(false);

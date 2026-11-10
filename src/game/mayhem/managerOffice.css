@@ -89,8 +89,8 @@
 .mo-simon { display: grid; grid-template-columns: repeat(3, 72px); gap: 12px; }
 .mo-simon-b { height: 72px; border: 3px solid hsl(0 0% 85%); opacity: 0.4; cursor: pointer; }
 .mo-simon-b.lit, .mo-simon-b:active { opacity: 1; }
-.mo-s0 { background: hsl(0 80% 55%); } .mo-s1 { background: hsl(210 80% 55%); } .mo-s2 { background: hsl(50 90% 55%); }
-.mo-s3 { background: hsl(120 70% 45%); } .mo-s4 { background: hsl(300 70% 60%); } .mo-s5 { background: hsl(25 90% 55%); }
+.mo-simon-b { background: transparent; color: hsl(140 70% 60%); border-color: hsl(140 65% 45%); font: 700 28px ui-monospace, monospace; opacity: 0.55; }
+.mo-simon-b.lit { background: hsl(140 70% 55%); color: hsl(0 0% 4%); opacity: 1; box-shadow: 0 0 18px hsl(140 70% 55% / 0.7); }
 .mo-con-wires { position: absolute; inset: 0; }
 .mo-con-wires .mo-wires { position: absolute; inset: 0; width: 100%; height: 100%; }
 .mo-con-wires .mo-ports { height: 100%; }
@@ -130,30 +130,11 @@
 .mo-pw-gauge { width: 100%; height: 14px; border: 2px solid currentColor; }
 .mo-pw-gauge div { height: 100%; background: currentColor; }
 
-/* Ink re-skin: hand-drawn HP-bar look for the desk terminal + Task 1 */
-.mo-overlay .mo-crt { --mo-ink: 0 0% 6%; --mo-paper: 48 30% 92%; background: hsl(var(--mo-paper)); color: hsl(var(--mo-ink)); border: 6px solid hsl(var(--mo-ink)); border-radius: 18px 26px 14px 30px / 26px 14px 30px 18px; box-shadow: 7px 7px 0 hsl(var(--mo-ink)); transform: rotate(-1.5deg); font-family: 'Press Start 2P', ui-monospace, monospace; font-size: 11px; background-image: repeating-linear-gradient(-45deg, hsl(var(--mo-ink) / 0.06) 0 2px, transparent 2px 9px); }
-.mo-overlay .mo-crt-title { font-size: 14px; color: hsl(var(--mo-paper)); -webkit-text-stroke: 1.5px hsl(var(--mo-ink)); paint-order: stroke fill; text-shadow: 3px 3px 0 hsl(var(--mo-ink)); }
-.mo-overlay .mo-crt-foot { opacity: 0.7; font-size: 9px; }
-.mo-overlay .mo-pw-gen, .mo-overlay .mo-pw-console { background: hsl(var(--mo-paper)); border: 4px solid hsl(var(--mo-ink)); border-radius: 10px 4px 12px 6px; box-shadow: 4px 4px 0 hsl(var(--mo-ink)); }
-.mo-overlay .mo-pw-label { font-size: 8px; }
-.mo-overlay .mo-pw-lever { background: hsl(var(--mo-paper)); border: 4px solid hsl(var(--mo-ink)); border-radius: 6px 10px 4px 8px; }
-.mo-overlay .mo-pw-arm { background: hsl(var(--mo-ink)); }
-.mo-overlay .mo-pw-leds i { border: 2.5px solid hsl(var(--mo-ink)); box-shadow: none; }
-.mo-overlay .mo-pw-socket { background: hsl(var(--mo-paper)); border: 4px solid hsl(var(--mo-ink)); box-shadow: 3px 3px 0 hsl(var(--mo-ink)); }
-.mo-overlay .mo-pw-socket b { background: hsl(var(--mo-ink)); }
-.mo-overlay .mo-pw-socket.on { border-color: hsl(var(--mo-ink)); background: hsl(130 60% 70%); }
-.mo-overlay .mo-pw-plug { border: 4px solid hsl(var(--mo-ink)); border-radius: 8px 4px 10px 5px; box-shadow: 3px 3px 0 hsl(var(--mo-ink)); }
-.mo-overlay .mo-pw-cable path { stroke: hsl(var(--mo-ink)); stroke-width: 7; }
-.mo-overlay .mo-pw-hub { border: 4px solid hsl(var(--mo-ink)); background: repeating-linear-gradient(45deg, hsl(var(--mo-ink) / 0.12) 0 2px, transparent 2px 8px); }
-.mo-overlay .mo-pw-hub::after { background: hsl(var(--mo-ink)); }
-.mo-overlay .mo-pw-crankarm::before { background: hsl(var(--mo-ink)); }
-.mo-overlay .mo-pw-knob { border: 3px solid hsl(var(--mo-ink)); }
-.mo-overlay .mo-pw-gauge { height: 18px; border: 4px solid hsl(var(--mo-ink)); border-radius: 6px 3px 7px 4px; box-shadow: 3px 3px 0 hsl(var(--mo-ink)); transform: rotate(-1deg); }
-.mo-overlay .mo-pw-gauge div { background: hsl(130 60% 45%); }
-.mo-overlay .mo-crt button { font-family: inherit; }
 
-/* Task 2: console codes + separate Stevenson terminal hint */
-.mo-code-rig { display: flex; gap: 18px; align-items: stretch; justify-content: center; flex-wrap: wrap; }
-.mo-con-label { font-family: 'Press Start 2P', monospace; font-size: 9px; margin-bottom: 6px; }
-.mo-stev { border: 5px solid hsl(var(--foreground)); border-radius: 10px 4px 12px 6px; padding: 10px; transform: rotate(1.5deg); background: hsl(var(--muted)); display: flex; flex-direction: column; min-width: 150px; }
-.mo-stev-screen { flex: 1; display: flex; align-items: center; justify-content: center; font-family: 'Press Start 2P', monospace; font-size: 18px; letter-spacing: 4px; border: 4px solid hsl(var(--foreground)); border-radius: 6px; padding: 14px 8px; background: hsl(var(--background)); }
+
+/* Task 2: console codes + Stevenson terminal hint (retro CRT look) */
+.mo-code-rig { display: flex; gap: 18px; align-items: stretch; justify-content: center; flex-wrap: wrap; width: 100%; }
+.mo-con-label { font-size: 11px; letter-spacing: 0.2em; margin-bottom: 8px; text-align: center; opacity: 0.8; }
+.mo-stev { border: 5px solid hsl(40 10% 45%); border-radius: 10px; padding: 10px; background: hsl(40 8% 22%); display: flex; flex-direction: column; min-width: 170px; box-shadow: inset 0 0 0 2px hsl(0 0% 0% / 0.5); }
+.mo-stev .mo-con-label { color: hsl(40 30% 85%); }
+.mo-stev-screen { flex: 1; display: flex; align-items: center; justify-content: center; font: 700 26px ui-monospace, monospace; letter-spacing: 6px; color: hsl(38 95% 60%); text-shadow: 0 0 8px hsl(38 95% 55% / 0.7); border: 3px solid hsl(0 0% 6%); border-radius: 6px; padding: 18px 10px; background: hsl(0 0% 3%); }
