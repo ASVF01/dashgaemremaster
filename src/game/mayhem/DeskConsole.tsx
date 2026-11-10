@@ -63,11 +63,14 @@ function PowerTask({ onDone }: { onDone: () => void }) {
   const nextClick = useRef(30);
   const charge = Math.min(100, (angle / 360) * CRANK_PER_TURN);
 
+  // Completion timer lives in a ref and is never cleared on unmount: closing the
+  // console during "LIGHTS ON!" must still advance to Task 2 and light the room.
+  const doneTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (charge < 100 || lights) return;
+    if (charge < 100 || doneTimer.current != null) return;
     setLights(true); sfx(lightsSfx.url);
-    const t = setTimeout(onDone, 2700); return () => clearTimeout(t);
-  }, [charge, lights, onDone]);
+    doneTimer.current = setTimeout(onDone, 2700);
+  }, [charge, onDone]);
 
   const rel = (e: React.PointerEvent) => {
     const r = rigRef.current!.getBoundingClientRect();
