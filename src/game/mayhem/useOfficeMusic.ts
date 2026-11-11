@@ -2,41 +2,71 @@ import { useEffect, useRef } from "react";
 import { isBgmMuted, pauseBgm, resumeBgm, subscribeBgmMuted } from "@/game/bgm";
 import { useSettings } from "@/game/settings";
 import officeTrack from "@/assets/audio/office_rotatatron.ogg.asset.json";
+import { crushOfficeChannel } from "./officeMusicProcessing";
 
-/** Dry, pre-crushed soundtrack owned by the office, not the console overlay. */
+/** Dry, genuinely bitcrushed soundtrack owned by the office, not its console. */
 export function useOfficeMusic() {
   const [settings] = useSettings();
-  const audio = useRef<HTMLAudioElement | null>(null);
+  const gain = useRef<GainNode | null>(null);
   const volume = useRef(settings.bgmVolume);
   volume.current = settings.bgmVolume;
 
   useEffect(() => {
-    const track = new Audio(officeTrack.url);
-    track.loop = true;
-    track.playbackRate = 0.82;
-    track.preservesPitch = false;
-    const sync = () => { track.volume = isBgmMuted() ? 0 : Math.max(0, Math.min(1, volume.current)) * 0.55; };
+    const context = new AudioContext();
+    const output = context.createGain();
+    output.connect(context.destination);
+    gain.current = output;
+    let source: AudioBufferSourceNode | null = null;
+    let disposed = false;
+    const abort = new AbortController();
+    const sync = () => {
+      output.gain.value = isBgmMuted() ? 0 : Math.max(0, Math.min(1, volume.current)) * 0.55;
+    };
     sync();
-    audio.current = track;
     pauseBgm();
-    const play = () => { void track.play().catch(() => {}); };
+    const play = () => { if (!disposed) void context.resume().catch(() => {}); };
+    const load = async () => {
+      try {
+        const response = await fetch(officeTrack.url, { signal: abort.signal });
+        if (!response.ok) throw new Error(`Office music load failed (${response.status})`);
+        const decoded = await context.decodeAudioData(await response.arrayBuffer());
+        if (disposed) return;
+        const crushed = context.createBuffer(decoded.numberOfChannels, decoded.length, decoded.sampleRate);
+        for (let channel = 0; channel < decoded.numberOfChannels; channel++) {
+          crushed.getChannelData(channel).set(crushOfficeChannel(decoded.getChannelData(channel), decoded.sampleRate));
+        }
+        source = context.createBufferSource();
+        source.buffer = crushed;
+        source.loop = true;
+        source.playbackRate.value = 0.82;
+        source.connect(output);
+        source.start();
+        play();
+      } catch (error) {
+        if (!disposed) console.warn("Office soundtrack could not load", error);
+      }
+    };
+    void load();
     play();
     window.addEventListener("pointerdown", play);
     window.addEventListener("keydown", play);
     const unsubscribe = subscribeBgmMuted(sync);
     return () => {
+      disposed = true;
+      abort.abort();
       unsubscribe();
       window.removeEventListener("pointerdown", play);
       window.removeEventListener("keydown", play);
-      track.pause();
-      track.removeAttribute("src");
-      track.load();
-      audio.current = null;
+      source?.stop();
+      source?.disconnect();
+      output.disconnect();
+      gain.current = null;
+      void context.close().catch(() => {});
       resumeBgm();
     };
   }, []);
 
   useEffect(() => {
-    if (audio.current) audio.current.volume = isBgmMuted() ? 0 : Math.max(0, Math.min(1, settings.bgmVolume)) * 0.55;
+    if (gain.current) gain.current.gain.value = isBgmMuted() ? 0 : Math.max(0, Math.min(1, settings.bgmVolume)) * 0.55;
   }, [settings.bgmVolume]);
 }
