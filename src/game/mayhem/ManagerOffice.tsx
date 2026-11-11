@@ -11,6 +11,9 @@ import utilUsed from "@/assets/manager/util_desk_used.png.asset.json";
 import ceilingImg from "@/assets/manager/ceiling.png.asset.json";
 import ventImg from "@/assets/manager/vent.png.asset.json";
 import nopeSfx from "@/assets/manager/nope.mp3.asset.json";
+import doorGifted from "@/assets/manager/door_gifted.png.asset.json";
+import metalWalkSfx from "@/assets/manager/metalwalk2.wav.asset.json";
+import knockSfx from "@/assets/manager/knock2.wav.asset.json";
 import ventWalkSfx from "@/assets/manager/ventwalk.wav.asset.json";
 import {
   approach, edgeZone, yawTargetForView, officePitch, ventStepsCrossed, OFFICE_MAX_YAW, viewForKey, type OfficeView,
@@ -80,6 +83,13 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
   const viewRef = useRef(view); viewRef.current = view;
   const [size, setSize] = useState({ w: window.innerWidth, h: window.innerHeight });
   const [doorShut, setDoorShut] = useState(false);
+  const [gifted, setGifted] = useState(false);
+  // THE GIFTED: shut the door while she is there, she waits 3.5s, knocks, and leaves.
+  useEffect(() => {
+    if (!gifted || !doorShut) return;
+    const t = setTimeout(() => { playOnce(knockSfx.url); setGifted(false); }, 3500);
+    return () => clearTimeout(t);
+  }, [gifted, doorShut]);
   const [medUsed, setMedUsed] = useState(false);
   const [hp, setHp] = useState(50);
   const [tipOpen, setTipOpen] = useState(false);
@@ -107,6 +117,10 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
       if (e.code === "Escape") { onExit(); return; }
       if (e.code === "KeyZ") { if (!e.repeat) { setFlash(true); click(); } return; }
       if (e.repeat) return;
+      if (e.code === "Digit1" || e.code === "Numpad1") {
+        setGifted((g) => { if (!g) playOnce(metalWalkSfx.url); return true; });
+        return;
+      }
       if (e.code === "KeyA") { setDoorShut((d) => !d); return; }
       if (e.code === "KeyG") {
         setTaskOpen((o) => {
@@ -194,10 +208,11 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
 
   return (
     <div ref={stageRef} className="mo-stage" style={{ perspective: `${P}px` }} onPointerDown={onStagePointer}>
+      <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true"><filter id="mo-ink-wobble"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="7" /><feDisplacementMap in="SourceGraphic" scale="3" /></filter></svg>
       <div ref={worldRef} className="mo-world">
         {/* LEFT: door */}
         <div className="mo-face" style={panel(-1)}>
-          <img src={doorShut ? doorClosed.url : doorOpen.url} alt="Office door" draggable={false} />
+          <img src={doorShut ? doorClosed.url : gifted ? doorGifted.url : doorOpen.url} alt="Office door" draggable={false} />
           <button className="mo-hot" style={{ left: "70.6%", top: "37.8%", width: "7.8%", height: "13.4%" }}
             aria-label="Door button" onClick={() => { setDoorShut((d) => !d); }} />
           <button className="mo-hot" style={{ left: "70.4%", top: "53.8%", width: "8.2%", height: "13.8%" }}
@@ -239,7 +254,7 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
       {/* HUD */}
       <div className="mo-hud">
         <div>TEST ROOM · HP {hp} · {consoleProg.done ? "TASKS DONE" : `TASK ${consoleProg.task + 1}/5 [${consoleProg.round}/${TASK_ROUNDS[CONSOLE_TASKS[consoleProg.task]]}]`}</div>
-        <div className="mo-hint">mouse to edges = look · W vent · S desk · A door · G console · E surge · hold Z light · \ or ESC exit</div>
+        <div className="mo-hint">mouse to edges = look · W vent · S desk · A door · 1 test GIFTED · G console · E surge · hold Z light · \ or ESC exit</div>
         {view === "ceiling" && (
           <button className="mo-test" onClick={() => setCrawling((c) => !c)}>
             {crawling ? "stop crawl" : "test: NEO-MATA crawl"}

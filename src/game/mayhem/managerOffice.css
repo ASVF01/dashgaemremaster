@@ -138,3 +138,18 @@
 .mo-stev { border: 5px solid hsl(40 10% 45%); border-radius: 10px; padding: 10px; background: hsl(40 8% 22%); display: flex; flex-direction: column; min-width: 170px; box-shadow: inset 0 0 0 2px hsl(0 0% 0% / 0.5); }
 .mo-stev .mo-con-label { color: hsl(40 30% 85%); }
 .mo-stev-screen { flex: 1; display: flex; align-items: center; justify-content: center; font: 700 26px ui-monospace, monospace; letter-spacing: 6px; color: hsl(38 95% 60%); text-shadow: 0 0 8px hsl(38 95% 55% / 0.7); border: 3px solid hsl(0 0% 6%); border-radius: 6px; padding: 18px 10px; background: hsl(0 0% 3%); }
+
+/* Hand-drawn ink re-skin of the desk terminal (matches the Nights 1-4 HP bar) */
+.mo-crt { background: hsl(var(--select-black) / .92); color: hsl(var(--hell-warning)); border: 7px solid hsl(var(--select-black)); border-radius: 14px 22px 12px 26px / 24px 12px 22px 14px; outline: 3px solid hsl(var(--hell-warning)); outline-offset: -14px; box-shadow: 6px 6px 0 hsl(var(--select-black) / .7); transform: rotate(-1.5deg); font-family: 'Press Start 2P', monospace; filter: url(#mo-ink-wobble); }
+.mo-crt-title { font-size: 14px; color: hsl(var(--hell-warning)); text-shadow: 3px 3px 0 hsl(var(--select-black)); }
+.mo-crt-foot { font-size: 9px; }
+.mo-con-btn, .mo-simon-b { font-family: 'Press Start 2P', monospace; font-size: 14px; color: hsl(var(--select-black)); background: hsl(var(--hell-warning)); border: 4px solid hsl(var(--select-black)); border-radius: 6px 10px 5px 9px; box-shadow: 3px 3px 0 hsl(var(--select-black)); }
+.mo-con-btn:nth-child(odd) { transform: rotate(1deg); } .mo-con-btn:nth-child(even) { transform: rotate(-1.2deg); }
+.mo-con-btn:hover:not(:disabled) { background: hsl(var(--hell-warning)); filter: brightness(1.15); }
+.mo-con-btn:active:not(:disabled) { box-shadow: 0 0 0; translate: 3px 3px; }
+.mo-con-hint { font-size: 14px; color: hsl(var(--hell-warning)); }
+.mo-simon-b { opacity: .5; } .mo-simon-b.lit { background: hsl(var(--hell-warning)); color: hsl(var(--select-black)); opacity: 1; box-shadow: 3px 3px 0 hsl(var(--select-black)), 0 0 0 4px hsl(var(--select-white)); }
+.mo-pw-gen, .mo-pw-console { background: hsl(var(--select-black) / .6); border: 4px solid hsl(var(--hell-warning)); border-radius: 8px 14px 6px 12px; box-shadow: 3px 3px 0 hsl(var(--select-black)); }
+.mo-pw-label { font-size: 8px; }
+.mo-pw-lever, .mo-pw-socket { border: 4px solid hsl(var(--select-black)); outline: 2px solid hsl(var(--hell-warning)); }
+.mo-pw-cable path { stroke: hsl(var(--select-black)); stroke-width: 11; }
