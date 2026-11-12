@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getSettings } from "@/game/settings";
+import kidAttackAuraSfxUrl from "@/assets/mayhem/kid_attack_aura.mp3";
+import kidAttackChargeSfxUrl from "@/assets/mayhem/kid_attack_charge.mp3";
+import kidAttackCockingSfxUrl from "@/assets/mayhem/kid_attack_cocking.mp3";
+import kidLaserPitchHigh from "@/assets/mayhem/kid_laser_pitch_high.mp3";
+import kidLaserPitchHighMid from "@/assets/mayhem/kid_laser_pitch_high_mid.mp3";
+import kidLaserPitchLow from "@/assets/mayhem/kid_laser_pitch_low.mp3";
+import kidLaserPitchLowMid from "@/assets/mayhem/kid_laser_pitch_low_mid.mp3";
+import kidLaserPitchOriginal from "@/assets/mayhem/kid_laser_pitch_original.mp3";
+import mataDeathSfxUrl from "@/assets/mayhem/mata_death.mp3";
+import { chooseOfficeDeathVideo, OFFICE_DEATH_VIDEOS } from "./officeDeathVideos";
 import doorOpen from "@/assets/manager/door_open.png.asset.json";
 import doorClosed from "@/assets/manager/door_closed.png.asset.json";
 import frontRoom from "@/assets/manager/front_room.png.asset.json";
@@ -12,13 +22,17 @@ import ceilingImg from "@/assets/manager/ceiling.png.asset.json";
 import ventImg from "@/assets/manager/vent.png.asset.json";
 import VentArtwork from "./VentArtwork";
 import shockSfxUrl from "@/assets/audio/Shock.ogg";
+import mataShockedSfxUrl from "@/assets/audio/mata_shocked.mp3";
 import nopeSfx from "@/assets/manager/nope.mp3.asset.json";
 import doorGifted from "@/assets/manager/door_gifted.png.asset.json";
 import metalWalkSfx from "@/assets/manager/metalwalk2.wav.asset.json";
 import knockSfx from "@/assets/manager/knock2.wav.asset.json";
 import ventWalkSfx from "@/assets/manager/ventwalk.wav.asset.json";
 import {
-  airRattle, drainAir, MATA_SHOCK_MS, approach, edgeZone, yawTargetForView, officePitch, ventStepsCrossed, OFFICE_MAX_YAW, viewForKey, type OfficeView,
+  drainAir, GIFTED_DOOR_CLOSE_MS, GIFTED_REOPEN_DEATH_MS, GIFTED_WAIT_MS,
+  KID_BLAST_MS, KID_DAMAGE, KID_TELEGRAPH_MS, MATA_DEATH_BLACK_MS, MATA_SHOCK_MS,
+  KID_SHOT_INTERVAL_MS, KID_SHOTS_PER_ATTACK, KID_WARNING_MS,
+  isLaserHit, mataRattleProfile, approach, edgeZone, yawTargetForView, officePitch, ventStepsCrossed, OFFICE_MAX_YAW, viewForKey, type OfficeView,
 } from "./managerOfficeRules";
 import { mayhemSfx } from "@/game/sfx";
 import DeskConsole from "./DeskConsole";
@@ -27,10 +41,23 @@ import { completeRound, startConsole, CONSOLE_TASKS, TASK_ROUNDS } from "./offic
 import "./managerOffice.css";
 
 const FACE_ASPECT = 553 / 949;
+type KidLaserState = "idle" | "telegraph" | "blast";
+const KID_ATTACK_WARNING_SOUNDS = [
+  kidAttackChargeSfxUrl,
+  kidAttackAuraSfxUrl,
+  kidAttackCockingSfxUrl,
+];
+const KID_LASER_BLAST_SOUNDS = [
+  kidLaserPitchOriginal,
+  kidLaserPitchLow,
+  kidLaserPitchLowMid,
+  kidLaserPitchHighMid,
+  kidLaserPitchHigh,
+];
 
 function vol() { return Math.max(0, Math.min(1, getSettings().sfxVolume ?? 0.7)); }
 function playOnce(url: string, v = 1) {
-  const a = new Audio(url); a.volume = vol() * v; a.play().catch(() => {});
+  const a = new Audio(url); a.volume = Math.max(0, Math.min(1, vol() * v)); a.play().catch(() => {});
 }
 function click() {
   try {
@@ -43,24 +70,14 @@ function click() {
     setTimeout(() => ctx.close(), 200);
   } catch { /* noop */ }
 }
-/** Short metallic vent rattle (one hit). */
-function rattle() {
-  try {
-    const ctx = new AudioContext();
-    const len = Math.floor(ctx.sampleRate * 0.06);
-    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len) ** 2;
-    const src = ctx.createBufferSource(); src.buffer = buf;
-    const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 900 + Math.random() * 600; bp.Q.value = 6;
-    const g = ctx.createGain(); g.gain.value = 0.5 * vol();
-    src.connect(bp).connect(g).connect(ctx.destination); src.start();
-    setTimeout(() => ctx.close(), 250);
-  } catch { /* noop */ }
+function playLaserBlast() {
+  const sound = KID_LASER_BLAST_SOUNDS[Math.floor(Math.random() * KID_LASER_BLAST_SOUNDS.length)];
+  playOnce(sound, 0.35);
 }
 /** Night 5 Manager's Office test room. Press "\" anywhere to open/close. No threats, no boss. */
 export default function ManagerOffice() {
   const [open, setOpen] = useState(false);
+  const [run, setRun] = useState(0);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "\\" || e.repeat) return;
@@ -72,12 +89,166 @@ export default function ManagerOffice() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
-  return open ? <OfficeRoom onExit={() => setOpen(false)} /> : null;
+  return open ? <OfficeRoom key={run} onExit={() => setOpen(false)} onRestart={() => setRun((r) => r + 1)} /> : null;
 }
 
-function OfficeRoom({ onExit }: { onExit: () => void }) {
+function OfficeDeathScreen({ onRestart }: { onRestart: () => void }) {
+  const [clip] = useState(() => chooseOfficeDeathVideo(OFFICE_DEATH_VIDEOS));
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [playbackFailed, setPlaybackFailed] = useState(false);
+  const [audioPlaybackBlocked, setAudioPlaybackBlocked] = useState(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    const audio = audioRef.current;
+    if (!video || !audio) {
+      setPlaybackFailed(true);
+      return;
+    }
+
+    let active = true;
+    video.muted = true;
+    audio.volume = vol();
+    void video.play().catch((error: unknown) => {
+      if (!active) return;
+      console.error("Death video playback failed", error);
+      setPlaybackFailed(true);
+    });
+    void audio.play().then(() => {
+      if (active) {
+        audio.currentTime = video.currentTime;
+        setAudioPlaybackBlocked(false);
+      }
+    }).catch((error: unknown) => {
+      if (!active) return;
+      console.error("Death soundtrack playback failed", error);
+      setAudioPlaybackBlocked(true);
+    });
+
+    return () => {
+      active = false;
+      video.pause();
+      audio.pause();
+    };
+  }, [clip]);
+
+  const syncAudio = () => {
+    const video = videoRef.current;
+    const audio = audioRef.current;
+    if (!video || !audio || audio.paused) return;
+    if (Math.abs(video.currentTime - audio.currentTime) > 0.15) {
+      audio.currentTime = video.currentTime;
+    }
+  };
+
+  const enableAudio = () => {
+    const video = videoRef.current;
+    const audio = audioRef.current;
+    if (!video || !audio) return;
+    audio.currentTime = video.currentTime;
+    void audio.play().then(() => {
+      setAudioPlaybackBlocked(false);
+    }).catch((error: unknown) => {
+      console.error("Death soundtrack playback failed", error);
+      setAudioPlaybackBlocked(true);
+    });
+  };
+
+  return (
+    <div className="mo-death" role="dialog" aria-label="You died">
+      <video
+        ref={videoRef}
+        src={clip.video}
+        muted
+        playsInline
+        onEnded={onRestart}
+        onTimeUpdate={syncAudio}
+        onError={() => setPlaybackFailed(true)}
+        className="mo-death-video"
+      />
+      <audio
+        ref={audioRef}
+        src={clip.audio}
+        preload="auto"
+        onError={() => setAudioPlaybackBlocked(true)}
+      />
+      {(audioPlaybackBlocked || playbackFailed) && (
+        <div className="mo-death-controls">
+          {audioPlaybackBlocked && <button className="mo-death-action" onClick={enableAudio}>Enable audio</button>}
+          {playbackFailed && <button className="mo-death-action" onClick={onRestart}>Restart night</button>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MataDeathScreen({ onRestart }: { onRestart: () => void }) {
+  const [phase, setPhase] = useState<"flash" | "black" | "video">("flash");
+  const [audioBlocked, setAudioBlocked] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  useEffect(() => {
+    if (phase !== "black") return;
+    const timer = window.setTimeout(() => setPhase("video"), MATA_DEATH_BLACK_MS);
+    return () => window.clearTimeout(timer);
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== "flash") return;
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.volume = vol();
+    void audio.play().then(() => setAudioBlocked(false)).catch((error: unknown) => {
+      console.error("NEO-MATA death sound playback failed", error);
+      setAudioBlocked(true);
+    });
+    return () => audio.pause();
+  }, [phase]);
+
+  const playDeathSound = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.currentTime = 0;
+    void audio.play().then(() => setAudioBlocked(false)).catch((error: unknown) => {
+      console.error("NEO-MATA death sound playback failed", error);
+      setAudioBlocked(true);
+    });
+  };
+
+  if (phase === "video") return <OfficeDeathScreen onRestart={onRestart} />;
+
+  return (
+    <div className={`mo-death${phase === "flash" ? " mo-mata-death" : ""}`} role="dialog" aria-label="You died">
+      {phase === "flash" && (
+        <>
+          <div className="mo-mata-death-flash" aria-hidden />
+          <audio
+            ref={audioRef}
+            src={mataDeathSfxUrl}
+            preload="auto"
+            onEnded={() => setPhase("black")}
+            onError={() => setAudioBlocked(true)}
+          />
+          {audioBlocked && <button className="mo-death-action" onClick={playDeathSound}>Play death sound</button>}
+        </>
+      )}
+    </div>
+  );
+}
+
+function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () => void }) {
   const [consoleProg, setConsoleProg] = useState(startConsole);
-  useOfficeMusic(consoleProg.task > 0 || consoleProg.done); // music begins once Task 1 lights the room
+  const [dead, setDead] = useState(false);
+  const deadRef = useRef(dead); deadRef.current = dead;
+  const [deathCause, setDeathCause] = useState<"gifted" | "mata" | null>(null);
+  const die = useCallback((cause: "gifted" | "mata" = "gifted") => {
+    if (deadRef.current) return;
+    deadRef.current = true;
+    setDeathCause(cause);
+    setDead(true);
+  }, []);
+  useOfficeMusic(!dead && (consoleProg.task > 0 || consoleProg.done)); // music begins once Task 1 lights the room
   const worldRef = useRef<HTMLDivElement>(null);
   const cursorX = useRef(0);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -90,14 +261,113 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
   const [view, setView] = useState<OfficeView>("desk");
   const viewRef = useRef(view); viewRef.current = view;
   const [size, setSize] = useState({ w: window.innerWidth, h: window.innerHeight });
+  const [kidLaser, setKidLaser] = useState<{ state: KidLaserState; y: number }>({ state: "idle", y: 0 });
+  const kidLaserRef = useRef(kidLaser); kidLaserRef.current = kidLaser;
+  const mouseYRef = useRef(window.innerHeight / 2);
+  const kidAttackActiveRef = useRef(false);
+  const kidWarningTimerRef = useRef<number | null>(null);
+  const kidTelegraphTimerRef = useRef<number | null>(null);
+  const kidBlastTimerRef = useRef<number | null>(null);
+  const kidShotTimerRef = useRef<number | null>(null);
+  const kidJoltTimerRef = useRef<number | null>(null);
+  const setKidLaserPhase = useCallback((state: KidLaserState, y: number) => {
+    kidLaserRef.current = { state, y };
+    setKidLaser(kidLaserRef.current);
+  }, []);
+  const triggerBilly = useCallback(() => {
+    if (deadRef.current || kidAttackActiveRef.current) return;
+    kidAttackActiveRef.current = true;
+    KID_ATTACK_WARNING_SOUNDS.forEach((sound) => playOnce(sound));
+    kidWarningTimerRef.current = window.setTimeout(() => {
+      kidWarningTimerRef.current = null;
+      const fireShot = (shot: number) => {
+        if (deadRef.current) {
+          kidAttackActiveRef.current = false;
+          setKidLaserPhase("idle", mouseYRef.current);
+          return;
+        }
+        const y = mouseYRef.current;
+        setKidLaserPhase("telegraph", y);
+        kidTelegraphTimerRef.current = window.setTimeout(() => {
+          kidTelegraphTimerRef.current = null;
+          if (deadRef.current) {
+            kidAttackActiveRef.current = false;
+            setKidLaserPhase("idle", y);
+            return;
+          }
+          if (isLaserHit(mouseYRef.current, y)) {
+            setHp((hp) => Math.max(0, hp - KID_DAMAGE));
+            stageRef.current?.classList.remove("mo-kid-hit");
+            void stageRef.current?.offsetWidth;
+            stageRef.current?.classList.add("mo-kid-hit");
+            if (kidJoltTimerRef.current !== null) window.clearTimeout(kidJoltTimerRef.current);
+            kidJoltTimerRef.current = window.setTimeout(() => {
+              stageRef.current?.classList.remove("mo-kid-hit");
+              kidJoltTimerRef.current = null;
+            }, 220);
+          }
+          setKidLaserPhase("blast", y);
+          playLaserBlast();
+          kidBlastTimerRef.current = window.setTimeout(() => {
+            kidBlastTimerRef.current = null;
+            setKidLaserPhase("idle", y);
+            if (shot + 1 >= KID_SHOTS_PER_ATTACK) {
+              kidAttackActiveRef.current = false;
+              return;
+            }
+            kidShotTimerRef.current = window.setTimeout(() => {
+              kidShotTimerRef.current = null;
+              fireShot(shot + 1);
+            }, KID_SHOT_INTERVAL_MS - KID_TELEGRAPH_MS - KID_BLAST_MS);
+          }, KID_BLAST_MS);
+        }, KID_TELEGRAPH_MS);
+      };
+      fireShot(0);
+    }, KID_WARNING_MS);
+  }, [setKidLaserPhase]);
+  useEffect(() => () => {
+    if (kidWarningTimerRef.current !== null) window.clearTimeout(kidWarningTimerRef.current);
+    if (kidTelegraphTimerRef.current !== null) window.clearTimeout(kidTelegraphTimerRef.current);
+    if (kidBlastTimerRef.current !== null) window.clearTimeout(kidBlastTimerRef.current);
+    if (kidShotTimerRef.current !== null) window.clearTimeout(kidShotTimerRef.current);
+    if (kidJoltTimerRef.current !== null) window.clearTimeout(kidJoltTimerRef.current);
+  }, []);
   const [doorShut, setDoorShut] = useState(false);
+  const doorShutRef = useRef(doorShut); doorShutRef.current = doorShut;
   const [gifted, setGifted] = useState(false);
-  // THE GIFTED: shut the door while she is there, she waits 3.5s, knocks, and leaves.
+  const giftedRef = useRef(gifted); giftedRef.current = gifted;
+  const giftedLeaveAtRef = useRef<number | null>(null);
+  // The Gifted kills if the door is left open too long or reopened while she waits.
   useEffect(() => {
-    if (!gifted || !doorShut) return;
-    const t = setTimeout(() => { playOnce(knockSfx.url); setGifted(false); }, 3500);
+    if (!gifted) {
+      giftedLeaveAtRef.current = null;
+      return;
+    }
+    const t = setTimeout(() => {
+      if (giftedRef.current && !doorShutRef.current) die();
+    }, GIFTED_DOOR_CLOSE_MS);
     return () => clearTimeout(t);
-  }, [gifted, doorShut]);
+  }, [gifted, die]);
+  useEffect(() => {
+    if (!gifted || dead) return;
+    if (doorShut) {
+      if (giftedLeaveAtRef.current === null) giftedLeaveAtRef.current = Date.now() + GIFTED_WAIT_MS;
+      const wait = Math.max(0, giftedLeaveAtRef.current - Date.now());
+      const t = setTimeout(() => {
+        if (giftedRef.current && doorShutRef.current && !deadRef.current) {
+          playOnce(knockSfx.url);
+          setGifted(false);
+        }
+      }, wait);
+      return () => clearTimeout(t);
+    }
+    if (giftedLeaveAtRef.current !== null) {
+      const t = setTimeout(() => {
+        if (giftedRef.current && !doorShutRef.current && !deadRef.current) die();
+      }, GIFTED_REOPEN_DEATH_MS);
+      return () => clearTimeout(t);
+    }
+  }, [gifted, doorShut, dead, die]);
   const [medUsed, setMedUsed] = useState(false);
   const [hp, setHp] = useState(50);
   const [tipOpen, setTipOpen] = useState(false);
@@ -110,9 +380,14 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
   const crawlAudio = useRef<HTMLAudioElement | null>(null);
   const overlayOpen = tipOpen || taskOpen;
   const shock = useCallback(() => {
-    playOnce(shockSfxUrl);
-    setMata((m) => (m === "vent" ? "shocked" : m === "crawl" ? "off" : m));
-  }, []);
+    if (mata === "vent") {
+      playOnce(shockSfxUrl);
+      playOnce(mataShockedSfxUrl, 1.8);
+      setMata("shocked");
+    } else if (mata === "crawl") {
+      setMata("off");
+    }
+  }, [mata]);
 
   // Flat panel size: each wall picture covers the screen when facing it.
   const PW = Math.max(size.w, size.h / FACE_ASPECT);
@@ -124,13 +399,16 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
     const onResize = () => setSize({ w: window.innerWidth, h: window.innerHeight });
     const onMove = (e: PointerEvent) => {
       cursorX.current = (e.clientX / window.innerWidth) * 2 - 1;
+      mouseYRef.current = e.clientY;
       stageRef.current?.style.setProperty("--fx", `${e.clientX}px`);
       stageRef.current?.style.setProperty("--fy", `${e.clientY}px`);
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.code === "Escape") { onExit(); return; }
+      if (deadRef.current) return;
       if (e.code === "KeyZ") { if (!e.repeat) { setFlash(true); click(); } return; }
       if (e.repeat) return;
+      if (e.code === "Digit2" || e.code === "Numpad2") { triggerBilly(); return; }
       if (viewRef.current === "ceiling" && (
         e.code === "Space" || e.key === " " || e.code === "KeyF" || e.key.toLowerCase() === "f"
       )) {
@@ -164,7 +442,7 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("keyup", onUp);
     };
-  }, [onExit, shock]);
+  }, [onExit, shock, triggerBilly]);
 
   // One stepper: smooth yaw/pitch toward their targets.
   const overlayRef = useRef(overlayOpen); overlayRef.current = overlayOpen;
@@ -210,28 +488,85 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
     return () => { a.pause(); crawlAudio.current = null; };
   }, [crawling]);
 
-  // Air drains while she sits in the vent; empty tank = she breaks in (death screen not added yet: costs HP).
+  // Air drains while she sits in the vent; an empty tank triggers NEO-MATA's death sequence.
   useEffect(() => {
-    if (mata !== "vent") return;
+    if (mata !== "vent" || dead) return;
     let last = performance.now();
     const id = setInterval(() => {
       const now = performance.now(); const dt = (now - last) / 1000; last = now;
       setAir((a) => drainAir(a, dt));
     }, 50);
     return () => clearInterval(id);
-  }, [mata]);
+  }, [mata, dead]);
   useEffect(() => {
-    if (mata === "vent" && air <= 0) { setHp((h) => Math.max(0, h - 25)); setMata("off"); setAir(100); }
-  }, [mata, air]);
-  // Rattles speed up from slow to ultra fast as air runs out.
+    if (mata === "vent" && air <= 0 && !dead) {
+      setMata("off");
+      die("mata");
+    }
+  }, [mata, air, dead, die]);
   const airRef = useRef(air); airRef.current = air;
   useEffect(() => {
-    if (mata !== "vent") return;
-    let t: ReturnType<typeof setTimeout>;
-    const loop = () => { rattle(); t = setTimeout(loop, airRattle(airRef.current).intervalMs); };
-    t = setTimeout(loop, airRattle(airRef.current).intervalMs);
-    return () => clearTimeout(t);
-  }, [mata]);
+    if (mata !== "vent" || dead) return;
+    let ctx: AudioContext | null = null;
+    let src: AudioBufferSourceNode | null = null;
+    let filter: BiquadFilterNode | null = null;
+    let gain: GainNode | null = null;
+    let startedAt = 0;
+
+    try {
+      ctx = new AudioContext();
+      startedAt = performance.now();
+      const length = ctx.sampleRate * 2;
+      const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      let body = 0;
+      let heldGrain = 0;
+      const holdEvery = Math.max(1, Math.round(ctx.sampleRate / 8000));
+      for (let i = 0; i < length; i++) {
+        if (i % holdEvery === 0) heldGrain = Math.random() * 2 - 1;
+        const grain = heldGrain;
+        body = body * 0.93 + grain * 0.07;
+        const sample = (body * 2.5 + grain * 0.15) * (0.7 + 0.3 * Math.sin(i * 0.002));
+        data[i] = Math.round(Math.max(-1, Math.min(1, sample)) * 127) / 127;
+      }
+
+      src = ctx.createBufferSource();
+      src.buffer = buffer;
+      src.loop = true;
+
+      filter = ctx.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(4200, ctx.currentTime);
+
+      gain = ctx.createGain();
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+
+      src.connect(filter).connect(gain).connect(ctx.destination);
+      src.start();
+      if (ctx.state === "suspended") void ctx.resume().catch(() => {});
+    } catch { /* noop */ }
+
+    const update = setInterval(() => {
+      if (!ctx || !src || !gain || !filter) return;
+      const rattle = mataRattleProfile(airRef.current);
+      const now = ctx.currentTime;
+      src.playbackRate.setTargetAtTime(rattle.playbackRate, now, 0.05);
+      filter.frequency.setTargetAtTime(rattle.cutoffHz, now, 0.05);
+      const fadeIn = Math.min(1, (performance.now() - startedAt) / 800);
+      gain.gain.setTargetAtTime(rattle.volume * vol() * fadeIn, now, 0.05);
+    }, 50);
+
+    return () => {
+      clearInterval(update);
+      try {
+        src?.stop();
+        src?.disconnect();
+        filter?.disconnect();
+        gain?.disconnect();
+        if (ctx && ctx.state !== "closed") void ctx.close().catch(() => {});
+      } catch { /* noop */ }
+    };
+  }, [mata, dead]);
   useEffect(() => {
     if (mata !== "shocked") return;
     const t = setTimeout(() => { setMata("off"); setAir(100); }, MATA_SHOCK_MS);
@@ -306,7 +641,7 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
       {/* HUD */}
       <div className="mo-hud">
         <div>TEST ROOM · HP {hp} · {consoleProg.done ? "TASKS DONE" : `TASK ${consoleProg.task + 1}/5 [${consoleProg.round}/${TASK_ROUNDS[CONSOLE_TASKS[consoleProg.task]]}]`}</div>
-        <div className="mo-hint">mouse to edges = look · W vent · S desk · A door · 1 test GIFTED · G console · E surge · hold Z light · \ or ESC exit</div>
+        <div className="mo-hint">mouse to edges = look · W vent · S desk · A door · 1 GIFTED · 2 NEO-KID laser · G console · E surge · hold Z light · \ or ESC exit</div>
         {view === "ceiling" && (
           <button className="mo-test" onClick={() => setMata((m) => (m === "off" ? "crawl" : "off"))}>
             {mata === "off" ? "test: NEO-MATA crawl" : "send NEO-MATA away"}
@@ -315,7 +650,7 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
       </div>
 
       {mata === "vent" && (
-        <div className="mo-air" style={{ "--shk": `${airRattle(air).shakePx}px` } as React.CSSProperties}>
+        <div className="mo-air" style={{ "--gauge-jitter": `${Math.min(1.5, (100 - air) * 0.015)}px` } as React.CSSProperties}>
           <div className="mo-air-label">AIR {Math.ceil(air)}%</div>
           <div className="mo-air-bar"><div style={{ width: `${air}%` }} /></div>
         </div>
@@ -325,6 +660,9 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
         ? <div className={`mo-dark${flash ? " lit" : ""}`} aria-hidden />
         : flash && <div className="mo-flash" aria-hidden />}
 
+      {kidLaser.state !== "idle" && (
+        <div className={`mo-kid-laser ${kidLaser.state}`} style={{ top: kidLaser.y }} aria-hidden />
+      )}
       {tipOpen && (
         <div className="mo-overlay" onClick={() => setTipOpen(false)}>
           <img src={finalTip.url} alt="Your final tip" className="mo-tip" draggable={false} />
@@ -334,6 +672,9 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
         <DeskConsole progress={consoleProg} onRound={advanceConsole}
           onClose={() => { mayhemSfx.terminalClose(); setTaskOpen(false); }} />
       )}
+      {dead && (deathCause === "mata"
+        ? <MataDeathScreen onRestart={onRestart} />
+        : <OfficeDeathScreen onRestart={onRestart} />)}
     </div>
   );
 }

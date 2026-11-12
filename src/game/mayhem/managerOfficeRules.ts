@@ -133,15 +133,39 @@ export function taskComplete(done: WireColor[]): boolean {
 }
 
 /** NEO-MATA vent air: full tank drains in this many seconds while she sits in the vent. */
-export const MATA_DRAIN_SECONDS = 20;
+export const MATA_DRAIN_SECONDS = 10;
+export type MataRattleProfile = { playbackRate: number; volume: number; cutoffHz: number };
+/** Keep the vent rattle slower and quieter as air runs out. */
+export function mataRattleProfile(air: number): MataRattleProfile {
+  const lack = 1 - Math.max(0, Math.min(100, air)) / 100;
+  return {
+    playbackRate: 0.55 + lack * 0.35,
+    volume: 0.06 + lack * 0.03,
+    cutoffHz: 3200 + lack * 1000,
+  };
+}
 /** Shock jolt on her vent picture lasts exactly this long. */
 export const MATA_SHOCK_MS = 500;
+/** Black pause between NEO-MATA's death flash and the death video. */
+export const MATA_DEATH_BLACK_MS = 3000;
+export const KID_TELEGRAPH_MS = 380;
+export const KID_BLAST_MS = 220;
+export const KID_DAMAGE = 25;
+export const KID_LASER_HALF_HEIGHT = 38;
+export const KID_WARNING_MS = 6100;
+export const KID_SHOTS_PER_ATTACK = 4;
+export const KID_SHOT_INTERVAL_MS = 800;
+/** Returns whether the cursor is inside the laser's vertical hit band. */
+export function isLaserHit(cursorY: number, laserY: number, halfHeight = KID_LASER_HALF_HEIGHT): boolean {
+  return Math.abs(cursorY - laserY) <= halfHeight;
+}
+/** Time to shut the door after The Gifted appears. */
+export const GIFTED_DOOR_CLOSE_MS = 4200;
+/** Time the door may stay open again while The Gifted waits outside. */
+export const GIFTED_REOPEN_DEATH_MS = 500;
+/** How long The Gifted waits behind a closed door before leaving. */
+export const GIFTED_WAIT_MS = 3500;
 /** Air left after `dt` seconds of draining (never below 0). */
 export function drainAir(air: number, dt: number): number {
   return Math.max(0, air - (100 / MATA_DRAIN_SECONDS) * dt);
-}
-/** Lower air = faster rattles and harder gauge shake: 700ms apart when full, 60ms when empty. */
-export function airRattle(air: number): { intervalMs: number; shakePx: number } {
-  const lack = 1 - Math.max(0, Math.min(100, air)) / 100;
-  return { intervalMs: Math.round(700 - 640 * lack * lack), shakePx: Math.round(lack * 8 * 10) / 10 };
 }

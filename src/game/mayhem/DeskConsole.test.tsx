@@ -26,4 +26,23 @@ describe("office wire completion", () => {
     expect(onRound).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "cyan plug" })).not.toBeDisabled();
   });
+
+  it("draws a sagging cable that follows the pointer and jiggles on connection", () => {
+    const onRound = vi.fn();
+    const { container } = render(<DeskConsole progress={{ task: 3, round: 0, done: false }} onRound={onRound} onClose={vi.fn()} />);
+    const svg = container.querySelector("svg.mo-wires")!;
+    vi.spyOn(svg, "getBoundingClientRect").mockReturnValue({
+      left: 0, top: 0, right: 100, bottom: 100, width: 100, height: 100, x: 0, y: 0, toJSON: () => ({}),
+    } as DOMRect);
+
+    fireEvent.click(screen.getByRole("button", { name: "cyan plug" }));
+    fireEvent(container.querySelector(".mo-con-wires")!, new MouseEvent("pointermove", {
+      bubbles: true, clientX: 80, clientY: 60,
+    }));
+    expect(container.querySelector("path.mo-wire-live")?.getAttribute("d")).toBe("M 12 12.5 Q 46 80 80 60");
+
+    fireEvent.click(screen.getByRole("button", { name: "cyan port" }));
+    expect(container.querySelector("path.mo-wire-jiggle")?.getAttribute("d")).toMatch(/^M 12 12\.5 Q /);
+    expect(onRound).not.toHaveBeenCalled();
+  });
 });
