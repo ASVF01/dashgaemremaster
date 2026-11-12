@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { mayhemSfx } from "@/game/sfx";
 import FlowPuzzle, { makeRandomFlowPairs } from "./minigames/FlowPuzzle";
 import { startingPower, upgradedProgress, type NightUpgrades } from "./merchantRules";
-import generatorArt from "@/assets/mayhem/generator-panel.png.asset.json";
+import GeneratorArtwork from "./GeneratorArtwork";
 import { Button } from "@/components/ui/button";
 import { useSettings } from "@/game/settings";
 import { useGeneratorMusic } from "./useGeneratorMusic";
@@ -188,7 +188,7 @@ export default function GeneratorPanel({ night, upgrades = {}, paused, closing =
       <div ref={lookRef} className="gen-look-layer">
       <div className="gen-panel">
         <div className={`gen-completion-view ${rewarding ? "gen-rewarding" : ""} ${rewarding && progress.doubled ? "gen-double-reward" : ""}`} style={{ animationPlayState: paused ? "paused" : "running" }}>
-        <img className="gen-art" src={generatorArt.url} alt="Stevenson’s Ultra Power Generator 9000, COMPANY PACE" draggable={false} />
+        <GeneratorArtwork className="gen-art" alt="Stevenson’s Ultra Power Generator 9000, COMPANY PACE" />
         <output className="gen-percent" aria-label="Generator progress">{Number(displayPercent.toFixed(1))}%</output>
         <div className="gen-progress" role="progressbar" aria-label="Generator power" aria-valuemin={0} aria-valuemax={100} aria-valuenow={displayPercent}>
           <div className="gen-progress-fill" style={{ width: `${displayPercent}%` }} />

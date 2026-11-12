@@ -14,7 +14,7 @@ import { resetAllProgress, getMayhemCheckpoint, getMayhemNight } from "@/game/pr
 import exploseAsset from "@/assets/audio/explose1.mp3.asset.json";
 import BgmPlayer from "@/game/BgmPlayer";
 import StarVanisher from "@/game/StarVanisher";
-import Shop from "@/game/Shop";
+import Shop from "@/game/Shop.tsx";
 import { SPRITE_GALLERY } from "@/game/sprites";
 import { useLevelStats, formatMs } from "@/game/levelStats";
 import { ChevronLeft, ChevronRight, LockKeyhole } from "lucide-react";

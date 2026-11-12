@@ -10,8 +10,8 @@ import utilFull from "@/assets/manager/util_desk_full.png.asset.json";
 import utilUsed from "@/assets/manager/util_desk_used.png.asset.json";
 import ceilingImg from "@/assets/manager/ceiling.png.asset.json";
 import ventImg from "@/assets/manager/vent.png.asset.json";
-import ventMataImg from "@/assets/manager/vent_mata.png.asset.json";
-import ventMataShockImg from "@/assets/manager/vent_mata_shocked.png.asset.json";
+import VentArtwork from "./VentArtwork";
+import shockSfxUrl from "@/assets/audio/Shock.ogg";
 import nopeSfx from "@/assets/manager/nope.mp3.asset.json";
 import doorGifted from "@/assets/manager/door_gifted.png.asset.json";
 import metalWalkSfx from "@/assets/manager/metalwalk2.wav.asset.json";
@@ -58,19 +58,6 @@ function rattle() {
     setTimeout(() => ctx.close(), 250);
   } catch { /* noop */ }
 }
-function zap() {
-  try {
-    const ctx = new AudioContext();
-    const o = ctx.createOscillator(); const g = ctx.createGain();
-    o.type = "sawtooth"; o.frequency.setValueAtTime(90, ctx.currentTime);
-    o.frequency.linearRampToValueAtTime(40, ctx.currentTime + 0.35);
-    g.gain.setValueAtTime(0.35 * vol(), ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-    o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.42);
-    setTimeout(() => ctx.close(), 600);
-  } catch { /* noop */ }
-}
-
 /** Night 5 Manager's Office test room. Press "\" anywhere to open/close. No threats, no boss. */
 export default function ManagerOffice() {
   const [open, setOpen] = useState(false);
@@ -94,7 +81,10 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
   const worldRef = useRef<HTMLDivElement>(null);
   const cursorX = useRef(0);
   const stageRef = useRef<HTMLDivElement>(null);
-  const ventRef = useRef<HTMLImageElement>(null);
+  const ventRef = useRef<SVGSVGElement | HTMLImageElement>(null);
+  const assignVentRef = useCallback((node: SVGSVGElement | HTMLImageElement | null) => {
+    ventRef.current = node;
+  }, []);
   const lookRight = useRef(false);
   const [flash, setFlash] = useState(false);
   const [view, setView] = useState<OfficeView>("desk");
@@ -119,6 +109,10 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
   const [air, setAir] = useState(100);
   const crawlAudio = useRef<HTMLAudioElement | null>(null);
   const overlayOpen = tipOpen || taskOpen;
+  const shock = useCallback(() => {
+    playOnce(shockSfxUrl);
+    setMata((m) => (m === "vent" ? "shocked" : m === "crawl" ? "off" : m));
+  }, []);
 
   // Flat panel size: each wall picture covers the screen when facing it.
   const PW = Math.max(size.w, size.h / FACE_ASPECT);
@@ -137,6 +131,13 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
       if (e.code === "Escape") { onExit(); return; }
       if (e.code === "KeyZ") { if (!e.repeat) { setFlash(true); click(); } return; }
       if (e.repeat) return;
+      if (viewRef.current === "ceiling" && (
+        e.code === "Space" || e.key === " " || e.code === "KeyF" || e.key.toLowerCase() === "f"
+      )) {
+        e.preventDefault();
+        shock();
+        return;
+      }
       if (e.code === "Digit1" || e.code === "Numpad1") {
         setGifted((g) => { if (!g) playOnce(metalWalkSfx.url); return true; });
         return;
@@ -163,7 +164,7 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("keyup", onUp);
     };
-  }, [onExit]);
+  }, [onExit, shock]);
 
   // One stepper: smooth yaw/pitch toward their targets.
   const overlayRef = useRef(overlayOpen); overlayRef.current = overlayOpen;
@@ -185,7 +186,7 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
         const t = a.currentTime;
         if (ventStepsCrossed(audioT, t) > 0 && ventRef.current) {
           const v = ventRef.current;
-          v.classList.remove("mo-shake"); void v.offsetWidth; v.classList.add("mo-shake");
+          v.classList.remove("mo-shake"); void v.getBoundingClientRect(); v.classList.add("mo-shake");
         }
         audioT = t;
       } else audioT = 0;
@@ -236,7 +237,7 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
     const t = setTimeout(() => { setMata("off"); setAir(100); }, MATA_SHOCK_MS);
     return () => clearTimeout(t);
   }, [mata]);
-  const shock = () => { zap(); setMata((m) => (m === "vent" ? "shocked" : m === "crawl" ? "off" : m)); };
+
 
   // Flat panel at grid column col (-1 left, 0 front, 1 right) and row (0 room, -1 ceiling).
   const panel = (col: number, row = 0): React.CSSProperties => {
@@ -295,9 +296,9 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
         {/* CEILING: one strip above all three walls, vent above the desk */}
         <div className="mo-face" style={panel(0, -1)}>
           <img src={ceilingImg.url} alt="Ceiling" draggable={false} />
-          <img ref={ventRef} src={mata === "vent" ? ventMataImg.url : mata === "shocked" ? ventMataShockImg.url : ventImg.url}
-            alt={mata === "vent" || mata === "shocked" ? "NEO-MATA in the vent" : "Vent"} draggable={false}
-            className={`mo-vent${mata === "shocked" ? " mo-mata-shocked" : ""}`} />
+          <VentArtwork onVentRef={assignVentRef} src={ventImg.url}
+            alt={mata === "vent" || mata === "shocked" ? "NEO-MATA in the vent" : "Vent"}
+            present={mata === "vent" || mata === "shocked"} shocked={mata === "shocked"} />
           <button className="mo-shock" onClick={shock}>SHOCK</button>
         </div>
       </div>

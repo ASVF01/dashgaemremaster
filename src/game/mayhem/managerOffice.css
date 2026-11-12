@@ -1,6 +1,6 @@
 .mo-stage { position: fixed; inset: 0; z-index: 90; overflow: hidden; background: hsl(0 0% 2%); cursor: default; }
 .mo-world { position: absolute; left: 50%; top: 50%; width: 0; height: 0; will-change: transform; transform-style: preserve-3d; }
-.mo-face { position: absolute; left: 0; top: 0; overflow: hidden; backface-visibility: hidden; }
+.mo-face { position: absolute; left: 0; top: 0; overflow: visible; backface-visibility: hidden; }
 .mo-face > img { object-fit: cover; }
 .mo-desk { position: absolute; left: 15%; bottom: 0; width: 70%; aspect-ratio: 707 / 312; }
 .mo-util-desk { position: absolute; left: 0; bottom: 0; width: 100%; aspect-ratio: 949 / 207; }
@@ -18,6 +18,7 @@
 .mo-hot:hover { outline: 3px dashed hsl(0 0% 100% / 0.35); outline-offset: 2px; }
 .mo-vent { position: absolute; left: 40%; top: 38%; width: 20%; height: auto !important; inset: auto; }
 .mo-face > img.mo-vent { inset: auto; left: 40%; top: 38%; width: 20%; height: auto; }
+.mo-face > svg.mo-vent { left: 40%; top: 38%; width: 20%; height: auto; }
 
 @keyframes mo-shake {
   0% { transform: translate(-1.2%, 0.8%) rotate(-0.6deg); }
@@ -30,6 +31,7 @@
   background: hsl(0 80% 46%); color: hsl(0 0% 100%);
   font-family: "Permanent Marker", system-ui, sans-serif; font-size: 1.6vw;
   box-shadow: 0 0.6vw 0 hsl(0 70% 22%); cursor: pointer;
+  pointer-events: auto; z-index: 10;
 }
 .mo-shock:active { transform: translateY(0.4vw); box-shadow: 0 0.2vw 0 hsl(0 70% 22%); }
 .mo-hud { position: fixed; left: 16px; top: 14px; color: hsl(0 0% 92%); font: 600 14px ui-monospace, monospace; z-index: 2; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
@@ -154,7 +156,7 @@
 .mo-pw-cable path { stroke: hsl(var(--select-black)); stroke-width: 11; }
 
 /* NEO-MATA: big horizontal shock shake that calms down over 0.5s */
-.mo-face > img.mo-mata-shocked { animation: mo-mata-zap 0.5s linear 1; }
+.mo-face > .mo-mata-shocked { animation: mo-mata-zap 0.5s linear 1; }
 @keyframes mo-mata-zap {
   0% { transform: translateX(0); } 6% { transform: translateX(-9%); } 13% { transform: translateX(8%); }
   21% { transform: translateX(-7%); } 30% { transform: translateX(5.5%); } 40% { transform: translateX(-4%); }
@@ -169,7 +171,7 @@
 
 /* Task 1: the real Stevenson generator beside the console; lever + crank live in its drawn box */
 .mo-pw .mo-stv { position: absolute; left: 0; top: 10px; width: 66%; aspect-ratio: 686 / 389; }
-.mo-stv > img { position: absolute; inset: 0; width: 100%; height: 100%; user-select: none; image-rendering: pixelated; }
+.mo-stv > img, .mo-stv > .mo-stv-art { position: absolute; inset: 0; width: 100%; height: 100%; user-select: none; image-rendering: pixelated; }
 .mo-stv-bar { position: absolute; left: 14.43%; top: 20.82%; width: 63.7%; height: 4.1%; overflow: hidden; }
 .mo-stv-bar div { height: 100%; background: hsl(130 80% 55%); transition: width 0.08s linear; }
 .mo-stv-box { position: absolute; left: 8%; top: 31%; width: 84%; height: 59%; display: flex; align-items: center; justify-content: space-around; }

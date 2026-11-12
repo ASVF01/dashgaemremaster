@@ -3,7 +3,7 @@ import { getSettings } from "@/game/settings";
 import { mayhemSfx } from "@/game/sfx";
 import windupSfx from "@/assets/crank_windup.wav.asset.json";
 import lightsSfx from "@/assets/lights_on.mp3.asset.json";
-import generatorArt from "@/assets/mayhem/generator-panel.png.asset.json";
+import GeneratorArtwork from "./GeneratorArtwork";
 import { shuffledPorts, taskComplete, tryConnect, WIRE_COLORS, type WireColor } from "./managerOfficeRules";
 import {
   addSurge, CONSOLE_TASKS, makeCodeRound, makeSimonSequence, SIMON_BUTTONS, SURGE_HOLD_PER_SEC, SURGE_TAP, TASK_ROUNDS,
@@ -141,7 +141,7 @@ function PowerTask({ onDone }: { onDone: () => void }) {
     <div className={`mo-pw ${lights ? "lit" : ""}`} ref={rigRef}>
       {/* The actual Stevenson's Ultra Power Generator 9000, sitting next to the console */}
       <div ref={genRef} className={`mo-stv ${plugged ? "live" : ""}`}>
-        <img src={generatorArt.url} alt="Stevenson's Ultra Power Generator 9000" draggable={false} />
+        <GeneratorArtwork className="mo-stv-art" />
         <div className="mo-stv-bar"><div style={{ width: `${charge}%` }} /></div>
         <div className="mo-stv-box">
           <button className={`mo-pw-lever ${sw ? "on" : ""}`} disabled={sw} onClick={() => { setSw(true); snap(); hum.start(); }} aria-label="Flip power switch">
