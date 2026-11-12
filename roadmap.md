@@ -1,5 +1,9 @@
 # Roadmap
 
+- [x] Night 5 Task 1 on the real Stevenson generator (switch + crank in its box, plug into console, rising hum); office music starts only after Task 1.
+- [x] NEO-MATA test: crawl -> appears in vent (user art) -> shaking air gauge with accelerating rattles -> SHOCK swaps to shocked art with 0.5s calming horizontal shake.
+- [ ] Death screen / death video for the office: on hold by request (empty air costs 25 HP for now).
+
 - [ ] Finish Task 4 after one matched wire board, remove both table shadows, and add the supplied dry bitcrushed office soundtrack at 0.82× speed; verify the full console flow and music lifecycle.
 
 - [x] Audit approved outstanding requests; deferred art, Night 5 brainstorming, desktop packaging and promotion remain untouched. Dust artwork already renders untinted.

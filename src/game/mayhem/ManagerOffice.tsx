@@ -10,13 +10,15 @@ import utilFull from "@/assets/manager/util_desk_full.png.asset.json";
 import utilUsed from "@/assets/manager/util_desk_used.png.asset.json";
 import ceilingImg from "@/assets/manager/ceiling.png.asset.json";
 import ventImg from "@/assets/manager/vent.png.asset.json";
+import ventMataImg from "@/assets/manager/vent_mata.png.asset.json";
+import ventMataShockImg from "@/assets/manager/vent_mata_shocked.png.asset.json";
 import nopeSfx from "@/assets/manager/nope.mp3.asset.json";
 import doorGifted from "@/assets/manager/door_gifted.png.asset.json";
 import metalWalkSfx from "@/assets/manager/metalwalk2.wav.asset.json";
 import knockSfx from "@/assets/manager/knock2.wav.asset.json";
 import ventWalkSfx from "@/assets/manager/ventwalk.wav.asset.json";
 import {
-  approach, edgeZone, yawTargetForView, officePitch, ventStepsCrossed, OFFICE_MAX_YAW, viewForKey, type OfficeView,
+  airRattle, drainAir, MATA_SHOCK_MS, approach, edgeZone, yawTargetForView, officePitch, ventStepsCrossed, OFFICE_MAX_YAW, viewForKey, type OfficeView,
 } from "./managerOfficeRules";
 import { mayhemSfx } from "@/game/sfx";
 import DeskConsole from "./DeskConsole";
@@ -39,6 +41,21 @@ function click() {
     g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.03);
     o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.04);
     setTimeout(() => ctx.close(), 200);
+  } catch { /* noop */ }
+}
+/** Short metallic vent rattle (one hit). */
+function rattle() {
+  try {
+    const ctx = new AudioContext();
+    const len = Math.floor(ctx.sampleRate * 0.06);
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len) ** 2;
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 900 + Math.random() * 600; bp.Q.value = 6;
+    const g = ctx.createGain(); g.gain.value = 0.5 * vol();
+    src.connect(bp).connect(g).connect(ctx.destination); src.start();
+    setTimeout(() => ctx.close(), 250);
   } catch { /* noop */ }
 }
 function zap() {
@@ -72,7 +89,8 @@ export default function ManagerOffice() {
 }
 
 function OfficeRoom({ onExit }: { onExit: () => void }) {
-  useOfficeMusic();
+  const [consoleProg, setConsoleProg] = useState(startConsole);
+  useOfficeMusic(consoleProg.task > 0 || consoleProg.done); // music begins once Task 1 lights the room
   const worldRef = useRef<HTMLDivElement>(null);
   const cursorX = useRef(0);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -94,9 +112,11 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
   const [hp, setHp] = useState(50);
   const [tipOpen, setTipOpen] = useState(false);
   const [taskOpen, setTaskOpen] = useState(true); // Task 1 is the first thing the player does
-  const [consoleProg, setConsoleProg] = useState(startConsole);
   const advanceConsole = useCallback(() => setConsoleProg(completeRound), []);
-  const [crawling, setCrawling] = useState(false);
+  // NEO-MATA: crawl (vent jolts per step) -> sits in the vent draining air -> SHOCK sends her off.
+  const [mata, setMata] = useState<"off" | "crawl" | "vent" | "shocked">("off");
+  const crawling = mata === "crawl";
+  const [air, setAir] = useState(100);
   const crawlAudio = useRef<HTMLAudioElement | null>(null);
   const overlayOpen = tipOpen || taskOpen;
 
@@ -183,11 +203,40 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
   useEffect(() => {
     if (!crawling) return;
     const a = new Audio(ventWalkSfx.url); a.loop = false; a.volume = vol();
-    a.onended = () => setCrawling(false);
+    a.onended = () => setMata((m) => (m === "crawl" ? "vent" : m));
     a.play().catch(() => {});
     crawlAudio.current = a;
     return () => { a.pause(); crawlAudio.current = null; };
   }, [crawling]);
+
+  // Air drains while she sits in the vent; empty tank = she breaks in (death screen not added yet: costs HP).
+  useEffect(() => {
+    if (mata !== "vent") return;
+    let last = performance.now();
+    const id = setInterval(() => {
+      const now = performance.now(); const dt = (now - last) / 1000; last = now;
+      setAir((a) => drainAir(a, dt));
+    }, 50);
+    return () => clearInterval(id);
+  }, [mata]);
+  useEffect(() => {
+    if (mata === "vent" && air <= 0) { setHp((h) => Math.max(0, h - 25)); setMata("off"); setAir(100); }
+  }, [mata, air]);
+  // Rattles speed up from slow to ultra fast as air runs out.
+  const airRef = useRef(air); airRef.current = air;
+  useEffect(() => {
+    if (mata !== "vent") return;
+    let t: ReturnType<typeof setTimeout>;
+    const loop = () => { rattle(); t = setTimeout(loop, airRattle(airRef.current).intervalMs); };
+    t = setTimeout(loop, airRattle(airRef.current).intervalMs);
+    return () => clearTimeout(t);
+  }, [mata]);
+  useEffect(() => {
+    if (mata !== "shocked") return;
+    const t = setTimeout(() => { setMata("off"); setAir(100); }, MATA_SHOCK_MS);
+    return () => clearTimeout(t);
+  }, [mata]);
+  const shock = () => { zap(); setMata((m) => (m === "vent" ? "shocked" : m === "crawl" ? "off" : m)); };
 
   // Flat panel at grid column col (-1 left, 0 front, 1 right) and row (0 room, -1 ceiling).
   const panel = (col: number, row = 0): React.CSSProperties => {
@@ -246,8 +295,10 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
         {/* CEILING: one strip above all three walls, vent above the desk */}
         <div className="mo-face" style={panel(0, -1)}>
           <img src={ceilingImg.url} alt="Ceiling" draggable={false} />
-          <img ref={ventRef} src={ventImg.url} alt="Vent" draggable={false} className="mo-vent" />
-          <button className="mo-shock" onClick={() => { zap(); setCrawling(false); }}>SHOCK</button>
+          <img ref={ventRef} src={mata === "vent" ? ventMataImg.url : mata === "shocked" ? ventMataShockImg.url : ventImg.url}
+            alt={mata === "vent" || mata === "shocked" ? "NEO-MATA in the vent" : "Vent"} draggable={false}
+            className={`mo-vent${mata === "shocked" ? " mo-mata-shocked" : ""}`} />
+          <button className="mo-shock" onClick={shock}>SHOCK</button>
         </div>
       </div>
 
@@ -256,11 +307,18 @@ function OfficeRoom({ onExit }: { onExit: () => void }) {
         <div>TEST ROOM · HP {hp} · {consoleProg.done ? "TASKS DONE" : `TASK ${consoleProg.task + 1}/5 [${consoleProg.round}/${TASK_ROUNDS[CONSOLE_TASKS[consoleProg.task]]}]`}</div>
         <div className="mo-hint">mouse to edges = look · W vent · S desk · A door · 1 test GIFTED · G console · E surge · hold Z light · \ or ESC exit</div>
         {view === "ceiling" && (
-          <button className="mo-test" onClick={() => setCrawling((c) => !c)}>
-            {crawling ? "stop crawl" : "test: NEO-MATA crawl"}
+          <button className="mo-test" onClick={() => setMata((m) => (m === "off" ? "crawl" : "off"))}>
+            {mata === "off" ? "test: NEO-MATA crawl" : "send NEO-MATA away"}
           </button>
         )}
       </div>
+
+      {mata === "vent" && (
+        <div className="mo-air" style={{ "--shk": `${airRattle(air).shakePx}px` } as React.CSSProperties}>
+          <div className="mo-air-label">AIR {Math.ceil(air)}%</div>
+          <div className="mo-air-bar"><div style={{ width: `${air}%` }} /></div>
+        </div>
+      )}
 
       {consoleProg.task === 0 && !consoleProg.done
         ? <div className={`mo-dark${flash ? " lit" : ""}`} aria-hidden />

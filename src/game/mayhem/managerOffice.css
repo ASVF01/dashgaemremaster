@@ -152,3 +152,32 @@
 .mo-pw-label { font-size: 8px; }
 .mo-pw-lever, .mo-pw-socket { border: 4px solid hsl(var(--select-black)); outline: 2px solid hsl(var(--mo-crt-ink)); }
 .mo-pw-cable path { stroke: hsl(var(--select-black)); stroke-width: 11; }
+
+/* NEO-MATA: big horizontal shock shake that calms down over 0.5s */
+.mo-face > img.mo-mata-shocked { animation: mo-mata-zap 0.5s linear 1; }
+@keyframes mo-mata-zap {
+  0% { transform: translateX(0); } 6% { transform: translateX(-9%); } 13% { transform: translateX(8%); }
+  21% { transform: translateX(-7%); } 30% { transform: translateX(5.5%); } 40% { transform: translateX(-4%); }
+  52% { transform: translateX(2.6%); } 65% { transform: translateX(-1.5%); } 80% { transform: translateX(0.7%); } 100% { transform: translateX(0); }
+}
+/* Vent air gauge, ink style; --shk grows as the air runs out */
+.mo-air { position: fixed; left: 50%; top: 18px; translate: -50% 0; z-index: 2; width: min(360px, 70vw); font-family: 'Press Start 2P', monospace; color: hsl(0 0% 96%); animation: mo-air-rattle 0.09s steps(2) infinite; filter: url(#mo-ink-wobble); }
+.mo-air-label { font-size: 11px; margin-bottom: 6px; text-shadow: 2px 2px 0 hsl(0 0% 0%); }
+.mo-air-bar { height: 22px; border: 5px solid hsl(0 0% 0%); outline: 2px solid hsl(0 0% 96%); border-radius: 6px 10px 5px 9px; background: hsl(0 0% 8%); overflow: hidden; }
+.mo-air-bar div { height: 100%; background: repeating-linear-gradient(-45deg, hsl(190 85% 60%) 0 6px, hsl(190 85% 45%) 6px 10px); }
+@keyframes mo-air-rattle { 0% { transform: translate(calc(var(--shk) * -1), calc(var(--shk) * 0.4)); } 100% { transform: translate(var(--shk), calc(var(--shk) * -0.4)); } }
+
+/* Task 1: the real Stevenson generator beside the console; lever + crank live in its drawn box */
+.mo-pw .mo-stv { position: absolute; left: 0; top: 10px; width: 66%; aspect-ratio: 686 / 389; }
+.mo-stv > img { position: absolute; inset: 0; width: 100%; height: 100%; user-select: none; image-rendering: pixelated; }
+.mo-stv-bar { position: absolute; left: 14.43%; top: 20.82%; width: 63.7%; height: 4.1%; overflow: hidden; }
+.mo-stv-bar div { height: 100%; background: hsl(130 80% 55%); transition: width 0.08s linear; }
+.mo-stv-box { position: absolute; left: 8%; top: 31%; width: 84%; height: 59%; display: flex; align-items: center; justify-content: space-around; }
+.mo-stv.live .mo-stv-box { animation: mo-stv-hum 0.12s steps(2) infinite; }
+@keyframes mo-stv-hum { 0% { translate: 0 0; } 100% { translate: 0.6px -0.4px; } }
+.mo-stv-box .mo-pw-crank { position: static; transform: none; width: auto; }
+.mo-stv-box .mo-pw-hub { width: 104px; height: 104px; border: 4px dashed hsl(0 0% 96%); }
+.mo-stv-box .mo-pw-crankarm::before { height: 44px; background: hsl(0 0% 96%); }
+.mo-stv-box .mo-pw-leds { flex-direction: column; }
+.mo-pw .mo-pw-console { top: 50px; right: 0; width: 110px; }
+.mo-pw-hint { position: absolute; left: 0; right: 0; bottom: 0; text-align: center; font-size: 11px; }

@@ -3,6 +3,7 @@ import { getSettings } from "@/game/settings";
 import { mayhemSfx } from "@/game/sfx";
 import windupSfx from "@/assets/crank_windup.wav.asset.json";
 import lightsSfx from "@/assets/lights_on.mp3.asset.json";
+import generatorArt from "@/assets/mayhem/generator-panel.png.asset.json";
 import { shuffledPorts, taskComplete, tryConnect, WIRE_COLORS, type WireColor } from "./managerOfficeRules";
 import {
   addSurge, CONSOLE_TASKS, makeCodeRound, makeSimonSequence, SIMON_BUTTONS, SURGE_HOLD_PER_SEC, SURGE_TAP, TASK_ROUNDS,
@@ -72,6 +73,8 @@ function PowerTask({ onDone }: { onDone: () => void }) {
   const rigRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<HTMLDivElement>(null);
   const hubRef = useRef<HTMLDivElement>(null);
+  const genRef = useRef<HTMLDivElement>(null);
+  const hum = useHum();
   const crankLast = useRef<number | null>(null);
   const nextClick = useRef(30);
   const charge = Math.min(100, (angle / 360) * CRANK_PER_TURN);
@@ -81,7 +84,7 @@ function PowerTask({ onDone }: { onDone: () => void }) {
   const doneTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (charge < 100 || doneTimer.current != null) return;
-    setLights(true); sfx(lightsSfx.url); mayhemSfx.generatorImpact(false);
+    setLights(true); hum.stop(); sfx(lightsSfx.url); mayhemSfx.generatorImpact(false);
     doneTimer.current = setTimeout(onDone, 0); // lights come on the instant the crank finishes
   }, [charge, onDone]);
 
@@ -99,7 +102,7 @@ function PowerTask({ onDone }: { onDone: () => void }) {
     const s = socketRef.current!.getBoundingClientRect();
     const near = Math.hypot(e.clientX - (s.left + s.width / 2), e.clientY - (s.top + s.height / 2)) < 60;
     setPlug(null);
-    if (near) { setPlugged(true); snap(); }
+    if (near) { setPlugged(true); snap(); mayhemSfx.generatorImpact(false); }
   };
 
   const hubAngle = (e: React.PointerEvent) => {
@@ -119,33 +122,43 @@ function PowerTask({ onDone }: { onDone: () => void }) {
     setAngle((prev) => {
       const n = prev + d;
       if (n >= nextClick.current) { nextClick.current = n + 45; sfx(windupSfx.url, 0.8); }
+      hum.set(Math.min(100, (n / 360) * CRANK_PER_TURN));
       return n;
     });
   };
   const crankUp = () => { crankLast.current = null; };
 
-  // Plug head position: hanging off Stevenson when idle, under finger when dragging, in socket when plugged.
+  // Plug head: hanging off the Stevenson generator's side when idle, under the finger while dragging, seated when plugged.
   const rig = rigRef.current?.getBoundingClientRect();
   const sock = socketRef.current?.getBoundingClientRect();
-  const home = { x: 70, y: 150 };
+  const gen = genRef.current?.getBoundingClientRect();
+  const src = rig && gen ? { x: gen.right - rig.left - 4, y: gen.top - rig.top + gen.height * 0.62 } : { x: 380, y: 140 };
+  const home = { x: src.x + 34, y: src.y + 70 };
   const head = plugged && rig && sock ? { x: sock.left - rig.left + sock.width / 2, y: sock.top - rig.top + sock.height / 2 } : plug ?? home;
-  const src = { x: 70, y: 96 };
-  const midY = Math.max(src.y, head.y) + 50;
+  const midY = Math.max(src.y, head.y) + 60;
 
   return (
     <div className={`mo-pw ${lights ? "lit" : ""}`} ref={rigRef}>
-      <svg className="mo-pw-cable" width="100%" height="100%">
-        <path d={`M${src.x},${src.y} C${src.x},${midY} ${head.x},${midY} ${head.x},${head.y}`} />
-      </svg>
-
-      <div className="mo-pw-gen">
-        <div className="mo-pw-label">STEVENSON 9000</div>
-        <button className={`mo-pw-lever ${sw ? "on" : ""}`} disabled={sw} onClick={() => { setSw(true); snap(); }} aria-label="Flip power switch">
-          <span className="mo-pw-arm" />
-        </button>
-        <div className="mo-pw-leds"><i className={sw ? "" : "red"} /><i className={sw ? "green" : ""} /></div>
+      {/* The actual Stevenson's Ultra Power Generator 9000, sitting next to the console */}
+      <div ref={genRef} className={`mo-stv ${plugged ? "live" : ""}`}>
+        <img src={generatorArt.url} alt="Stevenson's Ultra Power Generator 9000" draggable={false} />
+        <div className="mo-stv-bar"><div style={{ width: `${charge}%` }} /></div>
+        <div className="mo-stv-box">
+          <button className={`mo-pw-lever ${sw ? "on" : ""}`} disabled={sw} onClick={() => { setSw(true); snap(); hum.start(); }} aria-label="Flip power switch">
+            <span className="mo-pw-arm" />
+          </button>
+          <div className={`mo-pw-crank ${plugged ? "" : "dead"}`}>
+            <div ref={hubRef} className="mo-pw-hub" onPointerDown={crankDown} onPointerMove={crankMove} onPointerUp={crankUp} onPointerCancel={crankUp}>
+              <div className="mo-pw-crankarm" style={{ transform: `rotate(${angle}deg)` }}><span className="mo-pw-knob" /></div>
+            </div>
+          </div>
+          <div className="mo-pw-leds"><i className={sw ? "" : "red"} /><i className={plugged ? "green" : ""} /></div>
+        </div>
       </div>
 
+      <svg className="mo-pw-cable" width="100%" height="100%">
+        <path d={`M${src.x},${src.y} C${src.x + 40},${midY} ${head.x},${midY} ${head.x},${head.y}`} />
+      </svg>
       <div className={`mo-pw-plug ${plug ? "held" : ""} ${!sw ? "dead" : ""}`} style={{ left: head.x, top: head.y }}
         onPointerDown={plugDown} onPointerMove={plugMove} onPointerUp={plugUp} aria-label="Power plug" />
 
@@ -154,17 +167,39 @@ function PowerTask({ onDone }: { onDone: () => void }) {
         <div ref={socketRef} className={`mo-pw-socket ${plugged ? "on" : ""}`}><b /><b /></div>
       </div>
 
-      <div className={`mo-pw-crank ${plugged ? "" : "dead"}`}>
-        <div ref={hubRef} className="mo-pw-hub" onPointerDown={crankDown} onPointerMove={crankMove} onPointerUp={crankUp} onPointerCancel={crankUp}>
-          <div className="mo-pw-crankarm" style={{ transform: `rotate(${angle}deg)` }}><span className="mo-pw-knob" /></div>
-        </div>
-        <div className="mo-pw-gauge"><div style={{ width: `${charge}%` }} /></div>
-        <div className="mo-con-hint">
-          {lights ? "LIGHTS ON!" : !sw ? "flip the switch" : !plugged ? "drag the plug into the console" : `spin the crank clockwise · ${Math.floor(charge)}%`}
-        </div>
+      <div className="mo-con-hint mo-pw-hint">
+        {lights ? "LIGHTS ON!" : !sw ? "flip the Stevenson's switch" : !plugged ? "plug the Stevenson into the console" : `crank the Stevenson · ${Math.floor(charge)}%`}
       </div>
     </div>
   );
+}
+
+/** Generator hum: starts on the switch, rises in pitch and volume with the crank charge. */
+function useHum() {
+  const ref = useRef<{ ctx: AudioContext; o: OscillatorNode; g: GainNode } | null>(null);
+  useEffect(() => () => { const h = ref.current; if (h) { try { h.o.stop(); } catch { /* */ } void h.ctx.close(); } }, []);
+  return {
+    start() {
+      if (ref.current) return;
+      try {
+        const ctx = new AudioContext(); const o = ctx.createOscillator(); const g = ctx.createGain();
+        const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 500;
+        o.type = "sawtooth"; o.frequency.value = 38; g.gain.value = 0.04 * (getSettings().sfxVolume ?? 0.7);
+        o.connect(lp).connect(g).connect(ctx.destination); o.start(); ref.current = { ctx, o, g };
+      } catch { /* noop */ }
+    },
+    set(charge: number) {
+      const h = ref.current; if (!h) return;
+      const t = h.ctx.currentTime;
+      h.o.frequency.setTargetAtTime(38 + charge * 1.4, t, 0.08);
+      h.g.gain.setTargetAtTime((0.04 + charge * 0.0012) * (getSettings().sfxVolume ?? 0.7), t, 0.08);
+    },
+    stop() {
+      const h = ref.current; if (!h) return; ref.current = null;
+      h.g.gain.setTargetAtTime(0, h.ctx.currentTime, 0.15);
+      setTimeout(() => { try { h.o.stop(); } catch { /* */ } void h.ctx.close(); }, 800);
+    },
+  };
 }
 
 function CodeTask({ onDone }: { onDone: () => void }) {

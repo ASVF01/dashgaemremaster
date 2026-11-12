@@ -5,7 +5,9 @@ import officeTrack from "@/assets/audio/office_rotatatron.ogg.asset.json";
 import { crushOfficeChannel } from "./officeMusicProcessing";
 
 /** Dry, genuinely bitcrushed soundtrack owned by the office, not its console. */
-export function useOfficeMusic() {
+export function useOfficeMusic(active = true) {
+  const activeRef = useRef(active); activeRef.current = active;
+  const startRef = useRef<(() => void) | null>(null);
   const [settings] = useSettings();
   const gain = useRef<GainNode | null>(null);
   const volume = useRef(settings.bgmVolume);
@@ -40,8 +42,10 @@ export function useOfficeMusic() {
         source.loop = true;
         source.playbackRate.value = 0.82;
         source.connect(output);
-        source.start();
-        play();
+        const src = source;
+        let started = false;
+        startRef.current = () => { if (!started && !disposed) { started = true; src.start(); play(); } };
+        if (activeRef.current) startRef.current();
       } catch (error) {
         if (!disposed) console.warn("Office soundtrack could not load", error);
       }
@@ -57,14 +61,18 @@ export function useOfficeMusic() {
       unsubscribe();
       window.removeEventListener("pointerdown", play);
       window.removeEventListener("keydown", play);
-      source?.stop();
+      try { source?.stop(); } catch { /* never started */ }
       source?.disconnect();
       output.disconnect();
       gain.current = null;
+      startRef.current = null;
       void context.close().catch(() => {});
       resumeBgm();
     };
   }, []);
+
+  // Music waits for its cue (Task 1 finished), then starts from the top.
+  useEffect(() => { if (active) startRef.current?.(); }, [active]);
 
   useEffect(() => {
     if (gain.current) gain.current.gain.value = isBgmMuted() ? 0 : Math.max(0, Math.min(1, settings.bgmVolume)) * 0.55;

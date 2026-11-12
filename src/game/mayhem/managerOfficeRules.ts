@@ -131,3 +131,17 @@ export function tryConnect(done: WireColor[], from: WireColor, to: WireColor): W
 export function taskComplete(done: WireColor[]): boolean {
   return WIRE_COLORS.every((c) => done.includes(c));
 }
+
+/** NEO-MATA vent air: full tank drains in this many seconds while she sits in the vent. */
+export const MATA_DRAIN_SECONDS = 20;
+/** Shock jolt on her vent picture lasts exactly this long. */
+export const MATA_SHOCK_MS = 500;
+/** Air left after `dt` seconds of draining (never below 0). */
+export function drainAir(air: number, dt: number): number {
+  return Math.max(0, air - (100 / MATA_DRAIN_SECONDS) * dt);
+}
+/** Lower air = faster rattles and harder gauge shake: 700ms apart when full, 60ms when empty. */
+export function airRattle(air: number): { intervalMs: number; shakePx: number } {
+  const lack = 1 - Math.max(0, Math.min(100, air)) / 100;
+  return { intervalMs: Math.round(700 - 640 * lack * lack), shakePx: Math.round(lack * 8 * 10) / 10 };
+}
