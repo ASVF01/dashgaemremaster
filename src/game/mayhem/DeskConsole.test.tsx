@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { mayhemSfx } from "@/game/sfx";
 import DeskConsole from "./DeskConsole";
 
 vi.mock("@/game/sfx", () => ({ mayhemSfx: {
@@ -51,5 +52,29 @@ describe("office wire completion", () => {
     fireEvent.click(screen.getByRole("button", { name: "cyan port" }));
     expect(container.querySelector("path.mo-wire-jiggle")?.getAttribute("d")).toMatch(/^M 12 12\.5 Q /);
     expect(onRound).not.toHaveBeenCalled();
+  });
+
+  it("does not play the Nights 1-4 generator reward sound when the wire task finishes", () => {
+    vi.clearAllMocks();
+    const onRound = vi.fn();
+    render(<DeskConsole progress={{ task: 3, round: 0, done: false }} onRound={onRound} onClose={vi.fn()} />);
+    for (const color of ["cyan", "pink", "yellow", "lime"]) {
+      fireEvent.click(screen.getByRole("button", { name: `${color} plug` }));
+      fireEvent.click(screen.getByRole("button", { name: `${color} port` }));
+    }
+    expect(onRound).toHaveBeenCalledTimes(1);
+    expect(mayhemSfx.generatorImpact).not.toHaveBeenCalled();
+  });
+
+  it("does not play the Nights 1-4 generator reward sound when the code task finishes", () => {
+    vi.clearAllMocks();
+    const onRound = vi.fn();
+    render(<DeskConsole progress={{ task: 1, round: 0, done: false }} onRound={onRound} onClose={vi.fn()} />);
+    for (const btn of screen.getAllByRole("button")) {
+      fireEvent.click(btn);
+      if (onRound.mock.calls.length) break;
+    }
+    expect(onRound).toHaveBeenCalledTimes(1);
+    expect(mayhemSfx.generatorImpact).not.toHaveBeenCalled();
   });
 });

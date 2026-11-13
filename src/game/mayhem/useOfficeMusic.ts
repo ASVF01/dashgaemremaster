@@ -84,7 +84,9 @@ export function useOfficeMusic(active = true) {
     if (active) {
       startRef.current?.();
     } else if (gain.current?.context.state === "running") {
-      void gain.current.context.suspend().catch(() => {});
+      // The node's context is typed BaseAudioContext, which has no suspend(); this
+      // loop's context is always a real AudioContext created above.
+      void (gain.current.context as AudioContext).suspend().catch(() => {});
     }
   }, [active]);
 

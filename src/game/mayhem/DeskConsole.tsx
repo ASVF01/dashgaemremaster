@@ -27,9 +27,9 @@ export default function DeskConsole({ progress, onRound, onClose }: { progress: 
           {progress.done ? <p>Console online. (Boss not added yet.)</p> : (
             <>
               {kind === "power" && <PowerTask onDone={onRound} />}
-              {kind === "code" && <CodeTask key={progress.round} onDone={() => { mayhemSfx.generatorImpact(false); onRound(); }} />}
-              {kind === "simon" && <SimonTask key={progress.round} round={progress.round} onDone={() => { mayhemSfx.generatorImpact(false); onRound(); }} />}
-              {kind === "wire" && <WireTask key={progress.round} onDone={() => { mayhemSfx.generatorImpact(false); onRound(); }} />}
+              {kind === "code" && <CodeTask key={progress.round} onDone={onRound} />}
+              {kind === "simon" && <SimonTask key={progress.round} round={progress.round} onDone={onRound} />}
+              {kind === "wire" && <WireTask key={progress.round} onDone={onRound} />}
               {kind === "surge" && <SurgeTask onDone={onRound} />}
             </>
           )}
@@ -115,7 +115,7 @@ function PowerTask({ onDone }: { onDone: () => void }) {
   const doneTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (charge < 100 || doneTimer.current != null) return;
-    setLights(true); hum.stop(); sfx(lightsSfx.url); mayhemSfx.generatorImpact(false);
+    setLights(true); hum.stop(); sfx(lightsSfx.url);
     doneTimer.current = setTimeout(onDone, 0); // lights come on the instant the crank finishes
   }, [charge, onDone]);
 
