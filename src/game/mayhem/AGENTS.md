@@ -1,5 +1,7 @@
 # MAYHEM rules
 
+- Office atmosphere owns filtered storm sources separately from shared outdoor SFX, follows live SFX volume, ducks only beneath audible powered music, and disposes sources on exit; visual layers stay below controls and honor reduced effects/motion.
+
 - NightIntro owns the post-tip static/text/reveal sequence; pure timing rules gate exit on asset readiness while NightRooms keeps gameplay inactive until reveal ends.
 - NightIntro signals the page-level audio owner the instant its text appears so the night-start sting stays locked to the picture, and tested `nightLookActive` lets the room's smoothed gaze run from the moment the card mounts while gameplay stays frozen.
 

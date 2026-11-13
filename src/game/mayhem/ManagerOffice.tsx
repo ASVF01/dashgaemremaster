@@ -54,6 +54,8 @@ import { mayhemSfx } from "@/game/sfx";
 import { stopBgm } from "@/game/bgm";
 import DeskConsole from "./DeskConsole";
 import { useOfficeMusic } from "./useOfficeMusic";
+import { useOfficeAtmosphere } from "./useOfficeAtmosphere";
+import OfficeAtmosphere from "./OfficeAtmosphere";
 import { completeRound, startConsole, CONSOLE_TASKS, TASK_ROUNDS } from "./officeConsoleRules";
 import "./managerOffice.css";
 
@@ -289,6 +291,7 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
   const anyDroidBGahAudioRef = useRef<HTMLAudioElement | null>(null);
   const anyDroidBAttackTwitchAudioRef = useRef<HTMLAudioElement | null>(null);
   useOfficeMusic(!dead && (consoleProg.task > 0 || consoleProg.done)); // music begins once Task 1 lights the room
+  useOfficeAtmosphere(!dead, consoleProg.task > 0 || consoleProg.done);
   const worldRef = useRef<HTMLDivElement>(null);
   const cursorX = useRef(0);
   const pointerXRef = useRef(window.innerWidth / 2);
@@ -898,6 +901,7 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
         ? <div className={`mo-dark${flash ? " lit" : ""}`} aria-hidden />
         : flash && <div className="mo-flash" aria-hidden />}
 
+      {!dead && <OfficeAtmosphere powered={consoleProg.task > 0 || consoleProg.done} flashlight={flash} />}
       {kidLaser.state !== "idle" && (
         <div className={`mo-kid-laser ${kidLaser.state}`} style={{ top: kidLaser.y }} aria-hidden />
       )}

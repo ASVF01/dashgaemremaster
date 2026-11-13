@@ -71,6 +71,11 @@
     --select-black: 0 0% 0%;
     --select-white: 0 0% 100%;
     --select-lock: 53 100% 50%;
+    /* Night 5 atmosphere stays neutral over the user's office artwork. */
+    --office-shadow: 0 0% 0%;
+    --office-dust: 48 12% 84%;
+    --office-vignette: radial-gradient(ellipse at 50% 46%, transparent 24%, hsl(var(--office-shadow) / .22) 57%, hsl(var(--office-shadow) / .84) 100%);
+    --office-scanlines: repeating-linear-gradient(to bottom, transparent 0 3px, hsl(var(--office-shadow) / .12) 3px 4px);
 
     --sidebar-background: 48 30% 94%;
     --sidebar-foreground: 0 0% 8%;

@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Add Night 5 muffled storm from Task 1, music-aware ducking, textured vignette, flashlight-lit dust and subtle scanlines; 26 focused tests pass, live switch/plug/crank-to-Task-2 flow and ceiling clicks verified, office audio closes on exit, desktop and landscape-phone effects checked.
+
 - [x] Night 5 Task 1 on the real Stevenson generator (switch + crank in its box, plug into console, rising hum); office music starts only after Task 1.
 - [x] NEO-MATA test: crawl -> appears in vent (user art) -> shaking air gauge with accelerating rattles -> SHOCK swaps to shocked art with 0.5s calming horizontal shake.
 - [ ] Death screen / death video for the office: on hold by request (empty air costs 25 HP for now).
