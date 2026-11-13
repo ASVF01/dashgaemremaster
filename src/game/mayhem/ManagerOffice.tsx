@@ -9,6 +9,17 @@ import kidLaserPitchLow from "@/assets/mayhem/kid_laser_pitch_low.mp3";
 import kidLaserPitchLowMid from "@/assets/mayhem/kid_laser_pitch_low_mid.mp3";
 import kidLaserPitchOriginal from "@/assets/mayhem/kid_laser_pitch_original.mp3";
 import mataDeathSfxUrl from "@/assets/mayhem/mata_death.mp3";
+import doorCloseSfxUrl from "@/assets/mayhem/night5_door_close.ogg";
+import anyDroidBGahSfxUrl from "@/assets/mayhem/anydroid_b_gah.mp3";
+import anyDroidBAttackTwitchSfxUrl from "@/assets/mayhem/AttackTwitch.mp3";
+import anyDroidBTwitchDodgeSfxUrl from "@/assets/mayhem/TwitchDodge.mp3";
+import anyDroidBSpawn1 from "@/assets/mayhem/anydroid_b_spawn_1.png";
+import anyDroidBSpawn2 from "@/assets/mayhem/anydroid_b_spawn_2.png";
+import anyDroidBSpawn3 from "@/assets/mayhem/anydroid_b_spawn_3.png";
+import anyDroidBAttack1 from "@/assets/mayhem/anydroid_b_attack_1.png";
+import anyDroidBAttack2 from "@/assets/mayhem/anydroid_b_attack_2.png";
+import anyDroidBAttack3 from "@/assets/mayhem/anydroid_b_attack_3.png";
+import anyDroidBDefeat from "@/assets/mayhem/anydroid_b_defeat.png";
 import { chooseOfficeDeathVideo, OFFICE_DEATH_VIDEOS } from "./officeDeathVideos";
 import doorOpen from "@/assets/manager/door_open.png.asset.json";
 import doorClosed from "@/assets/manager/door_closed.png.asset.json";
@@ -32,9 +43,15 @@ import {
   drainAir, GIFTED_DOOR_CLOSE_MS, GIFTED_REOPEN_DEATH_MS, GIFTED_WAIT_MS,
   KID_BLAST_MS, KID_DAMAGE, KID_TELEGRAPH_MS, MATA_DEATH_BLACK_MS, MATA_SHOCK_MS,
   KID_SHOT_INTERVAL_MS, KID_SHOTS_PER_ATTACK, KID_WARNING_MS,
-  isLaserHit, mataRattleProfile, approach, edgeZone, yawTargetForView, officePitch, ventStepsCrossed, OFFICE_MAX_YAW, viewForKey, type OfficeView,
+  ANYDROID_B_ATTACK_MS, ANYDROID_B_DAMAGE_INTERVAL_MS,
+  ANYDROID_B_HEAD_ANCHORS, ANYDROID_B_LANDING_MS,
+  ANYDROID_B_MAX_HP, ANYDROID_B_ROAR_MS, ANYDROID_B_STAND_MS, ANYDROID_B_TELEPORT_MS,
+  isFlashOnAnyDroidBHead, nextAnyDroidBAttack, isLaserHit, mataRattleProfile, approach, edgeZone,
+  yawTargetForView, officePitch, ventStepsCrossed, OFFICE_MAX_YAW, viewForKey,
+  type AnyDroidBAttack, type AnyDroidBFrame, type OfficeView,
 } from "./managerOfficeRules";
 import { mayhemSfx } from "@/game/sfx";
+import { stopBgm } from "@/game/bgm";
 import DeskConsole from "./DeskConsole";
 import { useOfficeMusic } from "./useOfficeMusic";
 import { completeRound, startConsole, CONSOLE_TASKS, TASK_ROUNDS } from "./officeConsoleRules";
@@ -42,6 +59,7 @@ import "./managerOffice.css";
 
 const FACE_ASPECT = 553 / 949;
 type KidLaserState = "idle" | "telegraph" | "blast";
+type AnyDroidBPhase = "idle" | "spawn1" | "landed" | "rising" | "attacking" | "roar" | "gone";
 const KID_ATTACK_WARNING_SOUNDS = [
   kidAttackChargeSfxUrl,
   kidAttackAuraSfxUrl,
@@ -54,6 +72,15 @@ const KID_LASER_BLAST_SOUNDS = [
   kidLaserPitchHighMid,
   kidLaserPitchHigh,
 ];
+const ANYDROID_B_SPRITES: Record<AnyDroidBFrame, string> = {
+  spawn1: anyDroidBSpawn1,
+  spawn2: anyDroidBSpawn2,
+  spawn3: anyDroidBSpawn3,
+  attack1: anyDroidBAttack1,
+  attack2: anyDroidBAttack2,
+  attack3: anyDroidBAttack3,
+  defeat: anyDroidBDefeat,
+};
 
 function vol() { return Math.max(0, Math.min(1, getSettings().sfxVolume ?? 0.7)); }
 function playOnce(url: string, v = 1) {
@@ -245,12 +272,26 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
   const die = useCallback((cause: "gifted" | "mata" = "gifted") => {
     if (deadRef.current) return;
     deadRef.current = true;
+    stopBgm();
     setDeathCause(cause);
     setDead(true);
   }, []);
+  const [anyDroidBPhase, setAnyDroidBPhase] = useState<AnyDroidBPhase>("idle");
+  const [anyDroidBAttack, setAnyDroidBAttack] = useState<AnyDroidBAttack>(1);
+  const [anyDroidBCycle, setAnyDroidBCycle] = useState(0);
+  const [anyDroidBHp, setAnyDroidBHp] = useState(ANYDROID_B_MAX_HP);
+  const [anyDroidBLightHit, setAnyDroidBLightHit] = useState(false);
+  const anyDroidBHeadRef = useRef<HTMLDivElement>(null);
+  const anyDroidBCounteredRef = useRef(false);
+  const anyDroidBLastPoseRef = useRef<string | null>(null);
+  const anyDroidBHpRef = useRef(anyDroidBHp); anyDroidBHpRef.current = anyDroidBHp;
+  const anyDroidBLightHitRef = useRef(false);
+  const anyDroidBGahAudioRef = useRef<HTMLAudioElement | null>(null);
+  const anyDroidBAttackTwitchAudioRef = useRef<HTMLAudioElement | null>(null);
   useOfficeMusic(!dead && (consoleProg.task > 0 || consoleProg.done)); // music begins once Task 1 lights the room
   const worldRef = useRef<HTMLDivElement>(null);
   const cursorX = useRef(0);
+  const pointerXRef = useRef(window.innerWidth / 2);
   const stageRef = useRef<HTMLDivElement>(null);
   const ventRef = useRef<SVGSVGElement | HTMLImageElement>(null);
   const assignVentRef = useCallback((node: SVGSVGElement | HTMLImageElement | null) => {
@@ -258,6 +299,7 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
   }, []);
   const lookRight = useRef(false);
   const [flash, setFlash] = useState(false);
+  const flashRef = useRef(flash); flashRef.current = flash;
   const [view, setView] = useState<OfficeView>("desk");
   const viewRef = useRef(view); viewRef.current = view;
   const [size, setSize] = useState({ w: window.innerWidth, h: window.innerHeight });
@@ -325,6 +367,10 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
       fireShot(0);
     }, KID_WARNING_MS);
   }, [setKidLaserPhase]);
+  const triggerAnyDroidB = useCallback(() => {
+    if (deadRef.current || (anyDroidBPhase !== "idle" && anyDroidBPhase !== "gone")) return;
+    setAnyDroidBPhase("spawn1");
+  }, [anyDroidBPhase]);
   useEffect(() => () => {
     if (kidWarningTimerRef.current !== null) window.clearTimeout(kidWarningTimerRef.current);
     if (kidTelegraphTimerRef.current !== null) window.clearTimeout(kidTelegraphTimerRef.current);
@@ -334,6 +380,12 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
   }, []);
   const [doorShut, setDoorShut] = useState(false);
   const doorShutRef = useRef(doorShut); doorShutRef.current = doorShut;
+  const toggleDoor = useCallback(() => {
+    const closing = !doorShutRef.current;
+    doorShutRef.current = closing;
+    if (closing) playOnce(doorCloseSfxUrl);
+    setDoorShut(closing);
+  }, []);
   const [gifted, setGifted] = useState(false);
   const giftedRef = useRef(gifted); giftedRef.current = gifted;
   const giftedLeaveAtRef = useRef<number | null>(null);
@@ -379,6 +431,146 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
   const [air, setAir] = useState(100);
   const crawlAudio = useRef<HTMLAudioElement | null>(null);
   const overlayOpen = tipOpen || taskOpen;
+  useEffect(() => {
+    if (dead) return;
+    let timer: number | undefined;
+    let roarAudio: HTMLAudioElement | null = null;
+    if (anyDroidBPhase === "idle" || anyDroidBPhase === "gone") {
+      return;
+    } else if (anyDroidBPhase === "spawn1") {
+      timer = window.setTimeout(() => setAnyDroidBPhase("landed"), ANYDROID_B_TELEPORT_MS);
+    } else if (anyDroidBPhase === "landed") {
+      timer = window.setTimeout(() => setAnyDroidBPhase("rising"), ANYDROID_B_LANDING_MS);
+    } else if (anyDroidBPhase === "rising") {
+      timer = window.setTimeout(() => {
+        setAnyDroidBAttack(1);
+        setAnyDroidBCycle(0);
+        setAnyDroidBHp(ANYDROID_B_MAX_HP);
+        setAnyDroidBPhase("attacking");
+      }, ANYDROID_B_STAND_MS);
+    } else if (anyDroidBPhase === "attacking") {
+      anyDroidBCounteredRef.current = false;
+      timer = window.setTimeout(() => {
+        if (anyDroidBCounteredRef.current || anyDroidBHpRef.current <= 0) {
+          setAnyDroidBAttack(nextAnyDroidBAttack());
+          setAnyDroidBCycle((cycle) => cycle + 1);
+        } else {
+          die();
+        }
+      }, ANYDROID_B_ATTACK_MS);
+    } else if (anyDroidBPhase === "roar") {
+      roarAudio = new Audio(anyDroidBGahSfxUrl);
+      roarAudio.volume = vol();
+      anyDroidBGahAudioRef.current = roarAudio;
+      roarAudio.onended = () => setAnyDroidBPhase("gone");
+      roarAudio.onerror = () => setAnyDroidBPhase("gone");
+      void roarAudio.play().catch(() => setAnyDroidBPhase("gone"));
+      timer = window.setTimeout(() => setAnyDroidBPhase("gone"), ANYDROID_B_ROAR_MS);
+    }
+
+    return () => {
+      if (timer !== undefined) window.clearTimeout(timer);
+      if (roarAudio) {
+        roarAudio.pause();
+        roarAudio.onended = null;
+        roarAudio.onerror = null;
+        if (anyDroidBGahAudioRef.current === roarAudio) anyDroidBGahAudioRef.current = null;
+      }
+    };
+  }, [anyDroidBAttack, anyDroidBCycle, anyDroidBPhase, dead, die]);
+  useEffect(() => {
+    if (anyDroidBPhase === "attacking" && anyDroidBHp <= 0) setAnyDroidBPhase("roar");
+  }, [anyDroidBHp, anyDroidBPhase]);
+  useEffect(() => {
+    if (anyDroidBPhase !== "attacking" || dead) return;
+    const audio = new Audio(anyDroidBAttackTwitchSfxUrl);
+    audio.loop = true;
+    audio.volume = vol();
+    anyDroidBAttackTwitchAudioRef.current = audio;
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+      if (anyDroidBAttackTwitchAudioRef.current === audio) {
+        anyDroidBAttackTwitchAudioRef.current = null;
+      }
+    };
+  }, [anyDroidBPhase, dead]);
+  useEffect(() => {
+    if (anyDroidBPhase !== "attacking" || dead) {
+      anyDroidBLastPoseRef.current = null;
+      if (anyDroidBLightHitRef.current) {
+        anyDroidBLightHitRef.current = false;
+        setAnyDroidBLightHit(false);
+      }
+      return;
+    }
+
+    let lastDamageAt = performance.now();
+    const pose = String(anyDroidBAttack);
+    let movementPending = anyDroidBLastPoseRef.current !== null && anyDroidBLastPoseRef.current !== pose;
+    anyDroidBLastPoseRef.current = pose;
+    const sampleLight = () => {
+      const target = anyDroidBHeadRef.current;
+      if (!flashRef.current || !target) {
+        const audio = anyDroidBAttackTwitchAudioRef.current;
+        if (audio && !audio.paused) {
+          audio.pause();
+          audio.currentTime = 0;
+        }
+        if (anyDroidBLightHitRef.current) {
+          anyDroidBLightHitRef.current = false;
+          setAnyDroidBLightHit(false);
+        }
+        return;
+      }
+      const rect = target.getBoundingClientRect();
+      const lit = isFlashOnAnyDroidBHead(
+        pointerXRef.current, mouseYRef.current,
+        rect.left + rect.width / 2, rect.top + rect.height / 2,
+        Math.max(24, Math.min(54, size.w * 0.035)),
+      );
+      if (lit) {
+        anyDroidBCounteredRef.current = true;
+        const audio = anyDroidBAttackTwitchAudioRef.current;
+        if (audio?.paused) {
+          void audio.play().catch((error: unknown) => {
+            console.error("Failed to play ANYDROID-B AttackTwitch audio.", error);
+          });
+        }
+        if (movementPending) {
+          playOnce(anyDroidBTwitchDodgeSfxUrl);
+          movementPending = false;
+        }
+        if (!anyDroidBLightHitRef.current) {
+          anyDroidBLightHitRef.current = true;
+          setAnyDroidBLightHit(true);
+        }
+        const now = performance.now();
+        if (now - lastDamageAt >= ANYDROID_B_DAMAGE_INTERVAL_MS) {
+          lastDamageAt = now;
+          setAnyDroidBHp((hp) => Math.max(0, hp - 1));
+        }
+      } else if (anyDroidBLightHitRef.current) {
+        const audio = anyDroidBAttackTwitchAudioRef.current;
+        if (audio && !audio.paused) {
+          audio.pause();
+          audio.currentTime = 0;
+        }
+        anyDroidBLightHitRef.current = false;
+        setAnyDroidBLightHit(false);
+      } else {
+        const audio = anyDroidBAttackTwitchAudioRef.current;
+        if (audio && !audio.paused) {
+          audio.pause();
+          audio.currentTime = 0;
+        }
+      }
+    };
+    sampleLight();
+    movementPending = false;
+    const timer = window.setInterval(sampleLight, 50);
+    return () => window.clearInterval(timer);
+  }, [anyDroidBAttack, anyDroidBCycle, anyDroidBPhase, dead, size.w]);
   const shock = useCallback(() => {
     if (mata === "vent") {
       playOnce(shockSfxUrl);
@@ -399,6 +591,7 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
     const onResize = () => setSize({ w: window.innerWidth, h: window.innerHeight });
     const onMove = (e: PointerEvent) => {
       cursorX.current = (e.clientX / window.innerWidth) * 2 - 1;
+      pointerXRef.current = e.clientX;
       mouseYRef.current = e.clientY;
       stageRef.current?.style.setProperty("--fx", `${e.clientX}px`);
       stageRef.current?.style.setProperty("--fy", `${e.clientY}px`);
@@ -409,6 +602,7 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
       if (e.code === "KeyZ") { if (!e.repeat) { setFlash(true); click(); } return; }
       if (e.repeat) return;
       if (e.code === "Digit2" || e.code === "Numpad2") { triggerBilly(); return; }
+      if (e.code === "Digit3" || e.code === "Numpad3") { triggerAnyDroidB(); return; }
       if (viewRef.current === "ceiling" && (
         e.code === "Space" || e.key === " " || e.code === "KeyF" || e.key.toLowerCase() === "f"
       )) {
@@ -420,7 +614,7 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
         setGifted((g) => { if (!g) playOnce(metalWalkSfx.url); return true; });
         return;
       }
-      if (e.code === "KeyA") { setDoorShut((d) => !d); return; }
+      if (e.code === "KeyA") { toggleDoor(); return; }
       if (e.code === "KeyG") {
         setTaskOpen((o) => {
           if (o) mayhemSfx.terminalClose(); else mayhemSfx.terminalOpen();
@@ -442,7 +636,7 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("keyup", onUp);
     };
-  }, [onExit, shock, triggerBilly]);
+  }, [onExit, shock, toggleDoor, triggerAnyDroidB, triggerBilly]);
 
   // One stepper: smooth yaw/pitch toward their targets.
   const overlayRef = useRef(overlayOpen); overlayRef.current = overlayOpen;
@@ -586,10 +780,40 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
   const onStagePointer = (e: React.PointerEvent) => {
     if (e.pointerType !== "touch") return;
     cursorX.current = (e.clientX / window.innerWidth) * 2 - 1;
+    pointerXRef.current = e.clientX;
+    mouseYRef.current = e.clientY;
+    stageRef.current?.style.setProperty("--fx", `${e.clientX}px`);
+    stageRef.current?.style.setProperty("--fy", `${e.clientY}px`);
     const y = e.clientY / window.innerHeight;
     if (y < 0.16) setView("ceiling");
     else if (y > 0.84) setView("desk");
   };
+
+  const anyDroidBFrame: AnyDroidBFrame | null =
+    anyDroidBPhase === "spawn1" ? "spawn1" :
+    anyDroidBPhase === "landed" ? "spawn2" :
+    anyDroidBPhase === "rising" ? "spawn3" :
+    anyDroidBPhase === "attacking" ? ({ 1: "attack1", 2: "attack2", 3: "attack3" } as const)[anyDroidBAttack] :
+    anyDroidBPhase === "roar" ? "defeat" : null;
+  const anyDroidBSourceWidth = anyDroidBFrame === "spawn1" ? 317 : 560;
+  const anyDroidBBoxWidth = Math.min(size.w * 0.6, size.h * 0.68);
+  const anyDroidBBoxHeight = PH * 0.7;
+  const anyDroidBScale = anyDroidBFrame
+    ? Math.min(anyDroidBBoxWidth / anyDroidBSourceWidth, anyDroidBBoxHeight / 553)
+      * (anyDroidBFrame === "spawn1" ? 0.72 : 1)
+    : 1;
+  const anyDroidBRenderedWidth = Math.max(1, anyDroidBSourceWidth * anyDroidBScale);
+  const anyDroidBStyle: React.CSSProperties & { "--anydroid-wide-scale": string } = {
+    width: anyDroidBBoxWidth,
+    height: anyDroidBBoxHeight,
+    bottom: PH * 0.16,
+    "--anydroid-wide-scale": String(Math.max(1, size.w * 1.1 / anyDroidBRenderedWidth)),
+  };
+  const anyDroidBAnchor = anyDroidBFrame ? ANYDROID_B_HEAD_ANCHORS[anyDroidBFrame] : { x: 0.5, y: 0.5 };
+  const anyDroidBHeadLeft = (anyDroidBBoxWidth - anyDroidBSourceWidth * anyDroidBScale) / 2
+    + anyDroidBAnchor.x * anyDroidBSourceWidth * anyDroidBScale;
+  const anyDroidBHeadTop = (anyDroidBBoxHeight - 553 * anyDroidBScale) / 2
+    + anyDroidBAnchor.y * 553 * anyDroidBScale;
 
   return (
     <div ref={stageRef} className="mo-stage" style={{ perspective: `${P}px` }} onPointerDown={onStagePointer}>
@@ -599,7 +823,7 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
         <div className="mo-face" style={panel(-1)}>
           <img src={doorShut ? doorClosed.url : gifted ? doorGifted.url : doorOpen.url} alt="Office door" draggable={false} />
           <button className="mo-hot" style={{ left: "70.6%", top: "37.8%", width: "7.8%", height: "13.4%" }}
-            aria-label="Door button" onClick={() => { setDoorShut((d) => !d); }} />
+            aria-label="Door button" onClick={toggleDoor} />
           <button className="mo-hot" style={{ left: "70.4%", top: "53.8%", width: "8.2%", height: "13.8%" }}
             aria-label="Blue button" onClick={() => playOnce(nopeSfx.url)} />
         </div>
@@ -607,6 +831,20 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
         {/* FRONT: room */}
         <div className="mo-face" style={panel(0)}>
           <img src={frontRoom.url} alt="Manager's office" draggable={false} />
+          {anyDroidBFrame && (
+            <div
+              className={`mo-anydroid mo-anydroid-${anyDroidBPhase}${anyDroidBLightHit ? " lit" : ""}`}
+              style={anyDroidBStyle}
+              aria-hidden="true"
+            >
+              <img src={ANYDROID_B_SPRITES[anyDroidBFrame]} alt="" draggable={false} />
+              <span
+                ref={anyDroidBHeadRef}
+                className="mo-anydroid-head-target"
+                style={{ left: anyDroidBHeadLeft, top: anyDroidBHeadTop }}
+              />
+            </div>
+          )}
           <div className="mo-desk">
             <img src={frontTable.url} alt="Manager's desk" draggable={false} />
             <button className="mo-hot" style={{ left: "37.5%", top: "6%", width: "28%", height: "41%" }}
@@ -641,7 +879,7 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
       {/* HUD */}
       <div className="mo-hud">
         <div>TEST ROOM · HP {hp} · {consoleProg.done ? "TASKS DONE" : `TASK ${consoleProg.task + 1}/5 [${consoleProg.round}/${TASK_ROUNDS[CONSOLE_TASKS[consoleProg.task]]}]`}</div>
-        <div className="mo-hint">mouse to edges = look · W vent · S desk · A door · 1 GIFTED · 2 NEO-KID laser · G console · E surge · hold Z light · \ or ESC exit</div>
+        <div className="mo-hint">mouse to edges = look · W vent · S desk · A door · 1 GIFTED · 2 NEO-KID laser · 3 ANYDROID-B · G console · E surge · hold Z light · \ or ESC exit</div>
         {view === "ceiling" && (
           <button className="mo-test" onClick={() => setMata((m) => (m === "off" ? "crawl" : "off"))}>
             {mata === "off" ? "test: NEO-MATA crawl" : "send NEO-MATA away"}

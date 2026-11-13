@@ -155,6 +155,44 @@ export const KID_LASER_HALF_HEIGHT = 38;
 export const KID_WARNING_MS = 6100;
 export const KID_SHOTS_PER_ATTACK = 4;
 export const KID_SHOT_INTERVAL_MS = 800;
+
+export type AnyDroidBAttack = 1 | 2 | 3;
+export type AnyDroidBHeadAnchor = { x: number; y: number };
+export type AnyDroidBFrame = "spawn1" | "spawn2" | "spawn3" | "attack1" | "attack2" | "attack3" | "defeat";
+
+export const ANYDROID_B_MAX_HP = 50;
+export const ANYDROID_B_TELEPORT_MS = 450;
+export const ANYDROID_B_LANDING_MS = 1500;
+export const ANYDROID_B_STAND_MS = 2400;
+export const ANYDROID_B_ATTACK_MS = 1500;
+export const ANYDROID_B_DAMAGE_INTERVAL_MS = 200;
+export const ANYDROID_B_ROAR_MS = 1951;
+
+export const ANYDROID_B_HEAD_ANCHORS: Record<AnyDroidBFrame, AnyDroidBHeadAnchor> = {
+  spawn1: { x: 0.49, y: 0.18 },
+  spawn2: { x: 0.51, y: 0.45 },
+  spawn3: { x: 0.52, y: 0.26 },
+  attack1: { x: 0.51, y: 0.27 },
+  attack2: { x: 0.33, y: 0.46 },
+  attack3: { x: 0.70, y: 0.39 },
+  defeat: { x: 0.54, y: 0.26 },
+};
+
+/** Attack 1 is the opener; every later pose is selected independently. */
+export function nextAnyDroidBAttack(rand: () => number = Math.random): AnyDroidBAttack {
+  return ([1, 2, 3] as const)[Math.min(2, Math.floor(Math.max(0, rand()) * 3))];
+}
+
+export function isFlashOnAnyDroidBHead(
+  lightX: number,
+  lightY: number,
+  headX: number,
+  headY: number,
+  radius: number,
+): boolean {
+  return Math.hypot(lightX - headX, lightY - headY) <= radius;
+}
+
 /** Returns whether the cursor is inside the laser's vertical hit band. */
 export function isLaserHit(cursorY: number, laserY: number, halfHeight = KID_LASER_HALF_HEIGHT): boolean {
   return Math.abs(cursorY - laserY) <= halfHeight;

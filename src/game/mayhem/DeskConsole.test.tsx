@@ -7,6 +7,13 @@ vi.mock("@/game/sfx", () => ({ mayhemSfx: {
 } }));
 
 describe("office wire completion", () => {
+  it("shows the Stevenson generator artwork with the code hint over its display", () => {
+    const { container } = render(<DeskConsole progress={{ task: 1, round: 0, done: false }} onRound={vi.fn()} onClose={vi.fn()} />);
+
+    expect(container.querySelector(".mo-stev img")).toHaveAttribute("src", expect.stringContaining("generator_panel_local.png"));
+    expect(container.querySelector(".mo-stev-screen")).toHaveTextContent(/^(?:_|\d)(?: (?:_|\d)){3}$/);
+  });
+
   it("advances exactly once on the fourth matching wire without a cancellable timer", () => {
     const onRound = vi.fn();
     render(<DeskConsole progress={{ task: 3, round: 0, done: false }} onRound={onRound} onClose={vi.fn()} />);

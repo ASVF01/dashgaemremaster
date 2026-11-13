@@ -248,8 +248,8 @@ function CodeTask({ onDone }: { onDone: () => void }) {
         </div>
       </div>
       <div className="mo-stev">
-        <div className="mo-con-label">STEVENSON TERMINAL</div>
-        <div className="mo-stev-screen">{hint}</div>
+        <GeneratorArtwork className="mo-stev-art" />
+        <output className="mo-stev-screen" aria-label={`Generator code hint: ${hint}`}>{hint}</output>
       </div>
     </div>
   );

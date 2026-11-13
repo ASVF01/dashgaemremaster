@@ -26,7 +26,9 @@ export function useOfficeMusic(active = true) {
     };
     sync();
     pauseBgm();
-    const play = () => { if (!disposed) void context.resume().catch(() => {}); };
+    const play = () => {
+      if (!disposed && activeRef.current) void context.resume().catch(() => {});
+    };
     const load = async () => {
       try {
         const response = await fetch(officeTrack.url, { signal: abort.signal });
@@ -44,14 +46,20 @@ export function useOfficeMusic(active = true) {
         source.connect(output);
         const src = source;
         let started = false;
-        startRef.current = () => { if (!started && !disposed) { started = true; src.start(); play(); } };
+        startRef.current = () => {
+          if (disposed || !activeRef.current) return;
+          if (!started) {
+            started = true;
+            src.start();
+          }
+          play();
+        };
         if (activeRef.current) startRef.current();
       } catch (error) {
         if (!disposed) console.warn("Office soundtrack could not load", error);
       }
     };
     void load();
-    play();
     window.addEventListener("pointerdown", play);
     window.addEventListener("keydown", play);
     const unsubscribe = subscribeBgmMuted(sync);
@@ -72,7 +80,13 @@ export function useOfficeMusic(active = true) {
   }, []);
 
   // Music waits for its cue (Task 1 finished), then starts from the top.
-  useEffect(() => { if (active) startRef.current?.(); }, [active]);
+  useEffect(() => {
+    if (active) {
+      startRef.current?.();
+    } else if (gain.current?.context.state === "running") {
+      void gain.current.context.suspend().catch(() => {});
+    }
+  }, [active]);
 
   useEffect(() => {
     if (gain.current) gain.current.gain.value = isBgmMuted() ? 0 : Math.max(0, Math.min(1, settings.bgmVolume)) * 0.55;

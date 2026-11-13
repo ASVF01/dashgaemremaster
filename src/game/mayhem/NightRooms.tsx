@@ -902,7 +902,9 @@ export default function NightRooms({ paused = false, upgrades = {}, onNightCompl
 
         {view === "storageDoor" && (
           <>
-            <div className={`pointer-events-none absolute inset-y-0 left-1/2 w-[42%] -translate-x-1/2 border-x-8 border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))] transition-transform duration-500 ${storageDoorClosed ? "translate-y-0" : "-translate-y-[82%]"}`} />
+            <div className={`pointer-events-none absolute inset-y-0 left-1/2 w-[42%] -translate-x-1/2 transition-transform duration-500 ${storageDoorClosed ? "translate-y-0" : "-translate-y-[82%]"}`}>
+              <div className={`absolute inset-0 border-x-8 border-[hsl(var(--hell-steel))] bg-[hsl(var(--hell-black))] ${storageDoorClosed ? "mayhem-storage-door-shake" : ""}`} />
+            </div>
             <button
               type="button"
               aria-label={storageDoorClosed ? "Open storage door" : "Close storage door"}

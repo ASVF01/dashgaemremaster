@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { officeYaw, viewForKey, shuffledPorts, tryConnect, taskComplete, WIRE_COLORS, OFFICE_MAX_YAW, officePitch, edgeScrollYaw, ventStepsCrossed, propScreenBox, OFFICE_FURNITURE_SCALE, OFFICE_DESK_DEPTH, OFFICE_UTIL_DEPTH } from "./managerOfficeRules";
+import {
+  officeYaw, viewForKey, shuffledPorts, tryConnect, taskComplete, WIRE_COLORS, OFFICE_MAX_YAW, officePitch,
+  edgeScrollYaw, ventStepsCrossed, propScreenBox, OFFICE_FURNITURE_SCALE, OFFICE_DESK_DEPTH, OFFICE_UTIL_DEPTH,
+  ANYDROID_B_DAMAGE_INTERVAL_MS, ANYDROID_B_ROAR_MS,
+  ANYDROID_B_LANDING_MS, ANYDROID_B_MAX_HP, ANYDROID_B_STAND_MS,
+  ANYDROID_B_TELEPORT_MS,
+  isFlashOnAnyDroidBHead, nextAnyDroidBAttack,
+} from "./managerOfficeRules";
 
 describe("manager office look", () => {
   it("centered cursor faces the desk, edges face the side walls", () => {
@@ -91,5 +98,27 @@ describe("office furniture placement", () => {
   });
   it("shrinking the desk lifts its top edge toward the middle", () => {
     expect(desk(1.9, 0.62).top).toBeLessThan(desk(OFFICE_FURNITURE_SCALE, OFFICE_DESK_DEPTH).top);
+  });
+});
+
+describe("ANYDROID-B office encounter", () => {
+  it("uses the requested teleport, landing, stand, and flashlight damage timings", () => {
+    expect(ANYDROID_B_TELEPORT_MS).toBe(450);
+    expect(ANYDROID_B_LANDING_MS).toBe(1500);
+    expect(ANYDROID_B_STAND_MS).toBe(2400);
+    expect(ANYDROID_B_ROAR_MS).toBe(1951);
+    expect(ANYDROID_B_MAX_HP).toBe(50);
+    expect(ANYDROID_B_DAMAGE_INTERVAL_MS).toBe(200);
+  });
+
+  it("selects attack 1 first when given the initial attack and randomizes later poses", () => {
+    expect(nextAnyDroidBAttack(() => 0)).toBe(1);
+    expect(nextAnyDroidBAttack(() => 0.5)).toBe(2);
+    expect(nextAnyDroidBAttack(() => 0.99)).toBe(3);
+  });
+
+  it("counts light only when its center is within the head target", () => {
+    expect(isFlashOnAnyDroidBHead(100, 100, 120, 110, 25)).toBe(true);
+    expect(isFlashOnAnyDroidBHead(100, 100, 130, 110, 25)).toBe(false);
   });
 });

@@ -34,6 +34,50 @@
   pointer-events: auto; z-index: 10;
 }
 .mo-shock:active { transform: translateY(0.4vw); box-shadow: 0 0.2vw 0 hsl(0 70% 22%); }
+.mo-anydroid { position: absolute; left: 50%; display: grid; place-items: stretch; transform: translateX(-50%); pointer-events: none; }
+.mo-anydroid > img { display: block; width: 100%; height: 100%; object-fit: contain; user-select: none; }
+.mo-anydroid-spawn1 > img { transform: scale(0.72); }
+.mo-anydroid-head-target { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; opacity: 0; }
+.mo-anydroid-spawn1 { animation: mo-anydroid-teleport 0.45s cubic-bezier(0.2, 0.8, 0.25, 1) both; }
+.mo-anydroid-landed > img { animation: mo-mata-zap 0.5s linear 1; }
+.mo-anydroid-attacking { animation: mo-anydroid-drift 1.2s steps(2, end) infinite; }
+.mo-anydroid-attacking.lit > img { animation: mo-anydroid-light-hit 0.16s linear infinite; }
+.mo-anydroid-roar { animation: mo-anydroid-roar-shake 0.08s linear infinite; }
+.mo-anydroid-roar > img {
+  transform-origin: center bottom;
+  animation: mo-anydroid-wide-stretch 1951ms ease-in forwards, mo-anydroid-fade 1951ms linear forwards;
+}
+@keyframes mo-anydroid-teleport {
+  from { transform: translate(-50%, -100vh) scaleY(1.8); }
+  72% { transform: translate(-50%, 0) scaleY(0.84); }
+  to { transform: translate(-50%, 0) scaleY(1); }
+}
+@keyframes mo-anydroid-drift {
+  0%, 100% { translate: 0 0; }
+  24% { translate: -10px 1px; }
+  52% { translate: 7px -3px; }
+  78% { translate: -5px 2px; }
+}
+@keyframes mo-anydroid-light-hit {
+  0%, 100% { translate: 0 0; }
+  35% { translate: -2px 0; }
+  70% { translate: 2px 0; }
+}
+@keyframes mo-anydroid-roar-shake {
+  0%, 100% { translate: 0 0; }
+  25% { translate: -12px 0; }
+  50% { translate: 11px 1px; }
+  75% { translate: -8px -1px; }
+}
+@keyframes mo-anydroid-wide-stretch {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(var(--anydroid-wide-scale)); }
+}
+@keyframes mo-anydroid-fade { from { opacity: 1; } to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .mo-anydroid { animation: none; }
+  .mo-anydroid > img { animation: none; }
+}
 .mo-death { position: absolute; inset: 0; z-index: 9999; display: grid; place-items: center; overflow: hidden; background: #000; }
 .mo-death-video { position: absolute; inset: 0; width: 100%; height: 100%; max-width: 100%; max-height: 100%; object-fit: contain; image-rendering: pixelated; }
 .mo-death-controls { position: absolute; bottom: 24px; display: flex; gap: 12px; }
@@ -165,9 +209,9 @@
 /* Task 2: console codes + Stevenson terminal hint (retro CRT look) */
 .mo-code-rig { display: flex; gap: 18px; align-items: stretch; justify-content: center; flex-wrap: wrap; width: 100%; }
 .mo-con-label { font-size: 11px; letter-spacing: 0.2em; margin-bottom: 8px; text-align: center; opacity: 0.8; }
-.mo-stev { border: 5px solid hsl(40 10% 45%); border-radius: 10px; padding: 10px; background: hsl(40 8% 22%); display: flex; flex-direction: column; min-width: 170px; box-shadow: inset 0 0 0 2px hsl(0 0% 0% / 0.5); }
-.mo-stev .mo-con-label { color: hsl(40 30% 85%); }
-.mo-stev-screen { flex: 1; display: flex; align-items: center; justify-content: center; font: 700 22px 'Press Start 2P', monospace; letter-spacing: 6px; color: hsl(38 95% 60%); text-shadow: 0 0 8px hsl(38 95% 55% / 0.7); border: 3px solid hsl(0 0% 6%); border-radius: 6px; padding: 18px 10px; background: hsl(0 0% 3%); }
+.mo-stev { position: relative; width: min(100%, 360px); min-width: 170px; aspect-ratio: 686 / 389; }
+.mo-stev-art { position: absolute; inset: 0; width: 100%; height: 100%; }
+.mo-stev-screen { position: absolute; left: 3%; top: 28%; width: 94%; height: 66%; display: flex; align-items: center; justify-content: center; font: 700 clamp(16px, 2.2vw, 22px) 'Press Start 2P', monospace; letter-spacing: 6px; color: hsl(var(--mo-crt-ink)); text-shadow: 0 0 8px hsl(var(--mo-crt-ink) / 0.7); }
 
 /* Hand-drawn ink re-skin of the desk terminal (matches the Nights 1-4 HP bar) */
 .mo-crt { --mo-crt-ink: 130 80% 55%; background: hsl(var(--select-black) / .92); color: hsl(var(--mo-crt-ink)); border: 7px solid hsl(var(--select-black)); border-radius: 14px 22px 12px 26px / 24px 12px 22px 14px; outline: 3px solid hsl(var(--mo-crt-ink)); outline-offset: -14px; box-shadow: 6px 6px 0 hsl(var(--select-black) / .7); font-family: 'Press Start 2P', monospace; filter: url(#mo-ink-wobble); }
