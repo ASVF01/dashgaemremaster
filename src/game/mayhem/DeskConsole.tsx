@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { getSettings } from "@/game/settings";
 import { mayhemSfx } from "@/game/sfx";
 import windupSfx from "@/assets/crank_windup.wav.asset.json";
@@ -99,16 +99,18 @@ function PowerTask({ onDone }: { onDone: () => void }) {
   const [sw, setSw] = useState(false);
   const [plug, setPlug] = useState<{ x: number; y: number } | null>(null); // drag pos while held
   const [plugged, setPlugged] = useState(false);
-  const [angle, setAngle] = useState(0); // total degrees cranked
+  const [charge, setCharge] = useState(0);
+  const angle = useRef(0);
+  const shownCharge = useRef(0);
   const [lights, setLights] = useState(false);
   const rigRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<HTMLDivElement>(null);
   const hubRef = useRef<HTMLDivElement>(null);
+  const crankArmRef = useRef<HTMLDivElement>(null);
   const genRef = useRef<HTMLDivElement>(null);
   const hum = useHum();
   const crankLast = useRef<number | null>(null);
   const nextClick = useRef(30);
-  const charge = Math.min(100, (angle / 360) * CRANK_PER_TURN);
 
   // Completion timer lives in a ref and is never cleared on unmount: closing the
   // console during "LIGHTS ON!" must still advance to Task 2 and light the room.
@@ -117,7 +119,7 @@ function PowerTask({ onDone }: { onDone: () => void }) {
     if (charge < 100 || doneTimer.current != null) return;
     setLights(true); hum.stop(); sfx(lightsSfx.url);
     doneTimer.current = setTimeout(onDone, 0); // lights come on the instant the crank finishes
-  }, [charge, onDone]);
+  }, [charge, hum, onDone]);
 
   const rel = (e: React.PointerEvent) => {
     const r = rigRef.current!.getBoundingClientRect();
@@ -150,12 +152,21 @@ function PowerTask({ onDone }: { onDone: () => void }) {
     if (d > 180) d -= 360; if (d < -180) d += 360;
     crankLast.current = a;
     if (d <= 0) return; // clockwise only, ratchet holds
-    setAngle((prev) => {
-      const n = prev + d;
-      if (n >= nextClick.current) { nextClick.current = n + 45; sfx(windupSfx.url, 0.8); }
-      hum.set(Math.min(100, (n / 360) * CRANK_PER_TURN));
-      return n;
-    });
+    angle.current += d;
+    if (crankArmRef.current) {
+      crankArmRef.current.style.transform = `rotate(${angle.current}deg)`;
+    }
+    const nextCharge = Math.min(100, (angle.current / 360) * CRANK_PER_TURN);
+    const wholeCharge = Math.floor(nextCharge);
+    if (wholeCharge !== shownCharge.current) {
+      shownCharge.current = wholeCharge;
+      setCharge(wholeCharge);
+    }
+    if (angle.current >= nextClick.current) {
+      nextClick.current = angle.current + 45;
+      sfx(windupSfx.url, 0.8);
+    }
+    hum.set(nextCharge);
   };
   const crankUp = () => { crankLast.current = null; };
 
@@ -180,7 +191,7 @@ function PowerTask({ onDone }: { onDone: () => void }) {
           </button>
           <div className={`mo-pw-crank ${plugged ? "" : "dead"}`}>
             <div ref={hubRef} className="mo-pw-hub" onPointerDown={crankDown} onPointerMove={crankMove} onPointerUp={crankUp} onPointerCancel={crankUp}>
-              <div className="mo-pw-crankarm" style={{ transform: `rotate(${angle}deg)` }}><span className="mo-pw-knob" /></div>
+              <div ref={crankArmRef} className="mo-pw-crankarm"><span className="mo-pw-knob" /></div>
             </div>
           </div>
           <div className="mo-pw-leds"><i className={sw ? "" : "red"} /><i className={plugged ? "green" : ""} /></div>
@@ -209,7 +220,7 @@ function PowerTask({ onDone }: { onDone: () => void }) {
 function useHum() {
   const ref = useRef<{ ctx: AudioContext; o: OscillatorNode; g: GainNode } | null>(null);
   useEffect(() => () => { const h = ref.current; if (h) { try { h.o.stop(); } catch { /* */ } void h.ctx.close(); } }, []);
-  return {
+  return useMemo(() => ({
     start() {
       if (ref.current) return;
       try {
@@ -230,7 +241,7 @@ function useHum() {
       h.g.gain.setTargetAtTime(0, h.ctx.currentTime, 0.15);
       setTimeout(() => { try { h.o.stop(); } catch { /* */ } void h.ctx.close(); }, 800);
     },
-  };
+  }), []);
 }
 
 function CodeTask({ onDone }: { onDone: () => void }) {

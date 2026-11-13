@@ -13,6 +13,9 @@ import doorCloseSfxUrl from "@/assets/mayhem/night5_door_close.ogg";
 import anyDroidBGahSfxUrl from "@/assets/mayhem/anydroid_b_gah.mp3";
 import anyDroidBAttackTwitchSfxUrl from "@/assets/mayhem/AttackTwitch.mp3";
 import anyDroidBTwitchDodgeSfxUrl from "@/assets/mayhem/TwitchDodge.mp3";
+import anyDroidBTeleportSfx from "@/assets/mayhem/teleport.mp3";
+import anyDroidBLandingSfx from "@/assets/mayhem/landing.mp3";
+import anyDroidBAttackBeginSfx from "@/assets/mayhem/Attack_Begin.ogg";
 import anyDroidBSpawn1 from "@/assets/mayhem/anydroid_b_spawn_1.png";
 import anyDroidBSpawn2 from "@/assets/mayhem/anydroid_b_spawn_2.png";
 import anyDroidBSpawn3 from "@/assets/mayhem/anydroid_b_spawn_3.png";
@@ -53,6 +56,7 @@ import {
 import { mayhemSfx } from "@/game/sfx";
 import { stopBgm } from "@/game/bgm";
 import DeskConsole from "./DeskConsole";
+import { WindowRain } from "./WindowRain";
 import { useOfficeMusic } from "./useOfficeMusic";
 import { useOfficeAtmosphere } from "./useOfficeAtmosphere";
 import OfficeAtmosphere from "./OfficeAtmosphere";
@@ -293,6 +297,10 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
   useOfficeMusic(!dead && (consoleProg.task > 0 || consoleProg.done)); // music begins once Task 1 lights the room
   useOfficeAtmosphere(!dead, consoleProg.task > 0 || consoleProg.done);
   const worldRef = useRef<HTMLDivElement>(null);
+  const fovSnapRef = useRef(0);
+  const triggerFovSnap = useCallback((intensity = 42) => {
+    fovSnapRef.current = intensity;
+  }, []);
   const cursorX = useRef(0);
   const pointerXRef = useRef(window.innerWidth / 2);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -303,9 +311,78 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
   const lookRight = useRef(false);
   const [flash, setFlash] = useState(false);
   const flashRef = useRef(flash); flashRef.current = flash;
+  const [lightning, setLightning] = useState(false);
   const [view, setView] = useState<OfficeView>("desk");
   const viewRef = useRef(view); viewRef.current = view;
   const [size, setSize] = useState({ w: window.innerWidth, h: window.innerHeight });
+  useEffect(() => {
+    if (dead) return;
+    let cancelled = false;
+    const timers = new Set<number>();
+    const contexts = new Set<AudioContext>();
+    const oscillators = new Set<OscillatorNode>();
+    const schedule = (callback: () => void, delay: number) => {
+      const timer = window.setTimeout(() => {
+        timers.delete(timer);
+        if (!cancelled) callback();
+      }, delay);
+      timers.add(timer);
+    };
+    const playThunder = () => {
+      let context: AudioContext;
+      try {
+        context = new AudioContext();
+      } catch (error) {
+        console.error("Failed to create Manager's Office thunder audio.", error);
+        return;
+      }
+      contexts.add(context);
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      const filter = context.createBiquadFilter();
+      oscillators.add(oscillator);
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(90, context.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(35, context.currentTime + 1.8);
+      oscillator.type = "sawtooth";
+      oscillator.frequency.setValueAtTime(55, context.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(25, context.currentTime + 1.8);
+      gain.gain.setValueAtTime(0.22, context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 1.8);
+      oscillator.connect(filter).connect(gain).connect(context.destination);
+      oscillator.onended = () => {
+        oscillators.delete(oscillator);
+        contexts.delete(context);
+        void context.close().catch((error: unknown) => {
+          console.error("Failed to close Manager's Office thunder audio.", error);
+        });
+      };
+      oscillator.start();
+      oscillator.stop(context.currentTime + 1.8);
+      void context.resume().catch((error: unknown) => {
+        console.error("Failed to resume Manager's Office thunder audio.", error);
+      });
+    };
+    const scheduleNext = () => {
+      schedule(() => {
+        setLightning(true);
+        schedule(() => setLightning(false), 450);
+        schedule(playThunder, 500);
+        scheduleNext();
+      }, 14000 + Math.random() * 8000);
+    };
+    scheduleNext();
+    return () => {
+      cancelled = true;
+      timers.forEach((timer) => window.clearTimeout(timer));
+      oscillators.forEach((oscillator) => oscillator.stop());
+      contexts.forEach((context) => {
+        void context.close().catch((error: unknown) => {
+          console.error("Failed to close Manager's Office thunder audio.", error);
+        });
+      });
+    };
+  }, [dead]);
   const [kidLaser, setKidLaser] = useState<{ state: KidLaserState; y: number }>({ state: "idle", y: 0 });
   const kidLaserRef = useRef(kidLaser); kidLaserRef.current = kidLaser;
   const mouseYRef = useRef(window.innerHeight / 2);
@@ -481,6 +558,18 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
       }
     };
   }, [anyDroidBAttack, anyDroidBCycle, anyDroidBPhase, dead, die]);
+  useEffect(() => {
+    if (dead) return;
+    if (anyDroidBPhase === "spawn1") {
+      playOnce(anyDroidBTeleportSfx, 0.9);
+      triggerFovSnap(28);
+    } else if (anyDroidBPhase === "landed") {
+      playOnce(anyDroidBLandingSfx, 1);
+      triggerFovSnap(55);
+    } else if (anyDroidBPhase === "attacking") {
+      playOnce(anyDroidBAttackBeginSfx, 0.95);
+    }
+  }, [anyDroidBPhase, dead, triggerFovSnap]);
   useEffect(() => {
     if (anyDroidBPhase === "attacking" && anyDroidBHp <= 0) setAnyDroidBPhase("roar");
   }, [anyDroidBHp, anyDroidBPhase]);
@@ -666,8 +755,10 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
         audioT = t;
       } else audioT = 0;
       pitch = approach(pitch, officePitch(viewRef.current), dt, 6);
+      fovSnapRef.current *= 0.85;
+      if (Math.abs(fovSnapRef.current) < 0.2) fovSnapRef.current = 0;
       if (worldRef.current) {
-        worldRef.current.style.transform = `translateZ(${P}px) rotateX(${pitch}deg) rotateY(${yaw}deg)`;
+        worldRef.current.style.transform = `translateZ(${P + fovSnapRef.current}px) rotateX(${pitch}deg) rotateY(${yaw}deg)`;
       }
       raf = requestAnimationFrame(tick);
     };
@@ -834,6 +925,11 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
         {/* FRONT: room */}
         <div className="mo-face" style={panel(0)}>
           <img src={frontRoom.url} alt="Manager's office" draggable={false} />
+          <div className="mo-window-pane">
+            <WindowRain lightning={lightning} />
+            <div className={`mo-window-flash${lightning ? " flashing" : ""}`} />
+          </div>
+          <div className={`mo-room-ambient-flash${lightning ? " flashing" : ""}`} />
           {anyDroidBFrame && (
             <div
               className={`mo-anydroid mo-anydroid-${anyDroidBPhase}${anyDroidBLightHit ? " lit" : ""}`}

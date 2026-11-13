@@ -2,7 +2,7 @@
 .mo-world { position: absolute; left: 50%; top: 50%; width: 0; height: 0; will-change: transform; transform-style: preserve-3d; }
 .mo-face { position: absolute; left: 0; top: 0; overflow: visible; backface-visibility: hidden; }
 .mo-face > img { object-fit: cover; }
-.mo-desk { position: absolute; left: 15%; bottom: 0; width: 70%; aspect-ratio: 707 / 312; }
+.mo-desk { position: absolute; left: 15%; bottom: 0; width: 70%; aspect-ratio: 707 / 312; z-index: 4; }
 .mo-util-desk { position: absolute; left: 0; bottom: 0; width: 100%; aspect-ratio: 949 / 207; }
 .mo-desk > img, .mo-util-desk > img { width: 100%; height: 100%; display: block; user-select: none; }
 .mo-gen-overlay { flex-direction: column; }
@@ -20,6 +20,54 @@
 .mo-face > img.mo-vent { inset: auto; left: 40%; top: 38%; width: 20%; height: auto; }
 .mo-face > svg.mo-vent { left: 40%; top: 38%; width: 20%; height: auto; }
 
+/* --- Manager Office Front Window Rain & Lightning --- */
+.mo-window-pane {
+  position: absolute;
+  left: 42.3%;
+  top: 16.1%;
+  width: 15.3%;
+  height: 25.3%;
+  overflow: hidden;
+  pointer-events: none;
+  background: transparent;
+  border: none;
+  z-index: 2;
+}
+
+.mo-window-flash {
+  position: absolute;
+  inset: 0;
+  background: hsl(205 95% 85% / 0.6);
+  mix-blend-mode: screen;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mo-window-flash.flashing {
+  animation: mo-lightning-burst 0.42s ease-out forwards;
+}
+
+.mo-room-ambient-flash {
+  position: absolute;
+  inset: 0;
+  background: hsl(205 80% 85% / 0.14);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 5;
+}
+
+.mo-room-ambient-flash.flashing {
+  animation: mo-lightning-burst 0.42s ease-out forwards;
+}
+
+@keyframes mo-lightning-burst {
+  0% { opacity: 0; }
+  15% { opacity: 0.85; }
+  35% { opacity: 0.15; }
+  55% { opacity: 0.95; }
+  100% { opacity: 0; }
+}
+
 @keyframes mo-shake {
   0% { transform: translate(-1.2%, 0.8%) rotate(-0.6deg); }
   50% { transform: translate(1.4%, -1%) rotate(0.7deg); }
@@ -34,7 +82,7 @@
   pointer-events: auto; z-index: 10;
 }
 .mo-shock:active { transform: translateY(0.4vw); box-shadow: 0 0.2vw 0 hsl(0 70% 22%); }
-.mo-anydroid { position: absolute; left: 50%; display: grid; place-items: stretch; transform: translateX(-50%); pointer-events: none; }
+.mo-anydroid { position: absolute; left: 50%; display: grid; place-items: stretch; transform: translateX(-50%); pointer-events: none; z-index: 3; }
 .mo-anydroid > img { display: block; width: 100%; height: 100%; object-fit: contain; user-select: none; }
 .mo-anydroid-spawn1 > img { transform: scale(0.72); }
 .mo-anydroid-head-target { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; opacity: 0; }
