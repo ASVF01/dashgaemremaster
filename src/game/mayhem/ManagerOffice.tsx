@@ -893,7 +893,6 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
   const anyDroidBBoxHeight = PH * 0.7;
   const anyDroidBScale = anyDroidBFrame
     ? Math.min(anyDroidBBoxWidth / anyDroidBSourceWidth, anyDroidBBoxHeight / 553)
-      * (anyDroidBFrame === "spawn1" ? 0.72 : 1)
     : 1;
   const anyDroidBRenderedWidth = Math.max(1, anyDroidBSourceWidth * anyDroidBScale);
   const anyDroidBStyle: React.CSSProperties & { "--anydroid-wide-scale": string } = {
