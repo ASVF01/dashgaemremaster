@@ -94,7 +94,7 @@
   animation: mo-anydroid-wide-stretch 1951ms ease-in forwards, mo-anydroid-fade 1951ms linear forwards;
 }
 @keyframes mo-anydroid-teleport {
-  from { transform: translate(-50%, -100vh) scaleX(0.38) scaleY(2.3); }
+  from { transform: translate(-50%, -100vh) scaleX(0.82) scaleY(1.28); }
   to { transform: translate(-50%, 0) scaleX(1) scaleY(1); }
 }
 @keyframes mo-anydroid-drift {
