@@ -888,7 +888,7 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
     anyDroidBPhase === "rising" ? "spawn3" :
     anyDroidBPhase === "attacking" ? ({ 1: "attack1", 2: "attack2", 3: "attack3" } as const)[anyDroidBAttack] :
     anyDroidBPhase === "roar" ? "defeat" : null;
-  const anyDroidBSourceWidth = anyDroidBFrame === "spawn1" ? 317 : 560;
+  const anyDroidBSourceWidth = 560;
   const anyDroidBBoxWidth = Math.min(size.w * 0.6, size.h * 0.68);
   const anyDroidBBoxHeight = PH * 0.7;
   const anyDroidBScale = anyDroidBFrame
