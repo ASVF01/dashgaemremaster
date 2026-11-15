@@ -562,12 +562,11 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
     if (dead) return;
     if (anyDroidBPhase === "spawn1") {
       playOnce(anyDroidBTeleportSfx, 0.9);
-      triggerFovSnap(28);
     } else if (anyDroidBPhase === "landed") {
       playOnce(anyDroidBLandingSfx, 1);
-      triggerFovSnap(55);
     } else if (anyDroidBPhase === "attacking") {
       playOnce(anyDroidBAttackBeginSfx, 0.95);
+      triggerFovSnap(55);
     }
   }, [anyDroidBPhase, dead, triggerFovSnap]);
   useEffect(() => {

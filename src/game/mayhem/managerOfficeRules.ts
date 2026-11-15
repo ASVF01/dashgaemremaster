@@ -161,7 +161,7 @@ export type AnyDroidBHeadAnchor = { x: number; y: number };
 export type AnyDroidBFrame = "spawn1" | "spawn2" | "spawn3" | "attack1" | "attack2" | "attack3" | "defeat";
 
 export const ANYDROID_B_MAX_HP = 50;
-export const ANYDROID_B_TELEPORT_MS = 450;
+export const ANYDROID_B_TELEPORT_MS = 320;
 export const ANYDROID_B_LANDING_MS = 1500;
 export const ANYDROID_B_STAND_MS = 2400;
 export const ANYDROID_B_ATTACK_MS = 1500;
