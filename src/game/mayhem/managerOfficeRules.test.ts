@@ -103,7 +103,7 @@ describe("office furniture placement", () => {
 
 describe("ANYDROID-B office encounter", () => {
   it("uses the requested teleport, landing, stand, and flashlight damage timings", () => {
-    expect(ANYDROID_B_TELEPORT_MS).toBe(450);
+    expect(ANYDROID_B_TELEPORT_MS).toBe(320);
     expect(ANYDROID_B_LANDING_MS).toBe(1500);
     expect(ANYDROID_B_STAND_MS).toBe(2400);
     expect(ANYDROID_B_ROAR_MS).toBe(1951);
