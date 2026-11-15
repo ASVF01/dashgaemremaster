@@ -85,7 +85,7 @@
 .mo-anydroid { position: absolute; left: 50%; display: grid; place-items: stretch; transform: translateX(-50%); pointer-events: none; z-index: 3; }
 .mo-anydroid > img { display: block; width: 100%; height: 100%; object-fit: contain; user-select: none; }
 .mo-anydroid-head-target { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; opacity: 0; }
-.mo-anydroid-spawn1 { animation: mo-anydroid-teleport 0.32s cubic-bezier(0.4, 0, 0.2, 1) both; }
+.mo-anydroid-spawn1 { transform-origin: center bottom; animation: mo-anydroid-teleport 0.32s cubic-bezier(0.4, 0, 0.2, 1) both; }
 .mo-anydroid-attacking { animation: mo-anydroid-drift 1.2s steps(2, end) infinite; }
 .mo-anydroid-attacking.lit > img { animation: mo-anydroid-light-hit 0.16s linear infinite; }
 .mo-anydroid-roar { animation: mo-anydroid-roar-shake 0.08s linear infinite; }
@@ -94,8 +94,8 @@
   animation: mo-anydroid-wide-stretch 1951ms ease-in forwards, mo-anydroid-fade 1951ms linear forwards;
 }
 @keyframes mo-anydroid-teleport {
-  from { transform: translate(-50%, -100vh) scaleY(1.7); }
-  to { transform: translate(-50%, 0) scaleY(1); }
+  from { transform: translate(-50%, -100vh) scaleX(0.38) scaleY(2.3); }
+  to { transform: translate(-50%, 0) scaleX(1) scaleY(1); }
 }
 @keyframes mo-anydroid-drift {
   0%, 100% { translate: 0 0; }
