@@ -1713,7 +1713,7 @@ export const mayhemSfx = {
   // Simon playback signal — lower pitch, bitcrushed + downsampled for a gritty CRT feel
   puzzleSignal(pad = 0) {
     const c = ac(); const b = nbus(); if (!c || !b) return;
-    const f = [262, 330, 392, 523][pad % 4] * 0.6;
+    const f = [220, 262, 330, 392, 440, 523][pad % 6] * 0.6;
     const dur = 0.18, rel = 0.12;
     const len = Math.floor(c.sampleRate * (dur + rel));
     const buf = c.createBuffer(1, len, c.sampleRate);

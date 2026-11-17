@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getSettings } from "@/game/settings";
 import { mayhemSfx } from "@/game/sfx";
 import windupSfx from "@/assets/crank_windup.wav.asset.json";
@@ -17,24 +17,26 @@ export default function DeskConsole({ progress, onRound, onClose }: { progress: 
   const kind = CONSOLE_TASKS[progress.task];
   const total = TASK_ROUNDS[kind];
   return (
-    <div className="mo-overlay" onClick={onClose}>
+    <div className="mo-overlay mo-console-overlay" onClick={onClose}>
       <div className="mo-crt" onClick={(e) => e.stopPropagation()}>
-        <div className="mo-crt-title">{progress.done ? "ALL TASKS COMPLETE" : `${TITLES[kind]}${total > 1 ? ` [${progress.round}/${total}]` : ""}`}</div>
-        <div className="mo-con-body" onPointerOver={(e) => {
-          const btn = (e.target as Element).closest("button");
-          if (btn && !btn.contains(e.relatedTarget as Node | null)) mayhemSfx.generatorHover();
-        }}>
-          {progress.done ? <p>Console online. (Boss not added yet.)</p> : (
-            <>
-              {kind === "power" && <PowerTask onDone={onRound} />}
-              {kind === "code" && <CodeTask key={progress.round} onDone={onRound} />}
-              {kind === "simon" && <SimonTask key={progress.round} round={progress.round} onDone={onRound} />}
-              {kind === "wire" && <WireTask key={progress.round} onDone={onRound} />}
-              {kind === "surge" && <SurgeTask onDone={onRound} />}
-            </>
-          )}
+        <div className="mo-console-screen">
+          <div className="mo-crt-title">{progress.done ? "ALL TASKS COMPLETE" : `${TITLES[kind]}${total > 1 ? ` [${progress.round}/${total}]` : ""}`}</div>
+          <div className="mo-con-body" onPointerOver={(e) => {
+            const btn = (e.target as Element).closest("button");
+            if (btn && !btn.contains(e.relatedTarget as Node | null)) mayhemSfx.generatorHover();
+          }}>
+            {progress.done ? <p>Console online. (Boss not added yet.)</p> : (
+              <>
+                {kind === "power" && <PowerTask onDone={onRound} />}
+                {kind === "code" && <CodeTask key={progress.round} onDone={onRound} />}
+                {kind === "simon" && <SimonTask key={progress.round} round={progress.round} onDone={onRound} />}
+                {kind === "wire" && <WireTask key={progress.round} onDone={onRound} />}
+                {kind === "surge" && <SurgeTask onDone={onRound} />}
+              </>
+            )}
+          </div>
+          <div className="mo-crt-foot">click outside or G to close</div>
         </div>
-        <div className="mo-crt-foot">click outside or G to close</div>
       </div>
     </div>
   );
@@ -52,8 +54,8 @@ function mechClick(pitch = 1) {
     const snapOsc = ctx.createOscillator();
     const snapGain = ctx.createGain();
     snapOsc.type = "square";
-    snapOsc.frequency.setValueAtTime(2100 * pitch, t);
-    snapOsc.frequency.exponentialRampToValueAtTime(300, t + 0.025);
+    snapOsc.frequency.setValueAtTime(1150 * pitch, t);
+    snapOsc.frequency.exponentialRampToValueAtTime(220, t + 0.025);
     snapGain.gain.setValueAtTime(vol, t);
     snapGain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
     snapOsc.connect(snapGain).connect(ctx.destination);
@@ -63,15 +65,15 @@ function mechClick(pitch = 1) {
     const thudOsc = ctx.createOscillator();
     const thudGain = ctx.createGain();
     thudOsc.type = "sine";
-    thudOsc.frequency.setValueAtTime(95 * pitch, t + 0.008);
-    thudOsc.frequency.exponentialRampToValueAtTime(38, t + 0.06);
-    thudGain.gain.setValueAtTime(vol * 0.75, t + 0.008);
-    thudGain.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+    thudOsc.frequency.setValueAtTime(58 * pitch, t + 0.008);
+    thudOsc.frequency.exponentialRampToValueAtTime(28, t + 0.09);
+    thudGain.gain.setValueAtTime(vol * 1.1, t + 0.008);
+    thudGain.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
     thudOsc.connect(thudGain).connect(ctx.destination);
     thudOsc.start(t + 0.008);
-    thudOsc.stop(t + 0.08);
+    thudOsc.stop(t + 0.1);
 
-    setTimeout(() => { void ctx.close(); }, 120);
+    setTimeout(() => { void ctx.close(); }, 140);
   } catch { /* noop */ }
 }
 function snap() {
@@ -248,20 +250,55 @@ function useHum() {
 function CodeTask({ onDone }: { onDone: () => void }) {
   const [r] = useState(() => makeCodeRound());
   const [wrong, setWrong] = useState(-1);
-  const hint = r.options[r.answer].split("").map((d, i) => (i === r.hintPos ? d : "_")).join(" ");
+  const [success, setSuccess] = useState(-1);
+  const [locked, setLocked] = useState(false);
+
+  const finalHint = `HINT: [ ${r.options[r.answer].split("").map((d, i) => (i === r.hintPos ? d : "_")).join(" ")} ]`;
+
+  const handleChoice = (i: number) => {
+    if (locked) return;
+    mechClick();
+    mayhemSfx.generatorCount?.();
+
+    if (i === r.answer) {
+      setLocked(true);
+      setSuccess(i);
+      mayhemSfx.puzzleConnect?.();
+      window.setTimeout(() => onDone(), 180);
+      return;
+    }
+
+    setWrong(i);
+    setLocked(true);
+    buzz();
+    window.setTimeout(() => {
+      setWrong(-1);
+      setLocked(false);
+    }, 300);
+  };
+
   return (
     <div className="mo-code-rig">
       <div className="mo-con-col">
         <div className="mo-con-label">CONSOLE</div>
         <div className="mo-con-grid">
           {r.options.map((o, i) => (
-            <button key={o} className={`mo-con-btn ${wrong === i ? "bad" : ""}`} onClick={() => { mechClick(); if (i === r.answer) onDone(); else { setWrong(i); buzz(); } }}>{o}</button>
+            <button
+              key={o}
+              className={`mo-con-btn ${wrong === i ? "bad" : ""} ${success === i ? "mo-con-btn-success" : ""}`}
+              disabled={locked}
+              onClick={() => handleChoice(i)}
+            >
+              {o}
+            </button>
           ))}
         </div>
       </div>
       <div className="mo-stev">
         <GeneratorArtwork className="mo-stev-art" />
-        <output className="mo-stev-screen" aria-label={`Generator code hint: ${hint}`}>{hint}</output>
+        <output className="mo-stev-screen" aria-label={`Generator code hint: ${finalHint}`}>
+          {finalHint}
+        </output>
       </div>
     </div>
   );
@@ -277,16 +314,16 @@ function SimonTask({ round, onDone }: { round: number; onDone: () => void }) {
     let i = 0; let on = false;
     const id = setInterval(() => {
       if (on) { setLit(-1); on = false; i++; if (i >= seq.length) { clearInterval(id); setShowing(false); } }
-      else { setLit(seq[i]); on = true; }
+      else { setLit(seq[i]); mayhemSfx.puzzleSignal(seq[i]); on = true; }
     }, 600);
     return () => clearInterval(id);
   }, [showing, seq]);
   const press = (b: number) => {
     if (showing) return;
-    mechClick();
-    mayhemSfx.generatorCount();
-    if (b !== seq[pos]) { buzz(); setSeq(makeSimonSequence(round)); setPos(0); setShowing(true); return; }
-    if (pos + 1 >= seq.length) onDone(); else setPos(pos + 1);
+    mechClick(0.8 + b * 0.12);
+    mayhemSfx.puzzleSignal(b);
+    if (b !== seq[pos]) { mayhemSfx.puzzleWrong(); setSeq(makeSimonSequence(round)); setPos(0); setShowing(true); return; }
+    if (pos + 1 >= seq.length) { mayhemSfx.puzzleConnect(); setTimeout(onDone, 200); } else setPos(pos + 1);
   };
   return (
     <div className="mo-con-col">
@@ -327,19 +364,19 @@ function WireTask({ onDone }: { onDone: () => void }) {
           <path key={`${c}-${jiggle?.color === c ? jiggle.id : 0}`}
             d={wirePath(12, 12.5 + WIRE_COLORS.indexOf(c) * 25, 88, 12.5 + ports.indexOf(c) * 25)}
             className={`mo-wire-path mo-w-${c}${jiggle?.color === c ? " mo-wire-jiggle" : ""}`}
-            strokeWidth={4} vectorEffect="non-scaling-stroke" />
+            strokeWidth={6} vectorEffect="non-scaling-stroke" />
         ))}
         {held && cursor && (
           <path d={wirePath(12, 12.5 + WIRE_COLORS.indexOf(held) * 25, cursor.x, cursor.y)}
-            className={`mo-wire-path mo-w-${held} mo-wire-live`} strokeWidth={4} vectorEffect="non-scaling-stroke" />
+            className={`mo-wire-path mo-w-${held} mo-wire-live`} strokeWidth={6} vectorEffect="non-scaling-stroke" />
         )}
       </svg>
       <div className="mo-ports">
-        <div>{WIRE_COLORS.map((c) => (
-          <button key={c} className={`mo-port mo-p-${c} ${held === c ? "held" : ""}`} disabled={linked.includes(c)} onClick={() => { mechClick(0.9); mayhemSfx.terminalSelect(); setHeld(c); }} aria-label={`${c} plug`} />
+        <div className="mo-wire-plugs">{WIRE_COLORS.map((c) => (
+          <button key={c} className={`mo-port mo-wire-plug mo-p-${c} ${held === c ? "held" : ""}`} disabled={linked.includes(c)} onClick={() => { mechClick(0.9); mayhemSfx.terminalSelect(); setHeld(c); }} aria-label={`${c} plug`} />
         ))}</div>
-        <div>{ports.map((c) => (
-          <button key={c} className={`mo-port mo-p-${c}`} disabled={linked.includes(c)} aria-label={`${c} port`}
+        <div className="mo-wire-terminals">{ports.map((c) => (
+          <button key={c} className={`mo-port mo-wire-terminal mo-p-${c}`} disabled={linked.includes(c)} aria-label={`${c} port`}
             onClick={() => {
               if (!held || completed.current) return;
               mechClick(0.9);
@@ -359,29 +396,109 @@ function WireTask({ onDone }: { onDone: () => void }) {
 
 function SurgeTask({ onDone }: { onDone: () => void }) {
   const [pct, setPct] = useState(0);
-  const holding = useRef(false);
+  const [complete, setComplete] = useState(false);
+  const inputs = useRef({ key: false, pointer: false });
+  const startedAt = useRef({ key: 0, pointer: 0 });
+  const completed = useRef(false);
+  const charge = useRef(pct);
+  charge.current = pct;
+  const hum = useHum();
+
+  const addTap = useCallback((click: boolean) => {
+    if (completed.current) return;
+    if (click) mechClick(0.7);
+    setPct((value) => addSurge(value, SURGE_TAP));
+  }, []);
+  const beginHold = useCallback((source: "key" | "pointer") => {
+    if (completed.current || inputs.current[source]) return;
+    inputs.current[source] = true;
+    startedAt.current[source] = performance.now();
+    mechClick(0.7);
+    hum.start();
+  }, [hum]);
+  const endHold = useCallback((source: "key" | "pointer", countTap: boolean) => {
+    if (!inputs.current[source]) return;
+    inputs.current[source] = false;
+    if (countTap && performance.now() - startedAt.current[source] < 180) addTap(false);
+    if (!inputs.current.key && !inputs.current.pointer) hum.stop();
+  }, [addTap, hum]);
+
   useEffect(() => {
+    const activeInputs = inputs.current;
     const down = (e: KeyboardEvent) => {
-      if (e.code !== "KeyE" || holding.current) return;
-      holding.current = true;
-      mechClick(0.85);
+      if (e.code === "KeyE" && !e.repeat) beginHold("key");
     };
-    const up = (e: KeyboardEvent) => { if (e.code === "KeyE") holding.current = false; };
-    window.addEventListener("keydown", down); window.addEventListener("keyup", up);
+    const up = (e: KeyboardEvent) => { if (e.code === "KeyE") endHold("key", true); };
+    const pointerUp = () => endHold("pointer", true);
+    const pointerCancel = () => endHold("pointer", false);
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    window.addEventListener("pointerup", pointerUp);
+    window.addEventListener("pointercancel", pointerCancel);
     let last = performance.now(); let raf = 0;
     const tick = (now: number) => {
       const dt = (now - last) / 1000; last = now;
-      if (holding.current) setPct((p) => addSurge(p, SURGE_HOLD_PER_SEC * dt));
+      if (activeInputs.key || activeInputs.pointer) {
+        setPct((value) => addSurge(value, SURGE_HOLD_PER_SEC * dt));
+        hum.set(charge.current);
+      }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => { cancelAnimationFrame(raf); window.removeEventListener("keydown", down); window.removeEventListener("keyup", up); };
-  }, []);
-  useEffect(() => { if (pct >= 100) onDone(); }, [pct, onDone]);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+      window.removeEventListener("pointerup", pointerUp);
+      window.removeEventListener("pointercancel", pointerCancel);
+      activeInputs.key = false;
+      activeInputs.pointer = false;
+      hum.stop();
+    };
+  }, [beginHold, endHold, hum]);
+  useEffect(() => {
+    if (pct < 100 || completed.current) return;
+    completed.current = true;
+    inputs.current.key = false;
+    inputs.current.pointer = false;
+    hum.stop();
+    mechClick(0.5);
+    setComplete(true);
+    window.setTimeout(onDone, 350);
+  }, [hum, onDone, pct]);
+
   return (
-    <div className="mo-con-col">
-      <div className="mo-gen-bar"><div style={{ width: `${pct}%` }} /><span>{Math.floor(pct)}%</span></div>
-      <button className="mo-con-btn" onClick={() => { mechClick(0.85); setPct((p) => addSurge(p, SURGE_TAP)); }}>HOLD E · or TAP HERE</button>
+    <div className={`mo-surge-console${pct >= 70 ? " amber" : ""}${complete ? " complete" : ""}`}>
+      <div className="mo-surge-title">EMERGENCY SURGE BREAKER</div>
+      <div className="mo-surge-readout">
+        <span>CAPACITOR CHARGE</span>
+        <output>{Math.floor(pct)}%</output>
+      </div>
+      <div
+        className={`mo-surge-meter${pct >= 70 ? " amber" : ""}`}
+        role="meter"
+        aria-label="Capacitor charge"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.floor(pct)}
+      >
+        {Array.from({ length: 20 }, (_, i) => (
+          <span key={i} className={pct >= (i + 1) * 5 ? "active" : ""} aria-hidden="true" />
+        ))}
+      </div>
+      <button
+        className="mo-surge-breaker"
+        disabled={complete}
+        aria-label="Charge emergency surge breaker"
+        onPointerDown={() => beginHold("pointer")}
+        onPointerUp={() => endHold("pointer", true)}
+        onPointerCancel={() => endHold("pointer", false)}
+        onClick={(e) => { if (e.detail === 0) addTap(true); }}
+      >
+        <span className="mo-surge-lever" aria-hidden="true" />
+        <span>CHARGE BREAKER</span>
+      </button>
+      <div className="mo-surge-hint">HOLD E OR PRESS AND HOLD · TAP TO PULSE</div>
     </div>
   );
 }

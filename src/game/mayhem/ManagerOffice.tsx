@@ -504,6 +504,8 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
   const [hp, setHp] = useState(50);
   const [tipOpen, setTipOpen] = useState(false);
   const [taskOpen, setTaskOpen] = useState(true); // Task 1 is the first thing the player does
+  const consoleTaskActive = taskOpen && !consoleProg.done;
+  const consoleFocusRef = useRef(consoleTaskActive); consoleFocusRef.current = consoleTaskActive;
   const deskSocketRef = useRef<HTMLDivElement>(null);
   const [deskPlugged, setDeskPlugged] = useState(false);
   const advanceConsole = useCallback(() => setConsoleProg(completeRound), []);
@@ -716,7 +718,7 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
         setView("desk");
         return;
       }
-      setView((v) => viewForKey(e.code, v));
+      if (!consoleFocusRef.current) setView((v) => viewForKey(e.code, v));
     };
     const onUp = (e: KeyboardEvent) => { if (e.code === "KeyZ") { setFlash(false); click(); } };
     window.addEventListener("keyup", onUp);
@@ -738,7 +740,10 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
     const tick = (now: number) => {
       const dt = (now - last) / 1000; last = now;
       const ceiling = viewRef.current === "ceiling";
-      if (lookRight.current && !ceiling) target = OFFICE_MAX_YAW;
+      if (consoleFocusRef.current) {
+        target = 0;
+        zone = 0;
+      } else if (lookRight.current && !ceiling) target = OFFICE_MAX_YAW;
       else if (!overlayRef.current) {
         const z = ceiling ? 0 : edgeZone(cursorX.current);
         target = yawTargetForView(viewRef.current, target, zone, z);
@@ -755,7 +760,7 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
         }
         audioT = t;
       } else audioT = 0;
-      pitch = approach(pitch, officePitch(viewRef.current), dt, 6);
+      pitch = approach(pitch, consoleFocusRef.current ? 0 : officePitch(viewRef.current), dt, 6);
       fovSnapRef.current *= 0.85;
       if (Math.abs(fovSnapRef.current) < 0.2) fovSnapRef.current = 0;
       if (worldRef.current) {
@@ -880,8 +885,10 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
     stageRef.current?.style.setProperty("--fx", `${e.clientX}px`);
     stageRef.current?.style.setProperty("--fy", `${e.clientY}px`);
     const y = e.clientY / window.innerHeight;
-    if (y < 0.16) setView("ceiling");
-    else if (y > 0.84) setView("desk");
+    if (!consoleFocusRef.current) {
+      if (y < 0.16) setView("ceiling");
+      else if (y > 0.84) setView("desk");
+    }
   };
 
   const anyDroidBFrame: AnyDroidBFrame | null =
@@ -910,7 +917,7 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
     + anyDroidBAnchor.y * 553 * anyDroidBScale;
 
   return (
-    <div ref={stageRef} className={`mo-stage${taskOpen && consoleProg.task === 0 && !consoleProg.done ? " mo-zoom-console" : ""}`} style={{ perspective: `${P}px` }} onPointerDown={onStagePointer}>
+    <div ref={stageRef} className={`mo-stage${consoleTaskActive ? " mo-zoom-console" : ""}`} style={{ perspective: `${P}px` }} onPointerDown={onStagePointer}>
       <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true"><filter id="mo-ink-wobble"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="7" /><feDisplacementMap in="SourceGraphic" scale="3" /></filter></svg>
       <div ref={worldRef} className="mo-world">
         {/* LEFT: door */}

@@ -5,8 +5,8 @@ const runRounds = (p: ConsoleProgress, n: number) => { for (let i = 0; i < n; i+
 
 describe("office console", () => {
   it("power is one round, then code starts", () => expect(runRounds(startConsole(), 1)).toEqual({ task: 1, round: 0, done: false }));
-  it("code takes 10 rounds before simon", () => expect(runRounds(startConsole(), 1 + 10).task).toBe(2));
-  it("simon takes 5 rounds before wires", () => expect(runRounds(startConsole(), 1 + 10 + 5).task).toBe(3));
+  it("code takes 4 rounds before simon", () => expect(runRounds(startConsole(), 1 + 4).task).toBe(2));
+  it("simon takes 5 rounds before wires", () => expect(runRounds(startConsole(), 1 + 4 + 5).task).toBe(3));
   it("one completed wire board immediately starts surge", () => expect(completeRound({ task: 3, round: 0, done: false })).toEqual({ task: 4, round: 0, done: false }));
   it("surge completes the console", () => expect(runRounds(startConsole(), 18).done).toBe(true));
   it("hint digit identifies only the answer", () => {
