@@ -504,6 +504,8 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
   const [hp, setHp] = useState(50);
   const [tipOpen, setTipOpen] = useState(false);
   const [taskOpen, setTaskOpen] = useState(true); // Task 1 is the first thing the player does
+  const deskSocketRef = useRef<HTMLDivElement>(null);
+  const [deskPlugged, setDeskPlugged] = useState(false);
   const advanceConsole = useCallback(() => setConsoleProg(completeRound), []);
   // NEO-MATA: crawl (vent jolts per step) -> sits in the vent draining air -> SHOCK sends her off.
   const [mata, setMata] = useState<"off" | "crawl" | "vent" | "shocked">("off");
@@ -908,7 +910,7 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
     + anyDroidBAnchor.y * 553 * anyDroidBScale;
 
   return (
-    <div ref={stageRef} className="mo-stage" style={{ perspective: `${P}px` }} onPointerDown={onStagePointer}>
+    <div ref={stageRef} className={`mo-stage${taskOpen && consoleProg.task === 0 && !consoleProg.done ? " mo-zoom-console" : ""}`} style={{ perspective: `${P}px` }} onPointerDown={onStagePointer}>
       <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true"><filter id="mo-ink-wobble"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="7" /><feDisplacementMap in="SourceGraphic" scale="3" /></filter></svg>
       <div ref={worldRef} className="mo-world">
         {/* LEFT: door */}
@@ -946,6 +948,7 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
             <img src={frontTable.url} alt="Manager's desk" draggable={false} />
             <button className="mo-hot" style={{ left: "37.5%", top: "6%", width: "28%", height: "41%" }}
               aria-label="Generator" onClick={() => { mayhemSfx.terminalOpen(); setTaskOpen(true); }} />
+            <div ref={deskSocketRef} className={`mo-desk-socket ${deskPlugged ? "on" : ""}`} aria-hidden><b /><b /></div>
             <button className="mo-hot" style={{ left: "17.8%", top: "70%", width: "10%", height: "18%" }}
               aria-label="Tip note" onClick={() => setTipOpen(true)} />
           </div>
@@ -1008,7 +1011,7 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
         <div className="mo-equip" onClick={() => setTaskOpen(false)}>
           <div className="mo-equip-hands" onClick={(e) => e.stopPropagation()}
             onPointerOver={(e) => { const b = (e.target as Element).closest("button"); if (b && !b.contains(e.relatedTarget as Node | null)) mayhemSfx.generatorHover(); }}>
-            <PowerTask onDone={advanceConsole} />
+            <PowerTask onDone={advanceConsole} socketEl={() => deskSocketRef.current} onPlugged={() => setDeskPlugged(true)} />
           </div>
         </div>
       )}

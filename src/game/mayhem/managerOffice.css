@@ -344,3 +344,10 @@
 .mo-equip .mo-stv-box .mo-pw-crankarm::before { height: 60px; }
 .mo-pw-crank-pop { animation: mo-crank-pop 0.3s cubic-bezier(.2,1.6,.5,1) both; }
 @keyframes mo-crank-pop { from { scale: 0; } to { scale: 1; } }
+
+/* Night starter: zoom onto the desk console; its plug socket sits on the CRT's right side. */
+.mo-stage { transition: transform 0.45s cubic-bezier(.3,.9,.4,1); transform-origin: 50% 78%; }
+.mo-stage.mo-zoom-console { transform: scale(1.7); }
+.mo-desk-socket { position: absolute; left: 64.5%; top: 22%; width: 3.2%; aspect-ratio: 1; border-radius: 50%; background: hsl(var(--select-black)); border: 3px solid hsl(0 0% 40%); display: flex; justify-content: center; align-items: center; gap: 18%; pointer-events: none; }
+.mo-desk-socket b { width: 14%; height: 42%; background: hsl(0 0% 60%); }
+.mo-desk-socket.on { border-color: hsl(130 80% 55%); box-shadow: 0 0 10px hsl(130 80% 55%); }

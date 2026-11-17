@@ -95,7 +95,9 @@ function buzz() {
 /** One full crank turn = this much charge. 5 turns to 100%. */
 const CRANK_PER_TURN = 20;
 
-export function PowerTask({ onDone }: { onDone: () => void }) {
+export function PowerTask({ onDone, socketEl, onPlugged }: { onDone: () => void; socketEl?: () => HTMLElement | null; onPlugged?: () => void }) {
+  const [, tick] = useState(0);
+  useEffect(() => { const t = setTimeout(() => tick((n) => n + 1), 450); return () => clearTimeout(t); }, []);
   const [sw, setSw] = useState(false);
   const [plug, setPlug] = useState<{ x: number; y: number } | null>(null); // drag pos while held
   const [plugged, setPlugged] = useState(false);
@@ -104,7 +106,8 @@ export function PowerTask({ onDone }: { onDone: () => void }) {
   const shownCharge = useRef(0);
   const [lights, setLights] = useState(false);
   const rigRef = useRef<HTMLDivElement>(null);
-  const socketRef = useRef<HTMLDivElement>(null);
+  const localSocket = useRef<HTMLDivElement>(null);
+  const socketRef = { get current() { return (socketEl?.() as HTMLDivElement | null) ?? localSocket.current; } };
   const hubRef = useRef<HTMLDivElement>(null);
   const crankArmRef = useRef<HTMLDivElement>(null);
   const genRef = useRef<HTMLDivElement>(null);
@@ -135,7 +138,7 @@ export function PowerTask({ onDone }: { onDone: () => void }) {
     const s = socketRef.current!.getBoundingClientRect();
     const near = Math.hypot(e.clientX - (s.left + s.width / 2), e.clientY - (s.top + s.height / 2)) < 60;
     setPlug(null);
-    if (near) { setPlugged(true); snap(); mechClick(1.2); mayhemSfx.puzzleConnect(); mayhemSfx.generatorImpact(false); } else mayhemSfx.puzzleRelease();
+    if (near) { setPlugged(true); onPlugged?.(); snap(); mechClick(1.2); mayhemSfx.puzzleConnect(); mayhemSfx.generatorImpact(false); } else mayhemSfx.puzzleRelease();
   };
 
   const hubAngle = (e: React.PointerEvent) => {
@@ -205,10 +208,10 @@ export function PowerTask({ onDone }: { onDone: () => void }) {
       <div className={`mo-pw-plug ${plug ? "held" : ""} ${!sw ? "dead" : ""}`} style={{ left: head.x, top: head.y }}
         onPointerDown={plugDown} onPointerMove={plugMove} onPointerUp={plugUp} aria-label="Power plug" />
 
-      <div className="mo-pw-console">
+      {!socketEl && <div className="mo-pw-console">
         <div className="mo-pw-label">CONSOLE</div>
-        <div ref={socketRef} className={`mo-pw-socket ${plugged ? "on" : ""}`}><b /><b /></div>
-      </div>
+        <div ref={localSocket} className={`mo-pw-socket ${plugged ? "on" : ""}`}><b /><b /></div>
+      </div>}
 
     </div>
   );
