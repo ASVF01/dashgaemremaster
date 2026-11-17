@@ -351,3 +351,6 @@
 .mo-desk-socket { position: absolute; left: 64.5%; top: 22%; width: 3.2%; aspect-ratio: 1; border-radius: 50%; background: hsl(var(--select-black)); border: 3px solid hsl(0 0% 40%); display: flex; justify-content: center; align-items: center; gap: 18%; pointer-events: none; }
 .mo-desk-socket b { width: 14%; height: 42%; background: hsl(0 0% 60%); }
 .mo-desk-socket.on { border-color: hsl(130 80% 55%); box-shadow: 0 0 10px hsl(130 80% 55%); }
+/* The desk zoom scales the room only: the held generator cancels it exactly (same box, same origin) and fits any screen. */
+.mo-stage.mo-zoom-console .mo-equip { transform: scale(calc(1 / 1.7)); transform-origin: 50% 78%; }
+.mo-equip .mo-pw .mo-stv { width: min(64%, 820px, 95vh); }
