@@ -95,7 +95,7 @@ function buzz() {
 /** One full crank turn = this much charge. 5 turns to 100%. */
 const CRANK_PER_TURN = 20;
 
-function PowerTask({ onDone }: { onDone: () => void }) {
+export function PowerTask({ onDone }: { onDone: () => void }) {
   const [sw, setSw] = useState(false);
   const [plug, setPlug] = useState<{ x: number; y: number } | null>(null); // drag pos while held
   const [plugged, setPlugged] = useState(false);
@@ -127,7 +127,7 @@ function PowerTask({ onDone }: { onDone: () => void }) {
   };
   const plugDown = (e: React.PointerEvent) => {
     if (!sw || plugged) return;
-    (e.target as Element).setPointerCapture(e.pointerId); setPlug(rel(e));
+    (e.target as Element).setPointerCapture(e.pointerId); setPlug(rel(e)); mayhemSfx.puzzleGrab(0.9);
   };
   const plugMove = (e: React.PointerEvent) => { if (plug) setPlug(rel(e)); };
   const plugUp = (e: React.PointerEvent) => {
@@ -135,7 +135,7 @@ function PowerTask({ onDone }: { onDone: () => void }) {
     const s = socketRef.current!.getBoundingClientRect();
     const near = Math.hypot(e.clientX - (s.left + s.width / 2), e.clientY - (s.top + s.height / 2)) < 60;
     setPlug(null);
-    if (near) { setPlugged(true); snap(); mayhemSfx.generatorImpact(false); }
+    if (near) { setPlugged(true); snap(); mechClick(1.2); mayhemSfx.puzzleConnect(); mayhemSfx.generatorImpact(false); } else mayhemSfx.puzzleRelease();
   };
 
   const hubAngle = (e: React.PointerEvent) => {
@@ -161,10 +161,11 @@ function PowerTask({ onDone }: { onDone: () => void }) {
     if (wholeCharge !== shownCharge.current) {
       shownCharge.current = wholeCharge;
       setCharge(wholeCharge);
+      if (wholeCharge % 5 === 0) mayhemSfx.generatorCount();
     }
     if (angle.current >= nextClick.current) {
       nextClick.current = angle.current + 45;
-      sfx(windupSfx.url, 0.8);
+      sfx(windupSfx.url, 0.8); mechClick(0.7 + nextCharge / 200); mayhemSfx.puzzleStep(Math.floor(angle.current / 45));
     }
     hum.set(nextCharge);
   };
@@ -186,14 +187,14 @@ function PowerTask({ onDone }: { onDone: () => void }) {
         <GeneratorArtwork className="mo-stv-art" />
         <div className="mo-stv-bar"><div style={{ width: `${charge}%` }} /></div>
         <div className="mo-stv-box">
-          <button className={`mo-pw-lever ${sw ? "on" : ""}`} disabled={sw} onClick={() => { setSw(true); snap(); hum.start(); }} aria-label="Flip power switch">
+          <button className={`mo-pw-lever ${sw ? "on" : ""}`} disabled={sw} onClick={() => { setSw(true); snap(); mechClick(0.8); mayhemSfx.puzzleConnect(); hum.start(); }} aria-label="Flip power switch">
             <span className="mo-pw-arm" />
           </button>
-          <div className={`mo-pw-crank ${plugged ? "" : "dead"}`}>
+          {plugged && <div className="mo-pw-crank mo-pw-crank-pop">
             <div ref={hubRef} className="mo-pw-hub" onPointerDown={crankDown} onPointerMove={crankMove} onPointerUp={crankUp} onPointerCancel={crankUp}>
               <div ref={crankArmRef} className="mo-pw-crankarm"><span className="mo-pw-knob" /></div>
             </div>
-          </div>
+          </div>}
           <div className="mo-pw-leds"><i className={sw ? "" : "red"} /><i className={plugged ? "green" : ""} /></div>
         </div>
       </div>
@@ -205,13 +206,10 @@ function PowerTask({ onDone }: { onDone: () => void }) {
         onPointerDown={plugDown} onPointerMove={plugMove} onPointerUp={plugUp} aria-label="Power plug" />
 
       <div className="mo-pw-console">
-        <div className="mo-pw-label">CONSOLE IN</div>
+        <div className="mo-pw-label">CONSOLE</div>
         <div ref={socketRef} className={`mo-pw-socket ${plugged ? "on" : ""}`}><b /><b /></div>
       </div>
 
-      <div className="mo-con-hint mo-pw-hint">
-        {lights ? "LIGHTS ON!" : !sw ? "flip the Stevenson's switch" : !plugged ? "plug the Stevenson into the console" : `crank the Stevenson · ${Math.floor(charge)}%`}
-      </div>
     </div>
   );
 }

@@ -55,7 +55,7 @@ import {
 } from "./managerOfficeRules";
 import { mayhemSfx } from "@/game/sfx";
 import { stopBgm } from "@/game/bgm";
-import DeskConsole from "./DeskConsole";
+import DeskConsole, { PowerTask } from "./DeskConsole";
 import { WindowRain } from "./WindowRain";
 import { useOfficeMusic } from "./useOfficeMusic";
 import { useOfficeAtmosphere } from "./useOfficeAtmosphere";
@@ -1004,7 +1004,15 @@ function OfficeRoom({ onExit, onRestart }: { onExit: () => void; onRestart: () =
           <img src={finalTip.url} alt="Your final tip" className="mo-tip" draggable={false} />
         </div>
       )}
-      {taskOpen && (
+      {taskOpen && consoleProg.task === 0 && !consoleProg.done && (
+        <div className="mo-equip" onClick={() => setTaskOpen(false)}>
+          <div className="mo-equip-hands" onClick={(e) => e.stopPropagation()}
+            onPointerOver={(e) => { const b = (e.target as Element).closest("button"); if (b && !b.contains(e.relatedTarget as Node | null)) mayhemSfx.generatorHover(); }}>
+            <PowerTask onDone={advanceConsole} />
+          </div>
+        </div>
+      )}
+      {taskOpen && !(consoleProg.task === 0 && !consoleProg.done) && (
         <DeskConsole progress={consoleProg} onRound={advanceConsole}
           onClose={() => { mayhemSfx.terminalClose(); setTaskOpen(false); }} />
       )}

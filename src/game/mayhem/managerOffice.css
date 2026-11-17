@@ -331,3 +331,16 @@
 .mo-dust-mote:nth-child(3n + 1) { animation-duration: 23s; animation-delay: -17s; }
 @keyframes mo-dust-drift { from { transform: translate(-9px, 14px); } to { transform: translate(12px, -17px); } }
 @media (prefers-reduced-motion: reduce) { .mo-dust-mote { animation: none; } }
+
+/* Night starter: Stevenson's generator held in your hands, cabled to the desk console. */
+.mo-equip { position: absolute; inset: 0; z-index: 40; pointer-events: auto; }
+.mo-equip-hands { position: absolute; left: 0; right: 0; bottom: 0; height: 72%; color: hsl(var(--mo-crt-ink)); }
+.mo-equip .mo-pw { height: 100%; animation: mo-equip-in 0.35s cubic-bezier(.2,1.4,.5,1) both; }
+@keyframes mo-equip-in { from { transform: translateY(60%); } to { transform: none; } }
+.mo-equip .mo-pw .mo-stv { top: auto; bottom: -4%; left: 3%; width: min(64%, 820px); animation: mo-equip-sway 3.2s ease-in-out infinite; }
+@keyframes mo-equip-sway { 0%,100% { rotate: -0.6deg; translate: 0 0; } 50% { rotate: 0.6deg; translate: 0 6px; } }
+.mo-equip .mo-pw .mo-pw-console { top: 4%; right: 4%; width: 130px; }
+.mo-equip .mo-stv-box .mo-pw-hub { width: 140px; height: 140px; }
+.mo-equip .mo-stv-box .mo-pw-crankarm::before { height: 60px; }
+.mo-pw-crank-pop { animation: mo-crank-pop 0.3s cubic-bezier(.2,1.6,.5,1) both; }
+@keyframes mo-crank-pop { from { scale: 0; } to { scale: 1; } }
