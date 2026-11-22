@@ -1,6 +1,7 @@
 import { PLAYER_H, PLAYER_W } from "./constants";
 import { sketchLine, sketchRect, sketchCircle } from "./draw";
 import { getSprite } from "./sprites";
+import { drawOldTimer } from "./oldTimerDraw";
 import { BOX_PRESSES, EVIL_SPAWN_DELAY, exitPowered, nearbyBox, type EvilChaseState } from "./evilChaseRules";
 
 export type EvilPalette = Record<"ink" | "eye" | "fog" | "ground" | "platform" | "edge" | "box" | "power" | "label" | "shadow", string>;
@@ -14,13 +15,23 @@ export function evilPalette(): EvilPalette {
 }
 const silhouettes = new WeakMap<HTMLImageElement, HTMLCanvasElement>();
 
-function drawReflection(ctx: CanvasRenderingContext2D, x: number, y: number, facing: number, pose: EvilChaseState["pose"], time: number, alpha: number, eye: boolean) {
+function drawReflection(ctx: CanvasRenderingContext2D, x: number, y: number, facing: number, pose: EvilChaseState["pose"], time: number, alpha: number, eye: boolean, oldTimer = false) {
   const colors = evilPalette();
   ctx.save(); ctx.globalAlpha = alpha;
   ctx.translate(x + PLAYER_W / 2, y + PLAYER_H);
   ctx.scale(facing, 1);
-  const sprite = getSprite(pose, Math.floor(time * 24));
-  if (sprite) {
+  const sprite = oldTimer ? null : getSprite(pose, Math.floor(time * 24));
+  if (oldTimer) {
+    ctx.save(); ctx.translate(-PLAYER_W / 2, -PLAYER_H);
+    const air = pose === "jump" || pose === "fall";
+    drawOldTimer(ctx, {
+      w: PLAYER_W, h: PLAYER_H, time, speed: pose === "idle" ? 0 : 420,
+      vy: pose === "jump" ? -1 : 1, onGround: !air && pose !== "dive",
+      sliding: pose === "slide", diving: pose === "dive", dashing: pose === "dash",
+      hurt: false, mach: 3, chompElapsed: -1, ink: colors.ink, evil: true,
+    });
+    ctx.restore();
+  } else if (sprite) {
     let dark = silhouettes.get(sprite);
     if (!dark) {
       dark = document.createElement("canvas"); dark.width = sprite.width; dark.height = sprite.height;
@@ -47,7 +58,9 @@ function drawReflection(ctx: CanvasRenderingContext2D, x: number, y: number, fac
   }
   if (eye) {
     const pulse = 0.6 + 0.4 * Math.pow(Math.sin(time * 7), 2);
-    const ex = 4, ey = pose === "slide" || pose === "dive" ? -20 : -44;
+    // Old Timer's star sits over his face (head centre is roughly 50px up).
+    const ex = oldTimer ? (pose === "slide" || pose === "dive" ? PLAYER_W / 2 + 18 : 10) : 4;
+    const ey = oldTimer ? (pose === "slide" || pose === "dive" ? -18 : -PLAYER_H + 1) : pose === "slide" || pose === "dive" ? -20 : -44;
     const radius = 8 + pulse * 3;
     ctx.fillStyle = colors.eye; ctx.shadowColor = colors.eye; ctx.shadowBlur = 8 + pulse * 8;
     ctx.beginPath();
@@ -62,10 +75,10 @@ function drawReflection(ctx: CanvasRenderingContext2D, x: number, y: number, fac
   ctx.restore();
 }
 
-export function drawEvilClone(ctx: CanvasRenderingContext2D, state: EvilChaseState, time: number) {
+export function drawEvilClone(ctx: CanvasRenderingContext2D, state: EvilChaseState, time: number, oldTimer = false) {
   if (!state.spawned) return;
-  for (const trail of state.trail) drawReflection(ctx, trail.x, trail.y, trail.facing, trail.pose, time, trail.life * 0.85, false);
-  drawReflection(ctx, state.x, state.y, state.facing, state.pose, time, 1, true);
+  for (const trail of state.trail) drawReflection(ctx, trail.x, trail.y, trail.facing, trail.pose, time, trail.life * 0.85, false, oldTimer);
+  drawReflection(ctx, state.x, state.y, state.facing, state.pose, time, 1, true, oldTimer);
 }
 
 export function drawEvilBoxes(ctx: CanvasRenderingContext2D, state: EvilChaseState, player: { x: number; y: number; w: number; h: number }) {

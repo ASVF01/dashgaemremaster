@@ -16,6 +16,8 @@ export type OldTimerPose = {
   mach: number;
   chompElapsed: number; // seconds since chomp started, -1 if none
   ink: string;
+  /** Evil doppelgänger gait: one arm reaching forward, dragging limp. */
+  evil?: boolean;
 };
 
 const PAPER_HEAD = "#fff8d6";
@@ -117,7 +119,9 @@ export function drawOldTimer(ctx: CanvasRenderingContext2D, s: OldTimerPose) {
   let lean = s.onGround ? Math.min(0.42, speed / 1400) : 0.12;
   if (chomp === "windup") lean = -0.25;
   if (chomp === "lunge") lean = 0.6;
-  const bob = running ? Math.abs(Math.sin(ph)) * -3 : s.onGround ? Math.sin(time * 2.5) * 0.8 : 0;
+  if (s.evil && running) lean = 0.28 + Math.max(0, Math.sin(ph)) * 0.18;
+  // Limp: deep sag on the dragged leg, a sharp hitch on the good one.
+  const bob = running && s.evil ? (Math.sin(ph) > 0 ? Math.sin(ph) * 5 : Math.sin(ph) * 2.5) : running ? Math.abs(Math.sin(ph)) * -3 : s.onGround ? Math.sin(time * 2.5) * 0.8 : 0;
 
   const hipX = w / 2;
   const hipY = h - 22 + bob;
@@ -128,7 +132,13 @@ export function drawOldTimer(ctx: CanvasRenderingContext2D, s: OldTimerPose) {
   const headY = neckY - Math.cos(lean) * (headR - 2);
 
   // Legs.
-  if (running) {
+  if (running && s.evil) {
+    // Good leg strides; bad leg barely lifts and drags behind, stiff.
+    const a = Math.sin(ph) * 0.95;
+    limb(ctx, hipX, hipY, 11, 11, a, a - Math.max(0, Math.cos(ph)) * 1.3, ink);
+    const drag = -0.55 + Math.sin(ph) * 0.18;
+    limb(ctx, hipX, hipY, 11, 11, drag, drag - 0.1, ink);
+  } else if (running) {
     const a = Math.sin(ph) * 0.9;
     const b = Math.sin(ph + Math.PI) * 0.9;
     limb(ctx, hipX, hipY, 11, 11, a, a - Math.max(0, Math.cos(ph)) * 1.2, ink);
@@ -155,7 +165,13 @@ export function drawOldTimer(ctx: CanvasRenderingContext2D, s: OldTimerPose) {
   // Arms from the shoulder (a bit below the neck).
   const shX = hipX + Math.sin(lean) * (torso - 4);
   const shY = hipY - Math.cos(lean) * (torso - 4);
-  if (chomp !== "none") {
+  if (s.evil && s.onGround && !s.dashing) {
+    // Reaching arm locked straight at you (twitching); the other hangs limp.
+    const twitch = Math.sin(time * 31) * 0.05;
+    limb(ctx, shX, shY, 11, 11, 1.62 - lean + twitch, 1.55 - lean - twitch, ink, 2.8);
+    const hang = running ? Math.sin(ph) * 0.25 : 0;
+    limb(ctx, shX, shY, 9, 9, -0.15 + hang, 0.05 + hang, ink, 2.6);
+  } else if (chomp !== "none") {
     // Arms flung back for the bite.
     limb(ctx, shX, shY, 9, 9, -1.9, -1.4, ink, 2.6);
     limb(ctx, shX, shY, 9, 9, -2.2, -1.8, ink, 2.6);

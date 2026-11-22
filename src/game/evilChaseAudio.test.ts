@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { EvilChaseAudio, phraseFrames, BFF_PHRASE_SECONDS } from "./evilChaseAudio";
+import { EvilChaseAudio, phraseFrames, BFF_PHRASE_SECONDS, THEME_TRACKS } from "./evilChaseAudio";
 
 vi.mock("./bgm", () => ({ isBgmMuted: () => false, subscribeBgmMuted: () => () => {} }));
 vi.mock("./settings", () => ({ getSettings: () => ({ bgmVolume: 0.7 }) }));
@@ -13,6 +13,13 @@ describe("radius soundtrack", () => {
     expect(phraseFrames(419168, 1)).toBe(419168);
     expect(phraseFrames(419168, 2)).toBe(419168);
     expect(phraseFrames(419168, 3)).toBe(3353344);
+  });
+
+  it("keeps Old Timer's slasher terror layers phrase-locked", () => {
+    const [l1, l2, l3, chase] = THEME_TRACKS.slasher.frames;
+    expect(l1 * 2).toBe(l2);
+    expect(l3).toBe(l2);
+    expect(chase).toBe(2311449);
   });
 
   it("starts all four native gapless loops on one clock and releases every source on exit", async () => {

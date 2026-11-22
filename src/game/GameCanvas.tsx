@@ -759,7 +759,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
 
   useEffect(() => {
     if (levelId !== "evil-you") return;
-    const audio = new EvilChaseAudio();
+    const audio = new EvilChaseAudio(getSelectedCharacter() === "oldtimer" ? "slasher" : "bff");
     evilAudioRef.current = audio;
     return () => { audio.dispose(); evilAudioRef.current = null; };
   }, [levelId, resetKey]);
@@ -3288,7 +3288,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
 
     if (r.evilChase) {
       drawEvilBoxes(ctx, r.evilChase, r.player);
-      drawEvilClone(ctx, r.evilChase, r.time);
+      drawEvilClone(ctx, r.evilChase, r.time, getSelectedCharacter() === "oldtimer");
     }
 
     // chaser red trail (drawn behind enemies) — sized to match the spook sprite
