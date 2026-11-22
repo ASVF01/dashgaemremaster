@@ -1,3 +1,4 @@
+import { drawSaiyanAura, usesSaiyanAura } from "./saiyanAura";
 import { useEffect, useRef, useState } from "react";
 import {
   GRAVITY, MOVE_ACCEL, MAX_SPEED, FRICTION, JUMP_VEL,
@@ -1771,7 +1772,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
 
     // afterimages — spawn when fast, diving, or dashing
     r.afterTimer -= dt;
-    if ((mach >= 1 || p.diving || p.dashTime > 0) && r.afterTimer <= 0) {
+    if ((mach >= 1 || p.diving || p.dashTime > 0) && r.afterTimer <= 0 && !(p.starman && !p.somSom && usesSaiyanAura(getSelectedCharacter()))) {
       const superDazh = p.superDashing && p.superDashTime >= 5;
       r.afterTimer = p.starman ? 0.10 : superDazh ? 0.075 : (p.dashTime > 0 ? 0.045 : Math.max(0.065, 0.12 - mach * 0.01));
       const life = p.starman ? 0.20 : (p.dashTime > 0 ? 0.16 : 0.14);
@@ -3501,8 +3502,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         }
       }
       // player
+      const aura = r.player.starman && !r.player.somSom && usesSaiyanAura(getSelectedCharacter());
+      if (aura) drawSaiyanAura(ctx, r.player.x + r.player.w / 2, r.player.y + r.player.h / 2, r.player.w, r.player.h, r.time);
       drawPlayer(ctx, r);
-      if (r.player.starman && !r.player.somSom) drawStarmanStars(ctx, r);
+      if (r.player.starman && !r.player.somSom && !aura) drawStarmanStars(ctx, r);
     }
 
 

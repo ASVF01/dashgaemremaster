@@ -31,3 +31,4 @@
 - Title-screen mode buttons are full-width slices of their card artwork; the interactive overlay must cover that exact band at the slice's own aspect ratio (never a fixed button height), or the drawn START bar renders squashed.
 - Before changing or recreating artwork, inspect `src/assets/sprites/` and the relevant existing asset folders. Prefer the project's/user-provided sprites over CSS approximations, bundle user-provided artwork and audio locally, and verify images load in the running app.
 - Old Timer is drawn live by `oldTimerDraw.ts` (no sprites, `getSprite` returns null) with pure Feral Chomp timing in `oldTimerRules.ts`, so his look stays the original ink figure and the B move stays testable.
+- Invboi visuals are chosen per character by tested `usesSaiyanAura` in `saiyanAura.ts`: classic roster keeps rainbow trail + sparkles, Old Timer and later characters get the canvas aura drawn behind the player, so new characters inherit it by default.
