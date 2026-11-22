@@ -2,7 +2,7 @@
 export const SSJ_CHARGE = 1.3; // charging stance + push-in, synced to the "who is" cue
 export const SSJ_SCREAM = 0.7; // scream pose + horizontal shake after the snap
 /** Seconds the transformed state holds before it powers itself down. */
-export const SSJ_DURATION = 20;
+export const SSJ_DURATION = 90;
 
 /** True once the powered state has held long enough to end. */
 export function ssjExpired(elapsed: number): boolean {

@@ -15,10 +15,10 @@ describe("Old Timer SSJ transformation", () => {
     expect(ssjShakeX(0.5)).toBe(0);
     expect(ssjShakeX(1.31)).not.toBe(0);
   });
-  it("holds the transformed state for 20 seconds, then expires", () => {
-    expect(SSJ_DURATION).toBe(20);
+  it("holds the transformed state for 90 seconds (45 + 45), then expires", () => {
+    expect(SSJ_DURATION).toBe(90);
     expect(ssjExpired(0)).toBe(false);
-    expect(ssjExpired(19.98)).toBe(false);
-    expect(ssjExpired(20)).toBe(true);
+    expect(ssjExpired(89.98)).toBe(false);
+    expect(ssjExpired(90)).toBe(true);
   });
 });
