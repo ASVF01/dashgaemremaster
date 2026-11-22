@@ -38,7 +38,7 @@ export const LEVELS: LevelMeta[] = [
   { id: "scribble-3", name: "OVERDRIVE",  subtitle: "go absurdly fast",    difficulty: 4, par: 60 },
   { id: "chase",      name: "Literaly every platformer chase level",  subtitle: "don't look back. parry to push it off.", difficulty: 4, par: 45 },
   { id: "speed-test", name: "??? SPEED TEST ???", subtitle: "the hallway never ends. or does it.", difficulty: 4, par: 30, hidden: true },
-  { id: "just-run-bro", name: "JUST RUN BRO..", subtitle: "no obstacles. no enemies. just vibes.", difficulty: 1, par: 9999 },
+  { id: "just-run-bro", name: "Just Run Brah.", subtitle: "no obstacles. no enemies. just vibes.", difficulty: 1, par: 9999 },
   { id: "meet-invboi", name: "CELESTIAL ENCOUNTER", subtitle: "say hi to a new friend :)", difficulty: 1, par: 60 },
   { id: "roaring-knight", name: "THE ROARING KNIGHT", subtitle: "closed for rework. he'll be back.", difficulty: 4, par: 120, locked: true },
   { id: "aftermath-1", name: "ASHEN MARGINS",  subtitle: "after the knight, the ink keeps bleeding.", difficulty: 4, par: 60 },
