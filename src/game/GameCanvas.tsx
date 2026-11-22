@@ -1051,7 +1051,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       if (!r || !c) return;
       const dt = Math.min(0.033, (t - last) / 1000);
       last = t;
-      evilAudioRef.current?.setActive(!paused && !r.finished && r.player.alive);
+      // The chase OST stays silent until the player steps inside the outer
+      // radius; the band latch keeps it alive until they fully escape.
+      const chaseHeard = (r.evilChase?.band ?? 0) > 0;
+      evilAudioRef.current?.setActive(!paused && !r.finished && r.player.alive && chaseHeard);
       evilAudioRef.current?.setBand(r.evilChase?.band ?? 0);
       sfx.characterPowered(r.player.starman);
       if (!paused && !r.finished && r.player.alive) {
