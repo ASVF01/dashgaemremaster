@@ -1,4 +1,5 @@
 import { Platform, Hazard, Enemy, Pickup } from "./constants";
+import { buildEvilChaseLevel } from "./evilChaseMap";
 
 export type Level = {
   width: number;
@@ -17,9 +18,10 @@ export type Level = {
   // Pre-placed invboi-star pickup (normally spawned by pressing E).
   // When set, the GameCanvas will spawn it at level init.
   invboiStart?: { x: number; y: number; facing: 1 | -1 };
+  objectiveBoxes?: { x: number; y: number }[];
 };
 
-export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "chase" | "speed-test" | "just-run-bro" | "meet-invboi" | "roaring-knight" | "aftermath-1" | "aftermath-2" | "aftermath-3" | "celestial-marathon" | "mayhem-outside" | "mayhem-main" | "mayhem-floor-1" | "mayhem-floor-2";
+export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "chase" | "evil-you" | "speed-test" | "just-run-bro" | "meet-invboi" | "roaring-knight" | "aftermath-1" | "aftermath-2" | "aftermath-3" | "celestial-marathon" | "mayhem-outside" | "mayhem-main" | "mayhem-floor-1" | "mayhem-floor-2";
 
 export type LevelMeta = {
   id: LevelId;
@@ -37,6 +39,7 @@ export const LEVELS: LevelMeta[] = [
   { id: "scribble-2", name: "PAPER CUTS", subtitle: "shooters everywhere", difficulty: 3, par: 55 },
   { id: "scribble-3", name: "OVERDRIVE",  subtitle: "go absurdly fast",    difficulty: 4, par: 60 },
   { id: "chase",      name: "Literaly every platformer chase level",  subtitle: "don't look back. parry to push it off.", difficulty: 4, par: 45 },
+  { id: "evil-you", name: "Literally just you but evil", subtitle: "five boxes. one very bad reflection.", difficulty: 4, par: 180 },
   { id: "speed-test", name: "??? SPEED TEST ???", subtitle: "the hallway never ends. or does it.", difficulty: 4, par: 30, hidden: true },
   { id: "just-run-bro", name: "Just Run Brah.", subtitle: "no obstacles. no enemies. just vibes.", difficulty: 1, par: 9999 },
   { id: "meet-invboi", name: "CELESTIAL ENCOUNTER", subtitle: "say hi to a new friend :)", difficulty: 1, par: 60 },
@@ -59,6 +62,7 @@ export function buildLevel(id: LevelId = "scribble-1", opts: { marathon?: boolea
     case "scribble-2": lv = buildLevel2(); break;
     case "scribble-3": lv = buildLevel3(); break;
     case "chase":      lv = buildChase(); break;
+    case "evil-you":   lv = buildEvilChaseLevel(); break;
     case "speed-test": lv = buildSpeedTest(); break;
     case "just-run-bro": lv = buildJustRunBro(opts.marathon); break;
     case "meet-invboi": lv = buildMeetInvboi(); break;

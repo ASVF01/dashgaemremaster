@@ -1,5 +1,8 @@
 # Project Architecture Rules
 
+- Evil-clone chase uses isolated pure objective/radius/route rules and map data; replay traversable player routes so vertical pursuit cannot tunnel through terrain or inherit the old ground-pinned chaser.
+- Evil-chase music owns synchronized native Web Audio loops and live mute/volume control; its owner cleans up on pause, death, retry and exit so radius stems cannot layer over shared music.
+
 - Manager's Office music uses an office-owned Web Audio lifecycle with five-bit quantization and 6 kHz sample-and-hold applied once after decoding, live settings/mute subscriptions, and a dry gain path; pause the shared soundtrack during the office and release/resume on exit so closing the console cannot restart or layer music.
 - Night 5 atmosphere uses an office-owned SFX lifecycle and a pointer-transparent screen-space effect layer; this keeps storm ducking, flashlight masks and cleanup independent of the shared soundtrack, box camera and encounters.
 

@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Build “Literally just you but evil”: huge vertical map without crawlspaces, five R×5 boxes, delayed spawn-point clone, modest chase boost/effects, BFF1–4 seamless radius audio; test and verify desktop/mobile play.
+
 - [x] Add Night 5 muffled storm from Task 1, music-aware ducking, textured vignette, flashlight-lit dust and subtle scanlines; 26 focused tests pass, live switch/plug/crank-to-Task-2 flow and ceiling clicks verified, office audio closes on exit, desktop and landscape-phone effects checked.
 
 - [x] Night 5 Task 1 on the real Stevenson generator (switch + crank in its box, plug into console, rising hum); office music starts only after Task 1.
