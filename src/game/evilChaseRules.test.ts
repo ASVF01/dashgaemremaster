@@ -97,7 +97,7 @@ describe("Literally just you but evil", () => {
     state.route = Array.from({ length: 151 }, (_, i) => ({ ...player, x: gate.x - 1200 + i * 8, y: atGate.y }));
     expect(beginEscape(state, atGate, gate)).toBe(true);
     expect(state.phase).toBe("escape");
-    expect(state.band).toBe(4);
+    expect(state.band).toBe(0); // chase OST waits for the close radius
     expect(state.x).toBe(gate.x - 1000);
     expect(state.y).toBe(atGate.y);
     expect(canFinishEvilChase(state)).toBe(true);

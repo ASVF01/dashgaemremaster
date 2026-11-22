@@ -67,7 +67,7 @@ export function beginEscape(state: EvilChaseState, player: { x: number; y: numbe
   const anchor = state.route[index];
   state.x = anchor.x; state.y = anchor.y; state.facing = anchor.facing; state.pose = anchor.pose;
   state.route = state.route.slice(index); state.cursor = 0;
-  state.spawned = true; state.band = 4; state.sightShake = SIGHT_SHAKE_SECONDS;
+  state.spawned = true; state.sightShake = SIGHT_SHAKE_SECONDS;
   state.trail = []; state.trailClock = 0;
   return true;
 }
