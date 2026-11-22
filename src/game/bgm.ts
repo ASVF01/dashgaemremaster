@@ -727,3 +727,10 @@ export function resetBgmLevelEndFx(rampSec = 0.25) {
   }
 }
 
+
+// Old Timer SSJ theme: replaces the INVBOI track, started at the transformation snap.
+import ssjThemeA from "@/assets/saiyan/ssj_theme.mp3.asset.json";
+export function playSsjBgm() {
+  ac();
+  playSrc(ssjThemeA.url, true);
+}

@@ -17,7 +17,7 @@ import { canChomp, chompPhase, CHOMP_COOLDOWN, CHOMP_LUNGE_SPEED, CHOMP_REACH } 
 import { isPressed, matchesAction, getLiveBinds } from "@/game/keybinds";
 import { sfx, unlockAudio, setCelestialMode, setThunderMode, setMetalMode, setWoodMode, setGrassMode } from "@/game/sfx";
 
-import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, playChaseStarmanLayer, stopStarmanLayer, getStarmanElapsed, playSomSomBgm, getSomSomElapsed } from "@/game/bgm";
+import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, playChaseStarmanLayer, stopStarmanLayer, getStarmanElapsed, playSomSomBgm, playSsjBgm, getSomSomElapsed } from "@/game/bgm";
 import weSfxUrl from "@/assets/audio/impact_aura_charge.ogg";
 import { getSettings } from "@/game/settings";
 import { gameplayZoom, clampCamera } from "@/game/viewportRules";
@@ -802,7 +802,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       unlockAudio();
       if (inJrb) playSomSomBgm();
       else if (levelIdRef.current === "chase") playChaseStarmanLayer();
-      else if (levelIdRef.current !== "evil-you") playStarmanBgm();
+      else if (levelIdRef.current !== "evil-you" && !usesSaiyanAura(getSelectedCharacter())) playStarmanBgm();
       sfx.shineStart();
       setCelestialMode(true, { replaceDefaults: !inJrb });
       setThunderMode(inJrb);
@@ -1434,7 +1434,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     if (p.ssjT >= 0) {
       const before = p.ssjT;
       p.ssjT += dt;
-      if (before < SSJ_CHARGE && p.ssjT >= SSJ_CHARGE) ssjAudio.burst();
+      if (before < SSJ_CHARGE && p.ssjT >= SSJ_CHARGE) { ssjAudio.burst(); if (levelIdRef.current !== "evil-you" && levelIdRef.current !== "chase") playSsjBgm(); }
       if (ssjPhase(p.ssjT) === "charge") { p.vx = 0; if (p.vy < 0) p.vy = 0; }
       r.punchZoom = ssjZoom(p.ssjT);
       if (ssjPhase(p.ssjT) === "done") { p.ssjT = -1; r.punchZoom = 1; }
@@ -2310,7 +2310,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         unlockAudio();
         if (inJrb) playSomSomBgm();
         else if (levelIdRef.current === "chase") playChaseStarmanLayer();
-        else if (levelIdRef.current !== "evil-you") playStarmanBgm();
+        else if (levelIdRef.current !== "evil-you" && !usesSaiyanAura(getSelectedCharacter())) playStarmanBgm();
         sfx.shineStart();
         setCelestialMode(true, { replaceDefaults: !inJrb });
         setThunderMode(inJrb);
