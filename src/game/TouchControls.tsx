@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useTouchControls } from "@/hooks/use-touch-controls";
 import { useKeybinds, type ActionId } from "@/game/keybinds";
+import { Button } from "@/components/ui/button";
 
 // Touch overlay that synthesizes the same keyboard codes the game already
 // listens for. Reusing the keyboard pipeline keeps every system (cheats,
@@ -71,7 +72,7 @@ function HoldButton({ code, label, className, ariaLabel }: BtnProps) {
   );
 }
 
-export default function TouchControls({ visible }: { visible: boolean }) {
+export default function TouchControls({ visible, interact = false }: { visible: boolean; interact?: boolean }) {
   const touch = useTouchControls();
   const [binds] = useKeybinds();
 
@@ -97,6 +98,7 @@ export default function TouchControls({ visible }: { visible: boolean }) {
 
       {/* RIGHT cluster: actions */}
       <div className="absolute right-2 bottom-2 sm:right-3 sm:bottom-3 grid grid-cols-3 gap-1.5 sm:gap-2">
+        {interact && <Button type="button" aria-label="Press objective box" onClick={() => { fire("keydown", "KeyR"); fire("keyup", "KeyR"); }} className="pointer-events-auto col-span-3 h-10 scribble-border bg-paper/85 text-ink font-marker">R</Button>}
         <HoldButton code={codeFor("slide", "KeyC")} label="SLIDE" className="w-12 h-10 sm:w-14 sm:h-12 text-[10px]" />
         <HoldButton code={codeFor("jump", "KeyZ")}  label="JUMP"  className="w-12 h-10 sm:w-14 sm:h-12 text-[10px]" />
         <HoldButton code={codeFor("dash", "KeyV")}  label="DASH"  className="w-12 h-10 sm:w-14 sm:h-12 text-[10px]" />

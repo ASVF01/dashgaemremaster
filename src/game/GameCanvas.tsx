@@ -18,6 +18,9 @@ import { getSettings } from "@/game/settings";
 import { gameplayZoom, clampCamera } from "@/game/viewportRules";
 import { slideDustFrame, slideDustAnchor, slideDustSpread } from "@/game/slideDustRules";
 import { getSprite, type SpriteState } from "@/game/sprites";
+import { createEvilChase, stepEvilChase, pressBox, exitPowered, cloneTouchesPlayer, CHASE_SPEED_MULTIPLIER, type EvilChaseState, type RoutePoint } from "@/game/evilChaseRules";
+import { EvilChaseAudio } from "@/game/evilChaseAudio";
+import { drawEvilClone, drawEvilBoxes, drawEvilExit, drawEvilAtmosphere, evilPalette } from "@/game/evilChaseDraw";
 import { getSelectedCharacter } from "@/game/character";
 import spookUrl from "@/assets/sprites/spook.png";
 import spookHurtUrl from "@/assets/sprites/spook_hurt.png";
@@ -342,6 +345,7 @@ interface Afterimage {
 
 interface GameRefs {
   level: Level;
+  evilChase: EvilChaseState | null;
   player: Player;
   projectiles: Projectile[];
   particles: Particle[];
@@ -515,6 +519,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
   const deathTimeoutRef = useRef<number | null>(null);
   const refs = useRef<GameRefs | null>(null);
   const keysRef = useRef<Keys>({});
+  const evilAudioRef = useRef<EvilChaseAudio | null>(null);
+  const pausedRef = useRef(paused);
+  pausedRef.current = paused;
   const levelIdRef = useRef<LevelId>(levelId);
   levelIdRef.current = levelId;
   const onInvboiPickupRef = useRef<(() => void) | undefined>(onInvboiPickup);
@@ -603,6 +610,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     const level = buildLevel(levelId, { marathon: startAsInvboi });
     refs.current = {
       level,
+      evilChase: level.objectiveBoxes ? createEvilChase(level.spawn, level.objectiveBoxes) : null,
       player: {
         x: level.spawn.x, y: level.spawn.y,
         vx: 0, vy: 0,
@@ -743,6 +751,13 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     if (levelId === "roaring-knight") sfx.preloadBossRoar();
   }, [resetKey, levelId, startAsInvboi]);
 
+  useEffect(() => {
+    if (levelId !== "evil-you") return;
+    const audio = new EvilChaseAudio();
+    evilAudioRef.current = audio;
+    return () => { audio.dispose(); evilAudioRef.current = null; };
+  }, [levelId, resetKey]);
+
   // BGM: stop on unmount only. The parent (Index) decides which track to
   // play based on the current screen (menu vs playing) so we don't race
   // with the menu music here. Restart on retry is also driven by the
@@ -773,7 +788,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       unlockAudio();
       if (inJrb) playSomSomBgm();
       else if (levelIdRef.current === "chase") playChaseStarmanLayer();
-      else playStarmanBgm();
+      else if (levelIdRef.current !== "evil-you") playStarmanBgm();
       sfx.shineStart();
       setCelestialMode(true, { replaceDefaults: !inJrb });
       setThunderMode(inJrb);
@@ -781,6 +796,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     };
     const down = (e: KeyboardEvent) => {
       keysRef.current[e.code] = true;
+      if (e.code === "KeyR" && refs.current?.evilChase) {
+        e.preventDefault();
+        const r = refs.current;
+        if (!e.repeat && !pausedRef.current && r.player.alive && !r.finished && r.evilChase && pressBox(r.evilChase, r.player)) {
+          sfx.menuClick();
+          r.score += 100;
+        }
+        return;
+      }
       if (refs.current?.boss?.phase === "intro") {
         e.preventDefault();
         keysRef.current[e.code] = false;
@@ -1003,6 +1027,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       if (!r || !c) return;
       const dt = Math.min(0.033, (t - last) / 1000);
       last = t;
+      evilAudioRef.current?.setActive(!paused && !r.finished && r.player.alive);
+      evilAudioRef.current?.setBand(r.evilChase?.band ?? 0);
       sfx.characterPowered(r.player.starman);
       if (!paused && !r.finished && r.player.alive) {
         if (r.freezeTime > 0) {
@@ -1456,7 +1482,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     if (right) dir += 1;
     if (dir !== 0) p.facing = dir > 0 ? 1 : -1;
 
-    const speedMul = p.starman ? 1.5 : (isAlt ? 1.15 : 1);
+    const speedMul = (p.starman ? 1.5 : (isAlt ? 1.15 : 1)) * (r.evilChase?.band === 4 ? CHASE_SPEED_MULTIPLIER : 1);
     if (dir !== 0) {
       p.vx += dir * MOVE_ACCEL * speedMul * dt;
     } else {
@@ -1822,6 +1848,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     }
     if (r.shake > 0) r.shake = Math.max(0, r.shake - dt * 3);
     if (r.glitch > 0) r.glitch = Math.max(0, r.glitch - dt * 4);
+
+    if (r.evilChase) {
+      const pose: RoutePoint["pose"] = p.dashTime > 0 ? "dash" : p.diving ? "dive" : p.sliding ? "slide" : !p.onGround ? (p.vy > 0 ? "fall" : "jump") : Math.abs(p.vx) > 60 ? "runFast" : "idle";
+      stepEvilChase(r.evilChase, { x: p.x, y: p.y, facing: p.facing, pose }, r.time, dt, r.level.platforms, MAX_SPEED * (isAlt ? 1.15 : 1));
+      if (cloneTouchesPlayer(r.evilChase, p)) {
+        p.hp = 0; p.alive = false;
+        evilAudioRef.current?.setActive(false);
+      }
+    }
     
 
     // enemies update
@@ -2167,7 +2202,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         unlockAudio();
         if (inJrb) playSomSomBgm();
         else if (levelIdRef.current === "chase") playChaseStarmanLayer();
-        else playStarmanBgm();
+        else if (levelIdRef.current !== "evil-you") playStarmanBgm();
         sfx.shineStart();
         setCelestialMode(true, { replaceDefaults: !inJrb });
         setThunderMode(inJrb);
@@ -2189,7 +2224,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
 
     // goal
     const g = r.level.goal;
-    if (!goalLockedRef.current && rectOverlap(p.x, p.y, p.w, p.h, g.x, g.y, g.w, g.h)) {
+    if (p.alive && !goalLockedRef.current && (!r.evilChase || exitPowered(r.evilChase)) && rectOverlap(p.x, p.y, p.w, p.h, g.x, g.y, g.w, g.h)) {
       r.finished = true;
       r.finishTime = performance.now() - r.startedAt;
       r.score += Math.max(0, 5000 - Math.floor(r.finishTime / 10));
@@ -2460,7 +2495,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     const bgT = starmanFx ? Math.min(1, (starElapsed - 3.20) / 0.6) : 0;
     const isBossLevel = levelIdRef.current === "roaring-knight";
     const isMayhemLevel = levelIdRef.current.startsWith("mayhem");
-    const isChaseLevel = levelIdRef.current === "chase";
+    const isChaseLevel = levelIdRef.current === "chase" || levelIdRef.current === "evil-you";
     // paper bg (or black during starman fx, OLED black post-impact for som som,
     // the boss-level cyan-flame backdrop, or MAYHEM's pitch-black industrial night)
     if (isBossLevel) {
@@ -2852,8 +2887,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
 
     // shake (scaled by user setting)
     const shakeMul = getSettings().reduceShake ? 0.25 : 1;
-    const shakeX = (Math.random() - 0.5) * r.shake * 16 * shakeMul;
-    const shakeY = (Math.random() - 0.5) * r.shake * 16 * shakeMul;
+    const evilShake = r.evilChase ? (r.evilChase.band === 4 ? 0.14 : 0) + (r.evilChase.sightShake > 0 ? 0.22 * r.evilChase.sightShake / 0.5 : 0) : 0;
+    const shakeX = (Math.random() - 0.5) * (r.shake + evilShake) * 16 * shakeMul;
+    const shakeY = (Math.random() - 0.5) * (r.shake + evilShake) * 16 * shakeMul;
     ctx.translate(shakeX, shakeY);
 
     // glitch background flashes
@@ -2889,7 +2925,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
 
     // distant scribbled clouds / scenery — MAYHEM hotel levels use bespoke interiors
     if (isMayhemLevel) drawMayhemScenery(ctx, camX, w, r.level.height, r.time);
-    else if (levelIdRef.current === "chase") drawChaseScenery(ctx, camX, w, r.level.height, r.time);
+    else if (isChaseLevel) drawChaseScenery(ctx, camX, w, r.level.height, r.time);
     else drawScenery(ctx, camX, w, r.level.height);
 
     // platforms
@@ -2915,9 +2951,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
             ? (isGround ? "#283a26" : "#34383b")
             : (isGround ? "#15191f" : "#20262e")
         : bossPlatforms ? "#000000"
+        : r.evilChase ? (isGround ? evilPalette().ground : evilPalette().platform)
         : levelIdRef.current === "chase" ? (isGround ? "#26351f" : "#49331f")
         : (isGround ? "#e5dfc2" : "#f7f1dc");
-      const stroke = isMayhemLevel ? (mayhemHotel ? "#b4936c" : mayhemOutside ? "#172318" : "#9aa5ad") : bossPlatforms ? "#ffffff" : levelIdRef.current === "chase" ? "#101a0f" : INK;
+      const stroke = r.evilChase ? evilPalette().edge : isMayhemLevel ? (mayhemHotel ? "#b4936c" : mayhemOutside ? "#172318" : "#9aa5ad") : bossPlatforms ? "#ffffff" : levelIdRef.current === "chase" ? "#101a0f" : INK;
       sketchRect(ctx, visX, pl.y, visW, pl.h + groundDepth, fill, stroke, isGround ? 3 : 2.6, isMayhemLevel ? 0.55 : isGround ? 1.6 : 1.2);
       if (isMayhemLevel && !mayhemOutside) {
         // Hotel interior: warm timber planks with brass top trim, wood grain
@@ -3189,6 +3226,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       }
     }
 
+    if (r.evilChase) {
+      drawEvilBoxes(ctx, r.evilChase, r.player);
+      drawEvilClone(ctx, r.evilChase, r.time);
+    }
+
     // chaser red trail (drawn behind enemies) — sized to match the spook sprite
     if (r.chaserTrail.length) {
       const tint = getSpookRedTint();
@@ -3332,7 +3374,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
 
     // boss world-space FX (warnings + slashes)
     if (r.boss) drawBossWorldFx(ctx, r, r.boss);
-    if (isMayhemLevel) drawMayhemDoor(ctx, r.level.goal.x, r.level.goal.y, r.level.goal.w, r.level.goal.h, r.time);
+    if (r.evilChase) drawEvilExit(ctx, r.evilChase, r.level.goal);
+    else if (isMayhemLevel) drawMayhemDoor(ctx, r.level.goal.x, r.level.goal.y, r.level.goal.w, r.level.goal.h, r.time);
     else drawGoal(ctx, r.level.goal.x, r.level.goal.y, r.level.goal.w, r.level.goal.h, r.time);
 
     // Ground-level dust is drawn behind the player and anchored in world space.
@@ -3515,6 +3558,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     ctx.restore();
 
     // boss screen-space layer (sprite + afterimages + hp pip) — draws on top of world.
+    if (r.evilChase) drawEvilAtmosphere(ctx, r.evilChase, w, h, r.time, r.player);
     if (r.boss) drawBossScreen(ctx, r, r.boss, w);
 
     // boss parry flash overlay (full-screen png)

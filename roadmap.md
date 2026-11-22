@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Build “Literally just you but evil”: huge vertical map without crawlspaces, five R×5 boxes, delayed spawn-point clone, modest chase boost/effects, BFF1–4 seamless radius audio; test and verify desktop/mobile play.
+- [x] Build “Literally just you but evil”: 30,000px vertical map without crawlspaces, five R×5 boxes, 10-second spawn-point clone, modest chase boost/effects and BFF1–4 synchronized native loops with Ogg padding excluded; 23 tests pass, all five boxes and exit completed live, mobile R taps and chase/death/pause verified.
 
 - [x] Add Night 5 muffled storm from Task 1, music-aware ducking, textured vignette, flashlight-lit dust and subtle scanlines; 26 focused tests pass, live switch/plug/crank-to-Task-2 flow and ceiling clicks verified, office audio closes on exit, desktop and landscape-phone effects checked.
 

@@ -279,6 +279,7 @@ const LEVEL_THEME: Record<LevelId, LevelTheme> = {
   "scribble-2":         { description: "Shooters everywhere. Time your parries or eat ink.", accent: "0 85% 60%", glyph: "✦" },
   "scribble-3":         { description: "Foot off the brake. Pure overdrive — chain mach tiers all the way.", accent: "280 80% 60%", glyph: "⚡" },
   "chase":              { description: "An ink wall is on your heels. Don't stop. Parry it back if it gets close.", accent: "350 85% 55%", glyph: "≫" },
+  "evil-you":           { description: "Five boxes, five presses each. Your reflection wants you dead.", accent: "var(--accent)", glyph: "✦" },
   "speed-test":         { description: "The hallway never ends. Or does it? Hold dash. Find out.", accent: "60 90% 55%", glyph: "∞" },
   "just-run-bro":       { description: "No obstacles. No enemies. Just vibes and a horizon. Hold dash.", accent: "200 80% 60%", glyph: "♥" },
   "meet-invboi":        { description: "Say hi to a new friend. Grab the star and become unstoppable.", accent: "50 95% 60%", glyph: "★" },

@@ -1024,7 +1024,7 @@ const Index = () => {
           )}
           {/* touch controls overlay the canvas corners on touch devices —
               they don't push the canvas down or hide the HUD. */}
-          <TouchControls visible={screen === "playing"} />
+          <TouchControls visible={screen === "playing" && !platformerPaused && !invboiIntroOpen && !chaseIntroOpen} interact={levelId === "evil-you"} />
           {screen === "playing" && !mayhem && touchControls && (
             <Button
               variant="outline"

@@ -7,6 +7,9 @@ import { getSettings } from "./settings";
 import { radiusMix, type RadiusBand } from "./evilChaseRules";
 
 export const BFF_URLS = [bff1.url, bff2.url, bff3.url, bff4.url];
+// Original Ogg granule length, verified from all three supplied short stems.
+// Chromium decodes an extra 992 padded frames; never loop that padding.
+export const BFF_PHRASE_SECONDS = 419168 / 44100;
 /** Align the long chase phrase to eight short bars, rounding only to sample frames. */
 export function phraseFrames(shortFrames: number, index: number): number {
   return shortFrames * (index === 3 ? 8 : 1);
@@ -51,7 +54,7 @@ export class EvilChaseAudio {
       buffers.forEach((buffer, index) => {
         // Ogg rounding may differ by a few frames. Align whole phrases without
         // crossfading away beats or inserting silence at the seam.
-        const length = phraseFrames(buffers[0].length, index);
+        const length = phraseFrames(Math.round(BFF_PHRASE_SECONDS * context.sampleRate), index);
         const aligned = context.createBuffer(buffer.numberOfChannels, length, context.sampleRate);
         for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
           const input = buffer.getChannelData(ch), output = aligned.getChannelData(ch);
