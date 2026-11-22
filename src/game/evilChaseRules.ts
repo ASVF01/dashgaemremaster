@@ -8,7 +8,7 @@ export const SIGHT_SHAKE_SECONDS = 0.5;
 /** A parried clone is frozen and harmless for this long. */
 export const CLONE_STUN_SECONDS = 1.5;
 export const PARRY_FLASH_SECONDS = 0.35;
-export const RADII = [1800, 1200, 750, 420] as const;
+export const RADII = [2600, 1900, 1300, 420] as const;
 export type RadiusBand = 0 | 1 | 2 | 3 | 4;
 export type RoutePoint = { x: number; y: number; facing: number; pose: "idle" | "runFast" | "jump" | "fall" | "dash" | "slide" | "dive" };
 export type ObjectiveBox = { x: number; y: number; presses: number };

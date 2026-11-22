@@ -65,25 +65,25 @@ describe("Literally just you but evil", () => {
     expect(MAX_SPEED * CHASE_SPEED_MULTIPLIER).toBeCloseTo(1097.6);
   });
   it("uses three terror layers and BFF4 alone in chase", () => {
-    expect(radiusMix(radiusBand(1700))).toEqual([1, 0, 0, 0]);
-    expect(radiusMix(radiusBand(1000))).toEqual([1, 1, 0, 0]);
-    expect(radiusMix(radiusBand(650))).toEqual([1, 1, 1, 0]);
+    expect(radiusMix(radiusBand(2500))).toEqual([1, 0, 0, 0]);
+    expect(radiusMix(radiusBand(1700))).toEqual([1, 1, 0, 0]);
+    expect(radiusMix(radiusBand(1000))).toEqual([1, 1, 1, 0]);
     expect(radiusMix(radiusBand(300))).toEqual([0, 0, 0, 1]);
   });
   it("silences every stem when escaping all radii", () => {
-    expect(radiusBand(1801)).toBe(0);
-    expect(radiusMix(radiusBand(1801))).toEqual([0, 0, 0, 0]);
+    expect(radiusBand(2601)).toBe(0);
+    expect(radiusMix(radiusBand(2601))).toEqual([0, 0, 0, 0]);
   });
   it("keeps only BFF4 playing through every terror band until escaping the outer radius", () => {
     let band = chaseRadiusBand(3, 420);
     expect(band).toBe(4);
-    for (const distance of [650, 1000, 1700, 1800]) {
+    for (const distance of [1000, 1700, 2500, 2600]) {
       band = chaseRadiusBand(band, distance);
       expect(radiusMix(band)).toEqual([0, 0, 0, 1]);
     }
-    band = chaseRadiusBand(band, 1801);
+    band = chaseRadiusBand(band, 2601);
     expect(radiusMix(band)).toEqual([0, 0, 0, 0]);
-    expect(radiusMix(chaseRadiusBand(band, 1700))).toEqual([1, 0, 0, 0]);
+    expect(radiusMix(chaseRadiusBand(band, 2500))).toEqual([1, 0, 0, 0]);
   });
   it("starts the final pursuit only after five completed tasks and reaching the first exit", () => {
     const level = buildLevel("evil-you"), gate = level.escapeEntrance;
