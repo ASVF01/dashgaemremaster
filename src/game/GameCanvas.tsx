@@ -1,5 +1,5 @@
 import { drawSaiyanAura, usesSaiyanAura } from "./saiyanAura";
-import { ssjPhase, ssjZoom, ssjShakeX, SSJ_CHARGE } from "./ssjRules";
+import { ssjPhase, ssjZoom, ssjShakeX, ssjExpired, SSJ_CHARGE, SSJ_DURATION } from "./ssjRules";
 import { ssjAudio } from "./ssjAudio";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -17,7 +17,7 @@ import { canChomp, chompPhase, CHOMP_COOLDOWN, CHOMP_LUNGE_SPEED, CHOMP_REACH } 
 import { isPressed, matchesAction, getLiveBinds } from "@/game/keybinds";
 import { sfx, unlockAudio, setCelestialMode, setThunderMode, setMetalMode, setWoodMode, setGrassMode } from "@/game/sfx";
 
-import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, playChaseStarmanLayer, getStarmanElapsed, playSomSomBgm, getSomSomElapsed } from "@/game/bgm";
+import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, playChaseStarmanLayer, stopStarmanLayer, getStarmanElapsed, playSomSomBgm, getSomSomElapsed } from "@/game/bgm";
 import weSfxUrl from "@/assets/audio/impact_aura_charge.ogg";
 import { getSettings } from "@/game/settings";
 import { gameplayZoom, clampCamera } from "@/game/viewportRules";
@@ -332,6 +332,7 @@ interface Player {
   punchTapFire: boolean; // release-fire path uses a shorter lunge
   punchHeldFire: boolean; // fire came from full-charge (held) — big lunge, long hitbox
   ssjT: number; // Old Timer SSJ transformation elapsed seconds, -1 none
+  ssjHold: number; // seconds the transformed state has been held, -1 none
   chompT: number; // Old Timer Feral Chomp elapsed seconds, -1 idle
   chompCd: number;
 
@@ -662,6 +663,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         punchHeldFire: false,
         chompT: -1,
         ssjT: -1,
+        ssjHold: -1,
         chompCd: 0,
 
       },
@@ -805,7 +807,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       setCelestialMode(true, { replaceDefaults: !inJrb });
       setThunderMode(inJrb);
       burst(r, r.player.x + r.player.w / 2, r.player.y + r.player.h / 2, inJrb ? "#22e2ff" : "#ffd11a", 24, 380);
-      if (!inJrb && usesSaiyanAura(getSelectedCharacter())) { r.player.ssjT = 0; ssjAudio.charge(); }
+      if (!inJrb && usesSaiyanAura(getSelectedCharacter())) { r.player.ssjT = 0; r.player.ssjHold = 0; ssjAudio.charge(); }
     };
     const down = (e: KeyboardEvent) => {
       keysRef.current[e.code] = true;
@@ -1345,6 +1347,33 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     r.shake = Math.max(r.shake, 0.18);
   }
 
+  /**
+   * Power Old Timer's transformation down: the aura, i-frames and cheat BGM
+   * all go, the power-off cue plays, and the level's own track comes back.
+   */
+  function endSsjTransform(r: GameRefs) {
+    const p = r.player;
+    p.starman = false;
+    p.somSom = false;
+    p.ssjT = -1;
+    p.ssjHold = -1;
+    p.invuln = 0;
+    p.laserActive = false;
+    p.beamTime = 0;
+    r.punchZoom = 1;
+    ssjActiveRef.current = false;
+    ssjAudio.powerOff();
+    sfx.shineStop();
+    setCelestialMode(false);
+    setThunderMode(false);
+    burst(r, p.x + p.w / 2, p.y + p.h / 2, "#ffd84a", 18, 300);
+    // The cheat track replaced the level's music (except in the clone chase,
+    // which never played it, and marathon, which owns its own starman mix).
+    if (marathonRef.current) return;
+    if (levelId === "chase") stopStarmanLayer();
+    else if (levelId !== "evil-you") playBgmFor(levelId, true);
+  }
+
   function update(r: GameRefs, dt: number, keys: Keys) {
     r.time += dt;
     const p = r.player;
@@ -1412,6 +1441,12 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     }
     if (p.ssjT < 0 && !p.starman && ssjActiveRef.current) { ssjActiveRef.current = false; ssjAudio.powerOff(); }
     if (p.starman && usesSaiyanAura(getSelectedCharacter()) && !p.somSom) ssjActiveRef.current = true;
+    // The transformation holds for SSJ_DURATION seconds, then powers itself
+    // down: aura gone, i-frames gone, power-off cue.
+    if (p.ssjHold >= 0) {
+      p.ssjHold += dt;
+      if (ssjExpired(p.ssjHold)) endSsjTransform(r);
+    }
     if (p.ssjT < 0) {
       let target = 1;
       if (p.punchCharge >= 2 && p.punchCharge < 2.7) target = 1.4;
@@ -2281,7 +2316,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         setThunderMode(inJrb);
         burst(r, p.x + p.w / 2, p.y + p.h / 2, inJrb ? "#22e2ff" : "#ffd11a", 24, 380);
         // Fire the parent callback (used by meet-invboi to pop the intro overlay).
-        if (!inJrb && usesSaiyanAura(getSelectedCharacter())) { p.ssjT = 0; ssjAudio.charge(); }
+        if (!inJrb && usesSaiyanAura(getSelectedCharacter())) { p.ssjT = 0; p.ssjHold = 0; ssjAudio.charge(); }
         if (levelIdRef.current === "meet-invboi") onInvboiPickupRef.current?.();
       }
     }
@@ -3522,9 +3557,16 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       const aura = r.player.starman && !r.player.somSom && usesSaiyanAura(getSelectedCharacter());
       const ssjT = r.player.ssjT;
       const shake = ssjShakeX(ssjT);
+      // The aura thins out over the last 0.6s before the transformation ends.
+      const hold = r.player.ssjHold;
+      const auraPower = ssjPhase(ssjT) === "charge"
+        ? 0
+        : hold >= 0
+          ? Math.max(0, Math.min(1, (SSJ_DURATION - hold) / 0.6))
+          : 1;
       ctx.save();
       ctx.translate(shake, 0);
-      if (aura) drawSaiyanAura(ctx, r.player.x + r.player.w / 2, r.player.y + r.player.h / 2, r.player.w, r.player.h, r.time, ssjPhase(ssjT) === "charge" ? 0 : 1);
+      if (aura) drawSaiyanAura(ctx, r.player.x + r.player.w / 2, r.player.y + r.player.h / 2, r.player.w, r.player.h, r.time, auraPower);
       drawPlayer(ctx, r);
       ctx.restore();
       if (r.player.starman && !r.player.somSom && !aura) drawStarmanStars(ctx, r);

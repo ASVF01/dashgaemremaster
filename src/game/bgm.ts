@@ -529,6 +529,11 @@ export function playChaseStarmanLayer() {
   }).catch(() => { /* stay with chase music only */ });
 }
 
+/** Stop the chase-only INVBOI mix so a finished transformation can't leave it under the level. */
+export function stopStarmanLayer() {
+  stopChaseInvboiLayer();
+}
+
 // Seconds elapsed since the Starman track started playing, or null if it
 // isn't currently playing. Also returns elapsed for the marathon variant
 // so the starman cinematic timing keeps working in CELESTIAL MARATHON.
