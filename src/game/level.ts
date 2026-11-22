@@ -40,7 +40,7 @@ export const LEVELS: LevelMeta[] = [
   { id: "scribble-2", name: "PAPER CUTS", subtitle: "shooters everywhere", difficulty: 3, par: 55 },
   { id: "scribble-3", name: "OVERDRIVE",  subtitle: "go absurdly fast",    difficulty: 4, par: 60 },
   { id: "chase",      name: "Literaly every platformer chase level",  subtitle: "don't look back. parry to push it off.", difficulty: 4, par: 45 },
-  { id: "evil-you", name: "Literally just you but evil", subtitle: "five boxes. one very bad reflection.", difficulty: 4, par: 180 },
+  { id: "evil-you", name: "Literally just you but evil", subtitle: "Me when im in a forest and a skin walker starts chasing me for some reason 😂👌", difficulty: 4, par: 180 },
   { id: "speed-test", name: "??? SPEED TEST ???", subtitle: "the hallway never ends. or does it.", difficulty: 4, par: 30, hidden: true },
   { id: "just-run-bro", name: "Just Run Brah.", subtitle: "no obstacles. no enemies. just vibes.", difficulty: 1, par: 9999 },
   { id: "meet-invboi", name: "CELESTIAL ENCOUNTER", subtitle: "say hi to a new friend :)", difficulty: 1, par: 60 },
