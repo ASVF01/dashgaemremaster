@@ -18,9 +18,9 @@ import { getSettings } from "@/game/settings";
 import { gameplayZoom, clampCamera } from "@/game/viewportRules";
 import { slideDustFrame, slideDustAnchor, slideDustSpread } from "@/game/slideDustRules";
 import { getSprite, type SpriteState } from "@/game/sprites";
-import { createEvilChase, stepEvilChase, pressBox, exitPowered, cloneTouchesPlayer, CHASE_SPEED_MULTIPLIER, type EvilChaseState, type RoutePoint } from "@/game/evilChaseRules";
+import { createEvilChase, stepEvilChase, pressBox, beginEscape, canFinishEvilChase, cloneTouchesPlayer, CHASE_SPEED_MULTIPLIER, type EvilChaseState, type RoutePoint } from "@/game/evilChaseRules";
 import { EvilChaseAudio } from "@/game/evilChaseAudio";
-import { drawEvilClone, drawEvilBoxes, drawEvilExit, drawEvilAtmosphere, evilPalette } from "@/game/evilChaseDraw";
+import { drawEvilClone, drawEvilBoxes, drawEvilExit, drawEvilAtmosphere, drawEvilHallway, evilPalette } from "@/game/evilChaseDraw";
 import { getSelectedCharacter } from "@/game/character";
 import spookUrl from "@/assets/sprites/spook.png";
 import spookHurtUrl from "@/assets/sprites/spook_hurt.png";
@@ -1850,6 +1850,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     if (r.glitch > 0) r.glitch = Math.max(0, r.glitch - dt * 4);
 
     if (r.evilChase) {
+      if (r.level.escapeEntrance && beginEscape(r.evilChase, p, r.level.escapeEntrance)) sfx.dash();
       const pose: RoutePoint["pose"] = p.dashTime > 0 ? "dash" : p.diving ? "dive" : p.sliding ? "slide" : !p.onGround ? (p.vy > 0 ? "fall" : "jump") : Math.abs(p.vx) > 60 ? "runFast" : "idle";
       stepEvilChase(r.evilChase, { x: p.x, y: p.y, facing: p.facing, pose }, r.time, dt, r.level.platforms, MAX_SPEED * (isAlt ? 1.15 : 1));
       if (cloneTouchesPlayer(r.evilChase, p)) {
@@ -2224,7 +2225,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
 
     // goal
     const g = r.level.goal;
-    if (p.alive && !goalLockedRef.current && (!r.evilChase || exitPowered(r.evilChase)) && rectOverlap(p.x, p.y, p.w, p.h, g.x, g.y, g.w, g.h)) {
+    if (p.alive && !goalLockedRef.current && (!r.evilChase || canFinishEvilChase(r.evilChase)) && rectOverlap(p.x, p.y, p.w, p.h, g.x, g.y, g.w, g.h)) {
       r.finished = true;
       r.finishTime = performance.now() - r.startedAt;
       r.score += Math.max(0, 5000 - Math.floor(r.finishTime / 10));
@@ -2552,6 +2553,9 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         ctx.fillStyle = glow;
         ctx.fillRect(0, 0, w, h);
       }
+    } else if (r.evilChase?.phase === "escape" && !postImpact) {
+      ctx.fillStyle = evilPalette().ink;
+      ctx.fillRect(0, 0, w, h);
     } else if (isChaseLevel && !postImpact) {
       const forestSky = ctx.createLinearGradient(0, 0, 0, h);
       forestSky.addColorStop(0, "#111b18");
@@ -2925,6 +2929,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
 
     // distant scribbled clouds / scenery — MAYHEM hotel levels use bespoke interiors
     if (isMayhemLevel) drawMayhemScenery(ctx, camX, w, r.level.height, r.time);
+    else if (r.evilChase?.phase === "escape") drawEvilHallway(ctx, camX, w / z, r.level.height);
     else if (isChaseLevel) drawChaseScenery(ctx, camX, w, r.level.height, r.time);
     else drawScenery(ctx, camX, w, r.level.height);
 
@@ -3374,7 +3379,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
 
     // boss world-space FX (warnings + slashes)
     if (r.boss) drawBossWorldFx(ctx, r, r.boss);
-    if (r.evilChase) drawEvilExit(ctx, r.evilChase, r.level.goal);
+    if (r.evilChase) {
+      if (r.level.escapeEntrance) drawEvilExit(ctx, r.evilChase, r.level.escapeEntrance);
+      if (r.evilChase.phase === "escape") drawEvilExit(ctx, r.evilChase, r.level.goal, true);
+    }
     else if (isMayhemLevel) drawMayhemDoor(ctx, r.level.goal.x, r.level.goal.y, r.level.goal.w, r.level.goal.h, r.time);
     else drawGoal(ctx, r.level.goal.x, r.level.goal.y, r.level.goal.w, r.level.goal.h, r.time);
 

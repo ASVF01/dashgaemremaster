@@ -19,6 +19,7 @@ export type Level = {
   // When set, the GameCanvas will spawn it at level init.
   invboiStart?: { x: number; y: number; facing: 1 | -1 };
   objectiveBoxes?: { x: number; y: number }[];
+  escapeEntrance?: { x: number; y: number; w: number; h: number };
 };
 
 export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "chase" | "evil-you" | "speed-test" | "just-run-bro" | "meet-invboi" | "roaring-knight" | "aftermath-1" | "aftermath-2" | "aftermath-3" | "celestial-marathon" | "mayhem-outside" | "mayhem-main" | "mayhem-floor-1" | "mayhem-floor-2";

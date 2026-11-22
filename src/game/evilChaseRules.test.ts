@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildLevel } from "./level";
 import { MAX_SPEED, PLAYER_H, PLAYER_W } from "./constants";
-import { createEvilChase, stepEvilChase, pressBox, exitPowered, radiusBand, radiusMix, hasLineOfSight, cloneTouchesPlayer, CHASE_SPEED_MULTIPLIER } from "./evilChaseRules";
+import { createEvilChase, stepEvilChase, pressBox, exitPowered, radiusBand, radiusMix, chaseRadiusBand, beginEscape, canFinishEvilChase, hasLineOfSight, cloneTouchesPlayer, CHASE_SPEED_MULTIPLIER } from "./evilChaseRules";
 
 const player = { x: 100, y: 1504, w: PLAYER_W, h: PLAYER_H, facing: 1, pose: "idle" as const };
 
@@ -40,7 +40,7 @@ describe("Literally just you but evil", () => {
   });
   it("is a huge map with varied elevations and no low crawl ceilings", () => {
     const level = buildLevel("evil-you");
-    expect(level.width).toBe(30000);
+    expect(level.width).toBe(78000);
     expect(level.height).toBe(1900);
     const boxes = level.objectiveBoxes ?? [];
     expect(new Set(boxes.map(b => b.y)).size).toBe(5);
@@ -73,6 +73,48 @@ describe("Literally just you but evil", () => {
   it("silences every stem when escaping all radii", () => {
     expect(radiusBand(1801)).toBe(0);
     expect(radiusMix(radiusBand(1801))).toEqual([0, 0, 0, 0]);
+  });
+  it("keeps only BFF4 playing through every terror band until escaping the outer radius", () => {
+    let band = chaseRadiusBand(3, 420);
+    expect(band).toBe(4);
+    for (const distance of [650, 1000, 1700, 1800]) {
+      band = chaseRadiusBand(band, distance);
+      expect(radiusMix(band)).toEqual([0, 0, 0, 1]);
+    }
+    band = chaseRadiusBand(band, 1801);
+    expect(radiusMix(band)).toEqual([0, 0, 0, 0]);
+    expect(radiusMix(chaseRadiusBand(band, 1700))).toEqual([1, 0, 0, 0]);
+  });
+  it("starts the final pursuit only after five completed tasks and reaching the first exit", () => {
+    const level = buildLevel("evil-you"), gate = level.escapeEntrance;
+    if (!gate) throw new Error("Missing escape entrance");
+    const state = createEvilChase(level.spawn, level.objectiveBoxes ?? []);
+    const atGate = { ...player, x: gate.x, y: gate.y + 64 };
+    expect(beginEscape(state, atGate, gate)).toBe(false);
+    state.boxes.forEach(b => { b.presses = 5; });
+    expect(canFinishEvilChase(state)).toBe(false);
+    expect(beginEscape(state, player, gate)).toBe(false);
+    state.route = Array.from({ length: 151 }, (_, i) => ({ ...player, x: gate.x - 1200 + i * 8, y: atGate.y }));
+    expect(beginEscape(state, atGate, gate)).toBe(true);
+    expect(state.phase).toBe("escape");
+    expect(state.band).toBe(4);
+    expect(state.x).toBe(gate.x - 1000);
+    expect(state.y).toBe(atGate.y);
+    expect(canFinishEvilChase(state)).toBe(true);
+    expect(beginEscape(state, atGate, gate)).toBe(false);
+  });
+  it("adds a very long hallway with vertical landings and no freestanding pillars", () => {
+    const level = buildLevel("evil-you");
+    expect(level.goal.x - (level.escapeEntrance?.x ?? level.goal.x)).toBe(48000);
+    const floor = level.platforms.filter(p => p.x >= 30000 && p.kind === "ground");
+    expect(new Set(floor.map(p => p.y)).size).toBe(6);
+    for (const p of floor) {
+      expect(p.w).toBeGreaterThanOrEqual(400);
+      expect(p.y + p.h).toBe(1900);
+    }
+    expect(level.platforms.filter(p => p.x >= 30000 && p.kind === "block")).toEqual([
+      { x: 30000, y: 120, w: 48000, h: 40, kind: "block" },
+    ]);
   });
   it("shakes for half a second upon seeing the player, not continuously retriggering", () => {
     const state = createEvilChase(player, []);

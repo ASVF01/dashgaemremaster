@@ -15,6 +15,7 @@ export type EvilChaseState = {
   atmosphere: number; route: RoutePoint[]; cursor: number;
   boxes: ObjectiveBox[]; trail: { x: number; y: number; facing: number; pose: RoutePoint["pose"]; life: number }[];
   trailClock: number;
+  phase: "objectives" | "escape";
 };
 
 export function radiusBand(distance: number): RadiusBand {
@@ -25,6 +26,12 @@ export function radiusBand(distance: number): RadiusBand {
   return 0;
 }
 
+/** Once spotted at close range, BFF4 owns the whole encounter until fully escaped. */
+export function chaseRadiusBand(previous: RadiusBand, distance: number): RadiusBand {
+  if (distance > RADII[0]) return 0;
+  return previous === 4 ? 4 : radiusBand(distance);
+}
+
 /** BFF1–3 are cumulative terror stems; BFF4 replaces them in chase. */
 export function radiusMix(band: RadiusBand): number[] {
   if (band === 4) return [0, 0, 0, 1];
@@ -33,7 +40,7 @@ export function radiusMix(band: RadiusBand): number[] {
 
 export function createEvilChase(spawn: { x: number; y: number }, boxes: { x: number; y: number }[]): EvilChaseState {
   return {
-    ...spawn, facing: 1, pose: "idle", spawned: false, band: 0,
+    ...spawn, facing: 1, pose: "idle", spawned: false, band: 0, phase: "objectives",
     sawPlayer: false, sightShake: 0, atmosphere: 0,
     route: [{ ...spawn, facing: 1, pose: "idle" }], cursor: 0,
     boxes: boxes.map(b => ({ ...b, presses: 0 })), trail: [], trailClock: 0,
@@ -42,6 +49,31 @@ export function createEvilChase(spawn: { x: number; y: number }, boxes: { x: num
 
 export function exitPowered(state: EvilChaseState): boolean {
   return state.boxes.length === 5 && state.boxes.every(b => b.presses === BOX_PRESSES);
+}
+
+export function beginEscape(state: EvilChaseState, player: { x: number; y: number; w: number; h: number }, gate: { x: number; y: number; w: number; h: number }): boolean {
+  // Crossing the doorway starts pursuit even during a jump or fast dash.
+  if (state.phase !== "objectives" || !exitPowered(state) || player.x + player.w <= gate.x) return false;
+  state.phase = "escape";
+  // Reappear behind the player on their actual approach, not through a wall.
+  const latest: RoutePoint = { x: player.x, y: player.y, facing: 1, pose: "runFast" };
+  state.route.push(latest);
+  let index = state.route.length - 1, distance = 0;
+  while (index > 0 && distance < 1000) {
+    const a = state.route[index], b = state.route[index - 1];
+    distance += Math.hypot(a.x - b.x, a.y - b.y);
+    index--;
+  }
+  const anchor = state.route[index];
+  state.x = anchor.x; state.y = anchor.y; state.facing = anchor.facing; state.pose = anchor.pose;
+  state.route = state.route.slice(index); state.cursor = 0;
+  state.spawned = true; state.band = 4; state.sightShake = SIGHT_SHAKE_SECONDS;
+  state.trail = []; state.trailClock = 0;
+  return true;
+}
+
+export function canFinishEvilChase(state: EvilChaseState): boolean {
+  return state.phase === "escape" && exitPowered(state);
 }
 
 export function nearbyBox(state: EvilChaseState, player: { x: number; y: number; w: number; h: number }): ObjectiveBox | undefined {
@@ -101,7 +133,7 @@ export function stepEvilChase(state: EvilChaseState, player: RoutePoint, elapsed
   }
   if (state.cursor > 128) { state.route.splice(0, state.cursor); state.cursor = 0; }
   const distance = Math.hypot(player.x - state.x, player.y - state.y);
-  state.band = radiusBand(distance);
+  state.band = chaseRadiusBand(state.band, distance);
   const seen = distance <= RADII[0] && hasLineOfSight(
     { x: state.x + PLAYER_W / 2, y: state.y + 14 },
     { x: player.x + PLAYER_W / 2, y: player.y + 14 }, platforms);

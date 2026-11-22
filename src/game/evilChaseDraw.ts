@@ -91,13 +91,31 @@ export function drawEvilBoxes(ctx: CanvasRenderingContext2D, state: EvilChaseSta
   });
 }
 
-export function drawEvilExit(ctx: CanvasRenderingContext2D, state: EvilChaseState, goal: { x: number; y: number; w: number; h: number }) {
+export function drawEvilHallway(ctx: CanvasRenderingContext2D, camX: number, width: number, height: number) {
+  const colors = evilPalette();
+  ctx.save();
+  ctx.fillStyle = colors.box;
+  ctx.fillRect(camX, 160, width, height - 160);
+  // Long horizontal seams and recessed lamps, not columns or standing pillars.
+  for (const y of [240, 420, 640, 1720]) sketchLine(ctx, camX, y, camX + width, y, 3, colors.edge, 1.2);
+  for (let x = Math.floor(camX / 900) * 900; x < camX + width + 900; x += 900) {
+    sketchRect(ctx, x + 240, 280, 220, 20, colors.ink, colors.edge, 3, 1.5);
+    sketchLine(ctx, x + 260, 290, x + 440, 290, 5, colors.label, 1);
+    // Painted arrows sit behind the traversable floor profile.
+    sketchLine(ctx, x + 320, 720, x + 440, 720, 5, colors.eye, 1.5);
+    sketchLine(ctx, x + 400, 680, x + 440, 720, 5, colors.eye, 1.5);
+    sketchLine(ctx, x + 400, 760, x + 440, 720, 5, colors.eye, 1.5);
+  }
+  ctx.restore();
+}
+
+export function drawEvilExit(ctx: CanvasRenderingContext2D, state: EvilChaseState, goal: { x: number; y: number; w: number; h: number }, final = false) {
   const colors = evilPalette(), open = exitPowered(state);
   sketchRect(ctx, goal.x, goal.y, goal.w, goal.h, colors.ink, open ? colors.power : colors.eye, 4, 1.5);
   for (let i = 0; i < 5; i++) sketchLine(ctx, goal.x + 12, goal.y + 16 + i * 20, goal.x + goal.w - 12, goal.y + 16 + i * 20, 5, state.boxes[i]?.presses === 5 ? colors.power : colors.eye);
   ctx.save(); ctx.textAlign = "center"; ctx.fillStyle = colors.label;
   ctx.font = "20px 'Permanent Marker', cursive";
-  ctx.fillText(open ? "GET OUT!" : "LOCKED", goal.x + goal.w / 2, goal.y - 18); ctx.restore();
+  ctx.fillText(final ? "WAY OUT!" : open ? "GET OUT!" : "LOCKED", goal.x + goal.w / 2, goal.y - 18); ctx.restore();
 }
 
 export function drawEvilAtmosphere(ctx: CanvasRenderingContext2D, state: EvilChaseState, width: number, height: number, time: number, player: { x: number; y: number; w: number; h: number }) {
@@ -115,7 +133,7 @@ export function drawEvilAtmosphere(ctx: CanvasRenderingContext2D, state: EvilCha
   ctx.strokeStyle = colors.ink; ctx.lineWidth = 6; ctx.lineJoin = "round";
   ctx.fillStyle = colors.label;
   const complete = state.boxes.filter(b => b.presses === 5).length;
-  const text = exitPowered(state) ? "EXIT POWERED" : `BOXES  ${complete}/5`;
+  const text = state.phase === "escape" ? "RUN. KEEP RUNNING." : exitPowered(state) ? "EXIT POWERED" : `BOXES  ${complete}/5`;
   ctx.strokeText(text, 24, 160); ctx.fillText(text, 24, 160);
   ctx.font = "17px 'Permanent Marker', cursive";
   const notice = !state.spawned ? `HEAD START  ${Math.max(0, Math.ceil(EVIL_SPAWN_DELAY - time))}` : state.band === 4 ? "DON'T STOP." : "";
