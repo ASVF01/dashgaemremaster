@@ -2107,9 +2107,9 @@ const WIP_CHARACTERS: WipCharacter[] = [
     blurb: "The very first sketch. Still got teeth.",
     art: oldTimerIconAsset.url,
     howToPlay: "Plays like the classic run — then press B to Feral Chomp: a short coil, a fast lunge and a snap that bites through enemies in front of you.",
-    lore: "What if you were abandoned by your owner and your owner brought you back? that would be Old Timer. Heh, see what i did there? with the what if thing?... yeah nevermind. this guy is in like his early 20s, back then he was an unfortunate cannibal, and he also likes old games. smells like coal from a mine.",
+    lore: "What if you were abandoned by your owner and your owner brought you back? That would be Old Timer. Heh, see what I did there? With the \"what if\" thing?... yeah, never mind. This guy is in like his early 20s. Back then he was an unfortunate cannibal, and he also likes old games. Smells like coal from a mine.",
     abilities: [
-      { name: "Feral Chomp [B]", description: "You bite whatevers in front of you, it acts like a dash, so i would use this if your dash is on cooldown for extra speed." },
+      { name: "Feral Chomp [B]", description: "You bite whatever's in front of you. It acts like a dash, so I would use this if your dash is on cooldown for extra speed." },
       { name: "Ink Body", description: "" },
     ],
   },
