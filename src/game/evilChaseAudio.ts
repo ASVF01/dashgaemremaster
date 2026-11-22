@@ -31,6 +31,7 @@ export const THEME_TRACKS: Record<ChaseTheme, { urls: string[]; frames: number[]
 export class EvilChaseAudio {
   private context: AudioContext | null = null;
   private sources: AudioBufferSourceNode[] = [];
+  private buffers: AudioBuffer[] = [];
   private gains: GainNode[] = [];
   private master: GainNode | null = null;
   private disposed = false;
@@ -83,7 +84,7 @@ export class EvilChaseAudio {
         gain.gain.value = radiusMix(this.band)[index];
         source.connect(gain).connect(this.master ?? context.destination);
         source.start(when); // All four share one sample-accurate clock.
-        this.sources.push(source); this.gains.push(gain);
+        this.sources.push(source); this.gains.push(gain); this.buffers.push(aligned);
       });
       this.updateVolume();
       if (!this.active) await context.suspend();
@@ -116,9 +117,12 @@ export class EvilChaseAudio {
 
   setBand(band: RadiusBand) {
     if (band === this.band || this.disposed) return;
+    const entering = band === 4 && this.band !== 4;
     this.band = band;
     const context = this.context;
     if (!context) return;
+    // Every time the chase radius is touched the chase track starts from its first beat.
+    if (entering) this.restartChase(context);
     radiusMix(band).forEach((value, index) => {
       const gain = this.gains[index];
       if (!gain) return;
@@ -126,6 +130,17 @@ export class EvilChaseAudio {
       gain.gain.cancelScheduledValues(now);
       gain.gain.setTargetAtTime(value, now, band === 0 ? 0.08 : 0.035);
     });
+  }
+
+  private restartChase(context: AudioContext) {
+    const old = this.sources[3], buffer = this.buffers[3], gain = this.gains[3];
+    if (!old || !buffer || !gain) return;
+    try { old.stop(); old.disconnect(); } catch { /* stopped */ }
+    const source = context.createBufferSource();
+    source.buffer = buffer; source.loop = true; source.loopStart = 0; source.loopEnd = buffer.duration;
+    source.connect(gain);
+    source.start(context.currentTime);
+    this.sources[3] = source;
   }
 
   dispose() {
