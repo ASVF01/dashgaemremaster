@@ -123,6 +123,8 @@ export class EvilChaseAudio {
     if (!context) return;
     // Every time the chase radius is touched the chase track starts from its first beat.
     if (entering) this.restartChase(context);
+    // Leaving the terror radius entirely resets the terror layers to their first beat.
+    if (band === 0) this.restartTerror(context);
     radiusMix(band).forEach((value, index) => {
       const gain = this.gains[index];
       if (!gain) return;
@@ -141,6 +143,20 @@ export class EvilChaseAudio {
     source.connect(gain);
     source.start(context.currentTime);
     this.sources[3] = source;
+  }
+
+  private restartTerror(context: AudioContext) {
+    const when = context.currentTime + 0.2; // after the fade-out
+    for (let i = 0; i < 3; i++) {
+      const old = this.sources[i], buffer = this.buffers[i], gain = this.gains[i];
+      if (!old || !buffer || !gain) continue;
+      try { old.stop(when); } catch { /* stopped */ }
+      const source = context.createBufferSource();
+      source.buffer = buffer; source.loop = true; source.loopStart = 0; source.loopEnd = buffer.duration;
+      source.connect(gain);
+      source.start(when); // shared start keeps the three layers locked together
+      this.sources[i] = source;
+    }
   }
 
   dispose() {

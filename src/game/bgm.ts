@@ -17,6 +17,7 @@ import bgmChaseIntro from "@/assets/audio/BP.ogg";
 import bgmMayhemAsset from "@/assets/audio/Level_Select_2.ogg.asset.json";
 import bgmInsomniaBluesAsset from "@/assets/audio/insomnia-blues.ogg.asset.json";
 import bgmLoudVisitorAsset from "@/assets/audio/loud-visitor.mp3.asset.json";
+import bgmEvilYouAsset from "@/assets/evil-chase/yorick_resting_place.mp3.asset.json";
 import type { LevelId } from "@/game/level";
 
 const bgmMayhem = bgmMayhemAsset.url;
@@ -32,6 +33,7 @@ const TRACKS: Partial<Record<LevelId, string>> = {
   "speed-test": bgmMap1,
   chase: bgmChaseWind,
   "just-run-bro": bgmJustRunBro,
+  "evil-you": bgmEvilYouAsset.url,
   "roaring-knight": bgmBlackKnife,
   // Post-boss act: Loud Visitor.
   "aftermath-1": bgmLoudVisitorAsset.url,

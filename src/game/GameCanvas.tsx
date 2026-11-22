@@ -529,6 +529,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
   const refs = useRef<GameRefs | null>(null);
   const keysRef = useRef<Keys>({});
   const evilAudioRef = useRef<EvilChaseAudio | null>(null);
+  const evilBgmHeldRef = useRef(false);
   const pausedRef = useRef(paused);
   const ssjActiveRef = useRef(false);
   pausedRef.current = paused;
@@ -769,6 +770,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     if (levelId !== "evil-you") return;
     const audio = new EvilChaseAudio(getSelectedCharacter() === "oldtimer" ? "slasher" : "bff");
     evilAudioRef.current = audio;
+    evilBgmHeldRef.current = false;
     return () => { audio.dispose(); evilAudioRef.current = null; };
   }, [levelId, resetKey]);
 
@@ -783,7 +785,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
   // BGM: pause/resume with the game's pause state — but keep playing when
   // an overlay (win/death) wants the music to continue in the background.
   useEffect(() => {
-    if (paused && !keepAudio) pauseBgm(); else resumeBgm();
+    if (paused && !keepAudio) pauseBgm(); else if (!evilBgmHeldRef.current) resumeBgm();
   }, [paused, keepAudio]);
 
   // keys
@@ -1054,6 +1056,11 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       // The chase OST stays silent until the player steps inside the outer
       // radius; the band latch keeps it alive until they fully escape.
       const chaseHeard = (r.evilChase?.band ?? 0) > 0;
+      // The level song steps aside while any radius music is playing.
+      if (r.evilChase && chaseHeard !== evilBgmHeldRef.current) {
+        evilBgmHeldRef.current = chaseHeard;
+        if (chaseHeard) pauseBgm(); else if (!paused) resumeBgm();
+      }
       evilAudioRef.current?.setActive(!paused && !r.finished && r.player.alive && chaseHeard);
       evilAudioRef.current?.setBand(r.evilChase?.band ?? 0);
       sfx.characterPowered(r.player.starman);
@@ -1374,7 +1381,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     // which never played it, and marathon, which owns its own starman mix).
     if (marathonRef.current) return;
     if (levelId === "chase") stopStarmanLayer();
-    else if (levelId !== "evil-you") playBgmFor(levelId, true);
+    else playBgmFor(levelId, true);
   }
 
   function update(r: GameRefs, dt: number, keys: Keys) {
