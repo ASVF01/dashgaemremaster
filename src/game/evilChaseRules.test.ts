@@ -143,3 +143,15 @@ describe("Literally just you but evil", () => {
     expect(cloneTouchesPlayer(state, player)).toBe(true);
   });
 });
+import { parryClone as _parry, CLONE_STUN_SECONDS as _STUN } from "./evilChaseRules";
+describe("parrying the clone", () => {
+  it("stuns it for 1.5s so it can't catch you", () => {
+    const s = createEvilChase({ x: 0, y: 0 }, []);
+    s.spawned = true;
+    _parry(s);
+    expect(_STUN).toBe(1.5);
+    expect(cloneTouchesPlayer(s, { x: 0, y: 0, w: 20, h: 20 })).toBe(false);
+    stepEvilChase(s, { x: 0, y: 0, facing: 1, pose: "idle" }, 20, 1.6, []);
+    expect(cloneTouchesPlayer(s, { x: 0, y: 0, w: 20, h: 20 })).toBe(true);
+  });
+});

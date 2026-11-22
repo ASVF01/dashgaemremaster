@@ -23,7 +23,7 @@ import { getSettings } from "@/game/settings";
 import { gameplayZoom, clampCamera } from "@/game/viewportRules";
 import { slideDustFrame, slideDustAnchor, slideDustSpread } from "@/game/slideDustRules";
 import { getSprite, type SpriteState } from "@/game/sprites";
-import { createEvilChase, stepEvilChase, pressBox, beginEscape, canFinishEvilChase, cloneTouchesPlayer, CHASE_SPEED_MULTIPLIER, type EvilChaseState, type RoutePoint } from "@/game/evilChaseRules";
+import { createEvilChase, stepEvilChase, pressBox, beginEscape, canFinishEvilChase, cloneTouchesPlayer, parryClone, CHASE_SPEED_MULTIPLIER, type EvilChaseState, type RoutePoint } from "@/game/evilChaseRules";
 import { EvilChaseAudio } from "@/game/evilChaseAudio";
 import { drawEvilClone, drawEvilBoxes, drawEvilExit, drawEvilAtmosphere, drawEvilHallway, evilPalette } from "@/game/evilChaseDraw";
 import { getSelectedCharacter } from "@/game/character";
@@ -1963,7 +1963,10 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       if (r.level.escapeEntrance && beginEscape(r.evilChase, p, r.level.escapeEntrance)) sfx.dash();
       const pose: RoutePoint["pose"] = p.dashTime > 0 ? "dash" : p.diving ? "dive" : p.sliding ? "slide" : !p.onGround ? (p.vy > 0 ? "fall" : "jump") : Math.abs(p.vx) > 60 ? "runFast" : "idle";
       stepEvilChase(r.evilChase, { x: p.x, y: p.y, facing: p.facing, pose }, r.time, dt, r.level.platforms, MAX_SPEED * (isAlt ? 1.15 : 1));
-      if (cloneTouchesPlayer(r.evilChase, p)) {
+      if (cloneTouchesPlayer(r.evilChase, p) && p.parrying > 0) {
+        parryClone(r.evilChase);
+        parrySuccess(r, r.evilChase.x + PLAYER_W / 2, r.evilChase.y + PLAYER_H / 2);
+      } else if (cloneTouchesPlayer(r.evilChase, p)) {
         p.hp = 0; p.alive = false;
         evilAudioRef.current?.setActive(false);
       }

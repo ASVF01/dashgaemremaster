@@ -5,6 +5,9 @@ export const BOX_PRESSES = 5;
 export const CLONE_SPEED_MULTIPLIER = 1.08;
 export const CHASE_SPEED_MULTIPLIER = 1.12;
 export const SIGHT_SHAKE_SECONDS = 0.5;
+/** A parried clone is frozen and harmless for this long. */
+export const CLONE_STUN_SECONDS = 1.5;
+export const PARRY_FLASH_SECONDS = 0.35;
 export const RADII = [1800, 1200, 750, 420] as const;
 export type RadiusBand = 0 | 1 | 2 | 3 | 4;
 export type RoutePoint = { x: number; y: number; facing: number; pose: "idle" | "runFast" | "jump" | "fall" | "dash" | "slide" | "dive" };
@@ -16,6 +19,8 @@ export type EvilChaseState = {
   boxes: ObjectiveBox[]; trail: { x: number; y: number; facing: number; pose: RoutePoint["pose"]; life: number }[];
   trailClock: number;
   phase: "objectives" | "escape";
+  stun: number; parryFlash: number;
+  eyeTrail: { x: number; y: number; t: number }[];
 };
 
 export function radiusBand(distance: number): RadiusBand {
@@ -44,6 +49,7 @@ export function createEvilChase(spawn: { x: number; y: number }, boxes: { x: num
     sawPlayer: false, sightShake: 0, atmosphere: 0,
     route: [{ ...spawn, facing: 1, pose: "idle" }], cursor: 0,
     boxes: boxes.map(b => ({ ...b, presses: 0 })), trail: [], trailClock: 0,
+    stun: 0, parryFlash: 0, eyeTrail: [],
   };
 }
 
@@ -116,6 +122,8 @@ export function stepEvilChase(state: EvilChaseState, player: RoutePoint, elapsed
   if (elapsed < EVIL_SPAWN_DELAY) return;
   // The spawn frame is held at the original spawn, before any route traversal.
   if (!state.spawned) { state.spawned = true; return; }
+  state.parryFlash = Math.max(0, state.parryFlash - dt);
+  if (state.stun > 0) { state.stun = Math.max(0, state.stun - dt); return; }
   let budget = normalSpeed * CLONE_SPEED_MULTIPLIER * dt;
   while (budget > 0 && state.cursor < state.route.length) {
     const target = state.route[state.cursor];
@@ -150,7 +158,13 @@ export function stepEvilChase(state: EvilChaseState, player: RoutePoint, elapsed
   }
 }
 
+/** Parrying while touching the clone stuns it instead of killing the player. */
+export function parryClone(state: EvilChaseState): void {
+  state.stun = CLONE_STUN_SECONDS;
+  state.parryFlash = PARRY_FLASH_SECONDS;
+}
+
 export function cloneTouchesPlayer(state: EvilChaseState, player: { x: number; y: number; w: number; h: number }): boolean {
-  return state.spawned && player.x < state.x + PLAYER_W && player.x + player.w > state.x &&
+  return state.spawned && state.stun <= 0 && player.x < state.x + PLAYER_W && player.x + player.w > state.x &&
     player.y < state.y + PLAYER_H && player.y + player.h > state.y;
 }

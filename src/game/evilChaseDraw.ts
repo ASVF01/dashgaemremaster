@@ -15,7 +15,12 @@ export function evilPalette(): EvilPalette {
 }
 const silhouettes = new WeakMap<HTMLImageElement, HTMLCanvasElement>();
 
-function drawReflection(ctx: CanvasRenderingContext2D, x: number, y: number, facing: number, pose: EvilChaseState["pose"], time: number, alpha: number, eye: boolean, oldTimer = false) {
+function eyeOffset(pose: EvilChaseState["pose"], oldTimer: boolean) {
+  const low = pose === "slide" || pose === "dive";
+  return oldTimer ? { ex: low ? PLAYER_W / 2 + 18 : 10, ey: low ? -18 : -PLAYER_H + 1 } : { ex: 4, ey: low ? -20 : -44 };
+}
+
+function drawReflection(ctx: CanvasRenderingContext2D, x: number, y: number, facing: number, pose: EvilChaseState["pose"], time: number, alpha: number, eye: boolean, oldTimer = false, stun = 0, flash = 0) {
   const colors = evilPalette();
   ctx.save(); ctx.globalAlpha = alpha;
   ctx.translate(x + PLAYER_W / 2, y + PLAYER_H);
@@ -58,14 +63,17 @@ function drawReflection(ctx: CanvasRenderingContext2D, x: number, y: number, fac
   }
   if (eye) {
     const pulse = 0.6 + 0.4 * Math.pow(Math.sin(time * 7), 2);
-    // Old Timer's star sits over his face (head centre is roughly 50px up).
-    const ex = oldTimer ? (pose === "slide" || pose === "dive" ? PLAYER_W / 2 + 18 : 10) : 4;
-    const ey = oldTimer ? (pose === "slide" || pose === "dive" ? -18 : -PLAYER_H + 1) : pose === "slide" || pose === "dive" ? -20 : -44;
-    const radius = 8 + pulse * 3;
-    ctx.fillStyle = colors.eye; ctx.shadowColor = colors.eye; ctx.shadowBlur = 8 + pulse * 8;
+    const { ex, ey } = eyeOffset(pose, oldTimer);
+    // Parry: the star flares wide, then shrinks and spins dizzily while stunned.
+    const flare = flash > 0 ? 1 + flash / 0.35 * 1.4 : 1;
+    const dizzy = stun > 0 ? 0.55 : 1;
+    const radius = (8 + pulse * 3) * flare * dizzy;
+    const spin = stun > 0 ? time * 14 : 0;
+    ctx.fillStyle = flash > 0.15 ? colors.label : colors.eye; ctx.shadowColor = colors.eye; ctx.shadowBlur = 8 + pulse * 8 + flash * 40;
+    if (stun > 0 && Math.floor(time * 12) % 3 === 0) ctx.globalAlpha = alpha * 0.4;
     ctx.beginPath();
     for (let i = 0; i < 8; i++) {
-      const a = i * Math.PI / 4;
+      const a = i * Math.PI / 4 + spin;
       const r = i % 2 === 0 ? radius : radius * 0.22;
       const px = ex + Math.cos(a) * r, py = ey + Math.sin(a) * r;
       if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
@@ -78,7 +86,22 @@ function drawReflection(ctx: CanvasRenderingContext2D, x: number, y: number, fac
 export function drawEvilClone(ctx: CanvasRenderingContext2D, state: EvilChaseState, time: number, oldTimer = false) {
   if (!state.spawned) return;
   for (const trail of state.trail) drawReflection(ctx, trail.x, trail.y, trail.facing, trail.pose, time, trail.life * 0.85, false, oldTimer);
-  drawReflection(ctx, state.x, state.y, state.facing, state.pose, time, 1, true, oldTimer);
+  // Red streak trailing behind the star eye.
+  const { ex, ey } = eyeOffset(state.pose, oldTimer);
+  const head = { x: state.x + PLAYER_W / 2 + ex * state.facing, y: state.y + PLAYER_H + ey, t: time };
+  const last = state.eyeTrail[state.eyeTrail.length - 1];
+  if (!last || last.t !== time) state.eyeTrail.push(head);
+  state.eyeTrail = state.eyeTrail.filter(p => time - p.t < 0.3);
+  const colors = evilPalette();
+  ctx.save(); ctx.lineCap = "round"; ctx.strokeStyle = colors.eye; ctx.shadowColor = colors.eye; ctx.shadowBlur = 10;
+  for (let i = 1; i < state.eyeTrail.length; i++) {
+    const a = state.eyeTrail[i - 1], b = state.eyeTrail[i];
+    const life = 1 - (time - b.t) / 0.3;
+    ctx.globalAlpha = life * 0.85; ctx.lineWidth = 1 + life * 6;
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+  }
+  ctx.restore();
+  drawReflection(ctx, state.x, state.y, state.facing, state.pose, time, 1, true, oldTimer, state.stun, state.parryFlash);
 }
 
 export function drawEvilBoxes(ctx: CanvasRenderingContext2D, state: EvilChaseState, player: { x: number; y: number; w: number; h: number }) {
