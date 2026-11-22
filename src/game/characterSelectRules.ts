@@ -10,5 +10,5 @@ export const CHARACTER_SELECT_EXIT_CLOSE_MS = 300;
 export const CHARACTER_SELECT_EXIT_OPEN_MS = 280;
 
 export function characterPage(id: CharacterId): 1 | 2 {
-  return id === "mmguy" || id === "green" ? 2 : 1;
+  return id === "mmguy" || id === "green" || id === "oldtimer" ? 2 : 1;
 }

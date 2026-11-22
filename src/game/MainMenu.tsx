@@ -1689,6 +1689,7 @@ import sharkGalArtAsset from "@/assets/characters/shark_gal_art.png.asset.json";
 import theAlternateArtAsset from "@/assets/characters/the_alternate_art.png.asset.json";
 import mmguyArt from "@/assets/characters/mmguy.png.asset.json";
 import mmguyIconAsset from "@/assets/characters/mmguy-icon.png.asset.json";
+import oldTimerIconAsset from "@/assets/characters/old-timer-icon.png.asset.json";
 import massiveUpdateAsset from "@/assets/updates/massive_update.png.asset.json";
 import selectInfoArt from "@/assets/character-select/info.png.asset.json";
 import selectLeaveArt from "@/assets/character-select/leave.png.asset.json";
@@ -2100,6 +2101,18 @@ const WIP_CHARACTERS: WipCharacter[] = [
   },
   { id: "dasher",  name: "Blue Blur",       blurb: "Dashes faster. Thinks slower.", art: blueBlurArtAsset.url },
   { id: "shadow",  name: "Shark Gal",      blurb: "A rumor in pencil form. Hard to pin down.", art: sharkGalArtAsset.url },
+  {
+    id: "oldtimer",
+    name: "Old Timer",
+    blurb: "The very first sketch. Still got teeth.",
+    art: oldTimerIconAsset.url,
+    howToPlay: "Plays like the classic run — then press B to Feral Chomp: a short coil, a fast lunge and a snap that bites through enemies in front of you.",
+    lore: "Before the sprites, there was him. Drawn live in wobbly ink, he never got replaced — just forgotten.",
+    abilities: [
+      { name: "Feral Chomp [B]", description: "Coil, lunge and snap. Bites through enemies ahead and gives a quick burst of speed. 1.2s cooldown." },
+      { name: "Ink Body", description: "Drawn live every frame with springy jointed limbs." },
+    ],
+  },
   { id: "mmguy",   name: "M&M's Guy",      blurb: "BOIII IM SO TUFF ✌️😂", art: mmguyIconAsset.url },
   { id: "x3mode",  name: "THE ALTERNATE",       blurb: "TO ACHIVE SUCH FORM, YOU MUST UNLOCK THE MARK, MANIPULATE IT'S FACE AND RE-COMPLETE YOUR GENISIS WITH YOUR NEW FOUND POWER.", art: theAlternateArtAsset.url, locked: true },
 ];

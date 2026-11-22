@@ -209,6 +209,8 @@ export function getSprite(state: SpriteState, frame = 0): HTMLImageElement | nul
   const char = getSelectedCharacter();
   // His supplied single sprite stays visible for every pose and cycle.
   if (char === "mmguy") return load("mmguy", "idle");
+  // Old Timer is drawn live in ink — no sprites.
+  if (char === "oldtimer") return null;
   const key = (c: CharacterId, s: SpriteState) => `${c}:${s}`;
 
   // animated cycle? (currently only from default character)

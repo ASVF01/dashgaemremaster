@@ -9,6 +9,8 @@ import {
 } from "@/game/constants";
 import { buildLevel, type Level, type LevelId } from "@/game/level";
 import { sketchLine, sketchRect, sketchCircle, jaggedBolt, INK } from "@/game/draw";
+import { drawOldTimer } from "@/game/oldTimerDraw";
+import { canChomp, chompPhase, CHOMP_COOLDOWN, CHOMP_LUNGE_SPEED, CHOMP_REACH } from "@/game/oldTimerRules";
 import { isPressed, matchesAction, getLiveBinds } from "@/game/keybinds";
 import { sfx, unlockAudio, setCelestialMode, setThunderMode, setMetalMode, setWoodMode, setGrassMode } from "@/game/sfx";
 
@@ -326,6 +328,8 @@ interface Player {
   punchHit: boolean; // set true once a punch has connected this swing
   punchTapFire: boolean; // release-fire path uses a shorter lunge
   punchHeldFire: boolean; // fire came from full-charge (held) — big lunge, long hitbox
+  chompT: number; // Old Timer Feral Chomp elapsed seconds, -1 idle
+  chompCd: number;
 
 }
 
@@ -651,6 +655,8 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         punchHit: false,
         punchTapFire: false,
         punchHeldFire: false,
+        chompT: -1,
+        chompCd: 0,
 
       },
       projectiles: [],
@@ -967,6 +973,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
           if (jumpAlso) dy -= 1;
           if (downHeld) dy += 1;
           igniteDash(r, p, dx, dy, jumpAlso);
+        }
+      }
+      // OLD TIMER — Feral Chomp (KeyB).
+      if (e.code === "KeyB" && refs.current && !e.repeat && getSelectedCharacter() === "oldtimer") {
+        const p = refs.current.player;
+        if (canChomp(p.alive, p.chompT, p.chompCd)) {
+          unlockAudio();
+          p.chompT = 0;
+          p.chompCd = CHOMP_COOLDOWN;
         }
       }
       // THE ALTERNATE — charged punch (KeyB). Hold to charge; auto-fires
@@ -1336,6 +1351,46 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       // dash cools down faster (but not instant) so it's chainable, not spammy
       if (p.dashCooldown > 0) p.dashCooldown = Math.max(0, p.dashCooldown - dt * 2.5);
       p.parryCooldown = 0;
+    }
+
+    // ============ OLD TIMER — Feral Chomp ============
+    if (p.chompCd > 0) p.chompCd -= dt;
+    if (p.chompT >= 0) {
+      const before = chompPhase(p.chompT);
+      p.chompT += dt;
+      const ph = chompPhase(p.chompT);
+      if (ph === "windup") {
+        p.vx *= Math.max(0, 1 - dt * 10);
+      } else if (ph === "lunge") {
+        if (before === "windup") {
+          sfx.dash();
+          r.shake = Math.max(r.shake, 0.35);
+          p.hStretch = 0.8;
+        }
+        p.vx = p.facing * Math.max(Math.abs(p.vx), CHOMP_LUNGE_SPEED);
+        p.invuln = Math.max(p.invuln, 0.08);
+        const hx = p.facing > 0 ? p.x + p.w : p.x - CHOMP_REACH;
+        for (const e of r.level.enemies) {
+          if (!e.alive) continue;
+          if (rectOverlap(hx, p.y - 8, CHOMP_REACH, p.h + 16, e.x, e.y, e.w, e.h)) {
+            e.hitFlash = 0.3;
+            if (e.kind === "chaser") { e.vx = p.facing * 1200; e.stunTimer = 1.5; }
+            else {
+              e.alive = false;
+              r.combo += 1;
+              r.comboTimer = 2.5;
+              r.score += 250 * Math.max(1, r.combo);
+            }
+            sfx.enemyKill();
+            r.freezeFrames = Math.max(r.freezeFrames, 4);
+            burst(r, e.x + e.w / 2, e.y + e.h / 2, INK, 14, 420);
+          }
+        }
+      } else if (ph === "chew" && before === "lunge") {
+        burst(r, p.x + p.w / 2 + p.facing * 24, p.y + 14, INK, 6, 220);
+      } else if (ph === "none") {
+        p.chompT = -1;
+      }
     }
 
     // ============ THE ALTERNATE — charged punch ============
@@ -4821,6 +4876,16 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     // ~14 fps at mach 2, ~22 fps at mach 4.
     const fps = state === "superDash" ? 8 : 12 + machNow * 3;
     const frame = Math.floor(r.time * fps);
+    if (getSelectedCharacter() === "oldtimer") {
+      drawOldTimer(ctx, {
+        w: p.w, h: p.h, time: r.time, speed: speedNow, vy: p.vy,
+        onGround: p.onGround, sliding: p.sliding, diving: p.diving,
+        dashing: p.dashTime > 0, hurt: p.hurtTimer > 0, mach: machNow,
+        chompElapsed: p.chompT, ink: inkCol,
+      });
+      ctx.restore();
+      return;
+    }
     const sprite = getSprite(state, frame);
     if (sprite) {
       // Fit the sprite to the player AABB. For wide sprites (slide/dive) we
