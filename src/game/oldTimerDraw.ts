@@ -18,6 +18,8 @@ export type OldTimerPose = {
   ink: string;
   /** Evil doppelgänger gait: one arm reaching forward, dragging limp. */
   evil?: boolean;
+  /** SSJ transformation pose. */
+  ssj?: "charge" | "scream";
 };
 
 const PAPER_HEAD = "#fff8d6";
@@ -112,6 +114,7 @@ export function drawOldTimer(ctx: CanvasRenderingContext2D, s: OldTimerPose) {
     return;
   }
 
+  if (s.ssj) { drawSsjPose(ctx, s); return; }
   const running = s.onGround && speed > 60;
   const runRate = 9 + s.mach * 2.5;
   const ph = time * runRate;
@@ -204,4 +207,42 @@ export function drawOldTimer(ctx: CanvasRenderingContext2D, s: OldTimerPose) {
       sketchLine(ctx, x0 + Math.cos(ang) * 4, headY + 4 + Math.sin(ang) * 4, x0 + Math.cos(ang) * 16, headY + 4 + Math.sin(ang) * 16, 2.2, ink, 0.6);
     }
   }
+}
+
+function drawSsjPose(ctx: CanvasRenderingContext2D, s: OldTimerPose) {
+  const { w, h, time, ink } = s;
+  const headR = 14;
+  const charge = s.ssj === "charge";
+  const tremble = charge ? Math.sin(time * 60) * 0.8 : 0;
+  const hipX = w / 2 + tremble;
+  const hipY = h - (charge ? 18 : 23);
+  const lean = charge ? 0.35 : -0.3; // hunched forward, then arched back
+  const torso = 20;
+  const neckX = hipX + Math.sin(lean) * torso;
+  const neckY = hipY - Math.cos(lean) * torso;
+  const headX = neckX + Math.sin(lean) * (headR - 2);
+  const headY = neckY - Math.cos(lean) * (headR - 2);
+  // Wide braced stance.
+  if (charge) {
+    limb(ctx, hipX, hipY, 11, 10, 0.85, -0.15, ink);
+    limb(ctx, hipX, hipY, 11, 10, -0.85, 0.15, ink);
+  } else {
+    limb(ctx, hipX, hipY, 11, 11, 0.5, 0.3, ink);
+    limb(ctx, hipX, hipY, 11, 11, -0.5, -0.3, ink);
+  }
+  sketchLine(ctx, hipX, hipY, neckX, neckY, 3, ink, 1.1);
+  const shX = hipX + Math.sin(lean) * (torso - 4);
+  const shY = hipY - Math.cos(lean) * (torso - 4);
+  if (charge) {
+    // Elbows out, fists clenched down at the hips.
+    limb(ctx, shX, shY, 9, 9, 1.4, -0.3, ink, 2.6);
+    limb(ctx, shX, shY, 9, 9, -1.4, 0.3, ink, 2.6);
+  } else {
+    // Arms flung down and out, fists back.
+    limb(ctx, shX, shY, 10, 10, 0.9, 0.6, ink, 2.6);
+    limb(ctx, shX, shY, 10, 10, -0.9, -0.6, ink, 2.6);
+  }
+  sketchCircle(ctx, headX, headY, headR, PAPER_HEAD, ink, 2.6, 1.2);
+  if (charge) face(ctx, headX + 1, headY, ink, "intense", 0);
+  else face(ctx, headX + 1, headY, ink, "feral", 1);
 }

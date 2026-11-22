@@ -1,4 +1,6 @@
 import { drawSaiyanAura, usesSaiyanAura } from "./saiyanAura";
+import { ssjPhase, ssjZoom, ssjShakeX, SSJ_CHARGE } from "./ssjRules";
+import { ssjAudio } from "./ssjAudio";
 import { useEffect, useRef, useState } from "react";
 import {
   GRAVITY, MOVE_ACCEL, MAX_SPEED, FRICTION, JUMP_VEL,
@@ -329,6 +331,7 @@ interface Player {
   punchHit: boolean; // set true once a punch has connected this swing
   punchTapFire: boolean; // release-fire path uses a shorter lunge
   punchHeldFire: boolean; // fire came from full-charge (held) — big lunge, long hitbox
+  ssjT: number; // Old Timer SSJ transformation elapsed seconds, -1 none
   chompT: number; // Old Timer Feral Chomp elapsed seconds, -1 idle
   chompCd: number;
 
@@ -526,6 +529,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
   const keysRef = useRef<Keys>({});
   const evilAudioRef = useRef<EvilChaseAudio | null>(null);
   const pausedRef = useRef(paused);
+  const ssjActiveRef = useRef(false);
   pausedRef.current = paused;
   const levelIdRef = useRef<LevelId>(levelId);
   levelIdRef.current = levelId;
@@ -657,6 +661,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         punchTapFire: false,
         punchHeldFire: false,
         chompT: -1,
+        ssjT: -1,
         chompCd: 0,
 
       },
@@ -734,7 +739,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       };
     }
     // Any reset/level change cancels the starman shimmer too.
-    sfx.shineStop(); sfx.rainStop(); sfx.windStop(); sfx.slideStop(); sfx.laserStop();
+    sfx.shineStop(); sfx.rainStop(); sfx.windStop(); sfx.slideStop(); sfx.laserStop(); ssjAudio.stop();
     if (isMayhemOutside) {
       sfx.rainStart();
       sfx.windStart();
@@ -770,7 +775,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
   // with the menu music here. Restart on retry is also driven by the
   // parent via screen/levelId/resetKey transitions.
   useEffect(() => {
-    return () => { stopBgm(); sfx.shineStop(); sfx.rainStop(); sfx.windStop(); sfx.slideStop(); sfx.laserStop(); setCelestialMode(false); setThunderMode(false); setMetalMode(false); setWoodMode(false); setGrassMode(false); };
+    return () => { stopBgm(); ssjAudio.stop(); sfx.shineStop(); sfx.rainStop(); sfx.windStop(); sfx.slideStop(); sfx.laserStop(); setCelestialMode(false); setThunderMode(false); setMetalMode(false); setWoodMode(false); setGrassMode(false); };
   }, []);
 
   // BGM: pause/resume with the game's pause state — but keep playing when
@@ -800,6 +805,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       setCelestialMode(true, { replaceDefaults: !inJrb });
       setThunderMode(inJrb);
       burst(r, r.player.x + r.player.w / 2, r.player.y + r.player.h / 2, inJrb ? "#22e2ff" : "#ffd11a", 24, 380);
+      if (!inJrb && usesSaiyanAura(getSelectedCharacter())) { r.player.ssjT = 0; ssjAudio.charge(); }
     };
     const down = (e: KeyboardEvent) => {
       keysRef.current[e.code] = true;
@@ -1396,7 +1402,17 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
 
     // ============ THE ALTERNATE — charged punch ============
     // Ease the punch zoom back toward its target every frame.
-    {
+    if (p.ssjT >= 0) {
+      const before = p.ssjT;
+      p.ssjT += dt;
+      if (before < SSJ_CHARGE && p.ssjT >= SSJ_CHARGE) ssjAudio.burst();
+      if (ssjPhase(p.ssjT) === "charge") { p.vx = 0; if (p.vy < 0) p.vy = 0; }
+      r.punchZoom = ssjZoom(p.ssjT);
+      if (ssjPhase(p.ssjT) === "done") { p.ssjT = -1; r.punchZoom = 1; }
+    }
+    if (p.ssjT < 0 && !p.starman && ssjActiveRef.current) { ssjActiveRef.current = false; ssjAudio.powerOff(); }
+    if (p.starman && usesSaiyanAura(getSelectedCharacter()) && !p.somSom) ssjActiveRef.current = true;
+    if (p.ssjT < 0) {
       let target = 1;
       if (p.punchCharge >= 2 && p.punchCharge < 2.7) target = 1.4;
       r.punchZoom += (target - r.punchZoom) * Math.min(1, dt * 6);
@@ -2265,6 +2281,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         setThunderMode(inJrb);
         burst(r, p.x + p.w / 2, p.y + p.h / 2, inJrb ? "#22e2ff" : "#ffd11a", 24, 380);
         // Fire the parent callback (used by meet-invboi to pop the intro overlay).
+        if (!inJrb && usesSaiyanAura(getSelectedCharacter())) { p.ssjT = 0; ssjAudio.charge(); }
         if (levelIdRef.current === "meet-invboi") onInvboiPickupRef.current?.();
       }
     }
@@ -3503,8 +3520,13 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       }
       // player
       const aura = r.player.starman && !r.player.somSom && usesSaiyanAura(getSelectedCharacter());
-      if (aura) drawSaiyanAura(ctx, r.player.x + r.player.w / 2, r.player.y + r.player.h / 2, r.player.w, r.player.h, r.time);
+      const ssjT = r.player.ssjT;
+      const shake = ssjShakeX(ssjT);
+      ctx.save();
+      ctx.translate(shake, 0);
+      if (aura) drawSaiyanAura(ctx, r.player.x + r.player.w / 2, r.player.y + r.player.h / 2, r.player.w, r.player.h, r.time, ssjPhase(ssjT) === "charge" ? 0 : 1);
       drawPlayer(ctx, r);
+      ctx.restore();
       if (r.player.starman && !r.player.somSom && !aura) drawStarmanStars(ctx, r);
     }
 
@@ -4885,6 +4907,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
         onGround: p.onGround, sliding: p.sliding, diving: p.diving,
         dashing: p.dashTime > 0, hurt: p.hurtTimer > 0, mach: machNow,
         chompElapsed: p.chompT, ink: inkCol,
+        ssj: ssjPhase(p.ssjT) === "charge" ? "charge" : ssjPhase(p.ssjT) === "scream" ? "scream" : undefined,
       });
       ctx.restore();
       return;
