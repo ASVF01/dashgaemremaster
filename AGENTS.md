@@ -34,3 +34,4 @@
 - Invboi visuals are chosen per character by tested `usesSaiyanAura` in `saiyanAura.ts`: classic roster keeps rainbow trail + sparkles, Old Timer and later characters get the canvas aura drawn behind the player, so new characters inherit it by default.
 
 - Old Timer SSJ transformation timing/zoom/shake live in pure `ssjRules.ts`; its audio lifecycle is isolated in `ssjAudio.ts` and stopped on every reset/unmount so loops never leak. The powered state holds for `SSJ_DURATION` seconds and then ends through a single teardown that clears starman/i-frames, stops the aura loop and plays the power-off cue, so no path can leave the aura or cheat BGM running.
+- THE HEARTBREAKER boss keeps attack/damage rules pure in `heartBoss/heartBossRules.ts` and drawing in `heartBossDraw.ts`; GameCanvas only feeds player box/parry and applies results, reusing the knight arena.

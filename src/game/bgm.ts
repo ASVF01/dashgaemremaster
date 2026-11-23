@@ -35,6 +35,7 @@ const TRACKS: Partial<Record<LevelId, string>> = {
   "just-run-bro": bgmJustRunBro,
   "evil-you": bgmEvilYouAsset.url,
   "roaring-knight": bgmBlackKnife,
+  heartbreaker: bgmBlackKnife,
   // Post-boss act: Loud Visitor.
   "aftermath-1": bgmLoudVisitorAsset.url,
   "aftermath-2": bgmLoudVisitorAsset.url,

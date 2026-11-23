@@ -24,6 +24,8 @@ import { gameplayZoom, clampCamera } from "@/game/viewportRules";
 import { slideDustFrame, slideDustAnchor, slideDustSpread } from "@/game/slideDustRules";
 import { getSprite, type SpriteState } from "@/game/sprites";
 import { createEvilChase, stepEvilChase, pressBox, beginEscape, canFinishEvilChase, cloneTouchesPlayer, parryClone, CHASE_SPEED_MULTIPLIER, type EvilChaseState, type RoutePoint } from "@/game/evilChaseRules";
+import { createHeartBoss, stepHeartBoss, type HeartBoss } from "@/game/heartBoss/heartBossRules";
+import { drawHeartBoss, drawHeartBackdrop, drawHeartHud } from "@/game/heartBoss/heartBossDraw";
 import { EvilChaseAudio } from "@/game/evilChaseAudio";
 import { drawEvilClone, drawEvilBoxes, drawEvilExit, drawEvilAtmosphere, drawEvilHallway, evilPalette } from "@/game/evilChaseDraw";
 import { getSelectedCharacter } from "@/game/character";
@@ -355,6 +357,7 @@ interface Afterimage {
 interface GameRefs {
   level: Level;
   evilChase: EvilChaseState | null;
+  heart: HeartBoss | null;
   player: Player;
   projectiles: Projectile[];
   particles: Particle[];
@@ -621,6 +624,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     const level = buildLevel(levelId, { marathon: startAsInvboi });
     refs.current = {
       level,
+      heart: levelId === "heartbreaker" ? createHeartBoss() : null,
       evilChase: level.objectiveBoxes ? createEvilChase(level.spawn, level.objectiveBoxes) : null,
       player: {
         x: level.spawn.x, y: level.spawn.y,
@@ -1966,6 +1970,14 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     if (r.shake > 0) r.shake = Math.max(0, r.shake - dt * 3);
     if (r.glitch > 0) r.glitch = Math.max(0, r.glitch - dt * 4);
 
+    if (r.heart && p.alive && !r.finished) {
+      const hb = r.heart;
+      const res = stepHeartBoss(hb, dt, p, p.parrying > 0);
+      if (res.parried) parrySuccess(r, res.parried.x, res.parried.y);
+      if (res.bossHit) { r.shake = Math.max(r.shake, 0.5); burst(r, hb.x, hb.y, "#ff3d8b", 26, 420); sfx.hit(); }
+      if (res.playerHit && p.invuln <= 0 && !p.starman) damage(r, res.playerHit.x, res.playerHit.y);
+      if (hb.defeated && hb.defeatT > 2) r.level.goal = { x: p.x, y: p.y, w: p.w, h: p.h };
+    }
     if (r.evilChase) {
       if (r.level.escapeEntrance && beginEscape(r.evilChase, p, r.level.escapeEntrance)) sfx.dash();
       const pose: RoutePoint["pose"] = p.dashTime > 0 ? "dash" : p.diving ? "dive" : p.sliding ? "slide" : !p.onGround ? (p.vy > 0 ? "fall" : "jump") : Math.abs(p.vx) > 60 ? "runFast" : "idle";
@@ -2391,7 +2403,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     const playerCenterX = p.x + p.w / 2;
     const playerCenterY = p.y + p.h / 2;
 
-    if (levelIdRef.current === "roaring-knight") {
+    if (levelIdRef.current === "roaring-knight" || levelIdRef.current === "heartbreaker") {
       // Semi-static arena camera: centered on the arena, nudged slightly toward the player.
       const visW = size.w / z, visH = size.h / z;
       const centerCam = (r.level.width - visW) / 2;
@@ -3050,6 +3062,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
 
     // distant scribbled clouds / scenery — MAYHEM hotel levels use bespoke interiors
     if (isMayhemLevel) drawMayhemScenery(ctx, camX, w, r.level.height, r.time);
+    else if (r.heart) drawHeartBackdrop(ctx, camX, w / z, r.level.height, r.time);
     else if (r.evilChase?.phase === "escape") drawEvilHallway(ctx, camX, w / z, r.level.height);
     else if (isChaseLevel) drawChaseScenery(ctx, camX, w, r.level.height, r.time);
     else drawScenery(ctx, camX, w, r.level.height);
@@ -3352,6 +3365,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       }
     }
 
+    if (r.heart) drawHeartBoss(ctx, r.heart);
     if (r.evilChase) {
       drawEvilBoxes(ctx, r.evilChase, r.player);
       drawEvilClone(ctx, r.evilChase, r.time, getSelectedCharacter() === "oldtimer");
@@ -3701,6 +3715,7 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     ctx.restore();
 
     // boss screen-space layer (sprite + afterimages + hp pip) — draws on top of world.
+    if (r.heart) drawHeartHud(ctx, r.heart, w);
     if (r.evilChase) drawEvilAtmosphere(ctx, r.evilChase, w, h, r.time, r.player);
     if (r.boss) drawBossScreen(ctx, r, r.boss, w);
 

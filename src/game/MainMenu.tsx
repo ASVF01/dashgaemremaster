@@ -284,6 +284,7 @@ const LEVEL_THEME: Record<LevelId, LevelTheme> = {
   "just-run-bro":       { description: "No obstacles. No enemies. Just vibes and a horizon. Hold dash.", accent: "200 80% 60%", glyph: "♥" },
   "meet-invboi":        { description: "Say hi to a new friend. Grab the star and become unstoppable.", accent: "50 95% 60%", glyph: "★" },
   "roaring-knight":     { description: "Boss fight. Dodge his sweeps, parry the openings, dash to strike.", accent: "260 70% 50%", glyph: "♛" },
+  "heartbreaker":       { description: "Boss fight. Dodge heart rain, beams and shockwaves. Parry her prompt bubbles back at her.", accent: "330 100% 62%", glyph: "♥" },
   "aftermath-1":        { description: "After the knight, the ink keeps bleeding. Push through the ash.", accent: "20 50% 45%", glyph: "▲" },
   "aftermath-2":        { description: "Shooters in the gaps. Mind the rips. Keep your line clean.", accent: "10 60% 50%", glyph: "▣" },
   "aftermath-3":        { description: "Final draft. Everything you've learned, all in one breath.", accent: "0 70% 45%", glyph: "✗" },
