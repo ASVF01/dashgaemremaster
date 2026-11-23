@@ -1,3 +1,4 @@
+import { HEART_LEVELS, secretHeartSpot } from "@/game/secretHearts";
 import { Platform, Hazard, Enemy, Pickup } from "./constants";
 import { buildEvilChaseLevel } from "./evilChaseMap";
 
@@ -20,6 +21,7 @@ export type Level = {
   invboiStart?: { x: number; y: number; facing: 1 | -1 };
   objectiveBoxes?: { x: number; y: number }[];
   escapeEntrance?: { x: number; y: number; w: number; h: number };
+  secretHeart?: { x: number; y: number };
 };
 
 export type LevelId = "tutorial" | "scribble-1" | "scribble-2" | "scribble-3" | "chase" | "evil-you" | "speed-test" | "just-run-bro" | "meet-invboi" | "roaring-knight" | "heartbreaker" | "aftermath-1" | "aftermath-2" | "aftermath-3" | "celestial-marathon" | "mayhem-outside" | "mayhem-main" | "mayhem-floor-1" | "mayhem-floor-2";
@@ -32,6 +34,7 @@ export type LevelMeta = {
   par: number; // seconds
   hidden?: boolean;
   locked?: boolean; // shown in the carousel but not playable
+  secret?: boolean; // shown as ??? until unlocked via secretHearts
 };
 
 export const LEVELS: LevelMeta[] = [
@@ -45,7 +48,7 @@ export const LEVELS: LevelMeta[] = [
   { id: "just-run-bro", name: "Just Run Brah.", subtitle: "no obstacles. no enemies. just vibes.", difficulty: 1, par: 9999 },
   { id: "meet-invboi", name: "CELESTIAL ENCOUNTER", subtitle: "say hi to a new friend :)", difficulty: 1, par: 60 },
   { id: "roaring-knight", name: "THE ROARING KNIGHT", subtitle: "closed for rework. he'll be back.", difficulty: 4, par: 120, locked: true },
-  { id: "heartbreaker", name: "THE HEARTBREAKER", subtitle: "she just wants you to build something lovable.", difficulty: 4, par: 120 },
+  { id: "heartbreaker", name: "THE HEARTBREAKER", subtitle: "she just wants you to build something lovable.", difficulty: 4, par: 120, secret: true },
   { id: "aftermath-1", name: "ASHEN MARGINS",  subtitle: "after the knight, the ink keeps bleeding.", difficulty: 4, par: 60 },
   { id: "aftermath-2", name: "TORN PAGES",     subtitle: "shooters in the gaps. mind the rips.",     difficulty: 4, par: 65 },
   { id: "aftermath-3", name: "FINAL DRAFT",    subtitle: "everything you've learned. one run.",      difficulty: 4, par: 75 },
@@ -87,6 +90,7 @@ export function buildLevel(id: LevelId = "scribble-1", opts: { marathon?: boolea
   if (opts.marathon && id === "tutorial") {
     lv.signs = [];
   }
+  if (!opts.marathon && HEART_LEVELS.includes(id)) lv.secretHeart = secretHeartSpot(lv.platforms) ?? undefined;
   // Fill any pit directly below a hazard with a ground platform so spikes
   // sit on solid floor instead of marking a bottomless gap.
   for (const h of lv.hazards) {

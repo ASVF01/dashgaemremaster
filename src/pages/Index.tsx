@@ -19,7 +19,8 @@ import introBeginUrl from "@/assets/audio/intro_begin.ogg";
 import { sfx, unlockAudio, setSfxVolume, silenceAllSfx, stopGameplayLoops, setMuted as setSfxMuted } from "@/game/sfx";
 import { selectCharacter, unlockCharacter, useCharacter } from "@/game/character";
 import { getSettings } from "@/game/settings";
-import { recordLevelResult } from "@/game/levelStats";
+import { recordLevelResult, loadLevelStats } from "@/game/levelStats";
+import { heartbreakerUnlocked, loadHearts } from "@/game/secretHearts";
 import MayhemPause from "@/game/mayhem/MayhemPause";
 import PlatformerPause from "@/game/PlatformerPause";
 import NightRooms from "@/game/mayhem/NightRooms";
@@ -389,6 +390,7 @@ const Index = () => {
   const startLevel = (id: LevelId) => {
     // Locked levels can't be started from anywhere.
     if (LEVELS.find((l) => l.id === id)?.locked) return;
+    if (id === "heartbreaker" && !heartbreakerUnlocked(LEVELS, loadLevelStats(), loadHearts())) return;
     // Level-select entries hard-cut; NEXT LEVEL keeps a shared soundtrack
     // running at its current position instead of restarting it.
     if (screen !== "win" || !isSameTrackAs(id)) stopBgm();

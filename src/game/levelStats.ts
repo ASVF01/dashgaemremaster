@@ -23,6 +23,8 @@ function load(): LevelStats {
   }
 }
 
+export const loadLevelStats = () => load();
+
 function save(s: LevelStats) {
   try { localStorage.setItem(KEY, JSON.stringify(s)); } catch { /* noop */ }
 }

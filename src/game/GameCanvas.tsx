@@ -16,6 +16,7 @@ import { drawOldTimer } from "@/game/oldTimerDraw";
 import { canChomp, chompPhase, CHOMP_COOLDOWN, CHOMP_LUNGE_SPEED, CHOMP_REACH } from "@/game/oldTimerRules";
 import { isPressed, matchesAction, getLiveBinds } from "@/game/keybinds";
 import { sfx, unlockAudio, setCelestialMode, setThunderMode, setMetalMode, setWoodMode, setGrassMode } from "@/game/sfx";
+import { collectHeart } from "@/game/secretHearts";
 
 import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, playChaseStarmanLayer, stopStarmanLayer, getStarmanElapsed, playSomSomBgm, playSsjBgm, getSomSomElapsed } from "@/game/bgm";
 import weSfxUrl from "@/assets/audio/impact_aura_charge.ogg";
@@ -402,6 +403,7 @@ interface GameRefs {
   rainStars: { x: number; y: number; vy: number; size: number; phase: number; hue: number }[];
   // Floating "invboi star" pickup spawned by pressing E. Touching it turns
   // the player into invboi (same as typing the cheat code).
+  heartFound?: boolean;
   invboiPickup: {
     x: number; y: number; t: number; bobPhase: number;
     // spawn anim: brief flash/scale-up + horizontal streak trail.
@@ -2299,6 +2301,15 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       }
     }
 
+    // secret heart (unlocks THE HEARTBREAKER)
+    const sh = r.level.secretHeart;
+    if (sh && !r.heartFound && rectOverlap(p.x, p.y, p.w, p.h, sh.x - 14, sh.y - 14, 28, 28)) {
+      r.heartFound = true;
+      collectHeart(levelIdRef.current);
+      burst(r, sh.x, sh.y, "#ff4f9a", 16, 260);
+      sfx.pickup();
+    }
+
     // invboi-star pickup (spawned by pressing E). Bobs in place; touching
     // the player turns them into invboi (same as the cheat code).
     if (r.invboiPickup) {
@@ -3281,6 +3292,21 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
       ctx.moveTo(pk.x, pk.y + bob - 3);
       ctx.lineTo(pk.x, pk.y + bob + 3);
       ctx.stroke();
+      ctx.restore();
+    }
+
+    if (r.level.secretHeart && !r.heartFound) {
+      const sh = r.level.secretHeart;
+      const hb = Math.sin(r.time * 4) * 4;
+      const sc = 1 + Math.sin(r.time * 8) * 0.08;
+      ctx.save();
+      ctx.translate(sh.x, sh.y + hb); ctx.scale(sc, sc);
+      ctx.beginPath();
+      ctx.moveTo(0, 10);
+      ctx.bezierCurveTo(-16, -2, -10, -16, 0, -6);
+      ctx.bezierCurveTo(10, -16, 16, -2, 0, 10);
+      ctx.fillStyle = "#ff4f9a"; ctx.strokeStyle = INK; ctx.lineWidth = 2.2;
+      ctx.fill(); ctx.stroke();
       ctx.restore();
     }
 
