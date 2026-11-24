@@ -71,6 +71,9 @@ export function setMayhemMix(v: boolean) { mayhemMix = v; }
 let ctx: AudioContext | null = null;
 let masterGain: GainNode | null = null;
 let lowpass: BiquadFilterNode | null = null;
+// Bitcrusher inserted in the master chain while the pause menu is open, so
+// the music keeps playing but sounds "pixelated" (8-bit crunch).
+let crusher: WaveShaperNode | null = null;
 let muted = false;
 let volume = 0.35;
 // Multiplier applied on top of `volume` when the level has ended (duck).
@@ -151,7 +154,10 @@ function ac(): AudioContext | null {
     lowpass.type = "lowpass";
     lowpass.frequency.value = LP_OPEN;
     lowpass.Q.value = 0.7;
-    masterGain.connect(lowpass);
+    crusher = ctx.createWaveShaper();
+    crusher.oversample = "none";
+    masterGain.connect(crusher);
+    crusher.connect(lowpass);
     lowpass.connect(ctx.destination);
   }
   if (ctx.state === "suspended") ctx.resume().catch(() => {});
@@ -629,6 +635,28 @@ export function stopBgm(fade = 0) {
   try { p.source.stop(); } catch { /* noop */ }
   try { p.nextSource?.stop(); } catch { /* noop */ }
 }
+
+// Staircase waveshaper curve that quantizes the signal to `bits` levels —
+// the "pixelated" crunch heard while the pause menu is open.
+export function crushCurve(bits = 4, steps = 1024): Float32Array<ArrayBuffer> {
+  const curve = new Float32Array(steps);
+  const levels = 2 ** bits;
+  for (let i = 0; i < steps; i++) {
+    const x = (i / (steps - 1)) * 2 - 1;
+    curve[i] = Math.round(((x + 1) / 2) * (levels - 1)) / (levels - 1) * 2 - 1;
+  }
+  return curve;
+}
+
+let pauseCrushed = false;
+// Toggle the pause-menu bitcrush on the shared music. Music keeps playing;
+// it just runs through the crusher while `on` is true.
+export function setPauseCrush(on: boolean) {
+  pauseCrushed = on;
+  if (!crusher) return;
+  crusher.curve = on ? crushCurve() : null;
+}
+export function isPauseCrushed() { return pauseCrushed; }
 
 export function pauseBgm() {
   // WebAudio AudioContext.suspend pauses all scheduling cleanly.

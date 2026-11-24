@@ -18,7 +18,7 @@ import { isPressed, matchesAction, getLiveBinds } from "@/game/keybinds";
 import { sfx, unlockAudio, setCelestialMode, setThunderMode, setMetalMode, setWoodMode, setGrassMode } from "@/game/sfx";
 import { collectHeart } from "@/game/secretHearts";
 
-import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, playChaseStarmanLayer, stopStarmanLayer, getStarmanElapsed, playSomSomBgm, playSsjBgm, getSomSomElapsed } from "@/game/bgm";
+import { playBgmFor, stopBgm, pauseBgm, resumeBgm, bgmLevelEnd, playStarmanBgm, playChaseStarmanLayer, stopStarmanLayer, getStarmanElapsed, playSomSomBgm, playSsjBgm, getSomSomElapsed, setPauseCrush } from "@/game/bgm";
 import weSfxUrl from "@/assets/audio/impact_aura_charge.ogg";
 import { getSettings } from "@/game/settings";
 import { gameplayZoom, clampCamera } from "@/game/viewportRules";
@@ -788,10 +788,18 @@ export default function GameCanvas({ onHud, onFinish, onDeath, onInvboiPickup, o
     return () => { stopBgm(); ssjAudio.stop(); sfx.shineStop(); sfx.rainStop(); sfx.windStop(); sfx.slideStop(); sfx.laserStop(); setCelestialMode(false); setThunderMode(false); setMetalMode(false); setWoodMode(false); setGrassMode(false); };
   }, []);
 
-  // BGM: pause/resume with the game's pause state — but keep playing when
-  // an overlay (win/death) wants the music to continue in the background.
+  // BGM: while the pause menu is open the music keeps playing but runs
+  // through a bitcrusher so it sounds "pixelated". Overlays (win/death)
+  // keep the music clean in the background.
   useEffect(() => {
-    if (paused && !keepAudio) pauseBgm(); else if (!evilBgmHeldRef.current) resumeBgm();
+    if (paused && !keepAudio) {
+      setPauseCrush(true);
+      resumeBgm();
+    } else {
+      setPauseCrush(false);
+      if (!evilBgmHeldRef.current) resumeBgm();
+    }
+    return () => setPauseCrush(false);
   }, [paused, keepAudio]);
 
   // keys
